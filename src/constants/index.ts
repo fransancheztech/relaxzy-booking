@@ -33,7 +33,8 @@ export const FORM_FIELDS_ADD_BOOKING: FormFieldConfigModel<BookingModel>[] = [
   { formKey: 'start_time', label: 'Date & Time', size: 6, type: 'datepicker', showTime: true, allowsDisabled: false, allowsEnabled: true },
   { formKey: 'duration', label: 'Duration', size: 6, type: 'select', elements: BOOKING_DEFAULT_DURATIONS, allowsDisabled: false, allowsEnabled: true },
   { formKey: 'service_name', label: 'Massage', size: 6, type: 'select', elements: BOOKING_DEFAULT_SERVICES, allowsDisabled: false, allowsEnabled: true },
-  { formKey: 'notes', label: 'Notes', size: 6, type: 'textfield', allowsDisabled: false, allowsEnabled: true },
+  { formKey: 'notes', label: 'Notes', size: 6, type: 'textfield', allowsEnabled:true, allowsDisabled: false },
+  { formKey: "price", label: "Price", size: 6, type: "textfield", allowsEnabled:true, allowsDisabled: false },
 ];
 
 export const FORM_FIELDS_EDIT_BOOKING: FormFieldConfigModel<BookingModel>[] = [
@@ -46,5 +47,8 @@ export const FORM_FIELDS_EDIT_BOOKING: FormFieldConfigModel<BookingModel>[] = [
   { formKey: "service_name", label: "Massage", size: 6,  type: "select", elements: BOOKING_DEFAULT_SERVICES, allowsEnabled:true, allowsDisabled: true, defaultEnabled: false },
   { formKey: "notes", label: "Notes", size: 6, type: "textfield", allowsEnabled:true, allowsDisabled: true, defaultEnabled: false },
   { formKey: "status", label: "Status", size: 6, type: "select", elements: BOOKING_DEFAULT_STATUSES, allowsEnabled:true, allowsDisabled: true, defaultEnabled: false },
+  { formKey: "price", label: "Price", size: 6, type: "textfield", allowsEnabled:true, allowsDisabled: true, defaultEnabled: false },
+  { formKey: "paidCash", label: "Paid in Cash", size: 6, type: "textfield", allowsEnabled:false, allowsDisabled: true },
+  { formKey: "paidCard", label: "Paid in Card", size: 6, type: "textfield", allowsEnabled:false, allowsDisabled: true },
 ];
 

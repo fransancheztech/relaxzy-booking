@@ -12,6 +12,9 @@ export interface BookingDTO {
     status?: string;
     created_at?: string;
     updated_at?: string;
+    price?: string;
+    paidCash?: string;
+    paidCard?: string;
 }
 
 export interface BookingModel extends BookingDTO {
