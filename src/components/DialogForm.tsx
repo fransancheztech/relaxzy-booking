@@ -32,20 +32,12 @@ export function DialogForm<T extends BookingModel>({
     cancelButton = <></>,
     deleteButton = <></>
 }: DialogFormProps<T>) {
-    const { isEditing, setIsEditing } = useLayout();
-
-    function computeIsDisabled<T>(field: FormFieldConfigModel<T>, isEditing: boolean): boolean {
-        if (!field.allowsEnabled) return true;
-        if (!field.allowsDisabled) return false;
-        return !isEditing;
-    }
 
     return (
         <Dialog
             open={open}
             onClose={() => {
                 handleCancel();
-                setIsEditing(false);
             }}
             maxWidth='md'
             fullWidth
@@ -74,7 +66,7 @@ export function DialogForm<T extends BookingModel>({
                             text={field.text}
                             showTime={field.showTime}
                             autoFocus={field.autoFocus}
-                            isDisabled={computeIsDisabled(field, isEditing)}
+                            isDisabled={field.disabled}
                         />
                     ))}
                 </Grid>

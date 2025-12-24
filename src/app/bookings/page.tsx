@@ -14,13 +14,14 @@ import { useLayout } from '../context/LayoutContext';
 import { useEffect, useState } from 'react';
 import { useServiceLookups } from '@/hooks/useServiceLookups';
 import { ClientRow, useSimilarClients } from '@/hooks/useSimilarClients';
+import { usePriceCalculator } from '@/hooks/usePriceCalculator';
 import { Button, Container, Typography } from '@mui/material';
 import ClientSearch from './ClientSearch';
 import EditIcon from '@mui/icons-material/Edit';
 import DialogDeletion from '@/components/DialogDeletion';
 
 export default function Bookings() {
-    const { setButtonLabel, setOnButtonClick, selectedBooking, isEditing, setIsEditing } = useLayout();
+    const { setButtonLabel, setOnButtonClick, selectedBooking} = useLayout();
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
     const newBookingForm = useBookingForm({ mode: 'new' });
@@ -32,6 +33,22 @@ export default function Bookings() {
         client_email: (newBookingForm.bookingFormData as BookingModel).client_email,
         client_phone: (newBookingForm.bookingFormData as BookingModel).client_phone
     });
+
+    // Calculate price based on service_name and duration
+    const { price } = usePriceCalculator(
+        (newBookingForm.bookingFormData as BookingModel).service_name,
+        (newBookingForm.bookingFormData as BookingModel).duration
+    );
+
+    // Auto-update price field when price is calculated
+    useEffect(() => {
+        if (price !== null && price !== undefined) {
+            newBookingForm.setBookingFormData((prev) => ({
+                ...prev,
+                price: price
+            }));
+        }
+    }, [price]);
 
     useEffect(() => {
         setButtonLabel('New Booking');
@@ -61,7 +78,6 @@ export default function Bookings() {
                         sx={{ color: 'error.main', gap: 1 }}
                         onClick={() => {
                             newBookingForm.handleCancel();
-                            setIsEditing(false);
                         }}>
                         {
                             <>
@@ -116,43 +132,31 @@ export default function Bookings() {
                 }
                 cancelButton={
                     <Button
-                        sx={{ color: 'error.main', gap: 1 }}
+                        sx={{ color: 'primary.main', gap: 1 }}
                         onClick={() => {
                             editBookingForm.handleCancel();
-                            setIsEditing(false);
                         }}>
                         {
                             <>
                                 <CloseIcon />
-                                Cancel
+                                Close
                             </>
                         }
                     </Button>
                 }
                 acceptButton={
-                    isEditing ? (
-                        <Button
-                            sx={{ color: 'primary.main', gap: 1 }}
-                            onClick={() => {
-                                setIsEditing(false);
-                                editBookingForm.handleAccept();
-                            }}>
-                            {
-                                <>
-                                    <SaveIcon />
-                                    Save
-                                </>
-                            }
-                        </Button>
-                    ) : (
-                        <Button sx={{ color: 'primary.main', gap: 1 }} onClick={() => setIsEditing(true)}>
-                            {
-                                <>
-                                    <EditIcon /> Edit
-                                </>
-                            }
-                        </Button>
-                    )
+                    <Button
+                        sx={{ color: 'primary.main', gap: 1 }}
+                        onClick={() => {
+                            editBookingForm.handleAccept();
+                        }}>
+                        {
+                            <>
+                                <SaveIcon />
+                                Save
+                            </>
+                        }
+                    </Button>
                 }
             />
             <DialogDeletion

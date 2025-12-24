@@ -14,7 +14,8 @@ const initialStateBookingForm: BookingModel = {
     notes: '',
     status: '',
     created_at: '',
-    updated_at: ''
+    updated_at: '',
+    price: ''
 };
 
 type BookingFormMode = 'new' | 'edit';

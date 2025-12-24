@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
       status: b.status,
       created_at: b.created_at,
       updated_at: b.updated_at,
+      price: b.price ?? "",
     }));
 
     return NextResponse.json(formatted);
