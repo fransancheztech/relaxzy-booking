@@ -48,7 +48,5 @@ export const FORM_FIELDS_EDIT_BOOKING: FormFieldConfigModel<BookingModel>[] = [
   { formKey: "notes", label: "Notes", size: 6, type: "textfield", disabled: false },
   { formKey: "status", label: "Status", size: 6, type: "select", elements: BOOKING_DEFAULT_STATUSES, disabled: false },
   { formKey: "price", label: "Price", size: 6, type: "textfield", disabled: false },
-  { formKey: "paidCash", label: "Paid in Cash", size: 6, type: "textfield", disabled: true },
-  { formKey: "paidCard", label: "Paid in Card", size: 6, type: "textfield", disabled: true },
 ];
 

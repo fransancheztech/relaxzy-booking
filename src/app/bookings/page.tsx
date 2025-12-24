@@ -19,6 +19,7 @@ import { Button, Container, Typography } from '@mui/material';
 import ClientSearch from './ClientSearch';
 import EditIcon from '@mui/icons-material/Edit';
 import DialogDeletion from '@/components/DialogDeletion';
+import AmountPaidInput from './AmountPaidInput';
 
 export default function Bookings() {
     const { setButtonLabel, setOnButtonClick, selectedBooking} = useLayout();
@@ -116,6 +117,18 @@ export default function Bookings() {
                 formData={editBookingForm.bookingFormData}
                 setFormData={editBookingForm.setBookingFormData}
                 handleCancel={editBookingForm.handleCancel}
+                moreInputs={[
+                    <AmountPaidInput
+                        moneyType="paidCard"
+                        value={editBookingForm.bookingFormData.paidCard}
+                        setFormData={editBookingForm.setBookingFormData}
+                    />,
+                    <AmountPaidInput
+                        moneyType="paidCash"
+                        value={editBookingForm.bookingFormData.paidCash}
+                        setFormData={editBookingForm.setBookingFormData}
+                    />
+                ]}
                 deleteButton={
                     <Button
                         color='error'

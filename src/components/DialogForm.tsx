@@ -14,6 +14,7 @@ type DialogFormProps<T extends BookingModel> = {
     formData: T;
     setFormData: React.Dispatch<React.SetStateAction<T>>;
     handleCancel: () => void;
+    moreInputs?: React.ReactNode[];
     otherSubComponents?: React.ReactNode[];
     acceptButton?: React.ReactNode;
     cancelButton?: React.ReactNode;
@@ -27,6 +28,7 @@ export function DialogForm<T extends BookingModel>({
     formData,
     setFormData,
     handleCancel,
+    moreInputs = [],
     otherSubComponents,
     acceptButton = <></>,
     cancelButton = <></>,
@@ -68,6 +70,9 @@ export function DialogForm<T extends BookingModel>({
                             autoFocus={field.autoFocus}
                             isDisabled={field.disabled}
                         />
+                    ))}
+                    {moreInputs.map((input, index) => (
+                        <React.Fragment key={index}>{input}</React.Fragment>
                     ))}
                 </Grid>
             </DialogContent>
