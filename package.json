@@ -33,7 +33,7 @@
     "libphonenumber-js": "^1.12.17",
     "lodash.debounce": "^4.0.8",
     "luxon": "^3.7.1",
-    "next": "15.3.1",
+    "next": "^15.5.9",
     "react": "^19.0.0",
     "react-big-calendar": "^1.19.4",
     "react-datepicker": "^8.3.0",
