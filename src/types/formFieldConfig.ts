@@ -8,7 +8,5 @@ export type FormFieldConfigModel<T> = {
     filesMax?: number;
     showTime?: boolean;
     autoFocus?: boolean;
-    allowsEnabled?: boolean;
-    allowsDisabled?: boolean;
-    defaultEnabled?: boolean;
+    disabled?: boolean;
 };

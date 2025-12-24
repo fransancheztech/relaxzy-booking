@@ -46,6 +46,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
       "service_id",
       "start_time",
       "end_time",
+      "price",
       "notes",
       "status",
     ]);

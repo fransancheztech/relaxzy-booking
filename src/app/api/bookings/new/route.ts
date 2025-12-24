@@ -10,6 +10,7 @@ type Body = {
   duration?: string; // minutes as string or number
   service_name?: string;
   notes?: string;
+  price?: string;
 };
 
 export async function POST(request: Request) {
@@ -99,6 +100,7 @@ export async function POST(request: Request) {
         start_time: start,
         end_time: end,
         notes: body.notes ?? null,
+        price: body.price,
         status: "confirmed",
       },
     });

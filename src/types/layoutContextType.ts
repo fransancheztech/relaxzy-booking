@@ -7,6 +7,4 @@ export type LayoutContextType = {
     setOnButtonClick: (fn: (() => void) | null) => void;
     selectedBooking: BookingDTO | null;
     setSelectedBooking: (booking: BookingDTO | null) => void;
-    isEditing: boolean;
-    setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
 };

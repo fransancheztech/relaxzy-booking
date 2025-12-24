@@ -31,11 +31,12 @@ interface CalendarUIProps {
 
 function CalendarUI({setBookingFormData, setIsOpenBookingDialog, setIsEditable}: CalendarUIProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { selectedBooking, setSelectedBooking } = useLayout();
   const [editing, setEditing] = useState(false);
-  const [localForm, setLocalForm] = useState({ service_name: '', start_time: '', end_time: '', notes: '', status: '' });
+  const [localForm, setLocalForm] = useState({ service_name: '', start_time: '', end_time: '', notes: '', status: '', price: '' });
   const [view, setView] = useState<View>("week");
   const [date, setDate] = useState(new Date());
+  
+  const { selectedBooking, setSelectedBooking } = useLayout();
 
   useEffect(() => {
     const handler = () => {
@@ -98,7 +99,7 @@ function CalendarUI({setBookingFormData, setIsOpenBookingDialog, setIsEditable}:
           onSelectEvent={(event) => {
 
             const b = (event as any).booking;
-            setBookingFormData(b);
+            setBookingFormData({...b, status: b.status[0].toUpperCase() + b.status.slice(1)});
             setIsEditable(false);
             setIsOpenBookingDialog(true);
             setLocalForm({
@@ -106,7 +107,8 @@ function CalendarUI({setBookingFormData, setIsOpenBookingDialog, setIsEditable}:
               start_time: new Date(b.start_time).toISOString(),
               end_time: new Date(b.end_time).toISOString(),
               notes: b.notes || '',
-              status: b.status || '',
+              status: b.status[0].toUpperCase() + b.status.slice(1) || '',
+              price: b.price || ''
             });
           }}
           onView={onView}
