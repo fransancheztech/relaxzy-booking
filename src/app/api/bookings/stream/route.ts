@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!, 
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
   {
     auth: { persistSession: false },
   }
@@ -64,7 +64,12 @@ export async function GET(_req: NextRequest) {
 
       controller.enqueue(encoder.encode("retry: 5000\n\n"));
 
+      let isClosed = false;
+
       const close = async () => {
+        if (isClosed) return;
+        isClosed = true;
+
         await supabase.removeChannel(channel);
         controller.close();
       };
