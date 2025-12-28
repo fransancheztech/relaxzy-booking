@@ -5,7 +5,7 @@ export const BookingSchema = z.object({
     client_name: z.string().min(1, { error: 'Client name is required' }),
     client_surname: z.string().optional(),
     client_phone: z.string().refine((val) => phoneValidator(val), { error: 'Invalid phone number' }),
-    client_email: z.email(),
+    client_email: z.email({ error: 'Invalid email address' }).optional(),
     start_time: z.date().nullable(),
     service_name: z.string().optional(),
     duration: z.number().min(15, { error: 'Duration must be at least 15 minutes' }).max(240, { error: 'Duration cannot exceed 240 minutes' }),
@@ -16,9 +16,9 @@ export const BookingSchema = z.object({
 export type BookingSchemaType = z.infer<typeof BookingSchema>;
 
 export const BookingUpdateSchema = BookingSchema.extend({
-    status: z.enum(['pending', 'confirmed', 'canceled']),
-    paidCash: z.number().min(0),
-    paidCard: z.number().min(0)
+    status: z.enum(['pending', 'confirmed', 'canceled'], { error: 'Invalid booking status' }),
+    paidCash: z.number().min(0, { error: 'paidCash must be a positive number' }),
+    paidCard: z.number().min(0, { error: 'paidCard must be a positive number' })
 }).superRefine((data, ctx) => {
     const totalPaid = data.paidCash + data.paidCard;
 

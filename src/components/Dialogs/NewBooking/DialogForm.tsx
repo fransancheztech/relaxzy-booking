@@ -3,7 +3,7 @@ import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, TextFi
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import handleSubmitCreateBooking from "@/handlers/handleSubmitCreateBooking";
-import NewBookingFormFields from "../FormFields/NewBookingFormFields";
+import NewBookingFormFields from "./FormFields";
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import CloseIcon from '@mui/icons-material/Close';
 import ClientSearch from "@/app/bookings/ClientSearch";
@@ -14,7 +14,7 @@ type Props = {
     onClose: () => void;
 };
 
-const NewBookingDialogForm = ({ open, onClose }: Props) => {
+const DialogForm = ({ open, onClose }: Props) => {
     const methods = useForm<BookingSchemaType>({
         resolver: zodResolver(BookingSchema),
         mode: 'onChange',
@@ -104,4 +104,4 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
     )
 }
 
-export default NewBookingDialogForm
+export default DialogForm

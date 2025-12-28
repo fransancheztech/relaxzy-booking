@@ -6,7 +6,7 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
 import { Controller, useFormContext } from "react-hook-form"
 
-const NewBookingFormFields = () => {
+const FormFields = () => {
     const { control, formState: { errors } } = useFormContext<BookingSchemaType>();
 
     return (
@@ -181,4 +181,4 @@ const NewBookingFormFields = () => {
     )
 }
 
-export default NewBookingFormFields
+export default FormFields

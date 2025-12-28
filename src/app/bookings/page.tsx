@@ -16,16 +16,16 @@ import { usePriceCalculator } from '@/hooks/usePriceCalculator';
 import { Button } from '@mui/material';
 import DialogDeletion from '@/components/DialogDeletion';
 import AmountPaidInput from './AmountPaidInput';
-import NewBookingDialogForm from '@/components/Dialogs/NewBookingDialogForm';
+import NewBookingDialogForm from '@/components/Dialogs/NewBooking/DialogForm';
+import UpdateBookingDialogForm from '@/components/Dialogs/UpdateBooking/DialogForm';
 
 export default function Bookings() {
-    const { setButtonLabel, setOnButtonClick, selectedBooking} = useLayout();
-    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+    const { setButtonLabel, setOnButtonClick, selectedBookingId} = useLayout();
 
     const [isOpenDialogFormNewBooking, setIsOpenDialogFormNewBooking] = useState(false);
+    const [isOpenDialogFormUpdateBooking, setIsOpenDialogFormUpdateBooking] = useState(false);
 
     const newBookingForm = useBookingForm({ mode: 'new' });
-    const editBookingForm = useBookingForm({ mode: 'edit', initialData: selectedBooking });
 
     const { clients, loading, error } = useSimilarClients({
         client_name: (newBookingForm.bookingFormData as BookingModel).client_name,
@@ -62,78 +62,10 @@ export default function Bookings() {
     return (
         <main className='p-4'>
             <CalendarUI
-                setBookingFormData={editBookingForm.setBookingFormData}
-                setIsOpenBookingDialog={editBookingForm.setIsOpenBookingDialog}
-                setIsEditable={editBookingForm.setIsEditable}
+                setIsOpenBookingDialog={setIsOpenDialogFormUpdateBooking}
             />
             <NewBookingDialogForm open={isOpenDialogFormNewBooking} onClose={() => setIsOpenDialogFormNewBooking(false)} />
-            <DialogForm<BookingModel>
-                open={editBookingForm.isOpenBookingDialog}
-                title='Booking Details'
-                formFields={FORM_FIELDS_EDIT_BOOKING as FormFieldConfigModel<BookingModel>[]}
-                formData={editBookingForm.bookingFormData}
-                setFormData={editBookingForm.setBookingFormData}
-                handleCancel={editBookingForm.handleCancel}
-                moreInputs={[
-                    <AmountPaidInput
-                        moneyType="paidCard"
-                        value={editBookingForm.bookingFormData.paidCard}
-                        setFormData={editBookingForm.setBookingFormData}
-                    />,
-                    <AmountPaidInput
-                        moneyType="paidCash"
-                        value={editBookingForm.bookingFormData.paidCash}
-                        setFormData={editBookingForm.setBookingFormData}
-                    />
-                ]}
-                deleteButton={
-                    <Button
-                        color='error'
-                        sx={{
-                            gap: 1
-                        }}
-                        variant='contained'
-                        onClick={() => setConfirmDeleteOpen(true)}>
-                        <>
-                            <DeleteIcon />
-                            Delete
-                        </>
-                    </Button>
-                }
-                cancelButton={
-                    <Button
-                        sx={{ color: 'primary.main', gap: 1 }}
-                        onClick={() => {
-                            editBookingForm.handleCancel();
-                        }}>
-                        {
-                            <>
-                                <CloseIcon />
-                                Close
-                            </>
-                        }
-                    </Button>
-                }
-                acceptButton={
-                    <Button
-                        sx={{ color: 'primary.main', gap: 1 }}
-                        onClick={() => {
-                            editBookingForm.handleAccept();
-                        }}>
-                        {
-                            <>
-                                <SaveIcon />
-                                Save
-                            </>
-                        }
-                    </Button>
-                }
-            />
-            <DialogDeletion
-                confirmDeleteOpen={confirmDeleteOpen}
-                setConfirmDeleteOpen={setConfirmDeleteOpen}
-                handleDelete={editBookingForm.handleDelete}
-            />
+            <UpdateBookingDialogForm open={isOpenDialogFormUpdateBooking} onClose={() => setIsOpenDialogFormUpdateBooking(false)} bookingId={selectedBookingId!} />
         </main>
     );
 }

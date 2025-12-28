@@ -1,14 +1,14 @@
 'use client';
 import { createContext, useContext, useState, ReactNode, useMemo } from 'react';
 import { LayoutContextType } from '@/types/layoutContextType';
-import { BookingDTO } from '@/types/bookings';
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
 
 export function LayoutProvider({ children }: { children: ReactNode }) {
     const [buttonLabel, setButtonLabel] = useState('');
     const [onButtonClick, setOnButtonClick] = useState<(() => void) | null>(null);
-    const [selectedBooking, setSelectedBooking] = useState<BookingDTO | null>(null);
+    const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+
 
     const value = useMemo(
         () => ({
@@ -16,10 +16,10 @@ export function LayoutProvider({ children }: { children: ReactNode }) {
             setButtonLabel,
             onButtonClick,
             setOnButtonClick,
-            selectedBooking,
-            setSelectedBooking,
+            selectedBookingId,
+            setSelectedBookingId,
         }),
-        [buttonLabel, onButtonClick, selectedBooking]
+        [buttonLabel, onButtonClick, selectedBookingId]
     );
 
     return <LayoutContext.Provider value={value}>{children}</LayoutContext.Provider>;

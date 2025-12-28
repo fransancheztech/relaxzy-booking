@@ -1,16 +1,6 @@
-//TODO
-// Insert a little delay after adding a booking so the customer names appear right on on the new bookings
-
 "use client";
 
 import React, { useState, useMemo, useCallback, useEffect } from "react";
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import { Grid, MenuItem } from '@mui/material';
 import { Calendar, luxonLocalizer, View } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { DateTime, Settings } from "luxon";
@@ -18,32 +8,25 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { useCalendarData } from "@/hooks/useCalendarData";
 import { calendarFormats } from "@/utils/dateHelpers";
 import { useLayout } from "../context/LayoutContext";
-import { BookingModel } from "@/types/bookings";
 
 Settings.defaultZone = "Europe/Madrid";
 const localizer = luxonLocalizer(DateTime, { firstDayOfWeek: 1 });
 
 interface CalendarUIProps {
-  setBookingFormData: React.Dispatch<React.SetStateAction<BookingModel>>;
   setIsOpenBookingDialog: React.Dispatch<React.SetStateAction<boolean>>;
-  setIsEditable: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-function CalendarUI({setBookingFormData, setIsOpenBookingDialog, setIsEditable}: CalendarUIProps) {
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [localForm, setLocalForm] = useState({ service_name: '', start_time: '', end_time: '', notes: '', status: '', price: '' });
+function CalendarUI({setIsOpenBookingDialog}: CalendarUIProps) {
   const [view, setView] = useState<View>("week");
   const [date, setDate] = useState(new Date());
-  
-  const { selectedBooking, setSelectedBooking } = useLayout();
 
+  const {setSelectedBookingId} = useLayout();
+  
   useEffect(() => {
     const handler = () => {
       // Simply change date state to trigger your hook re-run
       setDate(new Date(date));
     };
-
     window.addEventListener("refreshCalendarData", handler);
     return () => window.removeEventListener("refreshCalendarData", handler);
   }, [date]);
@@ -97,19 +80,9 @@ function CalendarUI({setBookingFormData, setIsOpenBookingDialog, setIsEditable}:
           })}
           view={view}
           onSelectEvent={(event) => {
-
             const b = (event as any).booking;
-            setBookingFormData({...b, status: b.status[0].toUpperCase() + b.status.slice(1)});
-            setIsEditable(false);
+            setSelectedBookingId(b.id);
             setIsOpenBookingDialog(true);
-            setLocalForm({
-              service_name: b.service_name || '',
-              start_time: new Date(b.start_time).toISOString(),
-              end_time: new Date(b.end_time).toISOString(),
-              notes: b.notes || '',
-              status: b.status[0].toUpperCase() + b.status.slice(1) || '',
-              price: b.price || ''
-            });
           }}
           onView={onView}
           onNavigate={onNavigate}
