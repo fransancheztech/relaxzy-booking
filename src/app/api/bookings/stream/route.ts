@@ -14,6 +14,8 @@ export async function GET(_req: NextRequest) {
 
   const stream = new ReadableStream({
     async start(controller) {
+      const encoder = new TextEncoder();
+
       const send = (event: any) => {
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify(event)}\n\n`)
@@ -28,19 +30,12 @@ export async function GET(_req: NextRequest) {
           (payload) => {
             const { eventType, new: newData, old: oldData } = payload;
 
-            // ------------------------------
-            // SOFT DELETE TRANSLATION LOGIC
-            // ------------------------------
-
-            // Real INSERT
             if (eventType === "INSERT") {
               send({ type: "INSERT", data: newData });
               return;
             }
 
-            // Real UPDATE
             if (eventType === "UPDATE") {
-              // If deleted_at was set => treat as DELETE
               if (newData?.deleted_at && !oldData?.deleted_at) {
                 send({ type: "DELETE", data: oldData });
               } else {
@@ -49,7 +44,6 @@ export async function GET(_req: NextRequest) {
               return;
             }
 
-            // Real DELETE (should not happen anymore but we leave it)
             if (eventType === "DELETE") {
               send({ type: "DELETE", data: oldData });
               return;
@@ -64,17 +58,27 @@ export async function GET(_req: NextRequest) {
 
       controller.enqueue(encoder.encode("retry: 5000\n\n"));
 
-      let isClosed = false;
+      let isCleaningUp = false;
 
-      const close = async () => {
-        if (isClosed) return;
-        isClosed = true;
+      const cleanup = async () => {
+        if (isCleaningUp) return;
+        isCleaningUp = true;
 
-        await supabase.removeChannel(channel);
-        controller.close();
+        try {
+          await supabase.removeChannel(channel);
+        } catch (err) {
+          console.error("Error removing Supabase channel:", err);
+        }
+        // No controller.close() needed!
       };
 
-      _req.signal.addEventListener("abort", close);
+      // This is sufficient — fires when client disconnects
+      _req.signal.addEventListener("abort", cleanup);
+    },
+
+    // Optional: handle explicit cancellation of the stream itself
+    cancel() {
+      // If needed, you could trigger cleanup here too
     },
   });
 
