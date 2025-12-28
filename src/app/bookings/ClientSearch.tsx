@@ -1,30 +1,33 @@
 import { ClientRow } from '@/hooks/useSimilarClients';
+import { BookingSchemaType } from '@/schemas/booking.schema';
 import { BookingModel } from '@/types/bookings';
 import { Button, Container, Typography } from '@mui/material';
-import React from 'react';
+import { UseFormSetValue } from 'react-hook-form';
 
 type ClientSearchProps = {
-    newBookingForm: {
-        bookingFormData: BookingModel;
-        setBookingFormData: React.Dispatch<React.SetStateAction<BookingModel>>;
-    };
+    setValue: UseFormSetValue<BookingSchemaType>
     clients: ClientRow[];
     loading: boolean;
-    error: string | undefined;
+    error?: string;
 };
 
-const ClientSearch = ({ newBookingForm, clients, loading, error }: ClientSearchProps) => {
+const ClientSearch = ({ setValue, clients, loading, error }: ClientSearchProps) => {
     const handlePickClient = (c: ClientRow) => {
-        newBookingForm.setBookingFormData(
-            (prev: BookingModel) =>
-                ({
-                    ...prev,
-                    client_name: c.client_name ?? '',
-                    client_surname: c.client_surname ?? '',
-                    client_email: c.client_email ?? (prev.client_email as string | undefined),
-                    client_phone: c.client_phone ?? (prev.client_phone as string | undefined),
-                    notes: prev.notes as string | undefined // keep existing notes
-                } as BookingModel)
+        setValue(
+            'client_name',
+            c.client_name ?? ''
+        );
+        setValue(
+            'client_surname',
+            c.client_surname ?? ''
+        );
+        setValue(
+            'client_email',
+            c.client_email ?? ''
+        );
+        setValue(
+            'client_phone',
+            c.client_phone ?? ''
         );
     };
 

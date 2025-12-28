@@ -3,27 +3,26 @@
 import { DialogForm } from '@/components/DialogForm';
 import CalendarUI from './CalendarUI';
 import { useBookingForm } from '@/hooks/useBookingForms';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
-import { BookingDTO, BookingModel } from '@/types/bookings';
-import { FORM_FIELDS_ADD_BOOKING, FORM_FIELDS_EDIT_BOOKING } from '@/constants';
+import { BookingModel } from '@/types/bookings';
+import { FORM_FIELDS_EDIT_BOOKING } from '@/constants';
 import { FormFieldConfigModel } from '@/types/formFieldConfig';
 import { useLayout } from '../context/LayoutContext';
 import { useEffect, useState } from 'react';
-import { useServiceLookups } from '@/hooks/useServiceLookups';
-import { ClientRow, useSimilarClients } from '@/hooks/useSimilarClients';
+import { useSimilarClients } from '@/hooks/useSimilarClients';
 import { usePriceCalculator } from '@/hooks/usePriceCalculator';
-import { Button, Container, Typography } from '@mui/material';
-import ClientSearch from './ClientSearch';
-import EditIcon from '@mui/icons-material/Edit';
+import { Button } from '@mui/material';
 import DialogDeletion from '@/components/DialogDeletion';
 import AmountPaidInput from './AmountPaidInput';
+import NewBookingDialogForm from '@/components/Dialogs/NewBookingDialogForm';
 
 export default function Bookings() {
     const { setButtonLabel, setOnButtonClick, selectedBooking} = useLayout();
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
+    const [isOpenDialogFormNewBooking, setIsOpenDialogFormNewBooking] = useState(false);
 
     const newBookingForm = useBookingForm({ mode: 'new' });
     const editBookingForm = useBookingForm({ mode: 'edit', initialData: selectedBooking });
@@ -53,12 +52,12 @@ export default function Bookings() {
 
     useEffect(() => {
         setButtonLabel('New Booking');
-        setOnButtonClick(() => () => newBookingForm.setIsOpenBookingDialog((prev) => !prev));
+        setOnButtonClick(() => () => setIsOpenDialogFormNewBooking((prev) => !prev));
         return () => {
             setButtonLabel('');
             setOnButtonClick(null);
         };
-    }, [setButtonLabel, setOnButtonClick, newBookingForm.setIsOpenBookingDialog]);
+    }, [setButtonLabel, setOnButtonClick, setIsOpenDialogFormNewBooking]);
 
     return (
         <main className='p-4'>
@@ -67,49 +66,7 @@ export default function Bookings() {
                 setIsOpenBookingDialog={editBookingForm.setIsOpenBookingDialog}
                 setIsEditable={editBookingForm.setIsEditable}
             />
-            <DialogForm<BookingModel>
-                open={newBookingForm.isOpenBookingDialog}
-                title='Add Booking'
-                formFields={FORM_FIELDS_ADD_BOOKING as FormFieldConfigModel<BookingModel>[]}
-                formData={newBookingForm.bookingFormData}
-                setFormData={newBookingForm.setBookingFormData}
-                handleCancel={newBookingForm.handleCancel}
-                cancelButton={
-                    <Button
-                        sx={{ color: 'error.main', gap: 1 }}
-                        onClick={() => {
-                            newBookingForm.handleCancel();
-                        }}>
-                        {
-                            <>
-                                <CloseIcon />
-                                Cancel
-                            </>
-                        }
-                    </Button>
-                }
-                acceptButton={
-                    <Button sx={{ color: 'primary.main', gap: 1 }} onClick={() => newBookingForm.handleAccept()}>
-                        {
-                            <>
-                                <AddCircleIcon />
-                                Add Booking
-                            </>
-                        }
-                    </Button>
-                }
-                otherSubComponents={[
-                    <ClientSearch
-                        newBookingForm={{
-                            bookingFormData: newBookingForm.bookingFormData,
-                            setBookingFormData: newBookingForm.setBookingFormData
-                        }}
-                        clients={clients}
-                        loading={loading}
-                        error={error}
-                    />
-                ]}
-            />
+            <NewBookingDialogForm open={isOpenDialogFormNewBooking} onClose={() => setIsOpenDialogFormNewBooking(false)} />
             <DialogForm<BookingModel>
                 open={editBookingForm.isOpenBookingDialog}
                 title='Booking Details'

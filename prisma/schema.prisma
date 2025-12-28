@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  provider        = "prisma-client-js"
+  output          = "../generated/prisma"
+  previewFeatures = ["views"]
 }
 
 datasource db {
@@ -158,6 +159,102 @@ model therapists_history {
   created_at   DateTime    @db.Timestamptz(6)
   deleted_at   DateTime?   @db.Timestamptz(6)
   change_type  change_type
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model services_details {
+  id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  service_name_id     String             @db.Uuid
+  service_duration_id String             @db.Uuid
+  price               Decimal            @db.Decimal
+  created_at          DateTime?          @default(now()) @db.Timestamptz(6)
+  deleted_at          DateTime?          @db.Timestamptz(6)
+  notes               String?
+  services_durations  services_durations @relation(fields: [service_duration_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services_names      services_names     @relation(fields: [service_name_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([service_name_id, service_duration_id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model services_details_history {
+  id                  String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  service_details_id  String?      @db.Uuid
+  service_name_id     String?      @db.Uuid
+  service_duration_id String?      @db.Uuid
+  price               Decimal?     @db.Decimal
+  notes               String?
+  created_at          DateTime?    @db.Timestamptz(6)
+  deleted_at          DateTime?    @db.Timestamptz(6)
+  change_type         change_type?
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model services_durations {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  duration         Decimal            @unique @db.Decimal
+  notes            String?
+  created_at       DateTime?          @default(now()) @db.Timestamptz(6)
+  deleted_at       DateTime?          @db.Timestamptz(6)
+  services_details services_details[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model services_durations_history {
+  id                  String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  service_duration_id String?      @db.Uuid
+  duration            Decimal?     @db.Decimal
+  notes               String?
+  created_at          DateTime?    @db.Timestamptz(6)
+  deleted_at          DateTime?    @db.Timestamptz(6)
+  change_type         change_type?
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model services_names {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String             @unique
+  short_name       String?
+  notes            String?
+  created_at       DateTime?          @db.Timestamptz(6)
+  deleted_at       DateTime?          @db.Timestamptz(6)
+  services_details services_details[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model services_names_history {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  service_name_id String?      @db.Uuid
+  name            String?
+  short_name      String?
+  notes           String?
+  created_at      DateTime?    @db.Timestamptz(6)
+  deleted_at      DateTime?    @db.Timestamptz(6)
+  change_type     change_type?
+}
+
+view bookings_with_details {
+  booking_id         String?          @db.Uuid
+  start_time         DateTime?        @db.Timestamptz(6)
+  end_time           DateTime?        @db.Timestamptz(6)
+  booking_notes      String?
+  status             booking_status?
+  booking_created_at DateTime?        @db.Timestamptz(6)
+  booking_updated_at DateTime?        @db.Timestamptz(6)
+  client_id          String?          @db.Uuid
+  client_name        String?
+  client_email       String?
+  client_phone       String?
+  client_notes       String?
+  client_created_at  DateTime?        @db.Timestamptz(6)
+  service_id         String?          @db.Uuid
+  service_name       String?
+  service_created_at DateTime?        @db.Timestamp(6)
+  payment_id         String?          @db.Uuid
+  payment_amount     Decimal?         @db.Decimal(10, 2)
+  payment_method     payment_methods?
+  payment_refunded   Decimal?         @db.Decimal
+  payment_paid_at    DateTime?        @db.Timestamptz(6)
 }
 
 enum booking_status {
