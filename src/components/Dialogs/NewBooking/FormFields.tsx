@@ -58,7 +58,8 @@ const FormFields = () => {
                     />
                 )}>
                 </Controller>
-            </Grid><Grid size={6}>
+            </Grid>
+            <Grid size={6}>
                 <Controller name="client_email" control={control} render={({ field }) => (
                     <TextField
                         {...field}
@@ -85,7 +86,7 @@ const FormFields = () => {
                             format='dd/MM/yyyy HH:mm'
                             ampm={false}
                             slotProps={{
-                                textField: { size: 'small', sx: { borderRadius: '5px', width: '100%' } }
+                                textField: { error: !!errors.start_time, helperText: errors.start_time?.message, size: 'small', sx: { borderRadius: '5px', width: '100%' } }
                             }}
                         />
                     </LocalizationProvider>
@@ -130,7 +131,7 @@ const FormFields = () => {
                             getOptionLabel={(option) => String(option) || ''}
                             isOptionEqualToValue={(option, value) => option === value}
                             renderInput={(params) => (
-                                <TextField {...params} value={Number(field.value)} label="Duration" size='small' sx={{ borderRadius: '5px', width: '100%' }} />
+                                <TextField {...params} error={!!errors.duration} helperText={errors.duration?.message} value={Number(field.value)} label="Duration" size='small' sx={{ borderRadius: '5px', width: '100%' }} />
                             )}
                         />
                     </FormControl>
@@ -153,6 +154,8 @@ const FormFields = () => {
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
+                                    error={!!errors.price}
+                                    helperText={errors.price?.message}
                                     label="Price"
                                     size='small'
                                     sx={{ borderRadius: '5px', width: '100%' }} />

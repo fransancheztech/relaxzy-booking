@@ -235,10 +235,10 @@ model services_names_history {
 
 view bookings_with_details {
   booking_id         String?          @db.Uuid
-  start_time         DateTime?        @db.Timestamptz(6)
-  end_time           DateTime?        @db.Timestamptz(6)
+  booking_start_time DateTime?        @db.Timestamptz(6)
+  booking_end_time   DateTime?        @db.Timestamptz(6)
   booking_notes      String?
-  status             booking_status?
+  booking_status     booking_status?
   booking_created_at DateTime?        @db.Timestamptz(6)
   booking_updated_at DateTime?        @db.Timestamptz(6)
   client_id          String?          @db.Uuid
@@ -255,6 +255,7 @@ view bookings_with_details {
   payment_method     payment_methods?
   payment_refunded   Decimal?         @db.Decimal
   payment_paid_at    DateTime?        @db.Timestamptz(6)
+  booking_price      Decimal?         @db.Decimal
 }
 
 enum booking_status {

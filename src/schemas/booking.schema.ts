@@ -8,7 +8,9 @@ export const BookingSchema = z.object({
     client_email: z.email({ error: 'Invalid email address' }).optional(),
     start_time: z.date().nullable(),
     service_name: z.string().optional(),
-    duration: z.number().min(15, { error: 'Duration must be at least 15 minutes' }).max(240, { error: 'Duration cannot exceed 240 minutes' }),
+    duration: z.number()
+        .min(15, { message: 'Duration must be at least 15 minutes' })
+        .max(240, { message: 'Duration cannot exceed 240 minutes' }),
     price: z.number().min(0, { error: 'Price must be a positive number' }).optional(),
     notes: z.string().optional()
 })
@@ -17,16 +19,19 @@ export type BookingSchemaType = z.infer<typeof BookingSchema>;
 
 export const BookingUpdateSchema = BookingSchema.extend({
     status: z.enum(['pending', 'confirmed', 'canceled'], { error: 'Invalid booking status' }),
-    paidCash: z.number().min(0, { error: 'paidCash must be a positive number' }),
-    paidCard: z.number().min(0, { error: 'paidCard must be a positive number' })
+    paidCash: z.coerce.number<number>({ error: "Paid in card must be a number" }).nonnegative({ error: 'paidCard must be a positive number' }),
+    paidCard: z.coerce.number<number>({ error: "Paid in card must be a number" }).nonnegative({ error: 'paidCard must be a positive number' })
 }).superRefine((data, ctx) => {
-    const totalPaid = data.paidCash + data.paidCard;
+    console.log("SUPER REFINE RUNNING", data);
+    const paidCash = Number(data.paidCash || 0);
+    const paidCard = Number(data.paidCard || 0);
+    const totalPaid = paidCash + paidCard;
 
     if (data.price === undefined && totalPaid > 0) {
         ctx.addIssue({
             code: 'custom',
             message: 'Cannot register payments without a price',
-            path: ['price'],
+            path: ['form'],
         });
         return;
     }
@@ -34,8 +39,8 @@ export const BookingUpdateSchema = BookingSchema.extend({
     if (data.price !== undefined && totalPaid > data.price) {
         ctx.addIssue({
             code: 'custom',
-            message: 'The sum of paidCash and paidCard cannot be more than the total price',
-            path: ['paidCash'],
+            message: 'The payments cannot exceed the total price',
+            path: ['form'],
         });
     }
 });

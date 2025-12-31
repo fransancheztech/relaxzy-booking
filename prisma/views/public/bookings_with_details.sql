@@ -1,9 +1,9 @@
 SELECT
   b.id AS booking_id,
-  b.start_time,
-  b.end_time,
+  b.start_time AS booking_start_time,
+  b.end_time AS booking_end_time,
   b.notes AS booking_notes,
-  b.status,
+  b.status AS booking_status,
   b.created_at AS booking_created_at,
   b.updated_at AS booking_updated_at,
   c.id AS client_id,
@@ -19,7 +19,8 @@ SELECT
   p.amount AS payment_amount,
   p.method AS payment_method,
   p.refunded AS payment_refunded,
-  p.paid_at AS payment_paid_at
+  p.paid_at AS payment_paid_at,
+  b.price AS booking_price
 FROM
   (
     (

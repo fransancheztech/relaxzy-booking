@@ -24,6 +24,8 @@ const handleSubmitUpdateBooking = async (data: (BookingUpdateSchemaType & {id:st
             toast.error(result?.error || 'Error editing booking');
             return;
         }
+
+        toast.success('The booking has been updated successfully.');
     }
     catch (err) {
 

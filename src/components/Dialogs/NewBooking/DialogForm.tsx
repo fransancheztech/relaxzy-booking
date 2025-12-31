@@ -17,8 +17,6 @@ type Props = {
 const DialogForm = ({ open, onClose }: Props) => {
     const methods = useForm<BookingSchemaType>({
         resolver: zodResolver(BookingSchema),
-        mode: 'onChange',
-        reValidateMode: 'onChange',
         defaultValues: {
             client_name: '',
             client_surname: '',

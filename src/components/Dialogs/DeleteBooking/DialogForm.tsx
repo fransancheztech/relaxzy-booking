@@ -7,7 +7,7 @@ type DialogConfirmProps = {
     handleDelete: () => void;
 }
 
-const DialogDeletion = ({confirmDeleteOpen, setConfirmDeleteOpen, handleDelete}: DialogConfirmProps) => {
+const DialogForm = ({confirmDeleteOpen, setConfirmDeleteOpen, handleDelete}: DialogConfirmProps) => {
     return (
         <Dialog open={confirmDeleteOpen} onClose={() => setConfirmDeleteOpen(false)}>
             <DialogTitle>Delete booking?</DialogTitle>
@@ -28,4 +28,4 @@ const DialogDeletion = ({confirmDeleteOpen, setConfirmDeleteOpen, handleDelete}:
     );
 };
 
-export default DialogDeletion;
+export default DialogForm;

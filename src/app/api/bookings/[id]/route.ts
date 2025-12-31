@@ -3,6 +3,73 @@ import { NextResponse } from "next/server";
 import { PROTECTED_FIELDS } from "@/constants";
 import { PROTECTED_FIELDS_FOR_EDIT_BOOKING } from "@/constants";
 
+export async function GET(
+  _req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+
+    if (!id || typeof id !== "string") {
+      return NextResponse.json({ error: "Invalid booking ID" }, { status: 400 });
+    }
+
+    const rows = await prisma.bookings_with_details.findMany({
+      where: {
+        booking_id: id,
+      },
+    });
+
+    if (!rows.length) {
+      return NextResponse.json(
+        { error: "Booking not found" },
+        { status: 404 }
+      );
+    }
+
+    const first = rows[0];
+
+    // Aggregate payments
+    const paidCash = rows
+      .filter(r => r.payment_method === "cash")
+      .reduce((sum, r) => sum + Number(r.payment_amount ?? 0), 0);
+
+    const paidCard = rows
+      .filter(r => r.payment_method === "credit card")
+      .reduce((sum, r) => sum + Number(r.payment_amount ?? 0), 0);
+
+    return NextResponse.json({
+      id: first.booking_id,
+      start_time: first.booking_start_time,
+      end_time: first.booking_end_time,
+      notes: first.booking_notes,
+      status: first.booking_status,
+      price: first.booking_price, // or booking price if you prefer
+      client: {
+        id: first.client_id,
+        name: first.client_name,
+        email: first.client_email,
+        phone: first.client_phone,
+        notes: first.client_notes,
+      },
+      service: {
+        id: first.service_id,
+        name: first.service_name,
+      },
+      paidCash,
+      paidCard,
+    });
+
+  } catch (error) {
+    console.error("GET /bookings/[id] error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch booking" },
+      { status: 500 }
+    );
+  }
+}
+
+
 export async function PUT(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
