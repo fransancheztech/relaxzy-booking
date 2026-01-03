@@ -10,7 +10,6 @@ const supabase = createClient(
 );
 
 export async function GET(_req: NextRequest) {
-  const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
     async start(controller) {

@@ -11,7 +11,7 @@ export const BookingSchema = z.object({
     duration: z.number()
         .min(15, { message: 'Duration must be at least 15 minutes' })
         .max(240, { message: 'Duration cannot exceed 240 minutes' }),
-    price: z.number().min(0, { error: 'Price must be a positive number' }).optional(),
+    price: z.number({message: "The price must be a number"}).nonnegative({ error: 'Price must be a positive number' }).optional(),
     notes: z.string().optional()
 })
 
@@ -22,7 +22,6 @@ export const BookingUpdateSchema = BookingSchema.extend({
     paidCash: z.coerce.number<number>({ error: "Paid in card must be a number" }).nonnegative({ error: 'paidCard must be a positive number' }),
     paidCard: z.coerce.number<number>({ error: "Paid in card must be a number" }).nonnegative({ error: 'paidCard must be a positive number' })
 }).superRefine((data, ctx) => {
-    console.log("SUPER REFINE RUNNING", data);
     const paidCash = Number(data.paidCash || 0);
     const paidCard = Number(data.paidCard || 0);
     const totalPaid = paidCash + paidCard;

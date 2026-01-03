@@ -26,9 +26,12 @@ const handleSubmitUpdateBooking = async (data: (BookingUpdateSchemaType & {id:st
         }
 
         toast.success('The booking has been updated successfully.');
+        setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('refreshCalendarData'));
+            }, 500);
     }
     catch (err) {
-
+        toast.error("Unexpected error while updating booking");
     }
 }
 
