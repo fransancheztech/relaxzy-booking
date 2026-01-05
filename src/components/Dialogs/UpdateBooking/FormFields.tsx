@@ -1,14 +1,23 @@
 import { BOOKING_DEFAULT_DURATIONS, BOOKING_DEFAULT_PRICES, BOOKING_DEFAULT_SERVICES, BOOKING_DEFAULT_STATUSES } from "@/constants";
 import { BookingUpdateSchemaType } from "@/schemas/booking.schema";
-import { Alert, Autocomplete, Container, FormControl, FormHelperText, Grid, InputLabel, MenuItem, Select, TextField } from "@mui/material";
+import { Alert, Autocomplete, Button, Container, FormControl, FormHelperText, Grid, InputLabel, MenuItem, Select, TextField, Tooltip } from "@mui/material";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
 import { Controller, useFormContext } from "react-hook-form";
+import EuroIcon from '@mui/icons-material/Euro';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
+import { Dispatch, SetStateAction, useState } from "react";
 
-const FormFields = () => {
-  const { control, formState: { errors } } = useFormContext<BookingUpdateSchemaType>();
+interface Props {
+  setIsPaymentDialogOpen: Dispatch<SetStateAction<boolean>>
+}
 
+const FormFields = ({ setIsPaymentDialogOpen }: Props) => {
+  const { control, formState: { errors }, watch } = useFormContext<BookingUpdateSchemaType>();
+
+  const paidCash = watch('paidCash')
+  const paidCard = watch('paidCard')
 
   return (
     <Grid container sx={{ paddingTop: '1rem' }} spacing={{ xs: 1, xl: 2 }}>
@@ -204,10 +213,11 @@ const FormFields = () => {
           )}
         />
       </Grid>
-      <Grid size={6}>
+      <Grid size={4}>
         <Controller
           name="paidCash"
           control={control}
+          disabled
           render={({ field }) => (
             <TextField
               {...field}
@@ -222,24 +232,36 @@ const FormFields = () => {
           )}
         />
       </Grid>
-      <Grid size={6}>
-        <Controller name="paidCard" control={control} render={({ field }) => (
-          <TextField
-            {...field}
-            value={field.value ?? 0}
-            label='Paid in Card'
-            fullWidth
-            size='small'
-            variant='outlined'
-            error={!!errors.paidCard}
-            helperText={errors.paidCard?.message}
-          />
-        )}>
+      <Grid size={1} >
+        <Tooltip title="Pay All with Cash"><Button fullWidth disabled={typeof paidCash === 'number' && paidCash > 0}><EuroIcon /></Button></Tooltip>
+      </Grid>
+      <Grid size={2}>
+        <Tooltip title="Custom Payment"><Button fullWidth onClick={() => setIsPaymentDialogOpen(true)}>Pay</Button></Tooltip>
+      </Grid>
+      <Grid size={1}>
+        <Tooltip title="Pay All with Credit Card"><Button fullWidth disabled={typeof paidCard === 'number' && paidCard > 0}><CreditCardIcon /></Button></Tooltip>
+      </Grid>
+      <Grid size={4}>
+        <Controller name="paidCard"
+          control={control}
+          disabled
+          render={({ field }) => (
+            <TextField
+              {...field}
+              value={field.value ?? 0}
+              label='Paid in Card'
+              fullWidth
+              size='small'
+              variant='outlined'
+              error={!!errors.paidCard}
+              helperText={errors.paidCard?.message}
+            />
+          )}>
         </Controller>
       </Grid>
       {(errors as any).form?.message && (
-        <Container >
-          <Alert severity="error" variant="filled">
+        <Container sx={{ marginBottom: 2 }} >
+          <Alert severity="error" variant="standard">
             {(errors as any).form.message}
           </Alert>
         </Container>

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { PROTECTED_FIELDS } from "@/constants";
 import { PROTECTED_FIELDS_FOR_EDIT_BOOKING } from "@/constants";
+import { payment_methods } from "generated/prisma";
 
 export async function GET(
   _req: Request,
@@ -31,12 +32,12 @@ export async function GET(
 
     // Aggregate payments
     const paidCash = rows
-      .filter(r => r.payment_method === "cash")
-      .reduce((sum, r) => sum + Number(r.payment_amount ?? 0), 0);
+      .filter(r => r.payment_method === payment_methods.cash)
+      .reduce((sum, r) => sum + Number(r.payment_amount ?? 0) - Number(r.payment_refunded ?? 0), 0);
 
     const paidCard = rows
-      .filter(r => r.payment_method === "credit_card")
-      .reduce((sum, r) => sum + Number(r.payment_amount ?? 0), 0);
+      .filter(r => r.payment_method === payment_methods.credit_card)
+      .reduce((sum, r) => sum + Number(r.payment_amount ?? 0) - Number(r.payment_refunded ?? 0), 0);
 
     return NextResponse.json({
       id: first.booking_id,
@@ -44,7 +45,7 @@ export async function GET(
       end_time: first.booking_end_time,
       notes: first.booking_notes,
       status: first.booking_status,
-      price: first.booking_price, // or booking price if you prefer
+      price: first.booking_price,
       client: {
         id: first.client_id,
         name: first.client_name,
@@ -134,8 +135,6 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
     if (service_id) {
       safeData.service_id = service_id;
     }
-
-    console.log("SAFEDATA SENT TO DB:", safeData);
 
     // ---------------------------------------------------
     // 3. UPDATE only if booking is NOT deleted

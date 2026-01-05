@@ -2,13 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 export default function Home() {
     const supabase = createClient();
     const [message, setMessage] = useState("Connecting...");
-    const [startDate, setStartDate] = useState<Date | null>(new Date());
 
     useEffect(() => {
         const test = async () => {
@@ -29,13 +27,6 @@ export default function Home() {
     return (
         <div className="flex flex-col justify-center items-center w-full h-screen">
             <div className="p-4 text-xl">{message}</div>
-            <DatePicker
-                selected={startDate}
-                onChange={(date) => setStartDate(date)}
-                showTimeSelect
-                timeIntervals={5}
-                showTimeCaption={false}
-            />
         </div>
     );
 }
