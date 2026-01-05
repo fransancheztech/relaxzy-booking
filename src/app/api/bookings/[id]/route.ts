@@ -35,7 +35,7 @@ export async function GET(
       .reduce((sum, r) => sum + Number(r.payment_amount ?? 0), 0);
 
     const paidCard = rows
-      .filter(r => r.payment_method === "credit card")
+      .filter(r => r.payment_method === "credit_card")
       .reduce((sum, r) => sum + Number(r.payment_amount ?? 0), 0);
 
     return NextResponse.json({
@@ -52,7 +52,7 @@ export async function GET(
         phone: first.client_phone,
         notes: first.client_notes,
       },
-      service: {
+      services_names: {
         id: first.service_id,
         name: first.service_name,
       },
@@ -86,7 +86,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
     // 1. RESOLVE service_id from service_name or short_service_name
     // ---------------------------------------------------
     if (body.service_name || body.short_service_name) {
-      const service = await prisma.services.findFirst({
+      const service = await prisma.services_names.findFirst({
         where: {
           OR: [
             { name: body.service_name ?? undefined },
@@ -130,6 +130,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
       }
     }
 
+    // We do this because service_id is for sure a service found in the db table services_names
     if (service_id) {
       safeData.service_id = service_id;
     }

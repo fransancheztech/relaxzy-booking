@@ -12,7 +12,10 @@ export async function GET() {
         clients: {
           where: { deleted_at: null }, // ⬅️ Only active clients
         },
-        services: {
+        services_names: {
+          where: { deleted_at: null }, // ⬅️ Only active services
+        },
+        payments: {
           where: { deleted_at: null }, // ⬅️ Only active services
         },
       },
@@ -25,7 +28,7 @@ export async function GET() {
       id: b.id,
       client_name: b.clients?.client_name ?? "Unknown",
       client_surname: b.clients?.client_surname ?? null,
-      service_name: b.services?.name ?? "Unknown",
+      service_name: b.services_names?.name ?? "Unknown",
       start_time: b.start_time,
       end_time: b.end_time,
     }));

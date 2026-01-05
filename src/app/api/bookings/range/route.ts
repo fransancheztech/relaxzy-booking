@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
         clients: {
           where: { deleted_at: null }, // ← only active clients
         },
-        services: {
+        services_names: {
           where: { deleted_at: null }, // ← only active services
         },
       },
@@ -33,19 +33,25 @@ export async function GET(req: NextRequest) {
 
     const formatted = bookings.map((b) => ({
       id: b.id,
+
       client_name: b.clients?.client_name ?? "Unknown",
-      client_surname: b.clients?.client_surname,
-      client_phone: b.clients?.client_phone ?? "Unknown",
-      client_email: b.clients?.client_email ?? "Unknown",
-      service_name: b.services?.name ?? "Unknown",
-      short_service_name: b.services?.short_name ?? "Unknown",
+      client_surname: b.clients?.client_surname ?? null,
+      client_phone: b.clients?.client_phone ?? null,
+      client_email: b.clients?.client_email ?? null,
+
+      service_name: b.services_names?.name ?? "Unknown",
+      short_service_name: b.services_names?.short_name ?? null,
+
       start_time: b.start_time,
       end_time: b.end_time,
+
       notes: b.notes ?? "",
       status: b.status,
+
       created_at: b.created_at,
       updated_at: b.updated_at,
-      price: b.price ?? "",
+
+      price: b.price,
     }));
 
     return NextResponse.json(formatted);
