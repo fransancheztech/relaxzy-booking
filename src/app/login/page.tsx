@@ -24,7 +24,7 @@ export default function LoginPage() {
     };
 
     return (
-        <>
+        <main className="p-4">
             <div className="p-6 max-w-md mx-auto">
                 <h2 className="text-xl font-semibold mb-4">
                     Login
@@ -55,6 +55,6 @@ export default function LoginPage() {
 
                 {message && <p className="mt-4 text-red-600">{message}</p>}
             </div>
-        </>
+        </main>
     );
 }
