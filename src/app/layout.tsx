@@ -8,43 +8,43 @@ import { Providers } from "@/components/Providers";
 import { LayoutProvider } from "./context/LayoutContext";
 
 const geistSans = Geist({
-    variable: "--font-geist-sans",
-    subsets: ["latin"],
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
-    subsets: ["latin"],
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-    title: "Relaxzy Bookings",
-    description: "Manage your Relaxzy bookings",
-    icons: {
-        icon: "/favicon32.png",
-    },
+  title: "Relaxzy Bookings",
+  description: "Manage your Relaxzy bookings",
+  icons: {
+    icon: "/favicon32.png",
+  },
 };
 
 export default function RootLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    return (
-        <html lang="en">
-            <body
-                className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-                suppressHydrationWarning>
-                <AppRouterCacheProvider>
-                    <Providers>
-                        <LayoutProvider>
-                            <DatepickerLocaleProvider />
-                            <LayoutContent>{children}</LayoutContent>
-                        </LayoutProvider>
-
-                    </Providers>
-                </AppRouterCacheProvider>
-            </body>
-        </html>
-    );
+  return (
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
+      >
+        <AppRouterCacheProvider>
+          <Providers>
+            <LayoutProvider>
+              <DatepickerLocaleProvider />
+              <LayoutContent>{children}</LayoutContent>
+            </LayoutProvider>
+          </Providers>
+        </AppRouterCacheProvider>
+      </body>
+    </html>
+  );
 }

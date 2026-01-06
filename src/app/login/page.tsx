@@ -1,60 +1,105 @@
 "use client";
 
-import { useState } from 'react';
-import { createClient } from '@/utils/supabase/client'
+import { useState } from "react";
+import { createClient } from "@/utils/supabase/client";
+import {
+  Box,
+  Button,
+  Paper,
+  TextField,
+  Typography,
+  Alert,
+  Stack,
+} from "@mui/material";
 
 export default function LoginPage() {
+  const [message, setMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-    const [message, setMessage] = useState("");
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setMessage(null);
+    setLoading(true);
 
-    // Client-side login handler using Supabase
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        setMessage("Logging in...");
-        const formData = new FormData(e.currentTarget);
-        const email = formData.get("email") as string;
-        const password = formData.get("password") as string;
-        const supabase = createClient();
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-            setMessage(error.message);
-        } else {
-            window.location.href = "/";
-        }
-    };
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
-    return (
-        <main className="p-4">
-            <div className="p-6 max-w-md mx-auto">
-                <h2 className="text-xl font-semibold mb-4">
-                    Login
-                </h2>
-                <form className="space-y-4" onSubmit={handleSubmit}>
-                    <input
-                        id="email"
-                        name="email"
-                        type="email"
-                        placeholder="Email"
-                        className="w-full p-2 border rounded"
-                        required
-                    />
-                    <input
-                        id="password"
-                        name="password"
-                        type="password"
-                        placeholder="Password"
-                        className="w-full p-2 border rounded"
-                        required
-                    />
-                    <button
-                        type="submit"
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
-                        Log In
-                    </button>
-                </form>
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-                {message && <p className="mt-4 text-red-600">{message}</p>}
-            </div>
-        </main>
-    );
+    setLoading(false);
+
+    if (error) {
+      setMessage(error.message);
+    } else {
+      // freeze UI
+      setLoading(true); // keep it disabled
+      window.location.href = "/bookings"; // redirect to home page
+      return; // prevent further state updates
+    }
+  };
+
+  return (
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        bgcolor: "background.default",
+        p: 2,
+      }}
+    >
+      <Paper
+        elevation={6}
+        sx={{ p: 4, maxWidth: 400, width: "100%", borderRadius: 2 }}
+      >
+        <Typography variant="h5" component="h1" gutterBottom fontWeight={600}>
+          Login
+        </Typography>
+
+        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 2 }}>
+          <Stack spacing={2}>
+            <TextField
+              id="email"
+              name="email"
+              type="email"
+              label="Email"
+              variant="outlined"
+              required
+              fullWidth
+            />
+            <TextField
+              id="password"
+              name="password"
+              type="password"
+              label="Password"
+              variant="outlined"
+              required
+              fullWidth
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              fullWidth
+              disabled={loading}
+            >
+              {loading ? "Logging in..." : "Log In"}
+            </Button>
+          </Stack>
+        </Box>
+
+        {message && (
+          <Alert severity="error" sx={{ mt: 3 }}>
+            {message}
+          </Alert>
+        )}
+      </Paper>
+    </Box>
+  );
 }

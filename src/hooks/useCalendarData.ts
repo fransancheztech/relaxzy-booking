@@ -35,17 +35,22 @@ export function useCalendarData(date: Date, view: CalendarView) {
 
     try {
       const response = await fetch(
-        `/api/bookings/range?start=${encodeURIComponent(range.start.toISO()!)}&end=${encodeURIComponent(range.end.toISO()!)}`
+        `/api/bookings/range?start=${encodeURIComponent(
+          range.start.toISO()!
+        )}&end=${encodeURIComponent(range.end.toISO()!)}`
       );
       if (!response.ok) throw new Error(await response.text());
       const data: BookingModel[] = await response.json();
 
       //add duration to bookings
       data.map((booking) => {
-        const start = new Date(booking.start_time!)
-        const end = new Date(booking.end_time!)
-        booking.duration = ((end.getTime() - start.getTime()) / (1000 * 60)).toString()
-      })
+        const start = new Date(booking.start_time!);
+        const end = new Date(booking.end_time!);
+        booking.duration = (
+          (end.getTime() - start.getTime()) /
+          (1000 * 60)
+        ).toString();
+      });
 
       setBookings(data);
       setFetchError("");
@@ -71,7 +76,9 @@ export function useCalendarData(date: Date, view: CalendarView) {
           case "INSERT":
             return [...prev, payload.data];
           case "UPDATE":
-            return prev.map((b) => (b.id === payload.data.id ? payload.data : b));
+            return prev.map((b) =>
+              b.id === payload.data.id ? payload.data : b
+            );
           case "DELETE":
             return prev.filter((b) => b.id !== payload.data.id);
           default:
@@ -80,8 +87,8 @@ export function useCalendarData(date: Date, view: CalendarView) {
       });
     };
 
-    evtSource.onerror = (err) => {
-      console.error("SSE connection error:", err);
+    evtSource.onerror = () => {
+      console.warn("SSE connection lost, retrying...");
     };
 
     return () => {

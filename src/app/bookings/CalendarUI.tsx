@@ -17,7 +17,7 @@ interface CalendarUIProps {
 }
 
 function CalendarUI({setIsOpenBookingDialog}: CalendarUIProps) {
-  const [view, setView] = useState<View>("week");
+  const [view, setView] = useState<View>("day");
   const [date, setDate] = useState(new Date());
 
   const {setSelectedBookingId} = useLayout();
@@ -61,7 +61,7 @@ function CalendarUI({setIsOpenBookingDialog}: CalendarUIProps) {
       <div style={{ opacity: loading ? 0.5 : 1, transition: "opacity 0.3s" }}>
         <Calendar
           localizer={localizer}
-          defaultView="week"
+          view={view}
           events={events}
           startAccessor="start"
           endAccessor="end"
@@ -78,7 +78,6 @@ function CalendarUI({setIsOpenBookingDialog}: CalendarUIProps) {
               padding: "4px",
             },
           })}
-          view={view}
           onSelectEvent={(event) => {
             const b = (event as any).booking;
             setSelectedBookingId(b.id);

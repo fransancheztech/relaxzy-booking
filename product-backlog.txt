@@ -1,3 +1,4 @@
 - Añadir propinas a reservas
 - Permitir usar bonos para pagos de reservas o implementar pagina/tablas de bonos a mantener manualmente
 - Añadir sistema para saber cuantas terapeutas hay ocupadas
+- Permitir reembolsos

@@ -10,14 +10,14 @@ export default function Home() {
 
     useEffect(() => {
         const test = async () => {
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .schema('public')
                 .from("bookings")
                 .select("*");
             if (error) {
                 setMessage(`Error: ${error.code}`);
             } else {
-                setMessage(`Success! Got ${data.length} rows.`);
+                setMessage(`Success! Logged in.`);
             }
         };
 
