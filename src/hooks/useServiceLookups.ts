@@ -1,6 +1,6 @@
 // src/hooks/useServiceLookups.ts
 import { useState, useEffect } from 'react';
-import { services } from '@prisma/client';
+import { services } from 'generated/prisma';
 
 export const useServiceLookups = () => {
   const [availableServices, setAvailableServices] = useState<string[]>([]);

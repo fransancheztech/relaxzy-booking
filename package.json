@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "import:bookings": "node --experimental-modules src/scripts/importBookings.mjs",
-    "exec:testing": "node --experimental-modules src/scripts/testing.mjs"
+    "exec:testing": "node --experimental-modules src/scripts/testing.mjs",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
