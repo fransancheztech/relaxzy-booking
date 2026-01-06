@@ -35,7 +35,8 @@ SELECT
   p.method AS payment_method,
   p.refunded AS payment_refunded,
   p.refunded_at AS payment_refunded_at,
-  p.paid_at AS payment_paid_at
+  p.paid_at AS payment_paid_at,
+  p.created_at AS payment_created_at
 FROM
   (
     (

@@ -71,5 +71,3 @@ export interface CalendarUIEventModel {
     booking: BookingDTO;
     id: string;
 }
-
-export type BookingStatus = 'confirmed' | 'cancelled' | 'pending';

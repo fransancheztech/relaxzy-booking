@@ -271,9 +271,11 @@ view bookings_with_details {
   payment_refunded            Decimal?         @db.Decimal
   payment_refunded_at         DateTime?        @db.Timestamptz(6)
   payment_paid_at             DateTime?        @db.Timestamptz(6)
+  payment_created_at          DateTime?        @db.Timestamptz(6)
 }
 
 enum booking_status {
+  pending
   confirmed
   cancelled
   completed

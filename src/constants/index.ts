@@ -1,6 +1,7 @@
 import { FormFieldConfigModel } from '@/types/formFieldConfig';
 import { menuPageModel } from '../types/menuPage';
-import { BookingModel, BookingStatus } from '@/types/bookings';
+import { BookingModel } from '@/types/bookings';
+import { booking_status } from 'generated/prisma';
 
 export const menuPages: menuPageModel[] = [
   { text: 'Bookings', href: '/bookings' },
@@ -17,7 +18,7 @@ export const BOOKING_DEFAULT_PRICES = [30, 55, 60, 65, 80, 85, 90];
 
 export const BOOKING_DEFAULT_SERVICES = ['Traditional Thai', 'Thai Oil', 'Relaxzy', 'Deep Tissue', 'Feet & Legs', 'Back & Shoulders'];
 
-export const BOOKING_DEFAULT_STATUSES: BookingStatus[] = ['confirmed', 'cancelled', 'pending'];
+export const BOOKING_DEFAULT_STATUSES: booking_status[] = Object.values(booking_status) as booking_status[];
 
 export const AGENDA_LENGTH = 30;
 
