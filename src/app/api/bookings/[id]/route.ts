@@ -4,6 +4,9 @@ import { PROTECTED_FIELDS } from "@/constants";
 import { PROTECTED_FIELDS_FOR_EDIT_BOOKING } from "@/constants";
 import { payment_methods } from "generated/prisma";
 
+/* ======================================================
+   GET /api/bookings/[id]
+   ====================================================== */
 export async function GET(
   _req: Request,
   context: { params: Promise<{ id: string }> }
@@ -12,51 +15,75 @@ export async function GET(
     const { id } = await context.params;
 
     if (!id || typeof id !== "string") {
-      return NextResponse.json({ error: "Invalid booking ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid booking ID" },
+        { status: 400 }
+      );
     }
 
-    const rows = await prisma.bookings_with_details.findMany({
-      where: {
-        booking_id: id,
+    const booking = await prisma.bookings.findUnique({
+      where: { id },
+      include: {
+        payments: true,
+        clients: true,          // nullable (walk-ins)
+        services_names: true,
       },
     });
 
-    if (!rows.length) {
+    if (!booking) {
       return NextResponse.json(
         { error: "Booking not found" },
         { status: 404 }
       );
     }
 
-    const first = rows[0];
+    /* -----------------------------
+       Aggregate payments
+       ----------------------------- */
+    const paidCash = booking.payments
+      .filter(p => p.method === payment_methods.cash)
+      .reduce(
+        (sum, p) => sum + Number(p.amount) - Number(p.refunded ?? 0),
+        0
+      );
 
-    // Aggregate payments
-    const paidCash = rows
-      .filter(r => r.payment_method === payment_methods.cash)
-      .reduce((sum, r) => sum + Number(r.payment_amount ?? 0) - Number(r.payment_refunded ?? 0), 0);
+    const paidCard = booking.payments
+      .filter(p => p.method === payment_methods.credit_card)
+      .reduce(
+        (sum, p) => sum + Number(p.amount) - Number(p.refunded ?? 0),
+        0
+      );
 
-    const paidCard = rows
-      .filter(r => r.payment_method === payment_methods.credit_card)
-      .reduce((sum, r) => sum + Number(r.payment_amount ?? 0) - Number(r.payment_refunded ?? 0), 0);
+    /* -----------------------------
+       Normalize nullable client
+       ----------------------------- */
+    const client = booking.clients
+      ? {
+          id: booking.clients.id,
+          name: booking.clients.client_name,
+          email: booking.clients.client_email,
+          phone: booking.clients.client_phone,
+          notes: booking.clients.client_notes,
+        }
+      : null;
+
+      const services_names = booking.services_names
+      ? {
+          id: booking.services_names.id,
+          name: booking.services_names.name,
+          notes: booking.services_names.notes,
+        }
+      : null;
 
     return NextResponse.json({
-      id: first.booking_id,
-      start_time: first.booking_start_time,
-      end_time: first.booking_end_time,
-      notes: first.booking_notes,
-      status: first.booking_status,
-      price: first.booking_price,
-      client: {
-        id: first.client_id,
-        name: first.client_name,
-        email: first.client_email,
-        phone: first.client_phone,
-        notes: first.client_notes,
-      },
-      services_names: {
-        id: first.service_id,
-        name: first.service_name,
-      },
+      id: booking.id,
+      start_time: booking.start_time,
+      end_time: booking.end_time,
+      notes: booking.notes,
+      status: booking.status,
+      price: booking.price,
+      client, // ← null means walk-in
+      services_names,  // ← null means no service assigned to the booking yet
       paidCash,
       paidCard,
     });
@@ -70,35 +97,45 @@ export async function GET(
   }
 }
 
-
-export async function PUT(req: Request, context: { params: Promise<{ id: string }> }) {
+/* ======================================================
+   PUT /api/bookings/[id]
+   ====================================================== */
+export async function PUT(
+  req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
     const { id } = await context.params;
 
     if (!id || typeof id !== "string") {
-      return NextResponse.json({ error: "Invalid booking ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid booking ID" },
+        { status: 400 }
+      );
     }
 
     const body = await req.json();
 
     let service_id: string | null = null;
 
-    // ---------------------------------------------------
-    // 1. RESOLVE service_id from service_name or short_service_name
-    // ---------------------------------------------------
+    /* -----------------------------
+       Resolve service_id
+       ----------------------------- */
     if (body.service_name || body.short_service_name) {
       const service = await prisma.services_names.findFirst({
         where: {
           OR: [
             { name: body.service_name ?? undefined },
-            { short_name: body.short_service_name ?? undefined }
-          ]
-        }
+            { short_name: body.short_service_name ?? undefined },
+          ],
+        },
       });
 
       if (!service) {
         return NextResponse.json(
-          { error: `No service found matching name "${body.service_name}" or short "${body.short_service_name}"` },
+          {
+            error: `No service found matching name "${body.service_name}" or short "${body.short_service_name}"`,
+          },
           { status: 400 }
         );
       }
@@ -106,9 +143,9 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
       service_id = service.id;
     }
 
-    // ---------------------------------------------------
-    // 2. BUILD safedata only with allowed fields
-    // ---------------------------------------------------
+    /* -----------------------------
+       Whitelisted update fields
+       ----------------------------- */
     const allowedFields = new Set([
       "client_id",
       "service_id",
@@ -119,7 +156,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
       "status",
     ]);
 
-    const safeData: any = {};
+    const safeData: Record<string, any> = {};
 
     for (const key of Object.keys(body)) {
       if (
@@ -131,18 +168,17 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
       }
     }
 
-    // We do this because service_id is for sure a service found in the db table services_names
     if (service_id) {
       safeData.service_id = service_id;
     }
 
-    // ---------------------------------------------------
-    // 3. UPDATE only if booking is NOT deleted
-    // ---------------------------------------------------
+    /* -----------------------------
+       Update (soft-delete aware)
+       ----------------------------- */
     const updated = await prisma.bookings.update({
-      where: { 
+      where: {
         id,
-        deleted_at: null,   // <----- IMPORTANT
+        deleted_at: null,
       },
       data: {
         ...safeData,
@@ -156,7 +192,10 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
     console.error("PUT /bookings/[id] error:", error);
 
     if (error.code === "P2025") {
-      return NextResponse.json({ error: "Booking not found or already deleted" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Booking not found or already deleted" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(
@@ -166,21 +205,27 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
   }
 }
 
-export async function DELETE(_req: Request, context: { params: Promise<{ id: string }> }) {
+/* ======================================================
+   DELETE /api/bookings/[id]
+   ====================================================== */
+export async function DELETE(
+  _req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
   try {
     const { id } = await context.params;
 
     if (!id || typeof id !== "string") {
-      return NextResponse.json({ error: "Invalid booking ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid booking ID" },
+        { status: 400 }
+      );
     }
 
-    // ---------------------------------------------------
-    // SOFT DELETE: update deleted_at instead of delete()
-    // ---------------------------------------------------
     const deleted = await prisma.bookings.update({
       where: {
         id,
-        deleted_at: null,  // only delete if not already deleted
+        deleted_at: null,
       },
       data: {
         deleted_at: new Date(),

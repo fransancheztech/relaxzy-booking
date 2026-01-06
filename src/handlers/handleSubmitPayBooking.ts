@@ -23,12 +23,10 @@ const handleSubmitPayBooking = async (
     }
 
     toast.success("Payment registered successfully.");
-
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('refreshCalendarData'));
-    }, 500);
+    return true;
   } catch (error) {
     toast.error("Unexpected error while registering payment");
+    return false;
   }
 };
 

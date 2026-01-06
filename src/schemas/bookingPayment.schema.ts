@@ -5,19 +5,20 @@ export const BookingPaymentSchema = z
   .object({
     paidCash: z.number(),
     paidCard: z.number(),
-
     cashPayment: z.preprocess(
       (v) => (v === "" || v === null || v === undefined ? 0 : Number(v)),
-      z.number({message: "Payment in cash must be a number"})
+      z
+        .number({ message: "Payment in cash must be a number" })
         .nonnegative({ message: "Payment in cash must be a positive number" })
     ),
-
     cardPayment: z.preprocess(
       (v) => (v === "" || v === null || v === undefined ? 0 : Number(v)),
-      z.number({message: "Payment in credit card must be a number"})
-        .nonnegative({ message: "Payment in credit card must be a positive number" })
+      z
+        .number({ message: "Payment in credit card must be a number" })
+        .nonnegative({
+          message: "Payment in credit card must be a positive number",
+        })
     ),
-
     price: z.number().nonnegative().optional(),
   })
   .superRefine((data, ctx) => {
@@ -32,7 +33,7 @@ export const BookingPaymentSchema = z
       });
     }
 
-    if (data.price === undefined || totalPayment > data.price - totalPaid) {
+    if (data.price !== undefined && totalPayment > data.price - totalPaid) {
       ctx.addIssue({
         code: "custom",
         message: "The payment exceeds the booking price",
@@ -41,10 +42,6 @@ export const BookingPaymentSchema = z
     }
   });
 
+export type BookingPaymentFormInput = z.input<typeof BookingPaymentSchema>;
 
-export type BookingPaymentFormInput =
-  z.input<typeof BookingPaymentSchema>;
-
-export type BookingPaymentFormOutput =
-  z.output<typeof BookingPaymentSchema>;
-
+export type BookingPaymentFormOutput = z.output<typeof BookingPaymentSchema>;
