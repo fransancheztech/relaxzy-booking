@@ -1,10 +1,15 @@
 'use client';
 
-import CalendarUI from './CalendarUI';
+import dynamic from "next/dynamic";
 import { useLayout } from '../context/LayoutContext';
 import { useEffect, useState } from 'react';
 import NewBookingDialogForm from '@/components/Dialogs/NewBooking/DialogForm';
 import UpdateBookingDialogForm from '@/components/Dialogs/UpdateBooking/DialogForm';
+
+const CalendarUI = dynamic(
+  () => import("../bookings/CalendarUI"),
+  { ssr: false }
+);
 
 export default function Bookings() {
     const { setButtonLabel, setOnButtonClick, selectedBookingId} = useLayout();

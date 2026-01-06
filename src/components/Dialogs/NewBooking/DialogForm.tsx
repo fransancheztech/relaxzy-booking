@@ -8,6 +8,7 @@ import AddCircleIcon from '@mui/icons-material/AddCircle';
 import CloseIcon from '@mui/icons-material/Close';
 import ClientSearch from "@/app/bookings/ClientSearch";
 import { useSimilarClients } from "@/hooks/useSimilarClients";
+import { roundToNearestMinutes } from "date-fns";
 
 type Props = {
     open: boolean;
@@ -22,7 +23,7 @@ const DialogForm = ({ open, onClose }: Props) => {
             client_surname: '',
             client_phone: '',
             client_email: '',
-            start_time: null,
+            start_time: roundToNearestMinutes(new Date(), { nearestTo: 5 }),
             duration: undefined,
             service_name: '',
             notes: '',
