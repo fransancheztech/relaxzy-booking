@@ -136,10 +136,10 @@ const DialogForm = ({
               <input type="hidden" {...methods.register("paidCash")} />
               <input type="hidden" {...methods.register("paidCard")} />
 
-              {(methods.formState.errors as any).form?.message && (
+              {(methods.formState.errors as any).payment_form?.message && (
                 <Container sx={{ marginBottom: 2 }}>
                   <Alert severity="error" variant="standard">
-                    {(methods.formState.errors as any).form.message}
+                    {(methods.formState.errors as any).payment_form.message}
                   </Alert>
                 </Container>
               )}

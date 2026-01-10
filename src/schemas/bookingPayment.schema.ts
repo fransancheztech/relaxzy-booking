@@ -29,7 +29,7 @@ export const BookingPaymentSchema = z
       ctx.addIssue({
         code: "custom",
         message: "You must register at least one payment",
-        path: ["form"],
+        path: ["payment_form"],
       });
     }
 
@@ -37,7 +37,7 @@ export const BookingPaymentSchema = z
       ctx.addIssue({
         code: "custom",
         message: "The payment exceeds the booking price",
-        path: ["form"],
+        path: ["payment_form"],
       });
     }
   });

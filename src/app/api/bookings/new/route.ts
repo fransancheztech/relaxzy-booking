@@ -13,6 +13,10 @@ type Body = {
   price?: string | number;
 };
 
+const normalize = (v?: string) =>
+  v && v.trim() !== "" ? v.trim() : null;
+
+
 export async function POST(request: Request) {
   try {
     const body: Body = await request.json();
@@ -25,15 +29,8 @@ export async function POST(request: Request) {
         { error: "Missing start_time" },
         { status: 400 }
       );
-    if (!body.service_name)
-      return NextResponse.json(
-        { error: "Missing service_name" },
-        { status: 400 }
-      );
     if (body.duration == null)
       return NextResponse.json({ error: "Missing duration" }, { status: 400 });
-    if (body.price == null)
-      return NextResponse.json({ error: "Missing price" }, { status: 400 });
 
     // ------------------------------------------------------
     // 2) PARSE & VALIDATE START TIME
@@ -54,11 +51,18 @@ export async function POST(request: Request) {
     }
 
     // ------------------------------------------------------
-    // 4) VALIDATE PRICE (fully flexible)
+    // 4) VALIDATE PRICE (nullable)
     // ------------------------------------------------------
-    const price = Number(body.price);
-    if (!Number.isFinite(price) || price < 0) {
-      return NextResponse.json({ error: "Invalid price" }, { status: 400 });
+    let price: number | null = null;
+
+    if (body.price !== undefined && body.price !== null && body.price !== "") {
+      const parsedPrice = Number(body.price);
+
+      if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+        return NextResponse.json({ error: "Invalid price" }, { status: 400 });
+      }
+
+      price = parsedPrice;
     }
 
     // ------------------------------------------------------
@@ -66,40 +70,64 @@ export async function POST(request: Request) {
     // ------------------------------------------------------
     let clientId: string | null = null;
 
-    if (body.client_email) {
-      const client = await prisma.clients.findFirst({
-        where: { client_email: body.client_email, deleted_at: null },
-      });
-      clientId = client?.id ?? null;
-    }
+    const hasClientInfo =
+      body.client_name ||
+      body.client_email ||
+      body.client_phone ||
+      body.client_surname;
 
-    if (!clientId && body.client_phone) {
-      const client = await prisma.clients.findFirst({
-        where: { client_phone: body.client_phone, deleted_at: null },
-      });
-      clientId = client?.id ?? null;
-    }
+    if (hasClientInfo) {
+      // Only create/find client if info is provided
+      if (!body.client_name) throw new Error("Client name is required");
+      if (!body.client_email && !body.client_phone)
+        throw new Error("Provide at least a phone or email for the client");
 
-    if (!clientId && (body.client_email || body.client_phone)) {
-      const client = await prisma.clients.create({
-        data: {
-          client_name: body.client_name,
-          client_surname: body.client_surname,
-          client_email: body.client_email,
-          client_phone: body.client_phone,
-        },
-      });
-      clientId = client.id;
+      // find by email first
+      if (body.client_email) {
+        const client = await prisma.clients.findFirst({
+          where: { client_email: body.client_email, deleted_at: null },
+        });
+        clientId = client?.id ?? null;
+      }
+      if (!clientId && body.client_phone) {
+        const client = await prisma.clients.findFirst({
+          where: { client_phone: body.client_phone, deleted_at: null },
+        });
+        clientId = client?.id ?? null;
+      }
+
+      if (!clientId) {
+        const client = await prisma.clients.create({
+          data: {
+            client_name: body.client_name,
+            client_surname: normalize(body.client_surname),
+            client_email: normalize(body.client_email),
+            client_phone: normalize(body.client_phone),
+          },
+        });
+        clientId = client.id;
+      }
     }
 
     // ------------------------------------------------------
-    // 6) FIND SERVICE NAME (only active)
+    // 6) SERVICE (nullable)
     // ------------------------------------------------------
-    const serviceName = await prisma.services_names.findFirst({
-      where: { name: body.service_name, deleted_at: null },
-    });
-    if (!serviceName)
-      return NextResponse.json({ error: "Service not found" }, { status: 400 });
+    let serviceId: string | null = null;
+
+    if (body.service_name && body.service_name.trim() !== "") {
+      const service = await prisma.services_names.findFirst({
+        where: { name: body.service_name, deleted_at: null },
+      });
+
+      if (!service) {
+        return NextResponse.json(
+          { error: "Service not found" },
+          { status: 400 }
+        );
+      }
+
+      serviceId = service.id;
+    }
 
     // ------------------------------------------------------
     // 7) COMPUTE END TIME
@@ -112,7 +140,7 @@ export async function POST(request: Request) {
     const booking = await prisma.bookings.create({
       data: {
         client_id: clientId, // can be null
-        service_id: serviceName.id,
+        service_id: serviceId, // can be null
         start_time: start,
         end_time: end,
         notes: body.notes ?? null,

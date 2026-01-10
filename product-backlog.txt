@@ -1,7 +1,15 @@
-- Añadir propinas a reservas
 - Permitir usar bonos para pagos de reservas o implementar pagina/tablas de bonos a mantener manualmente
-- Añadir sistema para saber cuantas terapeutas hay ocupadas
+- Edición de clientes
+- Eliminación de clientes
+- Creación de clientes
+- Posibilidad de asignar clientes a reservas sin cliente ya creadas
+- Añadir pagos
+- Añadir stripe
+- Añadir bizum
 - Permitir reembolsos
-- Gestion de clientes apropiada
-- Gestion de pagos apropiada
-- Gestion de terapeutas apropiada
+- Añadir propinas no en efectivo a reservas
+- Visualización de terapeutas
+- Edición de terapeutas
+- Elminación de terapeutas
+- Añadir sistema para saber cuantas terapeutas hay ocupadas, para facilitar el conocimiento de la disponibilidad
+- Actualizar precio onBlur al editar reserva, para no tener que cerrar y abrir la reserva para pagar
