@@ -20,16 +20,30 @@ export async function POST(request: Request) {
     // ------------------------------------------------------
     // 1) VALIDATE REQUIRED FIELDS
     // ------------------------------------------------------
-    if (!body.start_time) return NextResponse.json({ error: "Missing start_time" }, { status: 400 });
-    if (!body.service_name) return NextResponse.json({ error: "Missing service_name" }, { status: 400 });
-    if (body.duration == null) return NextResponse.json({ error: "Missing duration" }, { status: 400 });
-    if (body.price == null) return NextResponse.json({ error: "Missing price" }, { status: 400 });
+    if (!body.start_time)
+      return NextResponse.json(
+        { error: "Missing start_time" },
+        { status: 400 }
+      );
+    if (!body.service_name)
+      return NextResponse.json(
+        { error: "Missing service_name" },
+        { status: 400 }
+      );
+    if (body.duration == null)
+      return NextResponse.json({ error: "Missing duration" }, { status: 400 });
+    if (body.price == null)
+      return NextResponse.json({ error: "Missing price" }, { status: 400 });
 
     // ------------------------------------------------------
     // 2) PARSE & VALIDATE START TIME
     // ------------------------------------------------------
     const start = new Date(body.start_time);
-    if (Number.isNaN(start.getTime())) return NextResponse.json({ error: "Invalid start_time" }, { status: 400 });
+    if (Number.isNaN(start.getTime()))
+      return NextResponse.json(
+        { error: "Invalid start_time" },
+        { status: 400 }
+      );
 
     // ------------------------------------------------------
     // 3) VALIDATE DURATION (fully flexible)
@@ -50,28 +64,32 @@ export async function POST(request: Request) {
     // ------------------------------------------------------
     // 5) FIND OR CREATE CLIENT (allows anonymous walk-ins)
     // ------------------------------------------------------
-    let client = null;
+    let clientId: string | null = null;
 
     if (body.client_email) {
-      client = await prisma.clients.findFirst({
+      const client = await prisma.clients.findFirst({
         where: { client_email: body.client_email, deleted_at: null },
       });
-    }
-    if (!client && body.client_phone) {
-      client = await prisma.clients.findFirst({
-        where: { client_phone: body.client_phone, deleted_at: null },
-      });
+      clientId = client?.id ?? null;
     }
 
-    if (!client) {
-      client = await prisma.clients.create({
+    if (!clientId && body.client_phone) {
+      const client = await prisma.clients.findFirst({
+        where: { client_phone: body.client_phone, deleted_at: null },
+      });
+      clientId = client?.id ?? null;
+    }
+
+    if (!clientId && (body.client_email || body.client_phone)) {
+      const client = await prisma.clients.create({
         data: {
-          client_name: body.client_name ?? null,
-          client_surname: body.client_surname ?? null,
-          client_email: body.client_email ?? null,
-          client_phone: body.client_phone ?? null,
+          client_name: body.client_name,
+          client_surname: body.client_surname,
+          client_email: body.client_email,
+          client_phone: body.client_phone,
         },
       });
+      clientId = client.id;
     }
 
     // ------------------------------------------------------
@@ -80,7 +98,8 @@ export async function POST(request: Request) {
     const serviceName = await prisma.services_names.findFirst({
       where: { name: body.service_name, deleted_at: null },
     });
-    if (!serviceName) return NextResponse.json({ error: "Service not found" }, { status: 400 });
+    if (!serviceName)
+      return NextResponse.json({ error: "Service not found" }, { status: 400 });
 
     // ------------------------------------------------------
     // 7) COMPUTE END TIME
@@ -92,7 +111,7 @@ export async function POST(request: Request) {
     // ------------------------------------------------------
     const booking = await prisma.bookings.create({
       data: {
-        client_id: client.id,
+        client_id: clientId, // can be null
         service_id: serviceName.id,
         start_time: start,
         end_time: end,
@@ -105,6 +124,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ booking });
   } catch (err) {
     console.error("Create booking error", err);
-    return NextResponse.json({ error: "Error creating booking" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error creating booking" },
+      { status: 500 }
+    );
   }
 }

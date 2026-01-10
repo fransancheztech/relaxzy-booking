@@ -12,13 +12,13 @@ export const BookingSchema = z.object({
     { message: "Invalid phone number" }
   ),
   client_email: z.string().optional().refine(
-    (val) => !val || z.string().email().safeParse(val).success,
+    (val) => !val || z.email().safeParse(val).success,
     { message: "Invalid email address" }
   ),
   service_name: z.string().optional(),
   start_time: z.date().nullable(),
   duration: z
-    .number()
+    .number({ message: "Duration must be a number" })
     .min(15, { message: "Duration must be at least 15 minutes" })
     .max(240, { message: "Duration cannot exceed 240 minutes" }),
   price: z

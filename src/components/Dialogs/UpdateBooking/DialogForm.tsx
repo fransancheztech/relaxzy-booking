@@ -116,13 +116,13 @@ const DialogForm = ({ open, onClose, bookingId }: Props) => {
         const end = data.end_time ? DateTime.fromISO(data.end_time) : null;
 
         methods.reset({
-          client_name: data.client.name ?? "",
-          client_surname: data.client.surname ?? "",
-          client_email: data.client.email ?? "",
-          client_phone: data.client.phone ?? "",
+          client_name: data.client?.name ?? "",
+          client_surname: data.client?.surname ?? "",
+          client_email: data.client?.email ?? "",
+          client_phone: data.client?.phone ?? "",
           start_time: data.start_time ? new Date(data.start_time) : null,
           duration: start && end ? end.diff(start, "minutes").minutes : 0,
-          service_name: data.services_names.name ?? "",
+          service_name: data.services_names?.name ?? "",
           notes: data.notes ?? "",
           price: data.price ?? undefined,
           status: data.status,
@@ -144,9 +144,16 @@ const DialogForm = ({ open, onClose, bookingId }: Props) => {
 
   const onSubmit = async (data: BookingUpdateSchemaType) => {
     if (!bookingId) return;
+
+    // Normalize client_email: trim and convert empty string to undefined
+    const normalizedData = {
+      ...data,
+      client_email: data.client_email?.trim() || undefined,
+    };
+
     setLoading(true);
     await handleSubmitUpdateBooking({
-      ...data,
+      ...normalizedData,
       id: bookingId,
     });
     methods.reset();
