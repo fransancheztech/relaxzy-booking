@@ -3,12 +3,18 @@ import { phoneValidator } from "@/utils/phoneValidator";
 import { booking_status } from "generated/prisma";
 
 export const BookingSchema = z.object({
-  client_name: z.string().min(1, { error: "Client name is required" }),
+  client_name: z.string().optional(),
   client_surname: z.string().optional(),
   client_phone: z
-    .string()
-    .refine((val) => phoneValidator(val), { error: "Invalid phone number" }),
-  client_email: z.email({ error: "Invalid email address" }).optional(),
+    .string().optional()
+    .refine(
+    (val) => !val || phoneValidator(val),
+    { message: "Invalid phone number" }
+  ),
+  client_email: z.string().optional().refine(
+    (val) => !val || z.string().email().safeParse(val).success,
+    { message: "Invalid email address" }
+  ),
   service_name: z.string().optional(),
   start_time: z.date().nullable(),
   duration: z
