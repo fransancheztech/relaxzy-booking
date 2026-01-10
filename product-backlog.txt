@@ -1,15 +1,18 @@
-- Permitir usar bonos para pagos de reservas o implementar pagina/tablas de bonos a mantener manualmente
-- Edición de clientes
-- Eliminación de clientes
-- Creación de clientes
-- Posibilidad de asignar clientes a reservas sin cliente ya creadas
-- Añadir pagos
-- Añadir stripe
-- Añadir bizum
-- Permitir reembolsos
-- Añadir propinas no en efectivo a reservas
-- Visualización de terapeutas
-- Edición de terapeutas
-- Elminación de terapeutas
-- Añadir sistema para saber cuantas terapeutas hay ocupadas, para facilitar el conocimiento de la disponibilidad
-- Actualizar precio onBlur al editar reserva, para no tener que cerrar y abrir la reserva para pagar
+- 8 Implementar los masajes múltiples, de forma que se sepa que están vinculados, que no sea necesario introducir información personal de más de un cliente, que permita saber qué terapeuta hace cada masaje y qué cada uno pueda tener su duración, masaje y precio
+- 8 Permitir usar bonos para pagos de reservas o implementar pagina/tablas de bonos a mantener manualmente
+- 8 Visualización de terapeutas
+- 7 Añadir sistema para saber cuantas terapeutas hay ocupadas, para facilitar el conocimiento de la disponibilidad
+- 7 Añadir pagos
+- 7 Añadir stripe
+- 7 Implementar sistema para saber qué terapeuta hace cada masaje
+- 6 Añadir bizum
+- 6 Añadir propinas no en efectivo a reservas
+- 5 Permitir reembolsos
+- 5 Edición de terapeutas
+- 5 Elminación de terapeutas
+- 4 Edición de clientes
+- 4 Creación de clientes
+- 4 Posibilidad de asignar clientes a reservas sin cliente ya creadas
+- 4 Actualizar precio onBlur al editar reserva, para no tener que cerrar y abrir la reserva para pagar
+- 4 Quitar el calendario las reservas canceladas
+- 4 Poner colores diferentes a las reservas pendientes, confirmadas y completadas
