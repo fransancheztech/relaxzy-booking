@@ -3,53 +3,60 @@ import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { FETCH_LIMIT } from "@/constants";
-import { clients as ClientType } from "generated/prisma/client";
-
+import { bookings as BookingType } from "generated/prisma/client";
 
 interface Props {
-  setSelectedClientId: (id: string) => void;
-  setIsOpenEditClientDialog: (open: boolean) => void;
-  setConfirmDeleteOpen: (open: boolean) => void;
-  clients: ClientType[];
+  setSelectedBookingId: (id: string) => void;
+  setIsOpenEditBookingDialog: (open: boolean) => void;
+  setIsOpenConfirmDelete: (open: boolean) => void;
+  bookings: BookingType[];
   rowCount: number;
   page: number;
-  loadClients: (pageToLoad: number) => void;
+  loadBookings: (pageToLoad: number) => void;
   searchTerm: string;
   setSearchTerm: (text: string) => void;
   debouncedSearch: (text: string) => void;
 }
 
-export const ClientsTable = ({
-  setSelectedClientId,
-  setIsOpenEditClientDialog,
-  setConfirmDeleteOpen,
-  clients,
+export const BookingsTable = ({
+  setSelectedBookingId,
+  setIsOpenEditBookingDialog,
+  setIsOpenConfirmDelete,
+  bookings,
   rowCount,
   page,
-  loadClients,
+  loadBookings,
   searchTerm,
   setSearchTerm,
   debouncedSearch,
 }: Props) => {
-  const confirmDeleteClient = (id: string) => {
-    setSelectedClientId(id);
-    setConfirmDeleteOpen(true);
-  };
-
-  function handleSearch(text: string) {
+  const handleSearch = (text: string) => {
     setSearchTerm(text);
     debouncedSearch(text);
-  }
+  };
+
+  const confirmDeleteBooking = (id: string) => {
+    setSelectedBookingId(id);
+    setIsOpenConfirmDelete(true);
+  };
 
   // -------------------------------
   // Columns for DataGrid
   // -------------------------------
   const columns: GridColDef[] = [
-    { field: "client_name", headerName: "Name", flex: 1 },
-    { field: "client_surname", headerName: "Surname", flex: 1 },
-    { field: "client_email", headerName: "Email", flex: 1 },
-    { field: "client_phone", headerName: "Phone", flex: 1 },
-    { field: "client_notes", headerName: "Notes", flex: 1 },
+    { field: "customer_name", headerName: "Customer", flex: 1 },
+    {
+      field: "service",
+      headerName: "Service",
+      flex: 1,
+      valueGetter: (params: any) => {
+        console.log(JSON.stringify(params, null, 2));
+        return params.name || "";
+      },
+    },
+    { field: "date", headerName: "Date", flex: 1 },
+    { field: "time", headerName: "Time", flex: 1 },
+    { field: "notes", headerName: "Notes", flex: 1 },
 
     // Actions column
     {
@@ -65,8 +72,8 @@ export const ClientsTable = ({
           }
           label="Edit"
           onClick={() => {
-            setSelectedClientId(params.row.id);
-            setIsOpenEditClientDialog(true);
+            setSelectedBookingId(params.row.id);
+            setIsOpenEditBookingDialog(true);
           }}
           key="edit"
         />,
@@ -77,7 +84,7 @@ export const ClientsTable = ({
             </Tooltip>
           }
           label="Delete"
-          onClick={() => confirmDeleteClient(params.row.id)}
+          onClick={() => confirmDeleteBooking(params.row.id)}
           key="delete"
         />,
       ],
@@ -89,7 +96,7 @@ export const ClientsTable = ({
       {/* Search */}
       <Stack spacing={2} mb={2}>
         <TextField
-          label="Search clients"
+          label="Search bookings"
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
           fullWidth
@@ -104,7 +111,7 @@ export const ClientsTable = ({
         }}
       >
         <DataGrid
-          rows={clients}
+          rows={bookings}
           columns={columns}
           getRowId={(row) => row.id}
           rowCount={rowCount}
@@ -112,7 +119,7 @@ export const ClientsTable = ({
           paginationMode="server"
           pagination
           paginationModel={{ page, pageSize: FETCH_LIMIT }}
-          onPaginationModelChange={(model) => loadClients(model.page)}
+          onPaginationModelChange={(model) => loadBookings(model.page)}
         />
       </Paper>
     </Container>

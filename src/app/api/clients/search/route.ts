@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { CLIENTS_FETCH_LIMIT } from "@/constants";
+import { FETCH_LIMIT } from "@/constants";
 
 export async function POST(req: NextRequest) {
   const { searchTerm } = await req.json();
@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   if (!searchTerm) {
     const clients = await prisma.clients.findMany({
       where: baseWhere,
-      take: CLIENTS_FETCH_LIMIT
+      take: FETCH_LIMIT
     });
     return NextResponse.json(clients);
   }
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
         }
       ]
     },
-    take: CLIENTS_FETCH_LIMIT
+    take: FETCH_LIMIT
   });
 
   return NextResponse.json(clients);

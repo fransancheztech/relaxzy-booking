@@ -25,7 +25,7 @@ export const BOOKING_DEFAULT_STATUSES: booking_status[] = Object.values(booking_
 
 export const AGENDA_LENGTH = 30;
 
-export const CLIENTS_FETCH_LIMIT = 100;
+export const FETCH_LIMIT = 100;
 
 export const PROTECTED_FIELDS = new Set(["id", "created_at"]);
 
