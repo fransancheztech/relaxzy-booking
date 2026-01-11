@@ -3,15 +3,11 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import debounce from "lodash.debounce";
 import { clients as ClientType } from "generated/prisma/client";
-import { TextField, Stack, Paper, Container, Tooltip } from "@mui/material";
-import { DataGrid, GridColDef, GridActionsCellItem } from "@mui/x-data-grid";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DialogConfirmDeleteClient from "./DialogConfirmDeleteClient";
+import DialogConfirmDeleteClient from "../../components/Dialogs/DeleteClient/DialogConfirmDeleteClient";
 import { toast } from "react-toastify";
-import DialogUpdateClient from "./DialogUpdateClient";
-
-const LIMIT = 100;
+import DialogClient from "@/components/Dialogs/NewOrUpdateClient/DialogForm";
+import { useLayout } from "../context/LayoutContext";
+import { ClientsTable } from "./ClientsTable";
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<ClientType[]>([]);
@@ -21,7 +17,10 @@ export default function ClientsPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [isOpenEditDialog, setIsOpenEditDialog] = useState(false);
+  const [isOpenEditClientDialog, setIsOpenEditClientDialog] = useState(false);
+  const [isOpenNewClientDialog, setIsOpenNewClientDialog] = useState(false);
+
+  const { setButtonLabel, setOnButtonClick } = useLayout();
 
   // -------------------------------
   // Load paginated clients normally
@@ -68,15 +67,19 @@ export default function ClientsPage() {
     }, 300)
   ).current;
 
-  function handleSearch(text: string) {
-    setSearchTerm(text);
-    debouncedSearch(text);
-  }
-
   // Load initial page
   useEffect(() => {
     loadClients(0);
   }, []);
+
+  useEffect(() => {
+    setButtonLabel("New Client");
+    setOnButtonClick(() => () => setIsOpenNewClientDialog((prev) => !prev));
+    return () => {
+      setButtonLabel("");
+      setOnButtonClick(null);
+    };
+  }, [setButtonLabel, setOnButtonClick, setIsOpenNewClientDialog]);
 
   // -------------------------------
   // Delete client
@@ -115,61 +118,18 @@ export default function ClientsPage() {
     }
   }
 
-  const confirmDeleteClient = (id: string) => {
-    setSelectedClientId(id);
-    setConfirmDeleteOpen(true);
-  };
-
   const onConfirmDelete = () => {
     if (selectedClientId) handleDelete(selectedClientId);
     setSelectedClientId(null);
   };
 
-  // -------------------------------
-  // Columns for DataGrid
-  // -------------------------------
-  const columns: GridColDef[] = [
-    { field: "client_name", headerName: "Name", flex: 1 },
-    { field: "client_surname", headerName: "Surname", flex: 1 },
-    { field: "client_email", headerName: "Email", flex: 1 },
-    { field: "client_phone", headerName: "Phone", flex: 1 },
-    { field: "client_notes", headerName: "Notes", flex: 1 },
+  const closeEditClientDialog = () => {
+    setIsOpenEditClientDialog(false);
+    setSelectedClientId(null);
+  };
 
-    // Actions column
-    {
-      field: "actions",
-      type: "actions",
-      headerName: "Actions",
-      getActions: (params) => [
-        <GridActionsCellItem
-          icon={
-            <Tooltip title="Edit">
-              <EditIcon color="primary" />
-            </Tooltip>
-          }
-          label="Edit"
-          onClick={() => {
-            setSelectedClientId(params.row.id);
-            setIsOpenEditDialog(true);
-          }}
-          key="edit"
-        />,
-        <GridActionsCellItem
-          icon={
-            <Tooltip title="Delete">
-              <DeleteIcon color="error" />
-            </Tooltip>
-          }
-          label="Delete"
-          onClick={() => confirmDeleteClient(params.row.id)}
-          key="delete"
-        />,
-      ],
-    },
-  ];
-
-  const closeEditDialog = () => {
-    setIsOpenEditDialog(false);
+  const closeNewClientDialog = () => {
+    setIsOpenNewClientDialog(false);
     setSelectedClientId(null);
   };
 
@@ -180,47 +140,34 @@ export default function ClientsPage() {
 
   return (
     <main className="p-4">
-      <Container sx={{ py: 3 }} disableGutters>
-        {/* Search */}
-        <Stack spacing={2} mb={2}>
-          <TextField
-            label="Search clients"
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-            fullWidth
-          />
-        </Stack>
-        <Paper
-          elevation={2}
-          sx={{
-            maxHeight: "calc(100vh - 186px)",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <DataGrid
-            rows={clients}
-            columns={columns}
-            getRowId={(row) => row.id}
-            rowCount={rowCount}
-            pageSizeOptions={[LIMIT]}
-            paginationMode="server"
-            pagination
-            paginationModel={{ page, pageSize: LIMIT }}
-            onPaginationModelChange={(model) => loadClients(model.page)}
-          />
-        </Paper>
-        <DialogConfirmDeleteClient
-          open={confirmDeleteOpen}
-          onClose={closeDeleteDialog}
-          onConfirm={onConfirmDelete}
-        />
-        <DialogUpdateClient
-          open={isOpenEditDialog}
-          onClose={closeEditDialog}
-          clientId={selectedClientId}
-        />
-      </Container>
+      <DialogConfirmDeleteClient
+        open={confirmDeleteOpen}
+        onClose={closeDeleteDialog}
+        onConfirm={onConfirmDelete}
+      />
+      {/* Dialog for New Client */}
+      <DialogClient
+        open={isOpenNewClientDialog}
+        onClose={closeNewClientDialog}
+      />
+      {/* Dialogs for Edit Client */}
+      <DialogClient
+        open={isOpenEditClientDialog}
+        onClose={closeEditClientDialog}
+        clientId={selectedClientId}
+      />
+      <ClientsTable
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        debouncedSearch={debouncedSearch}
+        clients={clients}
+        rowCount={rowCount}
+        page={page}
+        loadClients={loadClients}
+        setSelectedClientId={setSelectedClientId}
+        setIsOpenEditClientDialog={setIsOpenEditClientDialog}
+        setConfirmDeleteOpen={setConfirmDeleteOpen}
+      />
     </main>
   );
 }

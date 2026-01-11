@@ -20,11 +20,12 @@ import UpdateClientFormFields from "./FormFieldsClients";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
 import handleSubmitUpdateClient from "@/handlers/handleSubmitUpdateClient";
+import handleSubmitCreateClient from "@/handlers/handleSubmitCreateClient";
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  clientId: string | null;
+  clientId?: string | null;
 };
 
 export const defaultValuesClientForm: Partial<ClientUpdateSchemaType> = {
@@ -35,7 +36,7 @@ export const defaultValuesClientForm: Partial<ClientUpdateSchemaType> = {
   client_notes: "",
 };
 
-const DialogUpdateClient = ({ open, onClose, clientId }: Props) => {
+const DialogForm = ({ open, onClose, clientId = null }: Props) => {
   const [loading, setLoading] = useState(false);
 
   const methods = useForm<ClientUpdateSchemaType>({
@@ -76,7 +77,11 @@ const DialogUpdateClient = ({ open, onClose, clientId }: Props) => {
     if (!clientId) return;
 
     setLoading(true);
-    await handleSubmitUpdateClient({ ...data, id: clientId });
+    if (!clientId) {
+      await handleSubmitCreateClient(data);
+    } else {
+      await handleSubmitUpdateClient({ ...data, id: clientId });
+    }
     setLoading(false);
     onClose();
   };
@@ -137,4 +142,4 @@ const DialogUpdateClient = ({ open, onClose, clientId }: Props) => {
   );
 };
 
-export default DialogUpdateClient;
+export default DialogForm;

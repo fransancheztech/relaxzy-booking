@@ -1,7 +1,9 @@
 import { ClientUpdateSchemaType } from "@/schemas/client.schema";
 import { toast } from "react-toastify";
 
-const handleSubmitUpdateClient = async (data: ClientUpdateSchemaType & { id: string }) => {
+const handleSubmitUpdateClient = async (
+  data: ClientUpdateSchemaType & { id: string }
+) => {
   try {
     const res = await fetch(`/api/clients/${data.id}`, {
       method: "PUT",
@@ -13,7 +15,7 @@ const handleSubmitUpdateClient = async (data: ClientUpdateSchemaType & { id: str
 
     if (!res.ok) {
       toast.error(result?.error || "Error updating client");
-      return;
+      return null;
     }
 
     toast.success("Client updated successfully");
@@ -21,9 +23,11 @@ const handleSubmitUpdateClient = async (data: ClientUpdateSchemaType & { id: str
     // setTimeout(() => {
     //   window.dispatchEvent(new CustomEvent("refreshClientsData"));
     // }, 500);
+    return result;
   } catch (err) {
     toast.error("Unexpected error while updating client");
     console.error(err);
+    return null;
   }
 };
 
