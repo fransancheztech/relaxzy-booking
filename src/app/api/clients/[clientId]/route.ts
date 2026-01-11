@@ -33,13 +33,44 @@ export async function GET(
 }
 
 export async function PUT(
-  _: Request,
+  request: Request,
   { params }: { params: Promise<{ clientId: string }> }
 ) {
   try {
-    const body = await _.json();
     const { clientId } = await params;
+    const body = await request.json();
 
+    const { client_email, client_phone } = body;
+
+    // -------------------------------
+    // Check for duplicates
+    // -------------------------------
+    if (client_email || client_phone) {
+      const existingClient = await prisma.clients.findFirst({
+        where: {
+          deleted_at: null,
+          NOT: { id: clientId },
+          OR: [
+            client_email ? { client_email: client_email } : undefined,
+            client_phone ? { client_phone: client_phone } : undefined,
+          ].filter(Boolean) as any,
+        },
+      });
+
+      if (existingClient) {
+        return NextResponse.json(
+          {
+            error:
+              "Another client already exists with the same email or phone.",
+          },
+          { status: 409 } // Conflict
+        );
+      }
+    }
+
+    // -------------------------------
+    // Update client
+    // -------------------------------
     const updatedClient = await prisma.clients.update({
       where: { id: clientId },
       data: {
