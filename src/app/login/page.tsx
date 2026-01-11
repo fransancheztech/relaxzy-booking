@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import {
   Box,
@@ -11,10 +11,26 @@ import {
   Alert,
   Stack,
 } from "@mui/material";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [userChecked, setUserChecked] = useState(false);
+
+  const router = useRouter();
+  const supabase = createClient();
+
+  // Redirect to /calendar if already logged in
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        router.replace("/calendar");
+      } else {
+        setUserChecked(true); // only render form after check
+      }
+    });
+  }, [router, supabase]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -25,7 +41,6 @@ export default function LoginPage() {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -36,12 +51,13 @@ export default function LoginPage() {
     if (error) {
       setMessage(error.message);
     } else {
-      // freeze UI
-      setLoading(true); // keep it disabled
-      window.location.href = "/bookings"; // redirect to home page
-      return; // prevent further state updates
+      // Redirect to /calendar using Next.js router
+      router.replace("/calendar");
     }
   };
+
+  // Don't render form until we check if user is logged in
+  if (!userChecked) return null;
 
   return (
     <Box

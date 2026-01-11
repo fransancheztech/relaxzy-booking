@@ -4,10 +4,13 @@ import { BookingModel } from '@/types/bookings';
 import { booking_status } from 'generated/prisma';
 
 export const menuPages: menuPageModel[] = [
+  { text: 'Calendar', href: '/calendar' },
   { text: 'Bookings', href: '/bookings' },
   { text: 'Clients', href: '/clients' },
   { text: 'Payments', href: '/payments' },
   { text: 'Services', href: '/services' },
+  { text: 'Therapists', href: '/therapists' },
+  { text: 'Stats', href: '/stats' },
 ];
 
 export const drawerWidth: number = 240;

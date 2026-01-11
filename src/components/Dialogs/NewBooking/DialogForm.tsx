@@ -14,7 +14,7 @@ import handleSubmitCreateBooking from "@/handlers/handleSubmitCreateBooking";
 import NewBookingFormFields from "./FormFields";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CloseIcon from "@mui/icons-material/Close";
-import ClientSearch from "@/app/bookings/ClientSearch";
+import ClientSearch from "@/app/calendar/ClientSearch";
 import { useSimilarClients } from "@/hooks/useSimilarClients";
 import { roundToNearestMinutes } from "date-fns";
 
