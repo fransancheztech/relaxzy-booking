@@ -7,6 +7,7 @@ import { TextField, Stack, Paper, Container, Tooltip } from "@mui/material";
 import { DataGrid, GridColDef, GridActionsCellItem } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import DialogConfirmDeleteClient from "./DialogConfirmDeleteClient";
 
 const LIMIT = 100;
 
@@ -16,6 +17,8 @@ export default function ClientsPage() {
   const [rowCount, setRowCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
   // -------------------------------
   // Load paginated clients normally
@@ -61,6 +64,7 @@ export default function ClientsPage() {
       setIsSearching(!!text);
     }, 300)
   ).current;
+
   function handleSearch(text: string) {
     setSearchTerm(text);
     debouncedSearch(text);
@@ -90,6 +94,16 @@ export default function ClientsPage() {
     if (isSearching) debouncedSearch(searchTerm);
     else loadClients(page);
   }
+
+  const confirmDeleteClient = (id: string) => {
+    setSelectedClientId(id);
+    setConfirmDeleteOpen(true);
+  };
+
+  const onConfirmDelete = () => {
+    if (selectedClientId) handleDelete(selectedClientId);
+    setSelectedClientId(null);
+  };
 
   // -------------------------------
   // Columns for DataGrid
@@ -124,7 +138,7 @@ export default function ClientsPage() {
             </Tooltip>
           }
           label="Delete"
-          onClick={() => handleDelete(params.row.id)}
+          onClick={() => confirmDeleteClient(params.row.id)}
           key="delete"
         />,
       ],
@@ -164,6 +178,13 @@ export default function ClientsPage() {
             onPaginationModelChange={(model) => loadClients(model.page)}
           />
         </Paper>
+
+        {/* Confirmation dialog */}
+        <DialogConfirmDeleteClient
+          open={confirmDeleteOpen}
+          onClose={() => setConfirmDeleteOpen(false)}
+          onConfirm={onConfirmDelete}
+        />
       </Container>
     </main>
   );
