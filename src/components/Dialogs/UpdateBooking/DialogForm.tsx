@@ -200,21 +200,18 @@ const DialogForm = ({ open, onClose, bookingId }: Props) => {
               sx={{ display: "flex", justifyContent: "space-between" }}
             >
               <Button
+                startIcon={<DeleteIcon />}
                 color="error"
-                sx={{ gap: 1 }}
                 variant="contained"
                 onClick={() => setIsConfirmDeleteDialogOpen(true)}
               >
-                <DeleteIcon />
                 Delete
               </Button>
               <Container sx={{ display: "flex", justifyContent: "flex-end" }}>
-                <Button sx={{ color: "error.main", gap: 1 }} onClick={onCancel}>
-                  <CloseIcon />
+                <Button startIcon={<CloseIcon />} sx={{ color: "error.main"}} onClick={onCancel}>
                   Cancel
                 </Button>
-                <Button type="submit" sx={{ color: "primary.main", gap: 1 }}>
-                  <SaveIcon />
+                <Button startIcon={<SaveIcon />} sx={{ color: "primary.main"}} type="submit" >
                   Save Changes
                 </Button>
               </Container>

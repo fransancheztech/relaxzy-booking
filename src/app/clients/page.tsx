@@ -8,6 +8,8 @@ import { DataGrid, GridColDef, GridActionsCellItem } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DialogConfirmDeleteClient from "./DialogConfirmDeleteClient";
+import { toast } from "react-toastify";
+import DialogUpdateClient from "./DialogUpdateClient";
 
 const LIMIT = 100;
 
@@ -19,6 +21,7 @@ export default function ClientsPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [isOpenEditDialog, setIsOpenEditDialog] = useState(false);
 
   // -------------------------------
   // Load paginated clients normally
@@ -79,20 +82,37 @@ export default function ClientsPage() {
   // Delete client
   // -------------------------------
   async function handleDelete(id: string) {
-    const res = await fetch("/api/clients/delete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
+    try {
+      if (!id) {
+        toast.error("Missing client ID");
+        return;
+      }
 
-    if (!res.ok) {
-      console.error("Failed to delete client");
-      return;
+      const res = await fetch("/api/clients/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        console.error("Client delete error:", result);
+        toast.error(result?.error || "Error deleting client");
+        return;
+      }
+
+      toast.success("The client has been deleted successfully.");
+
+      // Reload the list after delete
+      setTimeout(() => {
+        if (isSearching) debouncedSearch(searchTerm);
+        else loadClients(page);
+      }, 300);
+    } catch (err) {
+      console.error("Network or server error deleting client", err);
+      toast.error("Network or server error");
     }
-
-    // Reload after delete
-    if (isSearching) debouncedSearch(searchTerm);
-    else loadClients(page);
   }
 
   const confirmDeleteClient = (id: string) => {
@@ -128,7 +148,10 @@ export default function ClientsPage() {
             </Tooltip>
           }
           label="Edit"
-          onClick={() => console.log("Edit clicked", params.row)}
+          onClick={() => {
+            setSelectedClientId(params.row.id);
+            setIsOpenEditDialog(true);
+          }}
           key="edit"
         />,
         <GridActionsCellItem
@@ -145,6 +168,16 @@ export default function ClientsPage() {
     },
   ];
 
+  const closeEditDialog = () => {
+    setIsOpenEditDialog(false);
+    setSelectedClientId(null);
+  };
+
+  const closeDeleteDialog = () => {
+    setConfirmDeleteOpen(false);
+    setSelectedClientId(null);
+  };
+
   return (
     <main className="p-4">
       <Container sx={{ py: 3 }} disableGutters>
@@ -157,7 +190,6 @@ export default function ClientsPage() {
             fullWidth
           />
         </Stack>
-
         <Paper
           elevation={2}
           sx={{
@@ -178,12 +210,15 @@ export default function ClientsPage() {
             onPaginationModelChange={(model) => loadClients(model.page)}
           />
         </Paper>
-
-        {/* Confirmation dialog */}
         <DialogConfirmDeleteClient
           open={confirmDeleteOpen}
-          onClose={() => setConfirmDeleteOpen(false)}
+          onClose={closeDeleteDialog}
           onConfirm={onConfirmDelete}
+        />
+        <DialogUpdateClient
+          open={isOpenEditDialog}
+          onClose={closeEditDialog}
+          clientId={selectedClientId}
         />
       </Container>
     </main>
