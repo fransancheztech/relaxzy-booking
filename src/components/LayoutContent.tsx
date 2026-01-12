@@ -49,42 +49,10 @@ export default function LayoutContent({
   const router = useRouter();
 
   const [user, setUser] = useState<User | null>(null);
-  const [checkedAuth, setCheckedAuth] = useState(false);
 
   const appBarHeight = 64; // typical MUI AppBar height in px
 
-  // Check auth state
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-      setCheckedAuth(true);
-
-      // Redirect root "/" to "/calendar"
-      if (pathname === "/") {
-        router.replace("/calendar");
-      }
-
-      // Redirect logged out users from private pages
-      if (!user && pathname !== "/login") {
-        router.replace("/login");
-      }
-
-      // Redirect logged in users away from login
-      if (user && pathname === "/login") {
-        router.replace("/calendar");
-      }
-    });
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      listener?.subscription.unsubscribe();
-    };
-  }, [pathname, router]);
-
-   const handleLogout = async () => {
+  const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.reload();
     setUser(null);
@@ -92,10 +60,9 @@ export default function LayoutContent({
   };
 
   // Hide sidebar and treat as logged out on login page
-  const isLoggedIn: boolean = !!user && pathname !== "/login";
+  const isLoggedIn: boolean = pathname !== "/login";
 
   // Avoid rendering until auth is checked
-  if (!checkedAuth) return null;
 
   return (
     <Stack sx={{ minHeight: "100vh" }}>
