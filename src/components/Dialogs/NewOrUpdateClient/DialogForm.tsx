@@ -111,14 +111,14 @@ const DialogForm = ({ open, onClose, clientId = null }: Props) => {
               <Container sx={{ display: "flex", justifyContent: "flex-end" }}>
                 <Button
                   startIcon={<CloseIcon />}
-                  sx={{ color: "error.main" }}
+                  color="error"
                   onClick={onCancel}
                 >
                   Cancel
                 </Button>
                 <Button
                   startIcon={<SaveIcon />}
-                  sx={{ color: "primary.main" }}
+                  color="success"
                   type="submit"
                 >
                   Save

@@ -19,6 +19,8 @@ export default function ClientsPage() {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [isOpenEditClientDialog, setIsOpenEditClientDialog] = useState(false);
   const [isOpenNewClientDialog, setIsOpenNewClientDialog] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const { setButtonLabel, setOnButtonClick } = useLayout();
 
@@ -26,22 +28,33 @@ export default function ClientsPage() {
   // Load paginated clients normally
   // -------------------------------
   async function loadClients(pageToLoad: number) {
-    const res = await fetch("/api/clients/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ searchTerm: "" }),
-    });
+    try {
+      setLoading(true);
+      setFetchError(null);
+      const res = await fetch("/api/clients/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ searchTerm: "" }),
+      });
 
-    if (!res.ok) {
-      console.error("Failed to load clients");
-      return;
+      if (!res.ok) {
+        console.error("Failed to load clients");
+        return;
+      }
+
+      const data = await res.json();
+      setClients(data);
+      setRowCount(data.length);
+      setPage(pageToLoad);
+      setIsSearching(false);
+    } catch (err) {
+      console.error(err);
+      setClients([]);
+      setRowCount(0);
+      setFetchError("Error loading clients");
+    } finally {
+      setLoading(false);
     }
-
-    const data = await res.json();
-    setClients(data);
-    setRowCount(data.length);
-    setPage(pageToLoad);
-    setIsSearching(false);
   }
 
   // -------------------------------
@@ -49,21 +62,32 @@ export default function ClientsPage() {
   // -------------------------------
   const debouncedSearch = useRef(
     debounce(async (text: string) => {
-      const res = await fetch("/api/clients/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ searchTerm: text }),
-      });
+      try {
+        setLoading(true);
+        setFetchError(null);
+        const res = await fetch("/api/clients/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ searchTerm: text }),
+        });
 
-      if (!res.ok) {
-        console.error("Search failed");
-        return;
+        if (!res.ok) {
+          console.error("Search failed");
+          return;
+        }
+
+        const data = await res.json();
+        setClients(data);
+        setRowCount(data.length);
+        setIsSearching(!!text);
+      } catch (err) {
+        console.error(err);
+        setClients([]);
+        setRowCount(0);
+        setFetchError("Error searching bookings");
+      } finally {
+        setLoading(false);
       }
-
-      const data = await res.json();
-      setClients(data);
-      setRowCount(data.length);
-      setIsSearching(!!text);
     }, 300)
   ).current;
 
@@ -140,10 +164,19 @@ export default function ClientsPage() {
 
   return (
     <main className="p-4">
-      <DialogConfirmDeleteClient
-        open={confirmDeleteOpen}
-        onClose={closeDeleteDialog}
-        onConfirm={onConfirmDelete}
+      <ClientsTable
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        debouncedSearch={debouncedSearch}
+        clients={clients}
+        rowCount={rowCount}
+        page={page}
+        loadClients={loadClients}
+        setSelectedClientId={setSelectedClientId}
+        setIsOpenEditClientDialog={setIsOpenEditClientDialog}
+        setConfirmDeleteOpen={setConfirmDeleteOpen}
+        loading={loading}
+        fetchError={fetchError}
       />
       {/* Dialog for New Client */}
       <DialogClient
@@ -156,17 +189,10 @@ export default function ClientsPage() {
         onClose={closeEditClientDialog}
         clientId={selectedClientId}
       />
-      <ClientsTable
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        debouncedSearch={debouncedSearch}
-        clients={clients}
-        rowCount={rowCount}
-        page={page}
-        loadClients={loadClients}
-        setSelectedClientId={setSelectedClientId}
-        setIsOpenEditClientDialog={setIsOpenEditClientDialog}
-        setConfirmDeleteOpen={setConfirmDeleteOpen}
+      <DialogConfirmDeleteClient
+        open={confirmDeleteOpen}
+        onClose={closeDeleteDialog}
+        onConfirm={onConfirmDelete}
       />
     </main>
   );

@@ -1,10 +1,10 @@
-import { createClient } from "@/utils/supabase/server"; // para el usuario actual
+import { createCustomServerClient } from "@/utils/supabase/server"; // para el usuario actual
 import { createAdminClient } from "@/utils/supabase/admin"; // para funciones admin
 import { NextResponse } from "next/server";
 
 export async function GET() {
   // 1. Obtener el usuario actual (desde cookies, no service_role)
-  const supabase = await createClient();
+  const supabase = await createCustomServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

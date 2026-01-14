@@ -1,10 +1,17 @@
-import { Container, Paper, Stack, TextField, Tooltip } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  Container,
+  Paper,
+  Stack,
+  TextField,
+  Tooltip,
+} from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { FETCH_LIMIT } from "@/constants";
 import { clients as ClientType } from "generated/prisma/client";
-
 
 interface Props {
   setSelectedClientId: (id: string) => void;
@@ -17,7 +24,37 @@ interface Props {
   searchTerm: string;
   setSearchTerm: (text: string) => void;
   debouncedSearch: (text: string) => void;
+  loading: boolean;
+  fetchError: string | null;
 }
+
+const LoadingOverlay = () => (
+  <Box
+    sx={{
+      position: "absolute",
+      inset: 0,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+  >
+    <CircularProgress />
+  </Box>
+);
+
+const NoRowsOverlay = ({ error }: { error: string | null }) => (
+  <Box
+    sx={{
+      height: "100%",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      color: error ? "error.main" : "text.secondary",
+    }}
+  >
+    {error ? `Error loading bookings: ${error}` : "No bookings found"}
+  </Box>
+);
 
 export const ClientsTable = ({
   setSelectedClientId,
@@ -30,6 +67,8 @@ export const ClientsTable = ({
   searchTerm,
   setSearchTerm,
   debouncedSearch,
+  loading,
+  fetchError,
 }: Props) => {
   const confirmDeleteClient = (id: string) => {
     setSelectedClientId(id);
@@ -113,6 +152,15 @@ export const ClientsTable = ({
           pagination
           paginationModel={{ page, pageSize: FETCH_LIMIT }}
           onPaginationModelChange={(model) => loadClients(model.page)}
+          loading={loading}
+          slots={{
+            loadingOverlay: LoadingOverlay,
+            noRowsOverlay: () => <NoRowsOverlay error={fetchError} />,
+          }}
+          sx={{
+            opacity: loading ? "0.5" : "1",
+            backgroundColor: loading ? "#ddd" : "",
+          }}
         />
       </Paper>
     </Container>

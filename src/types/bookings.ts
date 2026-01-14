@@ -1,3 +1,5 @@
+import { booking_status, payment_methods } from "generated/prisma";
+
 export interface BookingDTO {
     id?: string;
     client_name?: string;
@@ -71,3 +73,38 @@ export interface CalendarUIEventModel {
     booking: BookingDTO;
     id: string;
 }
+
+// src/types/bookings.ts
+
+export type BookingListItem = {
+  id: string;
+  start_time: Date | null;
+  end_time: Date | null;
+  status: booking_status;
+  price: string | null;
+
+  notes?: string | null;
+
+  client: {
+    id: string;
+    name: string | null;
+    surname: string | null;
+    email: string | null;
+    phone: string | null;
+  } | null;
+
+  service: {
+    id: string;
+    name: string;
+    short_name: string | null;
+  } | null;
+
+  payments: {
+    id: string;
+    amount: string;
+    method: payment_methods | null;
+    paid: boolean;
+    refunded: string | null;
+    paid_at: Date | null;
+  }[];
+};

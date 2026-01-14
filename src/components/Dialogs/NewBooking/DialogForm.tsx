@@ -90,12 +90,10 @@ const DialogForm = ({ open, onClose }: Props) => {
             <NewBookingFormFields />
           </DialogContent>
           <DialogActions>
-            <Button sx={{ color: "error.main", gap: 1 }} onClick={onCancel}>
-              <CloseIcon />
+            <Button color="error" onClick={onCancel} startIcon={<CloseIcon />}>
               Cancel
             </Button>
-            <Button type="submit" sx={{ color: "primary.main", gap: 1 }}>
-              <AddCircleIcon />
+            <Button type="submit" color="success" startIcon={<AddCircleIcon />}>
               Add Booking
             </Button>
           </DialogActions>

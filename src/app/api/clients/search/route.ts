@@ -10,7 +10,6 @@ export async function POST(req: NextRequest) {
   if (!searchTerm) {
     const clients = await prisma.clients.findMany({
       where: baseWhere,
-      take: FETCH_LIMIT
     });
     return NextResponse.json(clients);
   }
@@ -29,7 +28,6 @@ export async function POST(req: NextRequest) {
         }
       ]
     },
-    take: FETCH_LIMIT
   });
 
   return NextResponse.json(clients);

@@ -208,10 +208,10 @@ const DialogForm = ({ open, onClose, bookingId }: Props) => {
                 Delete
               </Button>
               <Container sx={{ display: "flex", justifyContent: "flex-end" }}>
-                <Button startIcon={<CloseIcon />} sx={{ color: "error.main"}} onClick={onCancel}>
+                <Button startIcon={<CloseIcon />} color="error" onClick={onCancel}>
                   Cancel
                 </Button>
-                <Button startIcon={<SaveIcon />} sx={{ color: "primary.main"}} type="submit" >
+                <Button startIcon={<SaveIcon />} color="success" type="submit" >
                   Save Changes
                 </Button>
               </Container>

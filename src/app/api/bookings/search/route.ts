@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { FETCH_LIMIT } from "@/constants";
+import { BookingListItem } from "@/types/bookings";
 
 export async function POST(req: NextRequest) {
   try {
-    const { searchTerm } = await req.json();
+    const { searchTerm, page } = await req.json();
 
     if (typeof searchTerm !== "string") {
       return NextResponse.json({ error: "Invalid searchTerm" }, { status: 400 });
@@ -41,16 +43,15 @@ export async function POST(req: NextRequest) {
         payments: true,
       },
       orderBy: { start_time: "desc" },
-      take: 50, // limit to first 50 results
     });
 
     // Map response for front-end table
-    const data = bookings.map((b) => ({
+    const data: BookingListItem[] = bookings.map((b) => ({
       id: b.id,
       start_time: b.start_time,
       end_time: b.end_time,
       status: b.status,
-      price: b.price,
+      price: b.price ? b.price.toString() : null,
       notes: b.notes,
       client: b.clients
         ? {
@@ -70,10 +71,10 @@ export async function POST(req: NextRequest) {
         : null,
       payments: b.payments.map((p) => ({
         id: p.id,
-        amount: p.amount,
+        amount: p.amount.toString(),
         method: p.method,
         paid: p.paid,
-        refunded: p.refunded,
+        refunded: p.refunded ? p.refunded.toString() : null,
         paid_at: p.paid_at,
       })),
     }));

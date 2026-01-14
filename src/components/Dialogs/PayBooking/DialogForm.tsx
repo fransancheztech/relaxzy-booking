@@ -146,12 +146,10 @@ const DialogForm = ({
             </Grid>
           </DialogContent>
           <DialogActions>
-            <Button sx={{ color: "error.main", gap: 1 }} onClick={onCancel}>
-              <CloseIcon />
+            <Button color="error" onClick={onCancel} startIcon={<CloseIcon />}>
               Cancel
             </Button>
-            <Button type="submit" sx={{ color: "primary.main", gap: 1 }}>
-              <AddCircleIcon />
+            <Button color="success" type="submit" startIcon={<AddCircleIcon />}>
               Add Payment
             </Button>
           </DialogActions>

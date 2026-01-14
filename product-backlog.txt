@@ -10,6 +10,7 @@
 - 5 Permitir reembolsos
 - 5 Edición de terapeutas
 - 5 Elminación de terapeutas
+- 5 Creación de facturas, descarga y almacenamiento en Drive automático de las mismas
 - 4 Edición de clientes
 - 4 Creación de clientes
 - 4 Posibilidad de asignar clientes a reservas sin cliente ya creadas
