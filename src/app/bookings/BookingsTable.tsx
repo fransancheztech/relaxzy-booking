@@ -11,7 +11,6 @@ import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { FETCH_LIMIT } from "@/constants";
-import { bookings as BookingType } from "generated/prisma/client";
 import { BookingListItem } from "@/types/bookings";
 
 interface Props {
@@ -76,7 +75,7 @@ export const BookingsTable = ({
     debouncedSearch(text);
   };
 
-  const confirmDeleteBooking = (id: string) => {
+  const openDeleteBooking = (id: string) => {
     setSelectedBookingId(id);
     setIsOpenConfirmDelete(true);
   };
@@ -207,7 +206,7 @@ export const BookingsTable = ({
             </Tooltip>
           }
           label="Delete"
-          onClick={() => confirmDeleteBooking(params.row.id)}
+          onClick={() => openDeleteBooking(params.row.id)}
           key="delete"
         />,
       ],

@@ -11,16 +11,16 @@ import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { FETCH_LIMIT } from "@/constants";
-import { clients as ClientType } from "generated/prisma/client";
+import { payments as PaymentsType } from "generated/prisma/client";
 
 interface Props {
-  setSelectedClientId: (id: string) => void;
-  setIsOpenEditClientDialog: (open: boolean) => void;
-  setConfirmDeleteOpen: (open: boolean) => void;
-  clients: ClientType[];
+  setSelectedPaymentId: (id: string) => void;
+  setIsOpenRefundPaymentDialog: (open: boolean) => void;
+  setConfirmRefundOpen: (open: boolean) => void;
+  payments: PaymentsType[];
   rowCount: number;
   page: number;
-  loadClients: (pageToLoad: number) => void;
+  loadPayments: (pageToLoad: number) => void;
   searchTerm: string;
   setSearchTerm: (text: string) => void;
   debouncedSearch: (text: string) => void;
@@ -52,27 +52,27 @@ const NoRowsOverlay = ({ error }: { error: string | null }) => (
       color: error ? "error.main" : "text.secondary",
     }}
   >
-    {error ? `Error loading clients: ${error}` : "No clients found"}
+    {error ? `Error loading payments: ${error}` : "No payments found"}
   </Box>
 );
 
-export const ClientsTable = ({
-  setSelectedClientId,
-  setIsOpenEditClientDialog,
-  setConfirmDeleteOpen,
-  clients,
+export const PaymentsTable = ({
+  setSelectedPaymentId,
+  setIsOpenRefundPaymentDialog,
+  setConfirmRefundOpen,
+  payments,
   rowCount,
   page,
-  loadClients,
+  loadPayments,
   searchTerm,
   setSearchTerm,
   debouncedSearch,
   loading,
   fetchError,
 }: Props) => {
-  const openDeleteClient = (id: string) => {
-    setSelectedClientId(id);
-    setConfirmDeleteOpen(true);
+  const confirmDeletePayment = (id: string) => {
+    setSelectedPaymentId(id);
+    setConfirmRefundOpen(true);
   };
 
   function handleSearch(text: string) {
@@ -84,11 +84,15 @@ export const ClientsTable = ({
   // Columns for DataGrid
   // -------------------------------
   const columns: GridColDef[] = [
-    { field: "client_name", headerName: "Name", flex: 1 },
-    { field: "client_surname", headerName: "Surname", flex: 1 },
-    { field: "client_email", headerName: "Email", flex: 1 },
-    { field: "client_phone", headerName: "Phone", flex: 1 },
-    { field: "client_notes", headerName: "Notes", flex: 1 },
+    { field: "amount", headerName: "Amount", flex: 1 },
+    { field: "method", headerName: "Method", flex: 1 },
+    { field: "paid", headerName: "Paid?", flex: 1 },
+    { field: "paid_at", headerName: "Date", flex: 1 },
+    { field: "refunded", headerName: "Amount Refunded", flex: 1 },
+    { field: "refunded_at", headerName: "Date Refund", flex: 1 },
+    { field: "client_data", headerName: "Client", flex: 1 },
+    { field: "booking_data", headerName: "Booking", flex: 1 },
+    { field: "notes", headerName: "Notes", flex: 1 },
 
     // Actions column
     {
@@ -116,7 +120,7 @@ export const ClientsTable = ({
             </Tooltip>
           }
           label="Delete"
-          onClick={() => openDeleteClient(params.row.id)}
+          onClick={() => confirmDeleteClient(params.row.id)}
           key="delete"
         />,
       ],
