@@ -304,10 +304,10 @@ const FormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Props) => {
             Below is a summary of your booking:
           </DialogContentText>
 
-          <Typography variant="body1">Total price: {totalPrice}€</Typography>
-          <Typography variant="body1">Total paid: {totalPaid}€</Typography>
+          <Typography variant="body1">Price: {totalPrice}€</Typography>
+          <Typography variant="body1">Paid: {totalPaid}€</Typography>
           <Typography variant="body1">
-            Remaining balance: {remainingBalance}€
+            Due: {remainingBalance}€
           </Typography>
         </Box>
 

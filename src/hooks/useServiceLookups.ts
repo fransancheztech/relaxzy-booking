@@ -1,6 +1,22 @@
 // src/hooks/useServiceLookups.ts
-import { useState, useEffect } from 'react';
-import { services } from 'generated/prisma';
+import { useState, useEffect } from "react";
+
+interface ServiceDuration {
+  service_details_id: string;
+  duration_id: string;
+  duration_minutes: number;
+  duration_notes?: string | null;
+  price: number;
+  notes?: string | null;
+}
+
+interface ServiceItem {
+  id: string;
+  name: string;
+  short_name?: string | null;
+  notes?: string | null;
+  durations: ServiceDuration[];
+}
 
 export const useServiceLookups = () => {
   const [availableServices, setAvailableServices] = useState<string[]>([]);
@@ -9,23 +25,27 @@ export const useServiceLookups = () => {
   useEffect(() => {
     const fetchLookups = async () => {
       try {
-        const res = await fetch('/api/services');
+        const res = await fetch("/api/services");
         if (!res.ok) throw new Error(res.statusText);
 
-        const data = await res.json();
+        const data: ServiceItem[] = await res.json();
 
+        // Extract unique service names
         const uniqueServices = [
-          ...new Set(data.map((s: services) => String(s.name))),
-        ].filter(Boolean) as string[];
+          ...new Set(data.map((s) => s.name).filter(Boolean)),
+        ];
 
-        const uniqueDurations = [
-          ...new Set(data.map((s: services) => String(s.duration ?? ''))),
-        ].filter(Boolean) as string[];
+        // Extract all durations across all services
+        const allDurations = data.flatMap((s) =>
+          s.durations.map((d) => String(d.duration_minutes))
+        );
+
+        const uniqueDurations = [...new Set(allDurations)].filter(Boolean);
 
         setAvailableServices(uniqueServices);
         setAvailableDurations(uniqueDurations);
       } catch (err) {
-        console.error('Lookup fetch error', err);
+        console.error("Lookup fetch error", err);
       }
     };
 

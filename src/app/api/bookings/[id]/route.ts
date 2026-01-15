@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { PROTECTED_FIELDS } from "@/constants";
 import { PROTECTED_FIELDS_FOR_EDIT_BOOKING } from "@/constants";
-import { payment_methods } from "generated/prisma";
+import { payment_methods, payments } from "generated/prisma";
 
 /* ======================================================
    GET /api/bookings/[id]
@@ -25,7 +25,7 @@ export async function GET(
       where: { id },
       include: {
         payments: true,
-        clients: true,          // nullable (walk-ins)
+        clients: true,
         services_names: true,
       },
     });
@@ -38,21 +38,23 @@ export async function GET(
     }
 
     /* -----------------------------
-       Aggregate payments
+       Aggregate payments safely
        ----------------------------- */
+    function isCashPayment(p: payments): boolean {
+      return p.method === payment_methods.cash && p.amount !== null;
+    }
+
+    function isCardPayment(p: payments): boolean {
+      return p.method === payment_methods.credit_card && p.amount !== null;
+    }
+
     const paidCash = booking.payments
-      .filter(p => p.method === payment_methods.cash)
-      .reduce(
-        (sum, p) => sum + Number(p.amount) - Number(p.refunded ?? 0),
-        0
-      );
+      .filter(isCashPayment)
+      .reduce((sum, p) => sum + Number(p.amount), 0);
 
     const paidCard = booking.payments
-      .filter(p => p.method === payment_methods.credit_card)
-      .reduce(
-        (sum, p) => sum + Number(p.amount) - Number(p.refunded ?? 0),
-        0
-      );
+      .filter(isCardPayment)
+      .reduce((sum, p) => sum + Number(p.amount), 0);
 
     /* -----------------------------
        Normalize nullable client
@@ -67,7 +69,7 @@ export async function GET(
         }
       : null;
 
-      const services_names = booking.services_names
+    const services_names = booking.services_names
       ? {
           id: booking.services_names.id,
           name: booking.services_names.name,
@@ -82,12 +84,11 @@ export async function GET(
       notes: booking.notes,
       status: booking.status,
       price: booking.price,
-      client, // ← null means walk-in
-      services_names,  // ← null means no service assigned to the booking yet
+      client,
+      services_names,
       paidCash,
       paidCard,
     });
-
   } catch (error) {
     console.error("GET /bookings/[id] error:", error);
     return NextResponse.json(

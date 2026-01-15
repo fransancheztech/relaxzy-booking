@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createCustomServerClient } from "@/utils/supabase/server";
 
 export async function GET(req: Request) {
-  const supabase = await createClient();
+  const supabase = await createCustomServerClient();
   const { searchParams } = new URL(req.url);
   const user_id = searchParams.get("user_id");
 

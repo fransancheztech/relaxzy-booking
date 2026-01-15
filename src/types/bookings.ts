@@ -103,7 +103,6 @@ export type BookingListItem = {
     id: string;
     amount: string;
     method: payment_methods | null;
-    paid: boolean;
     refunded: string | null;
     paid_at: Date | null;
   }[];
