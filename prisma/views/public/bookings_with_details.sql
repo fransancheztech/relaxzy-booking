@@ -53,5 +53,5 @@ FROM
       )
       LEFT JOIN services_durations sd ON ((sd.id = sdet.service_duration_id))
     )
-    LEFT JOIN payments p ON ((p.booking_id = b.id))
+    LEFT JOIN "OLD_payments" p ON ((p.booking_id = b.id))
   );
