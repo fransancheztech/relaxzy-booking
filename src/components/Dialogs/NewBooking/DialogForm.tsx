@@ -15,6 +15,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import ClientSearch from "@/app/calendar/ClientSearch";
 import { useSimilarClients } from "@/hooks/useSimilarClients";
 import { roundToNearestMinutes } from "date-fns";
+import { useEffect } from "react";
 
 type Props = {
   open: boolean;
@@ -22,9 +23,8 @@ type Props = {
 };
 
 const DialogForm = ({ open, onClose }: Props) => {
-  const methods = useForm<BookingSchemaType>({
-    resolver: zodResolver(BookingSchema),
-    defaultValues: {
+
+  const defaultValues = {
       client_name: "",
       client_surname: "",
       client_phone: "",
@@ -34,7 +34,11 @@ const DialogForm = ({ open, onClose }: Props) => {
       service_name: "",
       notes: "",
       price: undefined,
-    },
+    }
+
+  const methods = useForm<BookingSchemaType>({
+    resolver: zodResolver(BookingSchema),
+    defaultValues,
   });
 
   const watchedValues = useWatch({
@@ -62,10 +66,14 @@ const DialogForm = ({ open, onClose }: Props) => {
   };
 
   const onCancel = () => {
-    methods.reset();
+    methods.reset(defaultValues);
     onClose();
   };
 
+  useEffect(() => {
+    methods.reset(defaultValues);
+  }, [open])
+  
   return (
     <Dialog
       open={open}

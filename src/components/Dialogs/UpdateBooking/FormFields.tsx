@@ -27,6 +27,7 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
 import { Controller, useFormContext } from "react-hook-form";
 import { Dispatch, SetStateAction, useState } from "react";
+import ClientSearch from "@/app/calendar/ClientSearch";
 
 interface Props {
   setIsPaymentDialogOpen: Dispatch<SetStateAction<boolean>>;
@@ -43,6 +44,7 @@ const FormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Props) => {
   const {
     control,
     formState: { errors },
+    setValue
   } = useFormContext<BookingUpdateSchemaType>();
 
   const { totalPrice, totalPaid, remainingBalance } = paymentSummary;

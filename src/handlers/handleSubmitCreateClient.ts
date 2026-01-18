@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 const handleSubmitCreateClient = async (data: ClientUpdateSchemaType) => {
   try {
     const res = await fetch(`/api/clients/new`, {
-      // <--- use /new here
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...data }),
@@ -19,10 +18,9 @@ const handleSubmitCreateClient = async (data: ClientUpdateSchemaType) => {
 
     toast.success("Client created successfully");
 
-    // Optional: trigger refresh if you need the client list to update
-    // setTimeout(() => {
-    //   window.dispatchEvent(new CustomEvent("refreshClientsData"));
-    // }, 500);
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("refreshClientsData"));
+    }, 500);
 
     return result.client; // return the newly created client if needed
   } catch (err) {

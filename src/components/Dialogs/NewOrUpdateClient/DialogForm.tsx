@@ -75,8 +75,6 @@ const DialogForm = ({ open, onClose, clientId = null }: Props) => {
   }, [open, clientId]);
 
   const onSubmit = async (data: ClientUpdateSchemaType) => {
-    if (!clientId) return;
-
     setLoading(true);
     if (!clientId) {
       await handleSubmitCreateClient(data);

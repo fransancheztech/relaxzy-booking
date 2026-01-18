@@ -24,6 +24,8 @@ import DialogDeletion from "@/components/Dialogs/DeleteBooking/DialogForm";
 import handleDeleteBooking from "@/handlers/handleDeleteBooking";
 import { DateTime } from "luxon";
 import PayBookingDialog from "../PayBooking/DialogForm";
+import { useSimilarClients } from "@/hooks/useSimilarClients";
+import ClientSearch from "@/app/calendar/ClientSearch";
 
 type Props = {
   open: boolean;
@@ -61,6 +63,24 @@ const DialogForm = ({ open, onClose, bookingId }: Props) => {
   const methods = useForm<BookingUpdateSchemaType>({
     resolver: zodResolver(BookingUpdateSchema),
     defaultValues: defaultValuesUpdateBookingForm,
+  });
+
+  const watchedValues = methods.watch([
+    "client_name",
+    "client_surname",
+    "client_email",
+    "client_phone",
+  ]);
+
+  const {
+    clients,
+    loading: clientsLoading,
+    error: clientsError,
+  } = useSimilarClients({
+    client_name: watchedValues[0],
+    client_surname: watchedValues[1],
+    client_email: watchedValues[2],
+    client_phone: watchedValues[3],
   });
 
   const price = methods.watch("price");
@@ -210,16 +230,26 @@ const DialogForm = ({ open, onClose, bookingId }: Props) => {
                 Delete
               </Button>
               <Container sx={{ display: "flex", justifyContent: "flex-end" }}>
-                <Button startIcon={<CloseIcon />} color="error" onClick={onCancel}>
+                <Button
+                  startIcon={<CloseIcon />}
+                  color="error"
+                  onClick={onCancel}
+                >
                   Cancel
                 </Button>
-                <Button startIcon={<SaveIcon />} color="success" type="submit" >
+                <Button startIcon={<SaveIcon />} color="success" type="submit">
                   Save Changes
                 </Button>
               </Container>
             </DialogActions>
           </form>
         </FormProvider>
+        <ClientSearch<BookingUpdateSchemaType>
+          setValue={methods.setValue}
+          clients={clients}
+          loading={clientsLoading}
+          error={clientsError}
+        />
         {loading && (
           <div
             style={{

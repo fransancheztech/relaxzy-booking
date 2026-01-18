@@ -116,6 +116,8 @@ export async function PUT(
 
     const body = await req.json();
 
+    // console.log(JSON.stringify(body, null, 2))
+
     let service_id: string | null = null;
 
     /* -----------------------------
@@ -149,6 +151,10 @@ export async function PUT(
     const allowedFields = new Set([
       "client_id",
       "service_id",
+      // "client_name",
+      // "client_surname",
+      // "client_phone",
+      // "client_email", TO-DO this need to be enabled to allow client finding or creation on booking updating
       "start_time",
       "end_time",
       "price",
@@ -161,8 +167,7 @@ export async function PUT(
     for (const key of Object.keys(body)) {
       if (
         allowedFields.has(key) &&
-        !PROTECTED_FIELDS.has(key) &&
-        !PROTECTED_FIELDS_FOR_EDIT_BOOKING.has(key)
+        !PROTECTED_FIELDS.has(key)
       ) {
         safeData[key] = body[key];
       }
