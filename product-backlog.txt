@@ -16,4 +16,4 @@
 - 4 Quitar el calendario las reservas canceladas
 - 4 Poner colores diferentes a las reservas pendientes, confirmadas y completadas
 - 3 Hacer que Massage, Duration y Price recomiende las opciones adecuadas de forma dinámica.
-- Mostrar Created At en tabla clientes y permitir creacion y modificacion de clientes
+- Mostrar Created At en tabla clientes y permitir creacion y modificacion de clientes, también desde el dialogo de modificacion de reservas

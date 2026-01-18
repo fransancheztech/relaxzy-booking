@@ -26,8 +26,7 @@ import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
 import { Controller, useFormContext } from "react-hook-form";
-import { Dispatch, SetStateAction, useState } from "react";
-import ClientSearch from "@/app/calendar/ClientSearch";
+import { Dispatch, SetStateAction } from "react";
 
 interface Props {
   setIsPaymentDialogOpen: Dispatch<SetStateAction<boolean>>;
@@ -55,7 +54,6 @@ const FormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Props) => {
         <Controller
           name="client_name"
           control={control}
-          disabled
           render={({ field }) => (
             <TextField
               {...field}
@@ -76,7 +74,6 @@ const FormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Props) => {
         <Controller
           name="client_surname"
           control={control}
-          disabled
           render={({ field }) => (
             <TextField
               {...field}
@@ -96,7 +93,6 @@ const FormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Props) => {
         <Controller
           name="client_phone"
           control={control}
-          disabled
           render={({ field }) => (
             <TextField
               {...field}
@@ -116,7 +112,6 @@ const FormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Props) => {
         <Controller
           name="client_email"
           control={control}
-          disabled
           render={({ field }) => (
             <TextField
               {...field}
