@@ -61,6 +61,7 @@ function CalendarUI({setIsOpenBookingDialog}: CalendarUIProps) {
       <div style={{ opacity: loading ? 0.5 : 1, transition: "opacity 0.3s" }}>
         <Calendar
           localizer={localizer}
+          views={["day", "week", "month"]}
           view={view}
           events={events}
           startAccessor="start"

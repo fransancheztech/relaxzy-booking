@@ -105,12 +105,6 @@ export const PaymentsTable = ({
             })
           : "",
     },
-    // { field: "paid_at", headerName: "Date", flex: 1 },
-    // { field: "refunded", headerName: "Amount Refunded", flex: 1 },
-    // { field: "refunded_at", headerName: "Date Refund", flex: 1 },
-    // { field: "client_data", headerName: "Client", flex: 1 },
-    // { field: "booking_data", headerName: "Booking", flex: 1 },
-    // { field: "notes", headerName: "Notes", flex: 1 },
 
     // Actions column
     {
@@ -137,19 +131,10 @@ export const PaymentsTable = ({
 
   return (
     <Container sx={{ py: 3 }} disableGutters>
-      {/* Search */}
-      <Stack spacing={2} mb={2}>
-        <TextField
-          label="Search payments"
-          value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
-          fullWidth
-        />
-      </Stack>
       <Paper
         elevation={2}
         sx={{
-          maxHeight: "calc(100vh - 186px)",
+          maxHeight: "calc(100vh - 144px)",
           display: "flex",
           flexDirection: "column",
         }}

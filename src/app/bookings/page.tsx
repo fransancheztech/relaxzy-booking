@@ -9,6 +9,7 @@ import ConfirmDeleteBookingDialog from "./dialogs/ConfirmDeleteBookingDialog";
 import { BookingsTable } from "./BookingsTable";
 import { BookingListItem } from "@/types/bookings";
 import UpdateBookingDialogForm from "../../components/Dialogs/UpdateBooking/DialogForm";
+import { FETCH_LIMIT } from "@/constants";
 
 export default function BookingsPage() {
   const { setButtonLabel, setOnButtonClick } = useLayout();
@@ -22,16 +23,27 @@ export default function BookingsPage() {
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(
-    null
+    null,
   );
   const [isOpenNewBookingDialog, setIsOpenNewBookingDialog] = useState(false);
   const [isOpenEditBookingDialog, setIsOpenEditBookingDialog] = useState(false);
   const [isOpenConfirmDelete, setIsOpenConfirmDelete] = useState(false);
+  const [sortModel, setSortModel] = useState<{
+    field: string;
+    sort: "asc" | "desc";
+  }>({
+    field: "created_at",
+    sort: "desc",
+  });
 
   // -------------------------------
   // Load bookings
   // -------------------------------
-  async function loadBookings(pageToLoad: number) {
+  async function loadBookings(
+    pageToLoad: number,
+    sort = sortModel,
+    search = searchTerm,
+  ) {
     try {
       setLoading(true);
       setFetchError(null);
@@ -39,7 +51,10 @@ export default function BookingsPage() {
       const res = await fetch("/api/bookings/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ searchTerm: "", page }),
+        body: JSON.stringify({ page: pageToLoad,
+                  limit: FETCH_LIMIT,
+                  searchTerm: search,
+                  sort, }),
       });
 
       if (!res.ok) {
@@ -48,10 +63,10 @@ export default function BookingsPage() {
       }
 
       const data = await res.json();
-      setBookings(data);
-      setRowCount(data.length);
+      setBookings(data.rows);
+      setRowCount(data.total);
       setPage(pageToLoad);
-      setIsSearching(false);
+      setSortModel(sort);
     } catch (err) {
       console.error(err);
       setBookings([]);
@@ -94,7 +109,7 @@ export default function BookingsPage() {
       } finally {
         setLoading(false);
       }
-    }, 300)
+    }, 300),
   ).current;
 
   // -------------------------------

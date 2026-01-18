@@ -20,7 +20,10 @@ interface Props {
   bookings: BookingListItem[];
   rowCount: number;
   page: number;
-  loadBookings: (pageToLoad: number) => void;
+  loadBookings: (
+    pageToLoad: number,
+    sort?: { field: string; sort: "asc" | "desc" },
+  ) => void;
   searchTerm: string;
   setSearchTerm: (text: string) => void;
   debouncedSearch: (text: string) => void;
@@ -179,6 +182,26 @@ export const BookingsTable = ({
     },
 
     { field: "notes", headerName: "Notes", flex: 1 },
+    {
+      field: "created_at",
+      headerName: "Created at",
+      type: "dateTime",
+      flex: 1,
+      valueGetter: (_, row) =>
+        row.created_at ? new Date(row.created_at) : null,
+      valueFormatter: (value: Date | null) =>
+        value
+          ? value.toLocaleString("es-ES", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              hour12: false,
+            })
+          : "",
+    },
 
     // Actions column
     {
@@ -215,19 +238,10 @@ export const BookingsTable = ({
 
   return (
     <Container sx={{ py: 3 }} disableGutters>
-      {/* Search */}
-      <Stack spacing={2} mb={2}>
-        <TextField
-          label="Search bookings"
-          value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
-          fullWidth
-        />
-      </Stack>
       <Paper
         elevation={2}
         sx={{
-          maxHeight: "calc(100vh - 186px)",
+          maxHeight: "calc(100vh - 144px)",
           display: "flex",
           flexDirection: "column",
         }}
@@ -239,15 +253,36 @@ export const BookingsTable = ({
           rowCount={rowCount}
           pageSizeOptions={[FETCH_LIMIT]}
           paginationMode="server"
+          sortingMode="server"
           pagination
           paginationModel={{ page, pageSize: FETCH_LIMIT }}
           onPaginationModelChange={(model) => loadBookings(model.page)}
           loading={loading}
+          onSortModelChange={(model) => {
+            if (model.length === 0) return;
+
+            const sortItem = model[0];
+
+            if (!sortItem.sort) return; // guard against undefined
+
+            loadBookings(0, {
+              field: sortItem.field,
+              sort: sortItem.sort,
+            });
+          }}
+          initialState={{
+            sorting: {
+              sortModel: [{ field: "created_at", sort: "desc" }],
+            },
+          }}
           slots={{
             loadingOverlay: LoadingOverlay,
             noRowsOverlay: () => <NoRowsOverlay error={fetchError} />,
           }}
-          sx={{ opacity: loading ? "0.5" : "1", backgroundColor: loading ? "#ddd" : "" }}
+          sx={{
+            opacity: loading ? "0.5" : "1",
+            backgroundColor: loading ? "#ddd" : "",
+          }}
         />
       </Paper>
     </Container>

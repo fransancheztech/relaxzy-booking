@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { BookingListItem } from "@/types/bookings";
+import { Prisma } from "generated/prisma";
 
 export async function POST(req: NextRequest) {
   try {
-    const { searchTerm } = await req.json();
+    const { page, limit, searchTerm, sort } = await req.json();
 
     if (typeof searchTerm !== "string") {
       return NextResponse.json(
@@ -13,34 +14,40 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Query bookings with related client, service, and payments (including payment_events)
-    const bookings = await prisma.bookings.findMany({
-      where: {
-        deleted_at: null,
+    const where: Prisma.bookingsWhereInput = {
+  deleted_at: null,
+};
+
+    if (searchTerm) {
+  where.OR = [
+    {
+      notes: { contains: searchTerm, mode: "insensitive" },
+    },
+    {
+      clients: {
         OR: [
-          { notes: { contains: searchTerm, mode: "insensitive" } },
-          {
-            clients: {
-              OR: [
-                { client_name: { contains: searchTerm, mode: "insensitive" } },
-                {
-                  client_surname: { contains: searchTerm, mode: "insensitive" },
-                },
-                { client_email: { contains: searchTerm, mode: "insensitive" } },
-                { client_phone: { contains: searchTerm, mode: "insensitive" } },
-              ],
-            },
-          },
-          {
-            services_names: {
-              OR: [
-                { name: { contains: searchTerm, mode: "insensitive" } },
-                { short_name: { contains: searchTerm, mode: "insensitive" } },
-              ],
-            },
-          },
+          { client_name: { contains: searchTerm, mode: "insensitive" } },
+          { client_surname: { contains: searchTerm, mode: "insensitive" } },
+          { client_email: { contains: searchTerm, mode: "insensitive" } },
+          { client_phone: { contains: searchTerm, mode: "insensitive" } },
         ],
       },
+    },
+    {
+      services_names: {
+        OR: [
+          { name: { contains: searchTerm, mode: "insensitive" } },
+          { short_name: { contains: searchTerm, mode: "insensitive" } },
+        ],
+      },
+    },
+  ];
+}
+
+    // Query bookings with related client, service, and payments (including payment_events)
+    const [rows, total] = await Promise.all([
+      prisma.bookings.findMany({
+      where,
       include: {
         clients: true,
         services_names: true,
@@ -48,11 +55,17 @@ export async function POST(req: NextRequest) {
           include: { payment_events: true },
         },
       },
-      orderBy: { start_time: "desc" },
-    });
+      skip: page * limit,
+      take: limit,
+      orderBy: {
+        [sort?.field ?? "start_time"]: sort?.sort ?? "desc",
+      },
+    }),
+    prisma.bookings.count({where})
+  ])
 
     // Map response for front-end table
-    const data: BookingListItem[] = bookings.map((b) => ({
+    const data: BookingListItem[] = rows.map((b) => ({
       id: b.id,
       start_time: b.start_time,
       end_time: b.end_time,
@@ -102,7 +115,8 @@ export async function POST(req: NextRequest) {
       }),
     }));
 
-    return NextResponse.json(data);
+    // Return mapped rows (frontend expects `client` and `service` keys)
+    return NextResponse.json({ rows: data, total });
   } catch (err) {
     console.error("Error fetching bookings:", err);
     return NextResponse.json(

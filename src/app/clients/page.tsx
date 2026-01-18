@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import DialogClient from "@/components/Dialogs/NewOrUpdateClient/DialogForm";
 import { useLayout } from "../context/LayoutContext";
 import { ClientsTable } from "./ClientsTable";
+import { FETCH_LIMIT } from "@/constants";
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<ClientType[]>([]);
@@ -21,20 +22,36 @@ export default function ClientsPage() {
   const [isOpenNewClientDialog, setIsOpenNewClientDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [sortModel, setSortModel] = useState<{
+    field: string;
+    sort: "asc" | "desc";
+  }>({
+    field: "created_at",
+    sort: "desc",
+  });
 
   const { setButtonLabel, setOnButtonClick } = useLayout();
 
   // -------------------------------
   // Load paginated clients normally
   // -------------------------------
-  async function loadClients(pageToLoad: number) {
+  async function loadClients(
+    pageToLoad: number,
+    sort = sortModel,
+    search = searchTerm,
+  ) {
     try {
       setLoading(true);
       setFetchError(null);
       const res = await fetch("/api/clients/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ searchTerm: "" }),
+        body: JSON.stringify({
+          page: pageToLoad,
+          limit: FETCH_LIMIT,
+          searchTerm: search,
+          sort,
+        }),
       });
 
       if (!res.ok) {
@@ -43,10 +60,10 @@ export default function ClientsPage() {
       }
 
       const data = await res.json();
-      setClients(data);
-      setRowCount(data.length);
+      setClients(data.rows);
+      setRowCount(data.total);
       setPage(pageToLoad);
-      setIsSearching(false);
+      setSortModel(sort);
     } catch (err) {
       console.error(err);
       setClients([]);
@@ -88,7 +105,7 @@ export default function ClientsPage() {
       } finally {
         setLoading(false);
       }
-    }, 300)
+    }, 300),
   ).current;
 
   // Load initial page
