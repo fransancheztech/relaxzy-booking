@@ -43,6 +43,7 @@ model bookings_history {
   change_type change_type
   booking_id  String?        @db.Uuid
   price       Decimal?       @db.Decimal
+  deleted_at  DateTime?      @db.Timestamptz(6)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -69,7 +70,6 @@ model payments {
   id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   booking_id     String?          @db.Uuid
   amount         Decimal?         @db.Decimal
-  method         payment_methods?
   notes          String?
   deleted_at     DateTime?        @db.Timestamptz(6)
   created_at     DateTime         @default(now()) @db.Timestamptz(6)
@@ -261,15 +261,16 @@ model OLD_services_history {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model payment_events {
-  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  payment_id   String?        @db.Uuid
+  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  payment_id   String?          @db.Uuid
   type         payment_types?
-  amount       Decimal?       @db.Decimal
+  amount       Decimal?         @db.Decimal
   notes        String?
-  deleted_at   DateTime?      @db.Timestamptz(6)
-  created_at   DateTime       @default(now()) @db.Timestamptz(6)
-  performed_by String?        @default(dbgenerated("auth.uid()")) @db.Uuid
-  payments     payments?      @relation(fields: [payment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  deleted_at   DateTime?        @db.Timestamptz(6)
+  created_at   DateTime         @default(now()) @db.Timestamptz(6)
+  performed_by String?          @default(dbgenerated("auth.uid()")) @db.Uuid
+  method       payment_methods?
+  payments     payments?        @relation(fields: [payment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.

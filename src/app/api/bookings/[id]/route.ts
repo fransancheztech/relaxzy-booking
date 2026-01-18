@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { PROTECTED_FIELDS } from "@/constants";
 import { PROTECTED_FIELDS_FOR_EDIT_BOOKING } from "@/constants";
-import { payment_methods, payments } from "generated/prisma";
 
 /* ======================================================
    GET /api/bookings/[id]
@@ -24,37 +23,37 @@ export async function GET(
     const booking = await prisma.bookings.findUnique({
       where: { id },
       include: {
-        payments: true,
+        payments: {
+          include: {
+            payment_events: {
+              where: {
+                deleted_at: null,
+              },
+            },
+          },
+        },
         clients: true,
         services_names: true,
       },
     });
 
     if (!booking) {
-      return NextResponse.json(
-        { error: "Booking not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
     /* -----------------------------
        Aggregate payments safely
        ----------------------------- */
-    function isCashPayment(p: payments): boolean {
-      return p.method === payment_methods.cash && p.amount !== null;
-    }
-
-    function isCardPayment(p: payments): boolean {
-      return p.method === payment_methods.credit_card && p.amount !== null;
-    }
 
     const paidCash = booking.payments
-      .filter(isCashPayment)
-      .reduce((sum, p) => sum + Number(p.amount), 0);
+      .flatMap((p) => p.payment_events)
+      .filter((e) => e.method === "cash")
+      .reduce((sum, e) => sum + Number(e.amount ?? 0), 0);
 
     const paidCard = booking.payments
-      .filter(isCardPayment)
-      .reduce((sum, p) => sum + Number(p.amount), 0);
+      .flatMap((p) => p.payment_events)
+      .filter((e) => e.method === "credit_card")
+      .reduce((sum, e) => sum + Number(e.amount ?? 0), 0);
 
     /* -----------------------------
        Normalize nullable client
@@ -188,7 +187,6 @@ export async function PUT(
     });
 
     return NextResponse.json(updated, { status: 200 });
-
   } catch (error: any) {
     console.error("PUT /bookings/[id] error:", error);
 
@@ -234,7 +232,6 @@ export async function DELETE(
     });
 
     return NextResponse.json(deleted, { status: 200 });
-
   } catch (error: any) {
     console.error("DELETE /bookings/[id] error:", error);
 

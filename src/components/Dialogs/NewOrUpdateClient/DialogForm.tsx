@@ -8,6 +8,7 @@ import {
   Button,
   CircularProgress,
   Container,
+  Typography,
 } from "@mui/material";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -103,6 +104,7 @@ const DialogForm = ({ open, onClose, clientId = null }: Props) => {
                 pointerEvents: loading ? "none" : "auto",
               }}
             >
+              <Typography fontSize="small">Client ID: {clientId}</Typography>
               <UpdateClientFormFields />
             </DialogContent>
             <DialogActions

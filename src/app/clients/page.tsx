@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import debounce from "lodash.debounce";
 import { clients as ClientType } from "generated/prisma/client";
 import DialogConfirmDeleteClient from "../../components/Dialogs/DeleteClient/DialogConfirmDeleteClient";

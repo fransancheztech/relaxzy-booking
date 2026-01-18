@@ -12,6 +12,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Typography,
 } from "@mui/material";
 import { FormProvider, useForm } from "react-hook-form";
 import UpdateBookingFormFields from "./FormFields";
@@ -191,6 +192,7 @@ const DialogForm = ({ open, onClose, bookingId }: Props) => {
                 pointerEvents: loading ? "none" : "auto",
               }}
             >
+              <Typography fontSize="small">Booking ID: {bookingId}</Typography>
               <UpdateBookingFormFields
                 setIsPaymentDialogOpen={setIsPaymentDialogOpen}
                 paymentSummary={paymentSummary}

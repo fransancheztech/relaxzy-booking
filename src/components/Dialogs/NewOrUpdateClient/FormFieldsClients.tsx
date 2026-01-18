@@ -9,7 +9,7 @@ const FormFieldsClient = () => {
   } = useFormContext<ClientUpdateSchemaType>();
 
   return (
-    <Grid container spacing={2}>
+    <Grid container sx={{ paddingTop: "1rem" }} spacing={{ xs: 1, xl: 2 }}>
       <Grid size={6}>
         <Controller
           name="client_name"

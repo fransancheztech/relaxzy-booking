@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { FETCH_LIMIT } from "@/constants";
 
 export async function POST(req: NextRequest) {
   const { searchTerm } = await req.json();
