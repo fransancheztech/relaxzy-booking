@@ -67,17 +67,9 @@ export const BookingsTable = ({
   rowCount,
   page,
   loadBookings,
-  searchTerm,
-  setSearchTerm,
-  debouncedSearch,
   loading,
   fetchError,
 }: Props) => {
-  const handleSearch = (text: string) => {
-    setSearchTerm(text);
-    debouncedSearch(text);
-  };
-
   const openDeleteBooking = (id: string) => {
     setSelectedBookingId(id);
     setIsOpenConfirmDelete(true);
@@ -86,7 +78,7 @@ export const BookingsTable = ({
   // -------------------------------
   // Columns for DataGrid
   // -------------------------------
-  const columns: GridColDef[] = [
+  const columns: GridColDef<BookingListItem>[] = [
     {
       field: "customer_name",
       headerName: "Customer",
@@ -114,26 +106,38 @@ export const BookingsTable = ({
       field: "date",
       headerName: "Date",
       flex: 1,
+
       valueGetter: (_, row) =>
-        row.start_time
-          ? new Date(row.start_time).toLocaleDateString("es-ES", {
+        row.start_time ? new Date(row.start_time) : null,
+
+      valueFormatter: (value: Date | null) =>
+        value
+          ? value.toLocaleDateString("es-ES", {
               day: "2-digit",
               month: "2-digit",
               year: "numeric",
             })
           : "",
+
+      sortComparator: (a, b) => a.getTime() - b.getTime(),
     },
     {
       field: "time",
       headerName: "Time",
       flex: 1,
+
       valueGetter: (_, row) =>
-        row.start_time
-          ? `${new Date(row.start_time).toLocaleTimeString([], {
+        row.start_time ? new Date(row.start_time) : null,
+
+      valueFormatter: (value: Date | null) =>
+        value
+          ? value.toLocaleTimeString("es-ES", {
               hour: "2-digit",
               minute: "2-digit",
-            })}`
+            })
           : "",
+
+      sortComparator: (a, b) => a.getTime() - b.getTime(),
     },
     {
       field: "duration",
@@ -202,6 +206,13 @@ export const BookingsTable = ({
             })
           : "",
     },
+    {
+      field: "start_time",
+      headerName: "Start time",
+      type: "dateTime",
+      valueGetter: (_, row) =>
+        row.start_time ? new Date(row.start_time) : null,
+    },
 
     // Actions column
     {
@@ -249,6 +260,9 @@ export const BookingsTable = ({
         <DataGrid
           rows={bookings}
           columns={columns}
+          columnVisibilityModel={{
+            start_time: false,
+          }}
           getRowId={(row) => row.id}
           rowCount={rowCount}
           pageSizeOptions={[FETCH_LIMIT]}
@@ -272,7 +286,7 @@ export const BookingsTable = ({
           }}
           initialState={{
             sorting: {
-              sortModel: [{ field: "created_at", sort: "desc" }],
+              sortModel: [{ field: "start_time", sort: "desc" }],
             },
           }}
           slots={{

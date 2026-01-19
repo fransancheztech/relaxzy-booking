@@ -32,7 +32,7 @@ export default function BookingsPage() {
     field: string;
     sort: "asc" | "desc";
   }>({
-    field: "created_at",
+    field: "start_time",
     sort: "desc",
   });
 

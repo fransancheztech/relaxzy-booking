@@ -72,6 +72,8 @@ export async function POST(req: NextRequest) {
       status: b.status,
       price: b.price?.toString() ?? null,
       notes: b.notes,
+      created_at: b.created_at,
+      updated_at: b.updated_at,
       client: b.clients
         ? {
             id: b.clients.id,
@@ -96,21 +98,11 @@ export async function POST(req: NextRequest) {
             .reduce((sum, e) => sum + Number(e.amount ?? 0), 0)
         );
 
-        // infer method from CHARGE event
-        const chargeMethods = new Set(
-          p.payment_events
-            .filter((e) => e.type === "CHARGE")
-            .map((e) => e.method)
-        );
-
-        const method = chargeMethods.size === 1 ? [...chargeMethods][0] : null;
-
         return {
           id: p.id,
           amount: p.amount?.toString() ?? "0",
-          method,
           refunded: refunded > 0 ? refunded.toString() : null,
-          paid_at: p.created_at,
+          created_at: p.created_at,
         };
       }),
     }));

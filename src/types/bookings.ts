@@ -85,6 +85,9 @@ export type BookingListItem = {
 
   notes?: string | null;
 
+  created_at: Date | null;
+  updated_at: Date | null;
+
   client: {
     id: string;
     name: string | null;
@@ -102,8 +105,7 @@ export type BookingListItem = {
   payments: {
     id: string;
     amount: string;
-    method: payment_methods | null;
     refunded: string | null;
-    paid_at: Date | null;
+    created_at: Date | null;
   }[];
 };
