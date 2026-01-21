@@ -1,38 +1,35 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { id } = req.query;
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+  const therapist = await prisma.therapists.findUnique({ where: { id } });
+  if (!therapist) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json(therapist);
+}
 
-  if (typeof id !== "string") return res.status(400).json({ error: "Invalid ID" });
+export async function PUT(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+  const body = await req.json();
+  const { full_name, email, phone, notes } = body;
+  const updated = await prisma.therapists.update({
+    where: { id },
+    data: { full_name, email, phone, notes },
+  });
+  return NextResponse.json(updated);
+}
 
-  try {
-    if (req.method === "GET") {
-      const therapist = await prisma.therapists.findUnique({ where: { id } });
-      if (!therapist) return res.status(404).json({ error: "Therapist not found" });
-      return res.status(200).json(therapist);
-    }
-
-    if (req.method === "PUT") {
-      const { full_name, email, phone, notes } = req.body;
-
-      const updated = await prisma.therapists.update({
-        where: { id },
-        data: { full_name, email, phone, notes },
-      });
-
-      return res.status(200).json(updated);
-    }
-
-    if (req.method === "DELETE") {
-      await prisma.therapists.delete({ where: { id } });
-      return res.status(204).end();
-    }
-
-    res.setHeader("Allow", ["GET", "PUT", "DELETE"]);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Internal server error" });
-  }
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+  await prisma.therapists.delete({ where: { id } });
+  return new NextResponse(null, { status: 204 });
 }
