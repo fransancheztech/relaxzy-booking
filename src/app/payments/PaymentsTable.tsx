@@ -74,10 +74,6 @@ export const PaymentsTable = ({
   loading,
   fetchError,
 }: Props) => {
-  function handleSearch(text: string) {
-    setSearchTerm(text);
-    debouncedSearch(text);
-  }
 
   // -------------------------------
   // Columns for DataGrid

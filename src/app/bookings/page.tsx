@@ -187,8 +187,6 @@ export default function BookingsPage() {
         rowCount={rowCount}
         page={page}
         loadBookings={loadBookings}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
         debouncedSearch={debouncedSearch}
         setSelectedBookingId={setSelectedBookingId}
         setIsOpenEditBookingDialog={setIsOpenEditBookingDialog}

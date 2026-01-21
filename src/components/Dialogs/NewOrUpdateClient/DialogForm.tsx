@@ -79,7 +79,10 @@ const DialogForm = ({ open, onClose, clientId = null }: Props) => {
     if (!clientId) {
       await handleSubmitCreateClient(data);
     } else {
-      await handleSubmitUpdateClient({ ...data, id: clientId });
+      await handleSubmitUpdateClient({
+        id: clientId,
+        ...data,
+      });
     }
     setLoading(false);
     onClose();

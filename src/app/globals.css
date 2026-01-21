@@ -29,3 +29,10 @@ body {
 .rbc-allday-events {
   display: none !important;
 }
+
+.rbc-current-time-indicator {
+  background-color: blue !important;
+}
+
+
+

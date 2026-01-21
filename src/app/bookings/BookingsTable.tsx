@@ -3,8 +3,6 @@ import {
   CircularProgress,
   Container,
   Paper,
-  Stack,
-  TextField,
   Tooltip,
 } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -24,8 +22,6 @@ interface Props {
     pageToLoad: number,
     sort?: { field: string; sort: "asc" | "desc" },
   ) => void;
-  searchTerm: string;
-  setSearchTerm: (text: string) => void;
   debouncedSearch: (text: string) => void;
   loading: boolean;
   fetchError: string | null;
