@@ -40,7 +40,7 @@ const defaultValues: UpdateTherapistSchemaType = {
   notes: "",
 };
 
-export default function UpdateTherapistDialog({
+export default function UpdateTherapistDialogForm({
   open,
   onClose,
   therapistId,

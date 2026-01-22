@@ -1,10 +1,12 @@
-"use client"
+"use client";
 
 import { useState, useEffect } from "react";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { Button, CircularProgress } from "@mui/material";
-import AddTherapistDialog from "./AddTherapistDialog";
-import UpdateTherapistDialog from "./UpdateTherapistDialog";
+import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+import { CircularProgress, Tooltip } from "@mui/material";
+import AddTherapistDialog from "./AddTherapistDialogForm";
+import UpdateTherapistDialog from "./UpdateTherapistDialogForm";
+import { useLayout } from "../context/LayoutContext";
+import EditIcon from "@mui/icons-material/Edit";
 
 type Therapist = {
   id: string;
@@ -16,26 +18,37 @@ type Therapist = {
 };
 
 export default function TherapistsPage() {
+  const { setButtonLabel, setOnButtonClick } = useLayout();
+
   const [therapists, setTherapists] = useState<Therapist[]>([]);
   const [loading, setLoading] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string>("");
 
+  useEffect(() => {
+    setButtonLabel("New Therapist");
+    setOnButtonClick(() => () => setAddOpen(true));
+    return () => {
+      setButtonLabel("");
+      setOnButtonClick(null);
+    };
+  }, [setButtonLabel, setOnButtonClick]);
+
   const fetchTherapists = async () => {
-  setLoading(true);
-  try {
-    const res = await fetch("/api/therapists");
-    const data: Therapist[] = await res.json();
-    // Filter out any undefined/null rows
-    setTherapists(data.filter(Boolean));
-  } catch (err) {
-    console.error(err);
-    setTherapists([]);
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      const res = await fetch("/api/therapists");
+      const data: Therapist[] = await res.json();
+      // Filter out any undefined/null rows
+      setTherapists(data.filter(Boolean));
+    } catch (err) {
+      console.error(err);
+      setTherapists([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchTherapists();
@@ -50,26 +63,29 @@ export default function TherapistsPage() {
       field: "created_at",
       headerName: "Added",
       flex: 1,
-      valueGetter: (params: {row: Therapist}) =>
-    params.row?.created_at
-      ? new Date(params.row.created_at).toLocaleDateString()
-      : "",
+      valueGetter: (params: { row: Therapist }) =>
+        params.row?.created_at
+          ? new Date(params.row.created_at).toLocaleDateString()
+          : "",
     },
     {
       field: "actions",
+      type: "actions",
       headerName: "Actions",
-      renderCell: (params) => (
-        <Button
-          variant="contained"
-          size="small"
+      getActions: (params) => [
+        <GridActionsCellItem
+          icon={
+            <Tooltip title="Edit">
+              <EditIcon color="primary" />
+            </Tooltip>
+          }
+          label="Edit"
           onClick={() => {
             setSelectedId(params.row.id);
             setUpdateOpen(true);
           }}
-        >
-          Edit
-        </Button>
-      ),
+        />
+      ],
       sortable: false,
       filterable: false,
     },
@@ -77,25 +93,16 @@ export default function TherapistsPage() {
 
   return (
     <main className="p-4">
-      <Button
-        variant="contained"
-        color="primary"
-        sx={{ mb: 2 }}
-        onClick={() => setAddOpen(true)}
-      >
-        Add Therapist
-      </Button>
-
       {loading ? (
         <CircularProgress />
       ) : (
         <div style={{ height: 500, width: "100%" }}>
           <DataGrid
-  rows={therapists}
-  columns={columns}
-  getRowId={(row) => row?.id ?? Math.random()} // fallback id if row.id is undefined
-  pageSizeOptions={[5, 10, 25]}
-/>
+            rows={therapists}
+            columns={columns}
+            getRowId={(row) => row?.id ?? Math.random()} // fallback id if row.id is undefined
+            pageSizeOptions={[5, 10, 25]}
+          />
         </div>
       )}
 

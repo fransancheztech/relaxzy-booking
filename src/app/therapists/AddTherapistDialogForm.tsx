@@ -38,7 +38,7 @@ const defaultValues: AddTherapistSchemaType = {
   notes: "",
 };
 
-export default function AddTherapistDialog({ open, onClose }: Props) {
+export default function AddTherapistDialogForm({ open, onClose }: Props) {
   const methods = useForm<AddTherapistSchemaType>({
     resolver: zodResolver(AddTherapistSchema),
     defaultValues,
