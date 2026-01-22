@@ -94,10 +94,11 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
         <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
           <DialogContent sx={{ overflowY: "hidden" }}>
             <Typography variant="body1" color="warning">
-              WARNING!!! Only one booking per person. If it is a couple, you need
+              WARNING!: Please, create one booking per person. If it is a couple, you need
               to create two separate bookings with a note in both of them to
               indicate that they are together. Feel free to use the same Contact
-              Information for both of them if you need to.
+              Information for both of them if you find it necessary. The same
+              principle applies for triple, quadruple bookings, etc.
             </Typography>
             <NewBookingFormFields />
           </DialogContent>
