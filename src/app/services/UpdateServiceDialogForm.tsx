@@ -24,6 +24,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   serviceId: string;
+  setIsOpenConfirmDelete: (open: boolean) => void;
 };
 
 const defaultValues: BaseServiceSchemaType = {
@@ -33,7 +34,7 @@ const defaultValues: BaseServiceSchemaType = {
   duration_prices: [{ duration: 60, price: 0 }],
 };
 
-const UpdateServiceDialogForm = ({ open, onClose, serviceId }: Props) => {
+const UpdateServiceDialogForm = ({ open, onClose, serviceId, setIsOpenConfirmDelete }: Props) => {
   const [loading, setLoading] = useState(false);
 
   const methods = useForm<BaseServiceSchemaType>({
@@ -228,7 +229,7 @@ const UpdateServiceDialogForm = ({ open, onClose, serviceId }: Props) => {
           </DialogContent>
 
           <DialogActions sx={{ display: "flex", justifyContent: "space-between" }}>
-            <Button startIcon={<DeleteIcon />} color="error" variant="contained" onClick={onCancel}>
+            <Button startIcon={<DeleteIcon />} color="error" variant="contained" onClick={() =>setIsOpenConfirmDelete(true)}>
               Delete
             </Button>
             <div>

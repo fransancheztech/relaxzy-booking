@@ -5,11 +5,12 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Typography,
 } from "@mui/material";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import handleSubmitCreateBooking from "@/handlers/handleSubmitCreateBooking";
-import NewBookingFormFields from "./FormFields";
+import NewBookingFormFields from "./NewBookingFormFields";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CloseIcon from "@mui/icons-material/Close";
 import ClientSearch from "@/app/calendar/ClientSearch";
@@ -22,19 +23,18 @@ type Props = {
   onClose: () => void;
 };
 
-const DialogForm = ({ open, onClose }: Props) => {
-
+const NewBookingDialogForm = ({ open, onClose }: Props) => {
   const defaultValues = {
-      client_name: "",
-      client_surname: "",
-      client_phone: "",
-      client_email: "",
-      start_time: roundToNearestMinutes(new Date(), { nearestTo: 5 }),
-      duration: undefined,
-      service_name: "",
-      notes: "",
-      price: undefined,
-    }
+    client_name: "",
+    client_surname: "",
+    client_phone: "",
+    client_email: "",
+    start_time: roundToNearestMinutes(new Date(), { nearestTo: 5 }),
+    duration: undefined,
+    service_name: "",
+    notes: "",
+    price: undefined,
+  };
 
   const methods = useForm<BookingSchemaType>({
     resolver: zodResolver(BookingSchema),
@@ -72,8 +72,8 @@ const DialogForm = ({ open, onClose }: Props) => {
 
   useEffect(() => {
     methods.reset(defaultValues);
-  }, [open])
-  
+  }, [open]);
+
   return (
     <Dialog
       open={open}
@@ -93,6 +93,12 @@ const DialogForm = ({ open, onClose }: Props) => {
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
           <DialogContent sx={{ overflowY: "hidden" }}>
+            <Typography variant="body1" color="warning">
+              WARNING!!! Only one booking per person. If it is a couple, you need
+              to create two separate bookings with a note in both of them to
+              indicate that they are together. Feel free to use the same Contact
+              Information for both of them if you need to.
+            </Typography>
             <NewBookingFormFields />
           </DialogContent>
           <DialogActions>
@@ -115,4 +121,4 @@ const DialogForm = ({ open, onClose }: Props) => {
   );
 };
 
-export default DialogForm;
+export default NewBookingDialogForm;

@@ -1,22 +1,18 @@
 import {
-  Box,
-  CircularProgress,
   Container,
   Paper,
-  Stack,
-  TextField,
   Tooltip,
 } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import { FETCH_LIMIT } from "@/constants";
 import { clients as ClientType } from "generated/prisma/client";
+import NoRowsOverlay from "@/components/NoRowsOverlay";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 interface Props {
   setSelectedClientId: (id: string) => void;
   setIsOpenEditClientDialog: (open: boolean) => void;
-  setConfirmDeleteOpen: (open: boolean) => void;
   clients: ClientType[];
   rowCount: number;
   page: number;
@@ -32,61 +28,16 @@ interface Props {
   fetchError: string | null;
 }
 
-const LoadingOverlay = () => (
-  <Box
-    sx={{
-      position: "absolute",
-      inset: 0,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    }}
-  >
-    <CircularProgress />
-  </Box>
-);
-
-const NoRowsOverlay = ({ error }: { error: string | null }) => (
-  <Box
-    sx={{
-      height: "100%",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: error ? "error.main" : "text.secondary",
-    }}
-  >
-    {error ? `Error loading clients: ${error}` : "No clients found"}
-  </Box>
-);
-
 export const ClientsTable = ({
   setSelectedClientId,
   setIsOpenEditClientDialog,
-  setConfirmDeleteOpen,
   clients,
   rowCount,
   page,
   loadClients,
-  searchTerm,
-  setSearchTerm,
-  debouncedSearch,
   loading,
   fetchError,
 }: Props) => {
-  const openDeleteClient = (id: string) => {
-    setSelectedClientId(id);
-    setConfirmDeleteOpen(true);
-  };
-
-  function handleSearch(text: string) {
-    setSearchTerm(text);
-    debouncedSearch(text);
-  }
-
-  // -------------------------------
-  // Columns for DataGrid
-  // -------------------------------
   const columns: GridColDef[] = [
     { field: "client_name", headerName: "Name", flex: 1 },
     { field: "client_surname", headerName: "Surname", flex: 1 },
@@ -131,16 +82,6 @@ export const ClientsTable = ({
             setIsOpenEditClientDialog(true);
           }}
           key="edit"
-        />,
-        <GridActionsCellItem
-          icon={
-            <Tooltip title="Delete">
-              <DeleteIcon color="error" />
-            </Tooltip>
-          }
-          label="Delete"
-          onClick={() => openDeleteClient(params.row.id)}
-          key="delete"
         />,
       ],
     },

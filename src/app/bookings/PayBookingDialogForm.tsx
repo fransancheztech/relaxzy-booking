@@ -32,7 +32,7 @@ interface DialogFormProps {
   onPaymentSuccess: () => void;
 }
 
-const DialogForm = ({
+const PayBookingDialogForm = ({
   open,
   onClose,
   bookingId,
@@ -171,4 +171,4 @@ const DialogForm = ({
   );
 };
 
-export default DialogForm;
+export default PayBookingDialogForm;

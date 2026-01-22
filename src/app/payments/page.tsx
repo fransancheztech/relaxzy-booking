@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import debounce from "lodash.debounce";
 import { payments as PaymentsType } from "generated/prisma/client";
-import DialogPayment from "@/components/Dialogs/Payment/DialogPayment";
+import DialogPayment from "./DialogPayment";
 import { PaymentsTable } from "./PaymentsTable";
 import { FETCH_LIMIT } from "@/constants";
 
@@ -15,6 +15,8 @@ export default function PaymentsPage() {
   const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(
     null
   );
+  const [selectedPaymentAmount, setSelectedPaymentAmount] =
+  useState<number | null>(null);
   const [isOpenViewPaymentDialog, setIsOpenViewPaymentDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -99,6 +101,7 @@ export default function PaymentsPage() {
         page={page}
         loadPayments={loadPayments}
         setSelectedPaymentId={setSelectedPaymentId}
+        setSelectedPaymentAmount={setSelectedPaymentAmount}
         setIsOpenViewPaymentDialog={setIsOpenViewPaymentDialog}
         setIsOpenRefundPaymentDialog={() => null}
         setConfirmRefundOpen={() => null}
@@ -110,6 +113,7 @@ export default function PaymentsPage() {
         open={isOpenViewPaymentDialog}
         onClose={closeViewPaymentDialog}
         paymentId={selectedPaymentId}
+        paymentAmount={selectedPaymentAmount}
         setPaymentId={setSelectedPaymentId}
         loadPayments={loadPayments}
       />

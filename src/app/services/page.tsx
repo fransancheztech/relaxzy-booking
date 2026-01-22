@@ -13,7 +13,7 @@ import { useLayout } from "../context/LayoutContext";
 
 const ServicesPage = () => {
   const { setButtonLabel, setOnButtonClick } = useLayout();
-  
+
   const [services, setServices] = useState<ServicesType[]>([]);
   const [rowCount, setRowCount] = useState(0);
   const [page, setPage] = useState(0);
@@ -108,14 +108,15 @@ const ServicesPage = () => {
 
   const closeDeleteDialog = () => {
     setIsOpenConfirmDelete(false);
-    setSelectedServiceId(null);
   };
 
-  const onConfirmDelete = () => {
-    if (selectedServiceId) handleDeleteService(selectedServiceId);
-    setSelectedServiceId(null);
-  };
+  const onConfirmDelete = async () => {
+    if (!selectedServiceId) return;
 
+    await handleDeleteService(selectedServiceId);
+    setSelectedServiceId(null);
+    loadServices(page);
+  };
   return (
     <main className="p-4">
       <ServicesTable
@@ -134,11 +135,14 @@ const ServicesPage = () => {
         open={isOpenNewServiceDialog}
         onClose={closeNewServiceDialog}
       />
-      <UpdateServiceDialogForm
-        open={isOpenEditServiceDialog}
-        onClose={closeEditServiceDialog}
-        serviceId={selectedServiceId!}
-      />
+      {selectedServiceId && (
+        <UpdateServiceDialogForm
+          open={isOpenEditServiceDialog}
+          onClose={closeEditServiceDialog}
+          serviceId={selectedServiceId}
+          setIsOpenConfirmDelete={setIsOpenConfirmDelete}
+        />
+      )}
       <ConfirmDeleteServiceDialog
         open={isOpenConfirmDelete}
         onClose={closeDeleteDialog}

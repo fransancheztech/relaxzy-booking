@@ -2,12 +2,16 @@ import {
   BOOKING_DEFAULT_DURATIONS,
   BOOKING_DEFAULT_PRICES,
   BOOKING_DEFAULT_SERVICES,
+  BOOKING_DEFAULT_STATUSES,
 } from "@/constants";
-import { BookingSchemaType } from "@/schemas/booking.schema";
+import { BookingUpdateSchemaType } from "@/schemas/booking.schema";
 import {
   Alert,
   Autocomplete,
+  Box,
+  Button,
   Container,
+  DialogContentText,
   FormControl,
   FormHelperText,
   Grid,
@@ -15,17 +19,34 @@ import {
   MenuItem,
   Select,
   TextField,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
 import { Controller, useFormContext } from "react-hook-form";
+import { Dispatch, SetStateAction } from "react";
 
-const FormFields = () => {
+interface Props {
+  setIsPaymentDialogOpen: Dispatch<SetStateAction<boolean>>;
+  paymentSummary: {
+    totalPrice: number;
+    paidCash: number;
+    paidCard: number;
+    totalPaid: number;
+    remainingBalance: number;
+  };
+}
+
+const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Props) => {
   const {
     control,
     formState: { errors },
-  } = useFormContext<BookingSchemaType>();
+    setValue
+  } = useFormContext<BookingUpdateSchemaType>();
+
+  const { totalPrice, totalPaid, remainingBalance } = paymentSummary;
 
   return (
     <Grid container sx={{ paddingTop: "1rem" }} spacing={{ xs: 1, xl: 2 }}>
@@ -242,10 +263,60 @@ const FormFields = () => {
           )}
         ></Controller>
       </Grid>
-      {(errors as any).booking_creation_form?.message && (
+      <Grid size={6}>
+        <Controller
+          name="status"
+          control={control}
+          render={({ field }) => (
+            <FormControl fullWidth size="small" error={!!errors.status}>
+              <InputLabel id="status">Status</InputLabel>
+              <Select labelId="status" {...field} label="Status">
+                {BOOKING_DEFAULT_STATUSES.map((status) => (
+                  <MenuItem key={status} value={status}>
+                    {status[0].toUpperCase() + status.slice(1)}
+                  </MenuItem>
+                ))}
+              </Select>
+              <FormHelperText>{errors.status?.message}</FormHelperText>
+            </FormControl>
+          )}
+        />
+      </Grid>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          mt: 2,
+          gap: 2,
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            maxWidth: 300,
+          }}
+        >
+          <DialogContentText>
+            Below is a summary of your booking:
+          </DialogContentText>
+
+          <Typography variant="body1">Price: {totalPrice}€</Typography>
+          <Typography variant="body1">Paid: {totalPaid}€</Typography>
+          <Typography variant="body1">
+            Due: {remainingBalance}€
+          </Typography>
+        </Box>
+
+        <Tooltip title="Add payment">
+          <Button variant="contained" onClick={() => setIsPaymentDialogOpen(true)}>Add Payment</Button>
+        </Tooltip>
+      </Box>
+
+      {(errors as any).form?.message && (
         <Container sx={{ marginBottom: 2 }}>
           <Alert severity="error" variant="standard">
-            {(errors as any).booking_creation_form.message}
+            {(errors as any).form.message}
           </Alert>
         </Container>
       )}
@@ -253,4 +324,4 @@ const FormFields = () => {
   );
 };
 
-export default FormFields;
+export default UpdateBookingFormFields;

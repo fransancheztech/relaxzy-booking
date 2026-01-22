@@ -1,19 +1,18 @@
 import {
-  Box,
-  CircularProgress,
   Container,
   Paper,
-  Stack,
-  TextField,
   Tooltip,
 } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { FETCH_LIMIT } from "@/constants";
 import { payments as PaymentsType } from "generated/prisma/client";
+import LoadingOverlay from "@/components/LoadingOverlay";
+import NoRowsOverlay from "@/components/NoRowsOverlay";
 
 interface Props {
   setSelectedPaymentId: (id: string) => void;
+  setSelectedPaymentAmount: (amount: number | null) => void;
   setIsOpenViewPaymentDialog: (open: boolean) => void;
   setIsOpenRefundPaymentDialog: (open: boolean) => void;
   setConfirmRefundOpen: (open: boolean) => void;
@@ -31,46 +30,14 @@ interface Props {
   fetchError: string | null;
 }
 
-const LoadingOverlay = () => (
-  <Box
-    sx={{
-      position: "absolute",
-      inset: 0,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    }}
-  >
-    <CircularProgress />
-  </Box>
-);
-
-const NoRowsOverlay = ({ error }: { error: string | null }) => (
-  <Box
-    sx={{
-      height: "100%",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: error ? "error.main" : "text.secondary",
-    }}
-  >
-    {error ? `Error loading payments: ${error}` : "No payment events found"}
-  </Box>
-);
-
 export const PaymentsTable = ({
   setSelectedPaymentId,
+  setSelectedPaymentAmount,
   setIsOpenViewPaymentDialog,
-  setIsOpenRefundPaymentDialog,
-  setConfirmRefundOpen,
   payments,
   rowCount,
   page,
   loadPayments,
-  searchTerm,
-  setSearchTerm,
-  debouncedSearch,
   loading,
   fetchError,
 }: Props) => {
@@ -117,6 +84,7 @@ export const PaymentsTable = ({
           label="View"
           onClick={() => {
             setSelectedPaymentId(params.row.id);
+            setSelectedPaymentAmount(params.row.amount);
             setIsOpenViewPaymentDialog(true);
           }}
           key="view"

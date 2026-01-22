@@ -15,15 +15,15 @@ import {
   Typography,
 } from "@mui/material";
 import { FormProvider, useForm } from "react-hook-form";
-import UpdateBookingFormFields from "./FormFields";
+import UpdateBookingFormFields from "./UpdateBookingFormFields";
 import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import { useEffect, useState } from "react";
-import DialogDeletion from "@/components/Dialogs/DeleteBooking/DialogForm";
+import DialogDeletion from "@/app/bookings/ConfirmDeleteBookingDialog";
 import handleDeleteBooking from "@/handlers/handleDeleteBooking";
 import { DateTime } from "luxon";
-import PayBookingDialog from "../PayBooking/DialogForm";
+import PayBookingDialog from "./PayBookingDialogForm";
 import { useSimilarClients } from "@/hooks/useSimilarClients";
 import ClientSearch from "@/app/calendar/ClientSearch";
 
@@ -47,7 +47,7 @@ export const defaultValuesUpdateBookingForm: Partial<BookingUpdateSchemaType> =
     status: "pending",
   };
 
-const DialogForm = ({ open, onClose, bookingId }: Props) => {
+const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] =
     useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -282,4 +282,4 @@ const DialogForm = ({ open, onClose, bookingId }: Props) => {
   );
 };
 
-export default DialogForm;
+export default UpdateBookingDialogForm;

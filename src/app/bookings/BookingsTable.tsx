@@ -1,20 +1,14 @@
-import {
-  Box,
-  CircularProgress,
-  Container,
-  Paper,
-  Tooltip,
-} from "@mui/material";
+import { Container, Paper, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import { FETCH_LIMIT } from "@/constants";
 import { BookingListItem } from "@/types/bookings";
+import LoadingOverlay from "@/components/LoadingOverlay";
+import NoRowsOverlay from "@/components/NoRowsOverlay";
 
 interface Props {
   setSelectedBookingId: (id: string) => void;
   setIsOpenEditBookingDialog: (open: boolean) => void;
-  setIsOpenConfirmDelete: (open: boolean) => void;
   bookings: BookingListItem[];
   rowCount: number;
   page: number;
@@ -27,38 +21,9 @@ interface Props {
   fetchError: string | null;
 }
 
-const LoadingOverlay = () => (
-  <Box
-    sx={{
-      position: "absolute",
-      inset: 0,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    }}
-  >
-    <CircularProgress />
-  </Box>
-);
-
-const NoRowsOverlay = ({ error }: { error: string | null }) => (
-  <Box
-    sx={{
-      height: "100%",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: error ? "error.main" : "text.secondary",
-    }}
-  >
-    {error ? `Error loading bookings: ${error}` : "No bookings found"}
-  </Box>
-);
-
 export const BookingsTable = ({
   setSelectedBookingId,
   setIsOpenEditBookingDialog,
-  setIsOpenConfirmDelete,
   bookings,
   rowCount,
   page,
@@ -66,14 +31,6 @@ export const BookingsTable = ({
   loading,
   fetchError,
 }: Props) => {
-  const openDeleteBooking = (id: string) => {
-    setSelectedBookingId(id);
-    setIsOpenConfirmDelete(true);
-  };
-
-  // -------------------------------
-  // Columns for DataGrid
-  // -------------------------------
   const columns: GridColDef<BookingListItem>[] = [
     {
       field: "customer_name",
@@ -228,16 +185,6 @@ export const BookingsTable = ({
             setIsOpenEditBookingDialog(true);
           }}
           key="edit"
-        />,
-        <GridActionsCellItem
-          icon={
-            <Tooltip title="Delete">
-              <DeleteIcon color="error" />
-            </Tooltip>
-          }
-          label="Delete"
-          onClick={() => openDeleteBooking(params.row.id)}
-          key="delete"
         />,
       ],
     },

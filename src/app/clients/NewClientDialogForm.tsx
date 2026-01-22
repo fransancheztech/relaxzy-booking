@@ -8,7 +8,6 @@ import {
   Button,
   CircularProgress,
   Container,
-  Typography,
 } from "@mui/material";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,11 +15,10 @@ import {
   ClientUpdateSchema,
   ClientUpdateSchemaType,
 } from "@/schemas/client.schema";
-import { useEffect, useState } from "react";
-import UpdateClientFormFields from "./FormFieldsClients";
+import { useState } from "react";
+import UpdateClientFormFields from "./NewClientFormFields";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
-import handleSubmitUpdateClient from "@/handlers/handleSubmitUpdateClient";
 import handleSubmitCreateClient from "@/handlers/handleSubmitCreateClient";
 
 type Props = {
@@ -37,7 +35,7 @@ export const defaultValuesClientForm: Partial<ClientUpdateSchemaType> = {
   client_notes: "",
 };
 
-const DialogForm = ({ open, onClose, clientId = null }: Props) => {
+const NewClientDialogForm = ({ open, onClose }: Props) => {
   const [loading, setLoading] = useState(false);
 
   const methods = useForm<ClientUpdateSchemaType>({
@@ -45,45 +43,10 @@ const DialogForm = ({ open, onClose, clientId = null }: Props) => {
     defaultValues: defaultValuesClientForm,
   });
 
-  // Load client data when dialog opens
-  useEffect(() => {
-    if (!open || !clientId) return;
-
-    const loadClient = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/clients/${clientId}`, {
-          cache: "no-store",
-        });
-        if (!res.ok) throw new Error("Failed to load client");
-        const data = await res.json();
-        methods.reset({
-          client_name: data.client_name ?? "",
-          client_surname: data.client_surname ?? "",
-          client_email: data.client_email ?? "",
-          client_phone: data.client_phone ?? "", // CRITICAL
-          client_notes: data.client_notes ?? "",
-        });
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadClient();
-  }, [open, clientId]);
-
   const onSubmit = async (data: ClientUpdateSchemaType) => {
     setLoading(true);
-    if (!clientId) {
-      await handleSubmitCreateClient(data);
-    } else {
-      await handleSubmitUpdateClient({
-        id: clientId,
-        ...data,
-      });
-    }
+
+    await handleSubmitCreateClient(data);
     setLoading(false);
     onClose();
   };
@@ -96,7 +59,7 @@ const DialogForm = ({ open, onClose, clientId = null }: Props) => {
   return (
     <>
       <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Client</DialogTitle>
+        <DialogTitle>New Client</DialogTitle>
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
             <DialogContent
@@ -105,7 +68,6 @@ const DialogForm = ({ open, onClose, clientId = null }: Props) => {
                 pointerEvents: loading ? "none" : "auto",
               }}
             >
-              <Typography fontSize="small">Client ID: {clientId}</Typography>
               <UpdateClientFormFields />
             </DialogContent>
             <DialogActions
@@ -119,11 +81,7 @@ const DialogForm = ({ open, onClose, clientId = null }: Props) => {
                 >
                   Cancel
                 </Button>
-                <Button
-                  startIcon={<SaveIcon />}
-                  color="success"
-                  type="submit"
-                >
+                <Button startIcon={<SaveIcon />} color="success" type="submit">
                   Save
                 </Button>
               </Container>
@@ -145,4 +103,4 @@ const DialogForm = ({ open, onClose, clientId = null }: Props) => {
   );
 };
 
-export default DialogForm;
+export default NewClientDialogForm;

@@ -2,7 +2,7 @@ import { TextField, Grid } from "@mui/material";
 import { Controller, useFormContext } from "react-hook-form";
 import { ClientUpdateSchemaType } from "@/schemas/client.schema";
 
-const FormFieldsClient = () => {
+const NewClientFormFields = () => {
   const {
     control,
     formState: { errors },
@@ -94,4 +94,4 @@ const FormFieldsClient = () => {
   );
 };
 
-export default FormFieldsClient;
+export default NewClientFormFields;

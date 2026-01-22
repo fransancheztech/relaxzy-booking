@@ -3,9 +3,10 @@
 import { useEffect, useState, useRef } from "react";
 import debounce from "lodash.debounce";
 import { clients as ClientType } from "generated/prisma/client";
-import DialogConfirmDeleteClient from "../../components/Dialogs/DeleteClient/DialogConfirmDeleteClient";
+import DialogConfirmDeleteClient from "./ConfirmDeleteClientDialog";
 import { toast } from "react-toastify";
-import DialogClient from "@/components/Dialogs/NewOrUpdateClient/DialogForm";
+import NewClientDialogForm from "./NewClientDialogForm";
+import UpdateClientDialogForm from "./UpdateClientDialogForm";
 import { useLayout } from "../context/LayoutContext";
 import { ClientsTable } from "./ClientsTable";
 import { FETCH_LIMIT } from "@/constants";
@@ -191,25 +192,21 @@ export default function ClientsPage() {
         loadClients={loadClients}
         setSelectedClientId={setSelectedClientId}
         setIsOpenEditClientDialog={setIsOpenEditClientDialog}
-        setConfirmDeleteOpen={setConfirmDeleteOpen}
         loading={loading}
         fetchError={fetchError}
       />
-      {/* Dialog for New Client */}
-      <DialogClient
+      <NewClientDialogForm
         open={isOpenNewClientDialog}
         onClose={closeNewClientDialog}
       />
-      {/* Dialogs for Edit Client */}
-      <DialogClient
+      <UpdateClientDialogForm
         open={isOpenEditClientDialog}
         onClose={closeEditClientDialog}
         clientId={selectedClientId}
-      />
-      <DialogConfirmDeleteClient
-        open={confirmDeleteOpen}
-        onClose={closeDeleteDialog}
-        onConfirm={onConfirmDelete}
+        confirmDeleteOpen={confirmDeleteOpen}
+        onConfirmDelete={onConfirmDelete}
+        closeDeleteDialog={closeDeleteDialog}
+        setConfirmDeleteOpen={setConfirmDeleteOpen}
       />
     </main>
   );

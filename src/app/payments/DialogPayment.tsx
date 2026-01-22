@@ -1,12 +1,12 @@
 import {
-  Box,
   Button,
-  CircularProgress,
+  Container,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Paper,
+  Typography,
 } from "@mui/material";
 import UndoIcon from "@mui/icons-material/Undo";
 import CloseIcon from "@mui/icons-material/Close";
@@ -14,47 +14,29 @@ import DialogRefund from "./DialogRefund";
 import { useEffect, useState } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { payment_events as PaymentEventType } from "generated/prisma";
+import LoadingOverlay from "@/components/LoadingOverlay";
+import NoRowsOverlay from "@/components/NoRowsOverlay";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   paymentId: string | null;
   setPaymentId: (paymentId: string | null) => void;
+  paymentAmount: number | null;
   loadPayments: (
     pageToLoad: number,
-    sort?: { field: string; sort: "asc" | "desc" }
+    sort?: { field: string; sort: "asc" | "desc" },
   ) => void;
 }
 
-const LoadingOverlay = () => (
-  <Box
-    sx={{
-      position: "absolute",
-      inset: 0,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    }}
-  >
-    <CircularProgress />
-  </Box>
-);
-
-const NoRowsOverlay = ({ error }: { error: string | null }) => (
-  <Box
-    sx={{
-      height: "100%",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: error ? "error.main" : "text.secondary",
-    }}
-  >
-    {error ? `Error loading payments: ${error}` : "No payments found"}
-  </Box>
-);
-
-const DialogPayment = ({ open, onClose, paymentId, setPaymentId, loadPayments }: Props) => {
+const DialogPayment = ({
+  open,
+  onClose,
+  paymentId,
+  paymentAmount,
+  setPaymentId,
+  loadPayments,
+}: Props) => {
   const [isOpenRefundPaymentDialog, setIsOpenRefundPaymentDialog] =
     useState(false);
   const [paymentEvents, setPaymentEvents] = useState<PaymentEventType[]>([]);
@@ -121,7 +103,12 @@ const DialogPayment = ({ open, onClose, paymentId, setPaymentId, loadPayments }:
             })
           : "",
     },
-    { field: "performed_by", headerName: "Performed by", flex: 1 },
+    {
+      field: "email",
+      headerName: "Performed by",
+      flex: 1,
+      valueGetter: (_, row) => row.email ?? "System",
+    },
   ];
 
   useEffect(() => {
@@ -160,6 +147,10 @@ const DialogPayment = ({ open, onClose, paymentId, setPaymentId, loadPayments }:
             overflow: "hidden", // critical
           }}
         >
+          <Typography fontSize="small">Payment ID: {paymentId}</Typography>
+          <Typography variant="body1">
+            Total paid: {paymentAmount} €
+          </Typography>
           <Paper
             elevation={2}
             sx={{
@@ -191,10 +182,9 @@ const DialogPayment = ({ open, onClose, paymentId, setPaymentId, loadPayments }:
             />
           </Paper>
         </DialogContent>
-        <DialogActions>
-          <Button startIcon={<CloseIcon />} color="error" onClick={onClose}>
-            Close
-          </Button>
+        <DialogActions
+          sx={{ display: "flex", justifyContent: "space-between" }}
+        >
           <Button
             variant="contained"
             startIcon={<UndoIcon />}
@@ -203,6 +193,11 @@ const DialogPayment = ({ open, onClose, paymentId, setPaymentId, loadPayments }:
           >
             Refund
           </Button>
+          <Container sx={{ display: "flex", justifyContent: "flex-end" }}>
+            <Button startIcon={<CloseIcon />} color="error" onClick={onClose}>
+              Close
+            </Button>
+          </Container>
         </DialogActions>
       </Dialog>
 

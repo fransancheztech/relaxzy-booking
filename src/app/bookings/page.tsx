@@ -4,11 +4,10 @@ import { useEffect, useState, useRef } from "react";
 import debounce from "lodash.debounce";
 import { useLayout } from "../context/LayoutContext";
 import { toast } from "react-toastify";
-import NewBookingDialogForm from "@/components/Dialogs/NewBooking/DialogForm";
-import ConfirmDeleteBookingDialog from "./dialogs/ConfirmDeleteBookingDialog";
+import NewBookingDialogForm from "@/app/bookings/NewBookingDialogForm";
 import { BookingsTable } from "./BookingsTable";
 import { BookingListItem } from "@/types/bookings";
-import UpdateBookingDialogForm from "../../components/Dialogs/UpdateBooking/DialogForm";
+import UpdateBookingDialogForm from "@/app/bookings/UpdateBookingDialogForm";
 import { FETCH_LIMIT } from "@/constants";
 
 export default function BookingsPage() {
@@ -27,7 +26,6 @@ export default function BookingsPage() {
   );
   const [isOpenNewBookingDialog, setIsOpenNewBookingDialog] = useState(false);
   const [isOpenEditBookingDialog, setIsOpenEditBookingDialog] = useState(false);
-  const [isOpenConfirmDelete, setIsOpenConfirmDelete] = useState(false);
   const [sortModel, setSortModel] = useState<{
     field: string;
     sort: "asc" | "desc";
@@ -158,10 +156,6 @@ export default function BookingsPage() {
     setIsOpenEditBookingDialog(false);
     setSelectedBookingId(null);
   };
-  const closeDeleteDialog = () => {
-    setIsOpenConfirmDelete(false);
-    setSelectedBookingId(null);
-  };
 
   // -------------------------------
   // Layout button
@@ -190,7 +184,6 @@ export default function BookingsPage() {
         debouncedSearch={debouncedSearch}
         setSelectedBookingId={setSelectedBookingId}
         setIsOpenEditBookingDialog={setIsOpenEditBookingDialog}
-        setIsOpenConfirmDelete={setIsOpenConfirmDelete}
         loading={loading}
         fetchError={fetchError}
       />
@@ -202,11 +195,6 @@ export default function BookingsPage() {
         open={isOpenEditBookingDialog}
         onClose={closeEditDialog}
         bookingId={selectedBookingId!}
-      />
-      <ConfirmDeleteBookingDialog
-        open={isOpenConfirmDelete}
-        onClose={closeDeleteDialog}
-        onConfirm={onConfirmDelete}
       />
     </main>
   );

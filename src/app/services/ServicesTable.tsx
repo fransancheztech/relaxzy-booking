@@ -1,37 +1,10 @@
 import { FETCH_LIMIT } from "@/constants";
 import { ServiceListItem } from "@/types/services";
-import { Box, CircularProgress, Container, Paper, Tooltip } from "@mui/material";
+import { Container, Paper, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-
-const LoadingOverlay = () => (
-  <Box
-    sx={{
-      position: "absolute",
-      inset: 0,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    }}
-  >
-    <CircularProgress />
-  </Box>
-);
-
-const NoRowsOverlay = ({ error }: { error: string | null }) => (
-  <Box
-    sx={{
-      height: "100%",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: error ? "error.main" : "text.secondary",
-    }}
-  >
-    {error ? `Error loading services: ${error}` : "No services found"}
-  </Box>
-);
+import NoRowsOverlay from "@/components/NoRowsOverlay";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 interface Props {
   setSelectedServiceId: (id: string) => void;
@@ -52,7 +25,6 @@ interface Props {
 const ServicesTable = ({
   setSelectedServiceId,
   setIsOpenEditServiceDialog,
-  setIsOpenConfirmDelete,
   services,
   rowCount,
   page,
@@ -61,10 +33,7 @@ const ServicesTable = ({
   fetchError,
 }: Props) => {
 
-  const openDeleteService = (id: string) => {
-    setSelectedServiceId(id);
-    setIsOpenConfirmDelete(true);
-  };
+  
 
   // -------------------------------
   // Columns for DataGrid
@@ -98,16 +67,6 @@ const ServicesTable = ({
             setIsOpenEditServiceDialog(true);
           }}
           key="edit"
-        />,
-        <GridActionsCellItem
-          icon={
-            <Tooltip title="Delete">
-              <DeleteIcon color="error" />
-            </Tooltip>
-          }
-          label="Delete"
-          onClick={() => openDeleteService(params.row.id)}
-          key="delete"
         />,
       ],
     },

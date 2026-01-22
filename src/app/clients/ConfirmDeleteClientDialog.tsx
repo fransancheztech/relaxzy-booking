@@ -8,7 +8,7 @@ type Props = {
   onConfirm: () => void;
 };
 
-export default function DialogConfirmDeleteClient({ open, onClose, onConfirm }: Props) {
+export default function ConfirmDeleteClientDialog({ open, onClose, onConfirm }: Props) {
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>Delete client?</DialogTitle>

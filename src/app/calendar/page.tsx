@@ -3,8 +3,8 @@
 import dynamic from "next/dynamic";
 import { useLayout } from '../context/LayoutContext';
 import { useEffect, useState } from 'react';
-import NewBookingDialogForm from '@/components/Dialogs/NewBooking/DialogForm';
-import UpdateBookingDialogForm from '@/components/Dialogs/UpdateBooking/DialogForm';
+import NewBookingDialogForm from '@/app/bookings/NewBookingDialogForm';
+import UpdateBookingDialogForm from '@/app/bookings/UpdateBookingDialogForm';
 
 const CalendarUI = dynamic(
   () => import("./CalendarUI"),
