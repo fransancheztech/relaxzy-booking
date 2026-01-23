@@ -5,6 +5,7 @@ import { FETCH_LIMIT } from "@/constants";
 import { BookingListItem } from "@/types/bookings";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
+import { formatMoney } from "@/utils/formatMoney";
 
 interface Props {
   setSelectedBookingId: (id: string) => void;
@@ -110,16 +111,7 @@ export const BookingsTable = ({
       field: "price",
       headerName: "Price",
       flex: 1,
-      valueGetter: (_, row) => {
-        if (!row.price) return "";
-        const priceNumber = Number(row.price);
-        return (
-          new Intl.NumberFormat("es-ES", {
-            minimumFractionDigits: priceNumber % 1 === 0 ? 0 : 2,
-            maximumFractionDigits: 2,
-          }).format(priceNumber) + " €"
-        );
-      },
+      valueFormatter: (value) => formatMoney(value),
     },
     {
       field: "paid",
@@ -128,14 +120,9 @@ export const BookingsTable = ({
       valueGetter: (_, row) => {
         const payments: { amount: string }[] = row.payments;
         const total = payments.reduce((sum, p) => sum + Number(p.amount), 0);
-
-        return (
-          new Intl.NumberFormat("es-ES", {
-            minimumFractionDigits: total % 1 === 0 ? 0 : 2,
-            maximumFractionDigits: 2,
-          }).format(total) + " €"
-        );
+        return total;
       },
+      valueFormatter: (value) => formatMoney(value),
     },
 
     { field: "notes", headerName: "Notes", flex: 1 },

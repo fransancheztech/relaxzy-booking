@@ -1,14 +1,12 @@
-import {
-  Container,
-  Paper,
-  Tooltip,
-} from "@mui/material";
+import { Container, Paper, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { FETCH_LIMIT } from "@/constants";
 import { payments as PaymentsType } from "generated/prisma/client";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
+import Decimal from "decimal.js";
+import { formatMoney } from "@/utils/formatMoney";
 
 interface Props {
   setSelectedPaymentId: (id: string) => void;
@@ -21,7 +19,7 @@ interface Props {
   page: number;
   loadPayments: (
     pageToLoad: number,
-    sort?: { field: string; sort: "asc" | "desc" }
+    sort?: { field: string; sort: "asc" | "desc" },
   ) => void;
   searchTerm: string;
   setSearchTerm: (text: string) => void;
@@ -41,13 +39,17 @@ export const PaymentsTable = ({
   loading,
   fetchError,
 }: Props) => {
-
   // -------------------------------
   // Columns for DataGrid
   // -------------------------------
   const columns: GridColDef[] = [
     { field: "booking_id", headerName: "Bookind ID", flex: 1 },
-    { field: "amount", headerName: "Amount", flex: 1 },
+    {
+      field: "amount",
+      headerName: "Amount",
+      flex: 1,
+      valueFormatter: (value) => formatMoney(value),
+    },
     {
       field: "created_at",
       headerName: "Created at",

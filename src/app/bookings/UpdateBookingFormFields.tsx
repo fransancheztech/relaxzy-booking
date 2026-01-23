@@ -27,6 +27,8 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
 import { Controller, useFormContext } from "react-hook-form";
 import { Dispatch, SetStateAction } from "react";
+import { normalizeMoney } from "@/utils/normalizeMoney";
+import { formatMoney } from "@/utils/formatMoney";
 
 interface Props {
   setIsPaymentDialogOpen: Dispatch<SetStateAction<boolean>>;
@@ -221,11 +223,10 @@ const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Pro
                 options={BOOKING_DEFAULT_PRICES} // your list of available options
                 value={field.value ?? null}
                 onChange={(_, newValue) =>
-                  field.onChange(Number(newValue) ?? null)
+                  field.onChange(normalizeMoney(newValue as any))
                 }
                 onInputChange={(_, newInputValue) => {
-                  const num = parseInt(newInputValue, 10);
-                  field.onChange(isNaN(num) ? "" : num);
+                  field.onChange(normalizeMoney(newInputValue));
                 }}
                 getOptionLabel={(option) => String(option) || ""}
                 isOptionEqualToValue={(option, value) => option === value}
@@ -301,10 +302,10 @@ const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Pro
             Below is a summary of your booking:
           </DialogContentText>
 
-          <Typography variant="body1">Price: {totalPrice}€</Typography>
-          <Typography variant="body1">Paid: {totalPaid}€</Typography>
+          <Typography variant="body1">Price: {formatMoney(totalPrice)}</Typography>
+          <Typography variant="body1">Paid: {formatMoney(totalPaid)}</Typography>
           <Typography variant="body1">
-            Due: {remainingBalance}€
+            Due: {formatMoney(remainingBalance)}
           </Typography>
         </Box>
 

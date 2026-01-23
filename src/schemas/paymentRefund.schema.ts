@@ -1,16 +1,31 @@
 import { payment_methods } from "generated/prisma";
 import { z } from "zod";
 
+const moneyPreprocess = (v: unknown) => {
+  if (v === "" || v === null || v === undefined) return 0;
+
+  if (typeof v === "string") {
+    const normalized = v.replace(",", ".");
+    const num = Number(normalized);
+    return Number.isNaN(num) ? v : num;
+  }
+
+  return v;
+};
+
+const moneySchema = z
+  .number({ message: "Payment must be a number" })
+  .nonnegative({ message: "Payment must be a positive number" })
+  .refine(
+    (val) => Number.isInteger(Math.round(val * 100)),
+    { message: "Max 2 decimal places allowed" }
+  );
+
 export const PaymentRefundSchema = z.object({
   amount: z.preprocess(
-    (v) => (v === "" || v === null || v === undefined ? 0 : Number(v)),
-    z
-      .number({ message: "Payment in cash must be a number" })
-      .positive({ message: "Payment in cash must be a positive number" })
-  ),
-  // amount: z
-  //   .number("Amount is required")
-  //   .positive("Refund amount must be greater than 0"),
+        moneyPreprocess,
+        moneySchema
+      ),
   method: z.enum(payment_methods),
   notes: z.string().optional(),
 });

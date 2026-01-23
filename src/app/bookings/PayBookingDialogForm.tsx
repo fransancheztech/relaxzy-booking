@@ -21,6 +21,7 @@ import {
   BookingPaymentFormOutput,
 } from "@/schemas/bookingPayment.schema";
 import handleSubmitPayBooking from "@/handlers/handleSubmitPayBooking";
+import { normalizeMoneyInput } from "@/utils/normalizeMoney";
 
 interface DialogFormProps {
   open: boolean;
@@ -42,8 +43,8 @@ const PayBookingDialogForm = ({
   onPaymentSuccess,
 }: DialogFormProps) => {
   const defaultValues = {
-    cashPayment: 0,
-    cardPayment: 0,
+    cashPayment: "0",
+    cardPayment: "0",
     price: price ?? 0,
     paidCash,
     paidCard,
@@ -103,13 +104,17 @@ const PayBookingDialogForm = ({
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      value={field.value === 0 ? "" : field.value}
+                      value={field.value === "0" ? "" : field.value}
                       label="Cash"
                       fullWidth
                       size="small"
                       variant="outlined"
                       error={!!methods.formState.errors.cashPayment}
                       helperText={methods.formState.errors.cashPayment?.message}
+                      slotProps={{ htmlInput: { inputMode: "decimal" } }}
+                      onChange={(e) => {
+                        field.onChange(normalizeMoneyInput(e.target.value));
+                      }}
                     />
                   )}
                 ></Controller>
@@ -121,13 +126,17 @@ const PayBookingDialogForm = ({
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      value={field.value === 0 ? "" : field.value}
+                      value={field.value === "0" ? "" : field.value}
                       label="Credit card"
                       fullWidth
                       size="small"
                       variant="outlined"
                       error={!!methods.formState.errors.cardPayment}
                       helperText={methods.formState.errors.cardPayment?.message}
+                      slotProps={{ htmlInput: { inputMode: "decimal" } }}
+                      onChange={(e) => {
+                        field.onChange(normalizeMoneyInput(e.target.value));
+                      }}
                     />
                   )}
                 ></Controller>

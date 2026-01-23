@@ -20,6 +20,7 @@ import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
 import { Controller, useFormContext } from "react-hook-form";
+import { normalizeMoney } from "@/utils/normalizeMoney";
 
 const NewBookingFormFields = () => {
   const {
@@ -200,11 +201,10 @@ const NewBookingFormFields = () => {
                 options={BOOKING_DEFAULT_PRICES} // your list of available options
                 value={field.value ?? null}
                 onChange={(_, newValue) =>
-                  field.onChange(Number(newValue) ?? null)
+                  field.onChange(normalizeMoney(newValue as any))
                 }
                 onInputChange={(_, newInputValue) => {
-                  const num = parseInt(newInputValue, 10);
-                  field.onChange(isNaN(num) ? "" : num);
+                  field.onChange(normalizeMoney(newInputValue));
                 }}
                 getOptionLabel={(option) => String(option) || ""}
                 isOptionEqualToValue={(option, value) => option === value}

@@ -16,6 +16,8 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { payment_events as PaymentEventType } from "generated/prisma";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
+import Decimal from "decimal.js";
+import { formatMoney } from "@/utils/formatMoney";
 
 interface Props {
   open: boolean;
@@ -45,7 +47,6 @@ const DialogPayment = ({
 
   const closeRefundPaymentDialog = () => {
     setIsOpenRefundPaymentDialog(false);
-    setPaymentId(null);
   };
 
   // -------------------------------
@@ -82,7 +83,12 @@ const DialogPayment = ({
   const columns: GridColDef[] = [
     { field: "type", headerName: "Type", flex: 1 },
     { field: "method", headerName: "Method", flex: 1 },
-    { field: "amount", headerName: "Amount", flex: 1 },
+    {
+      field: "amount",
+      headerName: "Amount",
+      flex: 1,
+      valueFormatter: (value) => formatMoney(value),
+    },
     {
       field: "created_at",
       headerName: "Created at",
@@ -123,11 +129,23 @@ const DialogPayment = ({
     }
   }, [open]);
 
+  const handleClosePaymentDialog = () => {
+    setPaymentEvents([]);
+    setIsOpenRefundPaymentDialog(false); // make sure refund dialog closes
+    onClose(); // notify parent to close
+  };
+
+  const totalPaid = paymentEvents.reduce((sum, e) => {
+    // if e.amount is null, treat as 0
+    const amount = e.amount ? new Decimal(e.amount) : new Decimal(0);
+    return sum.plus(amount);
+  }, new Decimal(0));
+
   return (
     <>
       <Dialog
         open={open}
-        onClose={onClose}
+        onClose={handleClosePaymentDialog}
         maxWidth="md"
         fullWidth
         slotProps={{
@@ -149,7 +167,7 @@ const DialogPayment = ({
         >
           <Typography fontSize="small">Payment ID: {paymentId}</Typography>
           <Typography variant="body1">
-            Total paid: {paymentAmount} €
+            Total paid: {totalPaid.toFixed(2)} €
           </Typography>
           <Paper
             elevation={2}

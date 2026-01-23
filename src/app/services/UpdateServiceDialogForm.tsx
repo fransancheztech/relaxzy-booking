@@ -170,7 +170,7 @@ const UpdateServiceDialogForm = ({ open, onClose, serviceId, setIsOpenConfirmDel
 
               <Grid size={12}>
                 <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                  Durations & Prices
+                  Durations & Prices:
                 </Typography>
               </Grid>
 
