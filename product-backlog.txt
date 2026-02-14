@@ -31,3 +31,4 @@
 - Hacer que los masajes, duraciones y precios recomendados al crear/modificar una reservan, vengan efectivamente del backend
 - Sidebar menu izquierda plegable
 - Multicalendar para varias terapeutas.
+- Añadir terapeutas esta fallando, arreglar.

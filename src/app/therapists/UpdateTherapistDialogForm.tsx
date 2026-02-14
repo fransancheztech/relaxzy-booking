@@ -16,22 +16,13 @@ import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import { useState, useEffect } from "react";
-import { z } from "zod";
+import { UpdateTherapistSchema, UpdateTherapistSchemaType } from "@/schemas/therapist.schema";
 
 type Props = {
   open: boolean;
   onClose: () => void;
   therapistId: string;
 };
-
-const UpdateTherapistSchema = z.object({
-  full_name: z.string().min(1, "Full name is required"),
-  email: z.string().email("Invalid email").optional(),
-  phone: z.string().optional(),
-  notes: z.string().max(500).optional(),
-});
-
-export type UpdateTherapistSchemaType = z.infer<typeof UpdateTherapistSchema>;
 
 const defaultValues: UpdateTherapistSchemaType = {
   full_name: "",
@@ -176,6 +167,7 @@ export default function UpdateTherapistDialogForm({
             <Button
               startIcon={<DeleteIcon />}
               color="error"
+              variant="contained"
               onClick={async () => {
                 setLoading(true);
                 try {

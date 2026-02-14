@@ -1,32 +1,70 @@
 // app/api/therapists/stream/route.ts
 import { NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { persistSession: false } }
+);
 
 export async function GET(req: NextRequest) {
-  const encoder = new TextEncoder();
-
   const stream = new ReadableStream({
     async start(controller) {
-      // Send initial data
-      const therapists = await prisma.therapists.findMany({
-        where: { deleted_at: null },
-      });
-      controller.enqueue(encoder.encode(`data: ${JSON.stringify(therapists)}\n\n`));
+      const encoder = new TextEncoder();
 
-      // Set up a polling loop (or replace with Prisma change streams in future)
-      const interval = setInterval(async () => {
-        const updated = await prisma.therapists.findMany({
-          where: { deleted_at: null },
+      const send = (event: any) => {
+        try {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+        } catch (err) {
+          console.error("Failed to enqueue SSE event:", err);
+        }
+      };
+
+      // Subscribe to therapists table changes
+      const channel = supabase
+        .channel("public:therapists-stream")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "therapists" },
+          (payload) => {
+            const { eventType, new: newData, old: oldData } = payload;
+
+            if (eventType === "INSERT") {
+              send({ type: "INSERT", data: newData });
+            } else if (eventType === "UPDATE") {
+              if (newData?.deleted_at && !oldData?.deleted_at) {
+                send({ type: "DELETE", data: oldData });
+              } else {
+                send({ type: "UPDATE", data: newData });
+              }
+            } else if (eventType === "DELETE") {
+              send({ type: "DELETE", data: oldData });
+            }
+          }
+        )
+        .subscribe((status) => {
+          if (status === "SUBSCRIBED") {
+            controller.enqueue(encoder.encode(": connected\n\n"));
+          }
         });
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(updated)}\n\n`));
-      }, 5000); // every 5s
 
-      // Cleanup
-      return () => clearInterval(interval);
+      // SSE retry interval
+      controller.enqueue(encoder.encode("retry: 5000\n\n"));
+
+      // Cleanup on client disconnect
+      req.signal.addEventListener("abort", async () => {
+        await supabase.removeChannel(channel);
+        controller.close();
+      });
     },
   });
 
   return new Response(stream, {
-    headers: { "Content-Type": "text/event-stream" },
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
+    },
   });
 }
