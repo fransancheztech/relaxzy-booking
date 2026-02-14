@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { PROTECTED_FIELDS } from "@/constants";
-import { PROTECTED_FIELDS_FOR_EDIT_BOOKING } from "@/constants";
 
 type Body = {
   client_name?: string;

@@ -114,3 +114,64 @@ export async function PATCH(
     return NextResponse.json({ error: "Error updating service" }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+
+  if (!id) {
+    return NextResponse.json(
+      { error: "Service id is required" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Check service exists and is not already deleted
+      const service = await tx.services_names.findFirst({
+        where: { id, deleted_at: null },
+      });
+
+      if (!service) {
+        throw new Error("NOT_FOUND");
+      }
+
+      const now = new Date();
+
+      // Soft delete service
+      await tx.services_names.update({
+        where: { id },
+        data: { deleted_at: now },
+      });
+
+      // Soft delete related service details
+      await tx.services_details.updateMany({
+        where: {
+          service_name_id: id,
+          deleted_at: null,
+        },
+        data: {
+          deleted_at: now,
+        },
+      });
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    if (error.message === "NOT_FOUND") {
+      return NextResponse.json(
+        { error: "Service not found" },
+        { status: 404 }
+      );
+    }
+
+    console.error(error);
+    return NextResponse.json(
+      { error: "Error deleting service" },
+      { status: 500 }
+    );
+  }
+}

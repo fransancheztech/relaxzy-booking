@@ -2,7 +2,7 @@
 
 import { services_names as ServicesType } from "generated/prisma/client";
 import ServicesTable from "./ServicesTable";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FETCH_LIMIT } from "@/constants";
 import { debounce } from "lodash";
 import NewServiceDialogForm from "./NewServiceDialogForm";
@@ -49,51 +49,58 @@ const ServicesPage = () => {
   // -------------------------------
   // Load services
   // -------------------------------
-  async function loadServices(
-    pageToLoad: number,
-    sort = sortModel,
-    search = searchTerm,
-  ) {
-    try {
-      setLoading(true);
-      setFetchError(null);
+  const loadServices = useCallback(
+    async (pageToLoad: number, sort = sortModel, search = searchTerm) => {
+      try {
+        setLoading(true);
+        setFetchError(null);
 
-      const res = await fetch("/api/services/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          page: pageToLoad,
-          limit: FETCH_LIMIT,
-          searchTerm: search,
-          sort,
-        }),
-      });
+        const res = await fetch("/api/services/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            page: pageToLoad,
+            limit: FETCH_LIMIT,
+            searchTerm: search,
+            sort,
+          }),
+        });
 
-      if (!res.ok) {
-        console.error("Failed to load bookings");
-        return;
+        if (!res.ok) throw new Error("Failed to load services");
+
+        const data = await res.json();
+
+        setServices(data.rows);
+        setRowCount(data.total);
+        setPage(pageToLoad);
+        setSortModel(sort);
+      } catch (err) {
+        console.error(err);
+        setServices([]);
+        setRowCount(0);
+        setFetchError("Error loading services");
+      } finally {
+        setLoading(false);
       }
-
-      const data = await res.json();
-      setServices(data.rows);
-      setRowCount(data.total);
-      setPage(pageToLoad);
-      setSortModel(sort);
-    } catch (err) {
-      console.error(err);
-      setServices([]);
-      setRowCount(0);
-      setFetchError("Error loading services");
-    } finally {
-      setLoading(false);
-    }
-  }
+    },
+    [sortModel, searchTerm],
+  );
 
   const debouncedSearch = useRef(
     debounce((text: string) => {
       loadServices(0, sortModel, text);
     }, 300),
   ).current;
+
+  useEffect(() => {
+    const eventSource = new EventSource("/api/services/stream");
+
+    eventSource.onmessage = () => {
+      loadServices(page, sortModel, searchTerm);
+    };
+
+    return () => eventSource.close();
+  }, [page, sortModel, searchTerm, loadServices]);
 
   useEffect(() => {
     loadServices(0);
@@ -115,7 +122,6 @@ const ServicesPage = () => {
 
     await handleDeleteService(selectedServiceId);
     setSelectedServiceId(null);
-    loadServices(page);
   };
   return (
     <main className="p-4">
