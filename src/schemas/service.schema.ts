@@ -1,14 +1,18 @@
 import { z } from "zod";
 
 export const ServiceDurationPriceSchema = z.object({
-  duration: z
-    .number("Duration must be a number")
-    .int()
-    .positive("Duration must be greater than 0"),
-
-  price: z
-    .number("Price must be a number")
-    .positive("Price must be greater than 0"),
+  duration: z.preprocess(
+      (v) => (v === "" || v === null || v === undefined ? 0 : Number(v)),
+      z
+        .number({ message: "Duration must be a number" })
+        .nonnegative({ message: "Duration must be greater than 0" })
+    ), 
+  price: z.preprocess(
+      (v) => (v === "" || v === null || v === undefined ? 0 : Number(v)),
+      z
+        .number({ message: "Price must be a number" })
+        .nonnegative({ message: "Price must be greater than 0" })
+    ), 
 });
 
 export const BaseServiceSchema = z.object({
@@ -35,5 +39,12 @@ export const BaseServiceSchema = z.object({
 });
 
 export type BaseServiceSchemaType = z.infer<typeof BaseServiceSchema>;
+export type BaseServiceSchemaTypeInput = z.input<typeof BaseServiceSchema>;
+export type BaseServiceSchemaTypeOutput = z.output<typeof BaseServiceSchema>;
+
 export type ServiceDurationPriceSchemaType = z.infer<typeof ServiceDurationPriceSchema>;
+export type ServiceDurationPriceSchemaTypeInput = z.input<typeof ServiceDurationPriceSchema>;
+export type ServiceDurationPriceSchemaTypeOutput = z.output<typeof ServiceDurationPriceSchema>;
+
+
 

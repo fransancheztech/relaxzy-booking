@@ -20,3 +20,11 @@
 - Poner repo privado
 - Añadir ayuda contextual
 - Traducir español-inglés-tailandés
+- Añadir un calendario por terapeuta y uno para bookings sin asignar, para evitar bookings escondidos
+- Permitir bookings dobles contemporáneas al mismo nombre
+- Cuando se borra una reserva, también hay que borrar su pagos y eventos pagos
+- Filtrado de elementos en la tabla no funciona
+- Auto actualizar tablas cuando se añade/modifica un elemento
+- Permitir añadir dos clientes con el mismo nombre a la misma hora
+- Arreglar precio sale sin decimales en modificar reserva si el precio tiene decimales
+- Arreglar precio no se puede poner decimales

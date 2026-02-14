@@ -125,7 +125,6 @@ const PayBookingDialogForm = ({
                       label="Credit card"
                       fullWidth
                       size="small"
-                      variant="outlined"
                       error={!!methods.formState.errors.cardPayment}
                       helperText={methods.formState.errors.cardPayment?.message}
                     />

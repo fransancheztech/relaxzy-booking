@@ -22,6 +22,8 @@ import { useEffect } from "react";
 import {
   BaseServiceSchema,
   BaseServiceSchemaType,
+  BaseServiceSchemaTypeInput,
+  BaseServiceSchemaTypeOutput,
 } from "@/schemas/service.schema";
 import handleSubmitCreateService from "@/handlers/handleSubmitCreateService";
 
@@ -39,7 +41,11 @@ const defaultValues: BaseServiceSchemaType = {
 
 const NewServiceDialogForm = ({ open, onClose }: Props) => {
 
-  const methods = useForm<BaseServiceSchemaType>({
+  const methods = useForm<
+      BaseServiceSchemaTypeInput,
+      any,
+      BaseServiceSchemaTypeOutput
+    >({
     resolver: zodResolver(BaseServiceSchema),
     defaultValues,
   });
@@ -155,8 +161,8 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
                       render={({ field }) => (
                         <TextField
                           {...field}
+                          value={field.value === 0 ? "" : field.value}
                           label="Minutes"
-                          type="number"
                           size="small"
                           fullWidth
                           error={
@@ -179,8 +185,8 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
                       render={({ field }) => (
                         <TextField
                           {...field}
+                          value={field.value === 0 ? "" : field.value}
                           label="Price (€)"
-                          type="number"
                           size="small"
                           fullWidth
                           error={

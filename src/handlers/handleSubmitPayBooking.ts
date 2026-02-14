@@ -26,7 +26,7 @@ const handleSubmitPayBooking = async (
     toast.success("Payment registered successfully.");
     return true;
   } catch (error) {
-    toast.error("Unexpected error while registering payment");
+    toast.error(`Unexpected error while registering payment: ${error}`);
     return false;
   }
 };

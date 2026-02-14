@@ -301,17 +301,48 @@ export async function DELETE(
       );
     }
 
-    const deleted = await prisma.bookings.update({
-      where: {
-        id,
-        deleted_at: null,
-      },
-      data: {
-        deleted_at: new Date(),
-      },
+    const now = new Date();
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1️⃣ Soft delete booking
+      const booking = await tx.bookings.update({
+        where: {
+          id,
+          deleted_at: null,
+        },
+        data: {
+          deleted_at: now,
+        },
+      });
+
+      // 2️⃣ Soft delete related payments
+      const payments = await tx.payments.updateMany({
+        where: {
+          booking_id: id,
+          deleted_at: null,
+        },
+        data: {
+          deleted_at: now,
+        },
+      });
+
+      // 3️⃣ Soft delete related payment events
+      await tx.payment_events.updateMany({
+        where: {
+          payments: {
+            booking_id: id,
+          },
+          deleted_at: null,
+        },
+        data: {
+          deleted_at: now,
+        },
+      });
+
+      return booking;
     });
 
-    return NextResponse.json(deleted, { status: 200 });
+    return NextResponse.json(result, { status: 200 });
   } catch (error: any) {
     console.error("DELETE /bookings/[id] error:", error);
 
@@ -328,3 +359,4 @@ export async function DELETE(
     );
   }
 }
+
