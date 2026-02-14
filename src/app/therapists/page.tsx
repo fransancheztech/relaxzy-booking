@@ -7,20 +7,12 @@ import AddTherapistDialog from "./AddTherapistDialogForm";
 import UpdateTherapistDialog from "./UpdateTherapistDialogForm";
 import { useLayout } from "../context/LayoutContext";
 import EditIcon from "@mui/icons-material/Edit";
-
-type Therapist = {
-  id: string;
-  full_name: string;
-  email: string;
-  phone: string;
-  notes: string;
-  created_at: string;
-};
+import { therapists } from "generated/prisma/client";
 
 export default function TherapistsPage() {
   const { setButtonLabel, setOnButtonClick } = useLayout();
 
-  const [therapists, setTherapists] = useState<Therapist[]>([]);
+  const [therapists, setTherapists] = useState<therapists[]>([]);
   const [loading, setLoading] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
@@ -39,7 +31,7 @@ export default function TherapistsPage() {
     setLoading(true);
     try {
       const res = await fetch("/api/therapists");
-      const data: Therapist[] = await res.json();
+      const data: therapists[] = await res.json();
       // Filter out any undefined/null rows
       setTherapists(data.filter(Boolean));
     } catch (err) {
@@ -51,7 +43,24 @@ export default function TherapistsPage() {
   };
 
   useEffect(() => {
-    fetchTherapists();
+    // Connect to stream endpoint
+    const eventSource = new EventSource("/api/therapists/stream");
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data: therapists[] = JSON.parse(event.data);
+        setTherapists(data.filter((t) => t && !t.deleted_at));
+      } catch (err) {
+        console.error("Failed to parse SSE data:", err);
+      }
+    };
+
+    eventSource.onerror = (err) => {
+      console.error("SSE error:", err);
+      eventSource.close();
+    };
+
+    return () => eventSource.close();
   }, []);
 
   const columns: GridColDef[] = [
@@ -59,13 +68,25 @@ export default function TherapistsPage() {
     { field: "email", headerName: "Email", flex: 1 },
     { field: "phone", headerName: "Phone", flex: 1 },
     { field: "notes", headerName: "Notes", flex: 1 },
+    { field: "active", headerName: "Active", flex: 1 },
     {
       field: "created_at",
-      headerName: "Added",
+      headerName: "Created at",
+      type: "dateTime",
       flex: 1,
-      valueGetter: (params: { row: Therapist }) =>
-        params.row?.created_at
-          ? new Date(params.row.created_at).toLocaleDateString()
+      valueGetter: (_, row) =>
+        row.created_at ? new Date(row.created_at) : null,
+      valueFormatter: (value: Date | null) =>
+        value
+          ? value.toLocaleString("es-ES", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              hour12: false,
+            })
           : "",
     },
     {
@@ -84,7 +105,7 @@ export default function TherapistsPage() {
             setSelectedId(params.row.id);
             setUpdateOpen(true);
           }}
-        />
+        />,
       ],
       sortable: false,
       filterable: false,

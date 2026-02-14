@@ -1,5 +1,5 @@
 import { FETCH_LIMIT } from "@/constants";
-import { ServiceListItem } from "@/types/services";
+import { services_names } from "generated/prisma/client";
 import { Container, Paper, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
@@ -10,7 +10,7 @@ interface Props {
   setSelectedServiceId: (id: string) => void;
   setIsOpenEditServiceDialog: (open: boolean) => void;
   setIsOpenConfirmDelete: (open: boolean) => void;
-  services: ServiceListItem[];
+  services: services_names[];
   rowCount: number;
   page: number;
   loadServices: (
@@ -38,7 +38,7 @@ const ServicesTable = ({
   // -------------------------------
   // Columns for DataGrid
   // -------------------------------
-  const columns: GridColDef<ServiceListItem>[] = [
+  const columns: GridColDef<services_names>[] = [
     {
       field: "name",
       headerName: "Service Name",
@@ -48,6 +48,26 @@ const ServicesTable = ({
       field: "short_name",
       headerName: "Short Name",
       flex: 1,
+    },
+    {
+      field: "created_at",
+      headerName: "Created at",
+      type: "dateTime",
+      flex: 1,
+      valueGetter: (_, row) =>
+        row.created_at ? new Date(row.created_at) : null,
+      valueFormatter: (value: Date | null) =>
+        value
+          ? value.toLocaleString("es-ES", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              hour12: false,
+            })
+          : "",
     },
     // Actions column
     {

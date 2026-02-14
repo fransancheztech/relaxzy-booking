@@ -28,3 +28,6 @@
 - Permitir añadir dos clientes con el mismo nombre a la misma hora
 - Arreglar precio sale sin decimales en modificar reserva si el precio tiene decimales
 - Arreglar precio no se puede poner decimales
+- Hacer que los masajes, duraciones y precios recomendados al crear/modificar una reservan, vengan efectivamente del backend
+- Sidebar menu izquierda plegable
+- Multicalendar para varias terapeutas.

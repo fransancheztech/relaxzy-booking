@@ -6,8 +6,15 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  const therapist = await prisma.therapists.findUnique({ where: { id } });
-  if (!therapist) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  
+  const therapist = await prisma.therapists.findUnique({
+    where: { id },
+  });
+
+  if (!therapist || therapist.deleted_at) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   return NextResponse.json(therapist);
 }
 
@@ -30,6 +37,14 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  await prisma.therapists.delete({ where: { id } });
-  return new NextResponse(null, { status: 204 });
+
+  // Soft delete: just set deleted_at to now()
+  const now = new Date();
+
+  const softDeleted = await prisma.therapists.update({
+    where: { id },
+    data: { deleted_at: now },
+  });
+
+  return NextResponse.json(softDeleted, { status: 200 });
 }

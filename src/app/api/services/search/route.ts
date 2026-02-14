@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
       name: service.name,
       short_name: service.short_name,
       notes: service.notes,
+      created_at: service.created_at,
       durations: service.services_details.map((detail) => ({
         service_details_id: detail.id,
         duration_id: detail.services_durations.id,
