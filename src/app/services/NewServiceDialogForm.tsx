@@ -1,5 +1,7 @@
 import {
+  Alert,
   Button,
+  Container,
   Dialog,
   DialogActions,
   DialogContent,
@@ -40,12 +42,11 @@ const defaultValues: BaseServiceSchemaType = {
 };
 
 const NewServiceDialogForm = ({ open, onClose }: Props) => {
-
   const methods = useForm<
-      BaseServiceSchemaTypeInput,
-      any,
-      BaseServiceSchemaTypeOutput
-    >({
+    BaseServiceSchemaTypeInput,
+    any,
+    BaseServiceSchemaTypeOutput
+  >({
     resolver: zodResolver(BaseServiceSchema),
     defaultValues,
   });
@@ -58,15 +59,15 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
   });
 
   const addDuration = () => {
-  const durations = methods
-    .getValues("duration_prices")
-    .map((d) => d.duration);
+    const durations = methods
+      .getValues("duration_prices")
+      .map((d) => d.duration);
 
-  let next = 30;
-  while (durations.includes(next)) next += 30;
+    let next = 30;
+    while (durations.includes(next)) next += 30;
 
-  append({ duration: next, price: 0 });
-};
+    append({ duration: next, price: 0 });
+  };
 
   const onSubmit = async (data: BaseServiceSchemaType) => {
     data.duration_prices.sort((a, b) => a.duration - b.duration);
@@ -163,6 +164,7 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
                           {...field}
                           value={field.value === 0 ? "" : field.value}
                           label="Minutes"
+                          type="number"
                           size="small"
                           fullWidth
                           error={
@@ -187,6 +189,7 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
                           {...field}
                           value={field.value === 0 ? "" : field.value}
                           label="Price (€)"
+                          type="number"
                           size="small"
                           fullWidth
                           error={

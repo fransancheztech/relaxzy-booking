@@ -1,6 +1,9 @@
 import {
+  Alert,
+  Box,
   Button,
   CircularProgress,
+  Container,
   Dialog,
   DialogActions,
   DialogContent,
@@ -10,14 +13,25 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Controller, FormProvider, useForm, useFieldArray } from "react-hook-form";
+import {
+  Controller,
+  FormProvider,
+  useForm,
+  useFieldArray,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import { useEffect, useState } from "react";
-import { BaseServiceSchema, BaseServiceSchemaType, ServiceDurationPriceSchemaType } from "@/schemas/service.schema";
+import {
+  BaseServiceSchema,
+  BaseServiceSchemaType,
+  BaseServiceSchemaTypeInput,
+  BaseServiceSchemaTypeOutput,
+  ServiceDurationPriceSchemaType,
+} from "@/schemas/service.schema";
 import handleSubmitUpdateService from "@/handlers/handleSubmitupdateService";
 
 type Props = {
@@ -34,10 +48,19 @@ const defaultValues: BaseServiceSchemaType = {
   duration_prices: [{ duration: 60, price: 0 }],
 };
 
-const UpdateServiceDialogForm = ({ open, onClose, serviceId, setIsOpenConfirmDelete }: Props) => {
+const UpdateServiceDialogForm = ({
+  open,
+  onClose,
+  serviceId,
+  setIsOpenConfirmDelete,
+}: Props) => {
   const [loading, setLoading] = useState(false);
 
-  const methods = useForm<BaseServiceSchemaType>({
+  const methods = useForm<
+    BaseServiceSchemaTypeInput,
+    any,
+    BaseServiceSchemaTypeOutput
+  >({
     resolver: zodResolver(BaseServiceSchema),
     defaultValues,
   });
@@ -50,7 +73,9 @@ const UpdateServiceDialogForm = ({ open, onClose, serviceId, setIsOpenConfirmDel
   });
 
   const addDuration = () => {
-    const durations = methods.getValues("duration_prices").map((d) => d.duration);
+    const durations = methods
+      .getValues("duration_prices")
+      .map((d) => d.duration);
     let next = 30;
     while (durations.includes(next)) next += 30;
     append({ duration: next, price: 0 });
@@ -62,7 +87,9 @@ const UpdateServiceDialogForm = ({ open, onClose, serviceId, setIsOpenConfirmDel
     const loadService = async () => {
       setLoading(true);
       try {
-        const res: Response = await fetch(`/api/services/${serviceId}`, { cache: "no-store" });
+        const res: Response = await fetch(`/api/services/${serviceId}`, {
+          cache: "no-store",
+        });
         if (!res.ok) throw new Error("Failed to load service");
 
         const data: {
@@ -76,7 +103,10 @@ const UpdateServiceDialogForm = ({ open, onClose, serviceId, setIsOpenConfirmDel
           name: data.name,
           short_name: data.short_name ?? "",
           notes: data.notes ?? "",
-          duration_prices: data.duration_prices.length > 0 ? data.duration_prices : [{ duration: 60, price: 0 }],
+          duration_prices:
+            data.duration_prices.length > 0
+              ? data.duration_prices
+              : [{ duration: 60, price: 0 }],
         });
       } catch (err) {
         console.error(err);
@@ -89,14 +119,19 @@ const UpdateServiceDialogForm = ({ open, onClose, serviceId, setIsOpenConfirmDel
   }, [open, serviceId]);
 
   const onSubmit = async (data: BaseServiceSchemaType) => {
-    setLoading(true);
-    await handleSubmitUpdateService({
-      id: serviceId,
-      ...data,
-    });
-    reset();
-    setLoading(false);
-    onClose();
+    try {
+      setLoading(true);
+      await handleSubmitUpdateService({
+        id: serviceId,
+        ...data,
+      });
+      reset();
+      onClose();
+    } catch (error) {
+      console.error("Update failed:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const onCancel = () => {
@@ -183,12 +218,19 @@ const UpdateServiceDialogForm = ({ open, onClose, serviceId, setIsOpenConfirmDel
                       render={({ field }) => (
                         <TextField
                           {...field}
+                          value={field.value === 0 ? "" : field.value}
                           label="Minutes"
                           type="number"
                           size="small"
                           fullWidth
-                          error={!!formState.errors.duration_prices?.[index]?.duration}
-                          helperText={formState.errors.duration_prices?.[index]?.duration?.message}
+                          error={
+                            !!formState.errors.duration_prices?.[index]
+                              ?.duration
+                          }
+                          helperText={
+                            formState.errors.duration_prices?.[index]?.duration
+                              ?.message
+                          }
                         />
                       )}
                     />
@@ -201,45 +243,78 @@ const UpdateServiceDialogForm = ({ open, onClose, serviceId, setIsOpenConfirmDel
                       render={({ field }) => (
                         <TextField
                           {...field}
+                          value={field.value === 0 ? "" : field.value}
                           label="Price (€)"
                           type="number"
                           size="small"
                           fullWidth
-                          error={!!formState.errors.duration_prices?.[index]?.price}
-                          helperText={formState.errors.duration_prices?.[index]?.price?.message}
+                          error={
+                            !!formState.errors.duration_prices?.[index]?.price
+                          }
+                          helperText={
+                            formState.errors.duration_prices?.[index]?.price
+                              ?.message
+                          }
                         />
                       )}
                     />
                   </Grid>
 
                   <Grid size={2} sx={{ display: "flex", alignItems: "center" }}>
-                    <IconButton color="error" onClick={() => remove(index)} disabled={fields.length === 1}>
+                    <IconButton
+                      color="error"
+                      onClick={() => remove(index)}
+                      disabled={fields.length === 1}
+                    >
                       <CloseIcon />
                     </IconButton>
                   </Grid>
                 </Grid>
               ))}
 
+              {formState.errors.duration_prices?.message && (
+                <Container sx={{ marginBottom: 2 }}>
+                  <Alert severity="error" variant="standard">
+                    {formState.errors.duration_prices.message}
+                  </Alert>
+                </Container>
+              )}
+
               <Grid size={12}>
-                <Button size="small" startIcon={<AddCircleIcon />} onClick={addDuration}>
+                <Button
+                  size="small"
+                  startIcon={<AddCircleIcon />}
+                  onClick={addDuration}
+                >
                   Add duration
                 </Button>
               </Grid>
             </Grid>
           </DialogContent>
 
-          <DialogActions sx={{ display: "flex", justifyContent: "space-between" }}>
-            <Button startIcon={<DeleteIcon />} color="error" variant="contained" onClick={() =>setIsOpenConfirmDelete(true)}>
+          <DialogActions
+            sx={{ display: "flex", justifyContent: "space-between" }}
+          >
+            <Button
+              startIcon={<DeleteIcon />}
+              color="error"
+              variant="contained"
+              onClick={() => setIsOpenConfirmDelete(true)}
+            >
               Delete
             </Button>
-            <div>
-              <Button startIcon={<CloseIcon />} color="error" onClick={onCancel}>
+            <Box>
+              <Button
+                startIcon={<CloseIcon />}
+                color="error"
+                onClick={onCancel}
+              >
                 Cancel
               </Button>
               <Button startIcon={<SaveIcon />} color="success" type="submit">
                 Save Changes
               </Button>
-            </div>
+            </Box>
           </DialogActions>
         </form>
       </FormProvider>
