@@ -37,7 +37,7 @@
     "libphonenumber-js": "^1.12.17",
     "lodash.debounce": "^4.0.8",
     "luxon": "^3.7.1",
-    "next": "^16.0.7",
+    "next": "^16.1.6",
     "react": "^19.2.1",
     "react-big-calendar": "^1.19.4",
     "react-datepicker": "^9.1.0",
@@ -60,7 +60,7 @@
     "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "^16.0.7",
-    "prisma": "^7.0.1",
+    "prisma": "^6.19.2",
     "tailwindcss": "^4",
     "tsx": "^4.20.6",
     "typescript": "^5"

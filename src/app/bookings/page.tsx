@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import debounce from "lodash.debounce";
 import { useLayout } from "../context/LayoutContext";
-import { toast } from "react-toastify";
 import NewBookingDialogForm from "@/app/bookings/NewBookingDialogForm";
 import { BookingsTable } from "./BookingsTable";
 import { BookingListItem } from "@/types/bookings";
@@ -37,11 +36,11 @@ export default function BookingsPage() {
   // -------------------------------
   // Load bookings
   // -------------------------------
-  async function loadBookings(
-    pageToLoad: number,
-    sort = sortModel,
-    search = searchTerm,
-  ) {
+  const loadBookings = useCallback(async (
+  pageToLoad: number,
+  sort = sortModel,
+  search = searchTerm
+) => {
     try {
       setLoading(true);
       setFetchError(null);
@@ -49,10 +48,12 @@ export default function BookingsPage() {
       const res = await fetch("/api/bookings/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ page: pageToLoad,
-                  limit: FETCH_LIMIT,
-                  searchTerm: search,
-                  sort, }),
+        body: JSON.stringify({
+          page: pageToLoad,
+          limit: FETCH_LIMIT,
+          searchTerm: search,
+          sort,
+        }),
       });
 
       if (!res.ok) {
@@ -73,7 +74,7 @@ export default function BookingsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [sortModel, searchTerm]);
 
   // -------------------------------
   // Debounced search
@@ -111,42 +112,18 @@ export default function BookingsPage() {
   ).current;
 
   // -------------------------------
-  // Delete booking
+  // Realtime subscription
   // -------------------------------
-  const handleDelete = async (id: string) => {
-    try {
-      if (!id) return toast.error("Missing booking ID");
+  useEffect(() => {
+  const eventSource = new EventSource("/api/bookings/stream");
 
-      const res = await fetch("/api/bookings/delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-
-      const result = await res.json();
-
-      if (!res.ok) {
-        toast.error(result?.error || "Error deleting booking");
-        return;
-      }
-
-      toast.success("Booking deleted successfully");
-
-      // Reload list
-      setTimeout(() => {
-        if (isSearching) debouncedSearch(searchTerm);
-        else loadBookings(page);
-      }, 300);
-    } catch (err) {
-      console.error("Error deleting booking", err);
-      toast.error("Network or server error");
-    }
+  eventSource.onmessage = () => {
+    loadBookings(page, sortModel, searchTerm);
   };
 
-  const onConfirmDelete = () => {
-    if (selectedBookingId) handleDelete(selectedBookingId);
-    setSelectedBookingId(null);
-  };
+  return () => eventSource.close();
+}, []); // <-- empty deps
+
 
   // -------------------------------
   // Dialog handlers
