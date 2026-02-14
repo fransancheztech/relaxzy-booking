@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import debounce from "lodash.debounce";
 import { payments as PaymentsType } from "generated/prisma/client";
 import DialogPayment from "./DialogPayment";
@@ -13,10 +13,11 @@ export default function PaymentsPage() {
   const [rowCount, setRowCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(
-    null
+    null,
   );
-  const [selectedPaymentAmount, setSelectedPaymentAmount] =
-  useState<number | null>(null);
+  const [selectedPaymentAmount, setSelectedPaymentAmount] = useState<
+    number | null
+  >(null);
   const [isOpenViewPaymentDialog, setIsOpenViewPaymentDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -31,45 +32,52 @@ export default function PaymentsPage() {
   // -------------------------------
   // Load paginated payments normally
   // -------------------------------
-  async function loadPayments(
-    pageToLoad: number,
-    sort = sortModel,
-    search = searchTerm
-  ) {
-    try {
-      setLoading(true);
-      setFetchError(null);
+  const loadPayments = useCallback(
+    async (pageToLoad: number, sort = sortModel, search = searchTerm) => {
+      try {
+        setLoading(true);
+        setFetchError(null);
 
-      const res = await fetch("/api/payments/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          page: pageToLoad,
-          limit: FETCH_LIMIT,
-          searchTerm: search,
-          sort,
-        }),
-      });
+        const res = await fetch("/api/payments/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            page: pageToLoad,
+            limit: FETCH_LIMIT,
+            searchTerm: search,
+            sort,
+          }),
+        });
 
-      if (!res.ok) {
-        throw new Error("Failed to load payments");
+        if (!res.ok) throw new Error("Failed to load payments");
+
+        const data = await res.json();
+
+        setPayments(data.rows);
+        setRowCount(data.total);
+        setPage(pageToLoad);
+        setSortModel(sort);
+      } catch (err) {
+        console.error(err);
+        setPayments([]);
+        setRowCount(0);
+        setFetchError("Error loading payments");
+      } finally {
+        setLoading(false);
       }
+    },
+    [sortModel, searchTerm],
+  );
 
-      const data = await res.json();
+  useEffect(() => {
+    const eventSource = new EventSource("/api/payments/stream");
 
-      setPayments(data.rows);
-      setRowCount(data.total);
-      setPage(pageToLoad);
-      setSortModel(sort);
-    } catch (err) {
-      console.error(err);
-      setPayments([]);
-      setRowCount(0);
-      setFetchError("Error loading payments");
-    } finally {
-      setLoading(false);
-    }
-  }
+    eventSource.onmessage = () => {
+      loadPayments(page, sortModel, searchTerm);
+    };
+
+    return () => eventSource.close();
+  }, [page, sortModel, searchTerm, loadPayments]);
 
   // -------------------------------
   // Debounced fuzzy search (RPC)
@@ -77,7 +85,7 @@ export default function PaymentsPage() {
   const debouncedSearch = useRef(
     debounce((text: string) => {
       loadPayments(0, sortModel, text);
-    }, 300)
+    }, 300),
   ).current;
 
   // Load initial page

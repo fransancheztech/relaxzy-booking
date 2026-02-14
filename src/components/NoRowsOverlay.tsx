@@ -10,7 +10,7 @@ const NoRowsOverlay = ({ error }: { error: string | null }) => (
       color: error ? "error.main" : "text.secondary",
     }}
   >
-    {error ? `Error loading bookings: ${error}` : "No bookings found"}
+    {error ? `Error loading items: ${error}` : "No items found"}
   </Box>
 );
 

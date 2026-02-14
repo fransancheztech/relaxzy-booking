@@ -123,6 +123,18 @@ const DialogPayment = ({
     }
   }, [open]);
 
+  useEffect(() => {
+    if (!open || !paymentId) return;
+
+    const eventSource = new EventSource("/api/payment-events/stream");
+
+    eventSource.onmessage = () => {
+      loadPaymentEvents(paymentId);
+    };
+
+    return () => eventSource.close();
+  }, [open, paymentId]);
+
   return (
     <>
       <Dialog
@@ -148,9 +160,7 @@ const DialogPayment = ({
           }}
         >
           <Typography fontSize="small">Payment ID: {paymentId}</Typography>
-          <Typography variant="body1">
-            Total paid: {paymentAmount} €
-          </Typography>
+          <Typography variant="body1">Total paid: {paymentAmount} €</Typography>
           <Paper
             elevation={2}
             sx={{
