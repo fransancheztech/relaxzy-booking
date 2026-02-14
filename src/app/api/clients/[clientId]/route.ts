@@ -40,50 +40,36 @@ export async function PUT(
     const { clientId } = await params;
     const body = await request.json();
 
-    const { client_email, client_phone } = body;
+    const normalizedEmail =
+      body.client_email?.trim() === ""
+        ? null
+        : body.client_email?.trim().toLowerCase() ?? null;
 
-    // -------------------------------
-    // Check for duplicates
-    // -------------------------------
-    if (client_email || client_phone) {
-      const existingClient = await prisma.clients.findFirst({
-        where: {
-          deleted_at: null,
-          NOT: { id: clientId },
-          OR: [
-            client_email ? { client_email: client_email } : undefined,
-            client_phone ? { client_phone: client_phone } : undefined,
-          ].filter(Boolean) as any,
-        },
-      });
+    const normalizedPhone =
+      body.client_phone?.trim() === ""
+        ? null
+        : body.client_phone?.trim() ?? null;
 
-      if (existingClient) {
-        return NextResponse.json(
-          {
-            error:
-              "Another client already exists with the same email or phone.",
-          },
-          { status: 409 } // Conflict
-        );
-      }
-    }
-
-    // -------------------------------
-    // Update client
-    // -------------------------------
     const updatedClient = await prisma.clients.update({
       where: { id: clientId },
       data: {
         client_name: body.client_name,
         client_surname: body.client_surname,
-        client_email: body.client_email ?? null,
-        client_phone: body.client_phone ?? null,
+        client_email: normalizedEmail,
+        client_phone: normalizedPhone,
         updated_at: new Date(),
       },
     });
 
     return NextResponse.json(updatedClient);
-  } catch (err) {
+  } catch (err: any) {
+    if (err.code === "P2002") {
+      return NextResponse.json(
+        { error: "Email or phone already exists." },
+        { status: 409 }
+      );
+    }
+
     console.error("Update client error:", err);
     return NextResponse.json(
       { error: "Error updating client" },
@@ -91,3 +77,4 @@ export async function PUT(
     );
   }
 }
+

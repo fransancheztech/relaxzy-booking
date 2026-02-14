@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import debounce from "lodash.debounce";
 import { clients as ClientType } from "generated/prisma/client";
 import DialogConfirmDeleteClient from "./ConfirmDeleteClientDialog";
@@ -36,44 +36,56 @@ export default function ClientsPage() {
   // -------------------------------
   // Load paginated clients normally
   // -------------------------------
-  async function loadClients(
-    pageToLoad: number,
-    sort = sortModel,
-    search = searchTerm,
-  ) {
-    try {
-      setLoading(true);
-      setFetchError(null);
-      const res = await fetch("/api/clients/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          page: pageToLoad,
-          limit: FETCH_LIMIT,
-          searchTerm: search,
-          sort,
-        }),
-      });
+  const loadClients = useCallback(async (
+  pageToLoad: number,
+  sort = sortModel,
+  search = searchTerm
+) => {
+  try {
+    setLoading(true);
+    setFetchError(null);
 
-      if (!res.ok) {
-        console.error("Failed to load clients");
-        return;
-      }
+    const res = await fetch("/api/clients/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        page: pageToLoad,
+        limit: FETCH_LIMIT,
+        searchTerm: search,
+        sort,
+      }),
+    });
 
-      const data = await res.json();
-      setClients(data.rows);
-      setRowCount(data.total);
-      setPage(pageToLoad);
-      setSortModel(sort);
-    } catch (err) {
-      console.error(err);
-      setClients([]);
-      setRowCount(0);
-      setFetchError("Error loading clients");
-    } finally {
-      setLoading(false);
+    if (!res.ok) {
+      console.error("Failed to load clients");
+      return;
     }
+
+    const data = await res.json();
+    setClients(data.rows);
+    setRowCount(data.total);
+    setPage(pageToLoad);
+    setSortModel(sort);
+  } catch (err) {
+    console.error(err);
+    setClients([]);
+    setRowCount(0);
+    setFetchError("Error loading clients");
+  } finally {
+    setLoading(false);
   }
+}, [sortModel, searchTerm]);
+
+useEffect(() => {
+  const eventSource = new EventSource("/api/clients/stream");
+
+  eventSource.onmessage = () => {
+    loadClients(page, sortModel, searchTerm);
+  };
+
+  return () => eventSource.close();
+}, [page, sortModel, searchTerm, loadClients]);
+
 
   // -------------------------------
   // Debounced fuzzy search (RPC)

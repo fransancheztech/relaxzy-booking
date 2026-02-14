@@ -60,13 +60,15 @@ const UpdateClientDialogForm = ({
 
   // Load client data when dialog opens
   useEffect(() => {
+    if (!open || !clientId) return;
+    
     const loadClient = async () => {
       setLoading(true);
       try {
         const res = await fetch(`/api/clients/${clientId}`, {
           cache: "no-store",
         });
-        if (!res.ok) throw new Error("Failed to load client");
+        if (!res.ok) throw new Error(`Failed to load client: ${res.status}, ${res.statusText}`);
         const data = await res.json();
         methods.reset({
           client_name: data.client_name ?? "",

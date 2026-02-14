@@ -122,7 +122,7 @@ export default function BookingsPage() {
   };
 
   return () => eventSource.close();
-}, []); // <-- empty deps
+}, [page, sortModel, searchTerm, loadBookings]); // <-- empty deps
 
 
   // -------------------------------
