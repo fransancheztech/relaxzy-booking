@@ -23,6 +23,7 @@ import {
   PaymentRefundFormOutput,
 } from "@/schemas/paymentRefund.schema";
 import handleSubmitRefund from "@/handlers/handleSubmitRefund";
+import { normalizeMoneyInput } from "@/utils/normalizeMoney";
 
 interface Props {
   open: boolean;
@@ -30,29 +31,35 @@ interface Props {
   paymentId: string | null;
   loadPayments: (
     pageToLoad: number,
-    sort?: { field: string; sort: "asc" | "desc" }
+    sort?: { field: string; sort: "asc" | "desc" },
   ) => void;
-  loadPaymentEvents: (paymentId: string) => void
+  loadPaymentEvents: (paymentId: string) => void;
 }
 
-const DialogRefund = ({ open, onClose, paymentId, loadPayments, loadPaymentEvents }: Props) => {
+const DialogRefund = ({
+  open,
+  onClose,
+  paymentId,
+  loadPayments,
+  loadPaymentEvents,
+}: Props) => {
   const [loading, setLoading] = useState(false);
 
   const methods = useForm<PaymentRefundFormInput, any, PaymentRefundFormOutput>(
     {
       resolver: zodResolver(PaymentRefundSchema),
       defaultValues: {
-        amount: 0,
+        amount: "0",
         method: "cash",
         notes: "",
       },
-    }
+    },
   );
 
   useEffect(() => {
     if (!open) return;
     methods.reset({
-      amount: 0,
+      amount: "0",
       method: "cash",
       notes: "",
     });
@@ -60,9 +67,7 @@ const DialogRefund = ({ open, onClose, paymentId, loadPayments, loadPaymentEvent
 
   const onSubmit = async (data: PaymentRefundFormOutput) => {
     if (!paymentId) return;
-
     setLoading(true);
-
     const { success, error } = await handleSubmitRefund({
       paymentId,
       ...data,
@@ -71,8 +76,8 @@ const DialogRefund = ({ open, onClose, paymentId, loadPayments, loadPaymentEvent
     setLoading(false);
 
     if (success) {
-      loadPaymentEvents(paymentId)
-      loadPayments(0)
+      loadPaymentEvents(paymentId);
+      loadPayments(0);
       onClose();
     } else {
       methods.setError("root", {
@@ -100,11 +105,17 @@ const DialogRefund = ({ open, onClose, paymentId, loadPayments, loadPaymentEvent
                 render={({ field }) => (
                   <TextField
                     {...field}
+                    value={field.value === "0" ? "" : field.value}
                     label="Refund amount"
                     fullWidth
                     size="small"
+                    variant="outlined"
                     error={!!methods.formState.errors.amount}
                     helperText={methods.formState.errors.amount?.message}
+                    slotProps={{ htmlInput: { inputMode: "decimal" } }}
+                    onChange={(e) => {
+                      field.onChange(normalizeMoneyInput(e.target.value));
+                    }}
                   />
                 )}
               />

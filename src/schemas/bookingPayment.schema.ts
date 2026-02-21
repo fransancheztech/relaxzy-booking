@@ -1,23 +1,37 @@
 // schemas/bookingPayment.schema.ts
 import { z } from "zod";
 
+const moneyPreprocess = (v: unknown) => {
+  if (v === "" || v === null || v === undefined) return 0;
+
+  if (typeof v === "string") {
+    const normalized = v.replace(",", ".");
+    const num = Number(normalized);
+    return Number.isNaN(num) ? v : num;
+  }
+
+  return v;
+};
+
+const moneySchema = z
+  .number({ message: "Payment must be a number" })
+  .nonnegative({ message: "Payment must be a positive number" })
+  .refine(
+    (val) => Number.isInteger(Math.round(val * 100)),
+    { message: "Max 2 decimal places allowed" }
+  );
+
 export const BookingPaymentSchema = z
   .object({
     paidCash: z.number(),
     paidCard: z.number(),
     cashPayment: z.preprocess(
-      (v) => (v === "" || v === null || v === undefined ? 0 : Number(v)),
-      z
-        .number({ message: "Payment in cash must be a number" })
-        .nonnegative({ message: "Payment in cash must be a positive number" })
+      moneyPreprocess,
+      moneySchema
     ),
     cardPayment: z.preprocess(
-      (v) => (v === "" || v === null || v === undefined ? 0 : Number(v)),
-      z
-        .number({ message: "Payment in credit card must be a number" })
-        .nonnegative({
-          message: "Payment in credit card must be a positive number",
-        })
+      moneyPreprocess,
+      moneySchema
     ),
     price: z.number().nonnegative().optional(),
   })

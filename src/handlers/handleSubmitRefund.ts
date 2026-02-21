@@ -29,7 +29,7 @@ export default async function handleSubmitRefund({
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent("refreshCalendarData"));
     }, 500);
-    toast.success("The booking has been created successfully.");
+    toast.success("The refund has been successfully processed.");
     return { success: true };
   } catch (err) {
     console.error("Refund failed", err);
