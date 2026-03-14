@@ -16,3 +16,13 @@ export function formatMoney(
     }) + " €"
   );
 }
+
+export const formatMoneyInput = (value: string | number) => {
+  if (value === "" || value === null) return "";
+
+  const num = Number(value);
+  if (Number.isNaN(num)) return "";
+
+  // If integer, no decimals; if fractional, 2 decimals
+  return Number.isInteger(num) ? String(num) : num.toFixed(2);
+};

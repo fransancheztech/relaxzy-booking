@@ -32,3 +32,6 @@
 - Sidebar menu izquierda plegable
 - Multicalendar para varias terapeutas.
 - Añadir terapeutas esta fallando, arreglar.
+- crear tabla vouchers_with_details
+- Añadir columna opcional voucher_id a la tabla bookings
+- Añadir tipo de payment_event USAGE, para usos de balance de vouchers

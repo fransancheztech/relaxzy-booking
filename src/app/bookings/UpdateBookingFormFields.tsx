@@ -28,7 +28,7 @@ import { es } from "date-fns/locale";
 import { Controller, useFormContext } from "react-hook-form";
 import { Dispatch, SetStateAction } from "react";
 import { normalizeMoney } from "@/utils/normalizeMoney";
-import { formatMoney } from "@/utils/formatMoney";
+import { formatMoney, formatMoneyInput } from "@/utils/formatMoney";
 
 interface Props {
   setIsPaymentDialogOpen: Dispatch<SetStateAction<boolean>>;
@@ -221,7 +221,7 @@ const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Pro
               <Autocomplete
                 freeSolo // <-- allows free text typing
                 options={BOOKING_DEFAULT_PRICES} // your list of available options
-                value={field.value ?? null}
+                value={field.value ? formatMoneyInput(field.value) : null}
                 onChange={(_, newValue) =>
                   field.onChange(normalizeMoney(newValue as any))
                 }
