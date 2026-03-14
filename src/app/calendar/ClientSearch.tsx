@@ -61,8 +61,7 @@ const ClientSearch = <T extends FieldValues & ClientFields>({
               onClick={() => handlePickClient(c)}
               sx={{ textTransform: "none" }}
             >
-              {`${c.client_name ?? ""} ${c.client_surname ?? ""}`.trim()} –{" "}
-              {c.client_phone || c.client_email}
+              {`${c.client_name ?? ""}${c.client_surname ? (" " + c.client_surname) : ""}${c.client_phone ? (", " + c.client_phone) : ""}${c.client_email ? (", " + c.client_email) : ""}`}
             </Button>
           ))}
         </Container>
