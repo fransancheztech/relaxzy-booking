@@ -30,10 +30,10 @@ SELECT
   sdet.notes AS service_details_notes,
   sdet.created_at AS service_details_created_at,
   sdet.deleted_at AS service_details_deleted_at,
-  p.id AS payment_id,
-  p.amount AS payment_amount,
+  p.payment_id,
+  (p.amount) :: numeric(10, 2) AS payment_amount,
   p.method AS payment_method,
-  p.refunded AS payment_refunded,
+  p.refunded_amount AS payment_refunded,
   p.refunded_at AS payment_refunded_at,
   p.paid_at AS payment_paid_at,
   p.created_at AS payment_created_at,
@@ -53,5 +53,5 @@ FROM
       )
       LEFT JOIN services_durations sd ON ((sd.id = sdet.service_duration_id))
     )
-    LEFT JOIN "OLD_payments" p ON ((p.booking_id = b.id))
+    LEFT JOIN payments_summary p ON ((p.booking_id = b.id))
   );
