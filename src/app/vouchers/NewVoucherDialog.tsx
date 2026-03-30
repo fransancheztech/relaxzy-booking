@@ -64,15 +64,15 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
             <FormProvider {...methods}>
                 <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
                     <DialogContent sx={{ overflowY: "hidden" }}>
-                        <NewVoucherFormFields />
+                        {/* <NewVoucherFormFields /> */}
                     </DialogContent>
                     <DialogActions>
-                        <Button color="error" onClick={onCancel} startIcon={<CloseIcon />}>
+                        {/* <Button color="error" onClick={onCancel} startIcon={<CloseIcon />}>
                             Cancel
                         </Button>
                         <Button type="submit" color="success" startIcon={<AddCircleIcon />}>
                             Add Booking
-                        </Button>
+                        </Button> */}
                     </DialogActions>
                 </form>
             </FormProvider>
