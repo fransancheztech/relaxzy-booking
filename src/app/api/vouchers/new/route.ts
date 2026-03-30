@@ -207,10 +207,10 @@ export async function POST(request: Request) {
             },
           });
 
-          await tx.voucher_events.create({
+          await tx.voucher_uses.create({
             data: {
               voucher_id: v.id,
-              event_type: "INCREMENT",
+              recipient_id: recipientId,
               amount,
               code: paymentRef,
             },

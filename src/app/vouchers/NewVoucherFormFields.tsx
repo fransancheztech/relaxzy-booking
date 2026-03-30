@@ -1,5 +1,5 @@
 import { VoucherSchemaType } from "@/schemas/voucher.schema";
-import { Grid, TextField } from "@mui/material";
+import { Alert, Autocomplete, Container, FormControl, Grid, TextField } from "@mui/material";
 import { Controller, useFormContext } from "react-hook-form";
 
 const NewVoucherFormFields = () => {
@@ -167,64 +167,7 @@ const NewVoucherFormFields = () => {
           )}
         />
       </Grid>
-      <Grid size={6}>
-        <Controller
-          name="client_surname"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Surname(s)"
-              error={!!errors.client_surname}
-              helperText={errors.client_surname?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-            />
-          )}
-        ></Controller>
-      </Grid>
-      <Grid size={6}>
-        <Controller
-          name="client_phone"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Phone"
-              error={!!errors.client_phone}
-              helperText={errors.client_phone?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-            />
-          )}
-        ></Controller>
-      </Grid>
-      <Grid size={6}>
-        <Controller
-          name="client_email"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Email"
-              error={!!errors.client_email}
-              helperText={errors.client_email?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-            />
-          )}
-        ></Controller>
-      </Grid>
-      <Grid size={6}>
+      {/* <Grid size={6}>
         <Controller
           name="start_time"
           control={control}
@@ -339,7 +282,7 @@ const NewVoucherFormFields = () => {
             </FormControl>
           )}
         />
-      </Grid>
+      </Grid> */}
       <Grid size={6}>
         <Controller
           name="notes"

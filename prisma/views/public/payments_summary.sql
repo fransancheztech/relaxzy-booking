@@ -7,7 +7,8 @@ SELECT
   pes.method,
   pes.paid_at,
   pes.refunded_amount,
-  pes.refunded_at
+  pes.refunded_at,
+  p.voucher_id
 FROM
   (
     payments p
