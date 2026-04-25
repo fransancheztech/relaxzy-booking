@@ -51,7 +51,7 @@ const ServicesTable = ({
     },
     {
       field: "created_at",
-      headerName: "Created at",
+      headerName: "Created",
       type: "dateTime",
       flex: 1,
       valueGetter: (_, row) =>

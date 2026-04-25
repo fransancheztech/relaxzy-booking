@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "generated/prisma";
+import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 
 type Body = {
   buyer_name?: string;
@@ -154,6 +155,8 @@ export async function POST(request: Request) {
       );
     }
 
+    const performedBy = await getCurrentUserId();
+
     const hasRecipientInfo =
       body.recipient_name ||
       body.recipient_surname ||
@@ -206,14 +209,16 @@ export async function POST(request: Request) {
             },
           });
 
-          await tx.voucher_uses.create({
-            data: {
-              voucher_id: v.id,
-              recipient_id: recipientId,
-              amount,
-              code: paymentRef,
-            },
-          });
+          await tx.$queryRaw`
+            SELECT register_voucher_event(
+              ${v.id}::uuid,
+              'TOPUP',
+              ${amount}::numeric,
+              ${recipientId}::uuid,
+              ${performedBy}::uuid,
+              ${paymentRef}::text
+            )
+          `;
 
           return v;
         });

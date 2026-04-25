@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useLayout } from "../context/LayoutContext";
 import NewVoucherDialog from "./NewVoucherDialog";
+import VouchersTable from "./VouchersTable";
 
 const VouchersPage = () => {
   const { setButtonLabel, setOnButtonClick } = useLayout();
@@ -20,7 +21,7 @@ const VouchersPage = () => {
   
   return (
     <main className="p-4">
-      {/* <VouchersTable /> */}
+      <VouchersTable />
       <NewVoucherDialog open={isOpenNewVoucherDialog} onClose={() => setIsOpenNewVoucherDialog(false)} />
     </main>
   )

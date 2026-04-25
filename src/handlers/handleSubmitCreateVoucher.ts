@@ -20,6 +20,7 @@ const handleSubmitCreateVoucher = async (data: VoucherSchemaType) => {
 
     setTimeout(() => {
       window.dispatchEvent(new CustomEvent("refreshCalendarData"));
+      window.dispatchEvent(new CustomEvent("refreshVouchersData"));
     }, 500);
   } catch (err) {
     console.error(`Network or server error creating voucher`, err);
