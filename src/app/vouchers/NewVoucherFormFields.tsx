@@ -4,6 +4,7 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
 import { Controller, useFormContext } from "react-hook-form";
+import VoucherClientSection from "./VoucherClientSection";
 
 const NewVoucherFormFields = () => {
   const {
@@ -14,170 +15,8 @@ const NewVoucherFormFields = () => {
   return (
     <Grid container sx={{ paddingTop: "1rem" }} spacing={{ xs: 1, xl: 2 }}>
 
-      <Grid size={12}>
-        <Typography variant="subtitle2" color="text.secondary">Buyer</Typography>
-        <Divider />
-      </Grid>
-
-      <Grid size={6}>
-        <Controller
-          name="buyer_name"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Name *"
-              error={!!errors.buyer_name}
-              helperText={errors.buyer_name?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-              autoFocus
-            />
-          )}
-        />
-      </Grid>
-      <Grid size={6}>
-        <Controller
-          name="buyer_surname"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Surname(s)"
-              error={!!errors.buyer_surname}
-              helperText={errors.buyer_surname?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-            />
-          )}
-        />
-      </Grid>
-      <Grid size={6}>
-        <Controller
-          name="buyer_phone"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Phone"
-              error={!!errors.buyer_phone}
-              helperText={errors.buyer_phone?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-            />
-          )}
-        />
-      </Grid>
-      <Grid size={6}>
-        <Controller
-          name="buyer_email"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Email"
-              error={!!errors.buyer_email}
-              helperText={errors.buyer_email?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-            />
-          )}
-        />
-      </Grid>
-
-      <Grid size={12}>
-        <Typography variant="subtitle2" color="text.secondary">Recipient (optional — defaults to buyer)</Typography>
-        <Divider />
-      </Grid>
-
-      <Grid size={6}>
-        <Controller
-          name="recipient_name"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Name"
-              error={!!errors.recipient_name}
-              helperText={errors.recipient_name?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-            />
-          )}
-        />
-      </Grid>
-      <Grid size={6}>
-        <Controller
-          name="recipient_surname"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Surname(s)"
-              error={!!errors.recipient_surname}
-              helperText={errors.recipient_surname?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-            />
-          )}
-        />
-      </Grid>
-      <Grid size={6}>
-        <Controller
-          name="recipient_phone"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Phone"
-              error={!!errors.recipient_phone}
-              helperText={errors.recipient_phone?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-            />
-          )}
-        />
-      </Grid>
-      <Grid size={6}>
-        <Controller
-          name="recipient_email"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Email"
-              error={!!errors.recipient_email}
-              helperText={errors.recipient_email?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-            />
-          )}
-        />
-      </Grid>
+      <VoucherClientSection prefix="buyer" label="Buyer" autoFocus />
+      <VoucherClientSection prefix="recipient" label="Recipient (optional — defaults to buyer)" />
 
       <Grid size={12}>
         <Typography variant="subtitle2" color="text.secondary">Voucher Details</Typography>
@@ -210,6 +49,7 @@ const NewVoucherFormFields = () => {
           )}
         />
       </Grid>
+
       <Grid size={6}>
         <Controller
           name="expiration_date"
@@ -237,6 +77,7 @@ const NewVoucherFormFields = () => {
           )}
         />
       </Grid>
+
       <Grid size={6}>
         <Controller
           name="initial_payment_code"
@@ -256,6 +97,7 @@ const NewVoucherFormFields = () => {
           )}
         />
       </Grid>
+
       <Grid size={6}>
         <Controller
           name="notes"

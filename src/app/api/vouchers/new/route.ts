@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "generated/prisma";
 
 type Body = {
-  recipient_name?: string;
-  recipient_surname?: string;
-  recipient_phone?: string;
-  recipient_email?: string;
   buyer_name?: string;
   buyer_surname?: string;
   buyer_phone?: string;
   buyer_email?: string;
+  recipient_name?: string;
+  recipient_surname?: string;
+  recipient_phone?: string;
+  recipient_email?: string;
   initial_balance?: number | string;
   initial_payment_code?: string | null;
   notes?: string;
@@ -50,6 +51,7 @@ function nextSequenceForPrefix(
 }
 
 async function findOrCreateClientFromVoucher(
+  tx: Prisma.TransactionClient,
   prefix: "buyer" | "recipient",
   body: Body,
 ) {
@@ -75,21 +77,21 @@ async function findOrCreateClientFromVoucher(
   let clientId: string | null = null;
 
   if (email) {
-    const clientByEmail = await prisma.clients.findFirst({
+    const clientByEmail = await tx.clients.findFirst({
       where: { client_email: email, deleted_at: null },
     });
     clientId = clientByEmail?.id ?? null;
   }
 
   if (!clientId && phone) {
-    const clientByPhone = await prisma.clients.findFirst({
+    const clientByPhone = await tx.clients.findFirst({
       where: { client_phone: phone, deleted_at: null },
     });
     clientId = clientByPhone?.id ?? null;
   }
 
   if (!clientId) {
-    const created = await prisma.clients.create({
+    const created = await tx.clients.create({
       data: {
         client_name: name,
         client_surname: surname,
@@ -152,20 +154,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const buyerId = await findOrCreateClientFromVoucher("buyer", body);
-
-    let recipientId: string;
     const hasRecipientInfo =
       body.recipient_name ||
       body.recipient_surname ||
       body.recipient_email ||
       body.recipient_phone;
-
-    if (hasRecipientInfo) {
-      recipientId = await findOrCreateClientFromVoucher("recipient", body);
-    } else {
-      recipientId = buyerId;
-    }
 
     const voucherNotes = normalizeString(body.notes) ?? undefined;
     const paymentRef =
@@ -185,6 +178,12 @@ export async function POST(request: Request) {
     for (let attempt = 0; attempt < MAX_CODE_RETRIES; attempt++) {
       try {
         const result = await prisma.$transaction(async (tx) => {
+          const buyerId = await findOrCreateClientFromVoucher(tx, "buyer", body);
+
+          const recipientId = hasRecipientInfo
+            ? await findOrCreateClientFromVoucher(tx, "recipient", body)
+            : buyerId;
+
           const sameDay = await tx.vouchers.findMany({
             where: {
               deleted_at: null,
