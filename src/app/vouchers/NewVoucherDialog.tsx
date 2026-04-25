@@ -23,10 +23,10 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
         buyer_surname: "",
         buyer_phone: "",
         buyer_email: "",
-        initial_balance: 0,
+        initial_balance: undefined as unknown as number,
         initial_payment_code: "",
         notes: "",
-        expiration_date: new Date(),
+        expiration_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
     };
 
     const methods = useForm<VoucherSchemaType>({
@@ -60,19 +60,19 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
                 },
             }}
         >
-            <DialogTitle>Add Booking</DialogTitle>
+            <DialogTitle>New Voucher</DialogTitle>
             <FormProvider {...methods}>
                 <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
-                    <DialogContent sx={{ overflowY: "hidden" }}>
-                        {/* <NewVoucherFormFields /> */}
+                    <DialogContent>
+                        <NewVoucherFormFields />
                     </DialogContent>
                     <DialogActions>
-                        {/* <Button color="error" onClick={onCancel} startIcon={<CloseIcon />}>
+                        <Button color="error" onClick={onCancel} startIcon={<CloseIcon />}>
                             Cancel
                         </Button>
                         <Button type="submit" color="success" startIcon={<AddCircleIcon />}>
-                            Add Booking
-                        </Button> */}
+                            Create Voucher
+                        </Button>
                     </DialogActions>
                 </form>
             </FormProvider>
