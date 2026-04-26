@@ -38,7 +38,7 @@ Routes live at `src/app/api/[resource]/[action]/route.ts`. All routes:
 
 For **paginated list endpoints**, the request body is `{ page, limit, sort: { field, sort: "asc"|"desc" } }` and the response is `{ rows, total }`. `FETCH_LIMIT = 100` is the page size constant (from `src/constants/index.ts`).
 
-For **Supabase stored procedures** (e.g. `register_payment_event`, `register_voucher_event`), use `prisma.$queryRaw` with tagged template literals — these can be called inside a `prisma.$transaction` via the `tx` client.
+For **Supabase stored procedures** (e.g. `register_payment_event`, `register_voucher_use`), use `prisma.$queryRaw` with tagged template literals — these can be called inside a `prisma.$transaction` via the `tx` client.
 
 ### Transactions
 
@@ -58,7 +58,7 @@ All main entities use `deleted_at: null` as the "active" filter. Always include 
 
 ### Vouchers
 
-Voucher balance is maintained by the Supabase function `register_voucher_event(voucher_id, event_type, amount, recipient_id, ...)`. Event type `'TOPUP'` credits the balance; `'CHARGE'` debits it. Do not update `vouchers.balance` directly — always go through this function.
+Voucher balance is credited via `register_payment_event` (writes to `payment_events`) and debited via `register_voucher_use(p_voucher_id, p_event_type, p_amount, p_recipient_id, p_performed_by, p_code, p_booking_id, p_notes)` (writes to `voucher_uses`). `register_voucher_use` updates `vouchers.balance` internally — do not call `recalculateVoucherBalance` after it.
 
 ### Environment Variables
 

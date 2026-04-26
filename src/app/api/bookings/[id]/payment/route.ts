@@ -19,34 +19,25 @@ export async function POST(
     const {
       cashPayment = 0,
       cardPayment = 0,
-      typePayment
+      voucherPayment = 0,
+      voucherCode,
     } = await req.json();
 
-    // ---------------------------------------------------
-    // 1. Validate payment values
-    // ---------------------------------------------------
-    if (cashPayment <= 0 && cardPayment <= 0) {
+    if (cashPayment <= 0 && cardPayment <= 0 && voucherPayment <= 0) {
       return NextResponse.json(
         { error: "At least one payment must be greater than zero" },
         { status: 400 }
       );
     }
 
-    // 🔐 Resolve identity server-side
     const performed_by = await getCurrentUserId();
 
     // ---------------------------------------------------
-    // 2. Ensure booking exists
+    // 1. Ensure booking exists
     // ---------------------------------------------------
     const booking = await prisma.bookings.findFirst({
-      where: {
-        id,
-        deleted_at: null,
-      },
-      select: {
-        id: true,
-        price: true,
-      },
+      where: { id, deleted_at: null },
+      select: { id: true, price: true, client_id: true },
     });
 
     if (!booking) {
@@ -57,17 +48,74 @@ export async function POST(
     }
 
     // ---------------------------------------------------
-    // 3. Compute already-paid amount
+    // 2. Resolve voucher if needed
     // ---------------------------------------------------
-    const existingPayments = await prisma.payments.aggregate({
-      where: { booking_id: id },
-      _sum: { amount: true },
-    });
+    let voucherId: string | null = null;
 
-    const alreadyPaid = Number(existingPayments._sum.amount ?? 0);
-    const incomingTotal = cashPayment + cardPayment;
+    if (voucherPayment > 0) {
+      if (!voucherCode?.trim()) {
+        return NextResponse.json(
+          { error: "Voucher code is required" },
+          { status: 400 }
+        );
+      }
 
-    if (alreadyPaid + incomingTotal > Number(booking.price)) {
+      if (!booking.client_id) {
+        return NextResponse.json(
+          { error: "Cannot apply a voucher to an anonymous booking" },
+          { status: 400 }
+        );
+      }
+
+      const voucher = await prisma.vouchers.findFirst({
+        where: { code: voucherCode.trim().toUpperCase(), deleted_at: null },
+        select: { id: true, balance: true, expiration_date: true },
+      });
+
+      if (!voucher) {
+        return NextResponse.json(
+          { error: "Voucher not found" },
+          { status: 404 }
+        );
+      }
+
+      if (voucher.expiration_date < new Date()) {
+        return NextResponse.json(
+          { error: "Voucher has expired" },
+          { status: 400 }
+        );
+      }
+
+      if (Number(voucher.balance ?? 0) < voucherPayment) {
+        return NextResponse.json(
+          { error: "Insufficient voucher balance" },
+          { status: 400 }
+        );
+      }
+
+      voucherId = voucher.id;
+    }
+
+    // ---------------------------------------------------
+    // 3. Compute already-paid amount (cash/card + voucher)
+    // ---------------------------------------------------
+    const [paymentsAgg, voucherUsesAgg] = await Promise.all([
+      prisma.payments.aggregate({
+        where: { booking_id: id },
+        _sum: { amount: true },
+      }),
+      prisma.voucher_uses.aggregate({
+        where: { booking_id: id, deleted_at: null },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    const alreadyPaid =
+      Number(paymentsAgg._sum.amount ?? 0) +
+      Number(voucherUsesAgg._sum.amount ?? 0);
+    const incomingTotal = cashPayment + cardPayment + voucherPayment;
+
+    if (booking.price !== null && alreadyPaid + incomingTotal > Number(booking.price)) {
       return NextResponse.json(
         { error: "Total payment exceeds booking price" },
         { status: 400 }
@@ -75,13 +123,11 @@ export async function POST(
     }
 
     // ---------------------------------------------------
-    // 4. Register payment events (atomic)
+    // 4. Register all payments atomically
     // ---------------------------------------------------
-    const operations = [];
-
-    if (cashPayment > 0) {
-      operations.push(
-        prisma.$queryRaw`
+    await prisma.$transaction(async (tx) => {
+      if (cashPayment > 0) {
+        await tx.$queryRaw`
           SELECT register_payment_event(
             ${id}::uuid,
             'CHARGE'::payment_types,
@@ -89,13 +135,11 @@ export async function POST(
             'cash'::payment_methods,
             ${performed_by}::uuid
           )
-        `
-      );
-    }
+        `;
+      }
 
-    if (cardPayment > 0) {
-      operations.push(
-        prisma.$queryRaw`
+      if (cardPayment > 0) {
+        await tx.$queryRaw`
           SELECT register_payment_event(
             ${id}::uuid,
             'CHARGE'::payment_types,
@@ -103,11 +147,23 @@ export async function POST(
             'credit_card'::payment_methods,
             ${performed_by}::uuid
           )
-        `
-      );
-    }
+        `;
+      }
 
-    await prisma.$transaction(operations);
+      if (voucherPayment > 0 && voucherId) {
+        await tx.$queryRaw`
+          SELECT register_voucher_use(
+            ${voucherId}::uuid,
+            'CHARGE',
+            ${voucherPayment}::numeric,
+            ${booking.client_id}::uuid,
+            ${performed_by}::uuid,
+            NULL::text,
+            ${id}::uuid
+          )
+        `;
+      }
+    });
 
     return NextResponse.json({ success: true }, { status: 201 });
 

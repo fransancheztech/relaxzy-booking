@@ -24,8 +24,6 @@ model bookings {
   clients        clients?        @relation(fields: [client_id], references: [id], onUpdate: NoAction)
   services_names services_names? @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "bookings_service_name_fkey")
   payments       payments[]
-
-  @@unique([client_id, service_id, start_time], map: "bookings_client_service_start_unique")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.

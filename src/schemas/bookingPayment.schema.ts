@@ -25,18 +25,14 @@ export const BookingPaymentSchema = z
   .object({
     paidCash: z.number(),
     paidCard: z.number(),
-    cashPayment: z.preprocess(
-      moneyPreprocess,
-      moneySchema
-    ),
-    cardPayment: z.preprocess(
-      moneyPreprocess,
-      moneySchema
-    ),
+    cashPayment: z.preprocess(moneyPreprocess, moneySchema),
+    cardPayment: z.preprocess(moneyPreprocess, moneySchema),
+    voucherPayment: z.preprocess(moneyPreprocess, moneySchema),
+    voucherCode: z.string().optional(),
     price: z.number().nonnegative().optional(),
   })
   .superRefine((data, ctx) => {
-    const totalPayment = data.cashPayment + data.cardPayment;
+    const totalPayment = data.cashPayment + data.cardPayment + data.voucherPayment;
     const totalPaid = data.paidCash + data.paidCard;
 
     if (totalPayment <= 0) {
@@ -52,6 +48,14 @@ export const BookingPaymentSchema = z
         code: "custom",
         message: "The payment exceeds the booking price",
         path: ["payment_form"],
+      });
+    }
+
+    if (data.voucherPayment > 0 && !data.voucherCode?.trim()) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Voucher code is required",
+        path: ["voucherCode"],
       });
     }
   });

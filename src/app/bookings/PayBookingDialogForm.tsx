@@ -45,6 +45,8 @@ const PayBookingDialogForm = ({
   const defaultValues = {
     cashPayment: "0",
     cardPayment: "0",
+    voucherPayment: "0",
+    voucherCode: "",
     price: price ?? 0,
     paidCash,
     paidCard,
@@ -139,6 +141,46 @@ const PayBookingDialogForm = ({
                     />
                   )}
                 ></Controller>
+              </Grid>
+              <Grid size={6}>
+                <Controller
+                  name="voucherCode"
+                  control={methods.control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Voucher Code"
+                      fullWidth
+                      size="small"
+                      variant="outlined"
+                      error={!!methods.formState.errors.voucherCode}
+                      helperText={methods.formState.errors.voucherCode?.message}
+                      slotProps={{ htmlInput: { style: { textTransform: "uppercase" } } }}
+                    />
+                  )}
+                />
+              </Grid>
+              <Grid size={6}>
+                <Controller
+                  name="voucherPayment"
+                  control={methods.control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      value={field.value === "0" ? "" : field.value}
+                      label="Voucher"
+                      fullWidth
+                      size="small"
+                      variant="outlined"
+                      error={!!methods.formState.errors.voucherPayment}
+                      helperText={methods.formState.errors.voucherPayment?.message}
+                      slotProps={{ htmlInput: { inputMode: "decimal" } }}
+                      onChange={(e) => {
+                        field.onChange(normalizeMoneyInput(e.target.value));
+                      }}
+                    />
+                  )}
+                />
               </Grid>
               <input type="hidden" {...methods.register("price")} />
               <input type="hidden" {...methods.register("paidCash")} />

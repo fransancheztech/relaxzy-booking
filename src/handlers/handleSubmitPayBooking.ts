@@ -12,7 +12,8 @@ const handleSubmitPayBooking = async (
       body: JSON.stringify({
         cashPayment: data.cashPayment,
         cardPayment: data.cardPayment,
-        typePayment: "CHARGE",
+        voucherPayment: data.voucherPayment,
+        voucherCode: data.voucherCode,
       }),
     });
 
