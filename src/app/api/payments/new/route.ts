@@ -6,10 +6,17 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    if (!body.booking_id) {
+    if (!body.booking_id && !body.voucher_id) {
       return NextResponse.json(
-        { error: "Booking ID is required" },
-        { status: 400 }
+        { error: "Either booking_id or voucher_id is required" },
+        { status: 400 },
+      );
+    }
+
+    if (body.booking_id && body.voucher_id) {
+      return NextResponse.json(
+        { error: "Provide only one of booking_id or voucher_id" },
+        { status: 400 },
       );
     }
 
@@ -20,27 +27,28 @@ export async function POST(request: Request) {
     if (!["cash", "credit_card"].includes(body.method)) {
       return NextResponse.json(
         { error: "Invalid payment method" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!["CHARGE", "REFUND"].includes(body.payment_type)) {
       return NextResponse.json(
         { error: "Invalid payment type" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // 🔐 Resolve identity server-side
     const performed_by = await getCurrentUserId();
 
     const result = await prisma.$queryRaw<{ register_payment_event: string }[]>`
       SELECT register_payment_event(
-        ${body.booking_id}::uuid,
         ${body.payment_type}::payment_types,
         ${body.amount}::numeric,
         ${body.method}::payment_methods,
-        ${performed_by}::uuid
+        ${performed_by}::uuid,
+        ${body.notes ?? null}::text,
+        ${body.booking_id ?? null}::uuid,
+        ${body.voucher_id ?? null}::uuid
       )
     `;
 
@@ -51,7 +59,7 @@ export async function POST(request: Request) {
     console.error("Create payment error:", err);
     return NextResponse.json(
       { error: "Error creating payment" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
