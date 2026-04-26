@@ -1,5 +1,5 @@
 import { VoucherSchemaType } from "@/schemas/voucher.schema";
-import { Divider, Grid, TextField, Typography } from "@mui/material";
+import { Divider, FormControl, FormHelperText, Grid, InputLabel, MenuItem, Select, TextField, Typography } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
@@ -23,7 +23,7 @@ const NewVoucherFormFields = () => {
         <Divider />
       </Grid>
 
-      <Grid size={6}>
+      <Grid size={4}>
         <Controller
           name="initial_balance"
           control={control}
@@ -50,7 +50,30 @@ const NewVoucherFormFields = () => {
         />
       </Grid>
 
-      <Grid size={6}>
+      <Grid size={4}>
+        <Controller
+          name="payment_method"
+          control={control}
+          render={({ field }) => (
+            <FormControl fullWidth size="small" error={!!errors.payment_method}>
+              <InputLabel id="payment-method-label">Payment Method *</InputLabel>
+              <Select
+                {...field}
+                labelId="payment-method-label"
+                label="Payment Method *"
+              >
+                <MenuItem value="cash">Cash</MenuItem>
+                <MenuItem value="credit_card">Credit Card</MenuItem>
+              </Select>
+              {errors.payment_method && (
+                <FormHelperText>{errors.payment_method.message}</FormHelperText>
+              )}
+            </FormControl>
+          )}
+        />
+      </Grid>
+
+      <Grid size={4}>
         <Controller
           name="expiration_date"
           control={control}

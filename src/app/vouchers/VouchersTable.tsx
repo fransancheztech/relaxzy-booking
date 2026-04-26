@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Container, Paper } from "@mui/material";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Container, IconButton, Paper, Tooltip } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VoucherDetailDialog from "./VoucherDetailDialog";
 import { FETCH_LIMIT } from "@/constants/index";
 import { formatMoney } from "@/utils/formatMoney";
 import LoadingOverlay from "@/components/LoadingOverlay";
@@ -108,6 +110,34 @@ const VouchersTable = () => {
     field: "created_at",
     sort: "desc",
   });
+  const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  const allColumns = useMemo<GridColDef<VoucherRow>[]>(
+    () => [
+      ...columns,
+      {
+        field: "actions",
+        headerName: "Actions",
+        width: 80,
+        sortable: false,
+        renderCell: (params) => (
+          <Tooltip title="View details">
+            <IconButton
+              size="small"
+              onClick={() => {
+                setSelectedVoucherId(params.row.id);
+                setDetailOpen(true);
+              }}
+            >
+              <VisibilityIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        ),
+      },
+    ],
+    [],
+  );
 
   const loadVouchers = useCallback(
     async (pageToLoad: number, sort = sortModel) => {
@@ -153,6 +183,7 @@ const VouchersTable = () => {
   }, [loadVouchers]);
 
   return (
+    <>
     <Container sx={{ py: 3 }} disableGutters>
       <Paper
         elevation={2}
@@ -160,7 +191,7 @@ const VouchersTable = () => {
       >
         <DataGrid
           rows={rows}
-          columns={columns}
+          columns={allColumns}
           getRowId={(row) => row.id}
           rowCount={rowCount}
           pageSizeOptions={[FETCH_LIMIT]}
@@ -185,6 +216,15 @@ const VouchersTable = () => {
         />
       </Paper>
     </Container>
+
+    {selectedVoucherId && (
+      <VoucherDetailDialog
+        voucherId={selectedVoucherId}
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+      />
+    )}
+    </>
   );
 };
 

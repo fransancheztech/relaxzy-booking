@@ -13,6 +13,7 @@ type Body = {
   recipient_phone?: string;
   recipient_email?: string;
   initial_balance?: number | string;
+  payment_method?: string;
   initial_payment_code?: string | null;
   notes?: string;
   expiration_date?: string | Date;
@@ -140,6 +141,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!["cash", "credit_card"].includes(body.payment_method ?? "")) {
+      return NextResponse.json(
+        { error: "Invalid payment method" },
+        { status: 400 },
+      );
+    }
+
     if (!body.expiration_date) {
       return NextResponse.json(
         { error: "Expiration date is required" },
@@ -210,15 +218,21 @@ export async function POST(request: Request) {
           });
 
           await tx.$queryRaw`
-            SELECT register_voucher_event(
-              ${v.id}::uuid,
-              'TOPUP',
+            SELECT register_payment_event(
+              'CHARGE'::payment_types,
               ${amount}::numeric,
-              ${recipientId}::uuid,
+              ${body.payment_method}::payment_methods,
               ${performedBy}::uuid,
-              ${paymentRef}::text
+              ${paymentRef}::text,
+              NULL::uuid,
+              ${v.id}::uuid
             )
           `;
+
+          await tx.vouchers.update({
+            where: { id: v.id },
+            data: { balance: amount },
+          });
 
           return v;
         });
