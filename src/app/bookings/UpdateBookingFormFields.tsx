@@ -27,6 +27,7 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
 import { Controller, useFormContext } from "react-hook-form";
 import { Dispatch, SetStateAction } from "react";
+import BookingClientSection from "./BookingClientSection";
 import { normalizeMoney } from "@/utils/normalizeMoney";
 import { formatMoney, formatMoneyInput } from "@/utils/formatMoney";
 
@@ -45,90 +46,13 @@ const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Pro
   const {
     control,
     formState: { errors },
-    setValue
   } = useFormContext<BookingUpdateSchemaType>();
 
   const { totalPrice, totalPaid, remainingBalance } = paymentSummary;
 
   return (
     <Grid container sx={{ paddingTop: "1rem" }} spacing={{ xs: 1, xl: 2 }}>
-      <Grid size={6}>
-        <Controller
-          name="client_name"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Name"
-              error={!!errors.client_name}
-              helperText={errors.client_name?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-              autoFocus={true}
-            />
-          )}
-        ></Controller>
-      </Grid>
-      <Grid size={6}>
-        <Controller
-          name="client_surname"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Surname(s)"
-              error={!!errors.client_surname}
-              helperText={errors.client_surname?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-            />
-          )}
-        ></Controller>
-      </Grid>
-      <Grid size={6}>
-        <Controller
-          name="client_phone"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Phone"
-              error={!!errors.client_phone}
-              helperText={errors.client_phone?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-            />
-          )}
-        ></Controller>
-      </Grid>
-      <Grid size={6}>
-        <Controller
-          name="client_email"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label="Email"
-              error={!!errors.client_email}
-              helperText={errors.client_email?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-            />
-          )}
-        ></Controller>
-      </Grid>
+      <BookingClientSection autoFocus />
       <Grid size={6}>
         <Controller
           name="start_time"
