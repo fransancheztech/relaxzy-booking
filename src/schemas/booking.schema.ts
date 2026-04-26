@@ -2,6 +2,21 @@ import * as z from "zod";
 import { phoneValidator } from "@/utils/phoneValidator";
 import { booking_status } from "generated/prisma";
 
+export const CompanionSchema = z.object({
+  service_name: z.string().optional(),
+  duration: z
+    .number({ message: "Duration must be a number" })
+    .min(15, { message: "Duration must be at least 15 minutes" })
+    .max(240, { message: "Duration cannot exceed 240 minutes" }),
+  price: z
+    .number({ message: "The price must be a number" })
+    .nonnegative({ message: "Price must be a positive number" })
+    .optional(),
+  notes: z.string().optional(),
+});
+
+export type CompanionSchemaType = z.infer<typeof CompanionSchema>;
+
 export const BookingSchema = z
   .object({
     client_name: z.string().optional(),
@@ -33,6 +48,7 @@ export const BookingSchema = z
       })
       .optional(),
     notes: z.string().optional(),
+    companions: z.array(CompanionSchema).optional(),
   })
   .superRefine((data, ctx) => {
     // ------------------------------

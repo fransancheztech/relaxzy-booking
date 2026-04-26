@@ -34,6 +34,7 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
     service_name: "",
     notes: "",
     price: undefined,
+    companions: [],
   };
 
   const methods = useForm<BookingSchemaType>({

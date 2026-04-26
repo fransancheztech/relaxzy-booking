@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+type CompanionInput = {
+  service_name?: string;
+  duration?: string | number;
+  price?: string | number;
+  notes?: string;
+};
+
 type Body = {
   client_name?: string;
   client_surname?: string;
@@ -11,6 +18,7 @@ type Body = {
   service_name: string;
   notes?: string;
   price?: string | number;
+  companions?: CompanionInput[];
 };
 
 const normalize = (v?: string) =>
@@ -135,21 +143,77 @@ export async function POST(request: Request) {
     const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
 
     // ------------------------------------------------------
-    // 8) CREATE BOOKING
+    // 8) SOFT DUPLICATE CHECK (warn, don't block)
     // ------------------------------------------------------
-    const booking = await prisma.bookings.create({
-      data: {
-        client_id: clientId, // can be null
-        service_id: serviceId, // can be null
-        start_time: start,
-        end_time: end,
-        notes: body.notes ?? null,
-        price,
-        status: "confirmed",
-      },
+    if (clientId) {
+      const existing = await prisma.bookings.findFirst({
+        where: { client_id: clientId, start_time: start, deleted_at: null },
+      });
+      if (existing) {
+        console.warn(
+          `Duplicate booking: client ${clientId} already has a booking at ${start.toISOString()}`,
+        );
+      }
+    }
+
+    // ------------------------------------------------------
+    // 9) RESOLVE COMPANION SERVICES
+    // ------------------------------------------------------
+    const companions = body.companions ?? [];
+
+    const companionServiceIds = await Promise.all(
+      companions.map(async (c) => {
+        if (!c.service_name || c.service_name.trim() === "") return null;
+        const svc = await prisma.services_names.findFirst({
+          where: { name: c.service_name, deleted_at: null },
+        });
+        return svc?.id ?? null;
+      }),
+    );
+
+    // ------------------------------------------------------
+    // 10) CREATE PRIMARY + COMPANION BOOKINGS IN ONE TRANSACTION
+    // ------------------------------------------------------
+    const { booking, companionBookings } = await prisma.$transaction(async (tx) => {
+      const primary = await tx.bookings.create({
+        data: {
+          client_id: clientId,
+          service_id: serviceId,
+          start_time: start,
+          end_time: end,
+          notes: body.notes ?? null,
+          price,
+          status: "confirmed",
+        },
+      });
+
+      const created = await Promise.all(
+        companions.map(async (c, i) => {
+          const dur = Number(c.duration);
+          const companionEnd = new Date(start.getTime() + dur * 60 * 1000);
+          const companionPrice =
+            c.price !== undefined && c.price !== null && c.price !== ""
+              ? Number(c.price)
+              : null;
+
+          return tx.bookings.create({
+            data: {
+              client_id: clientId,
+              service_id: companionServiceIds[i],
+              start_time: start,
+              end_time: companionEnd,
+              notes: c.notes ?? null,
+              price: companionPrice,
+              status: "confirmed",
+            },
+          });
+        }),
+      );
+
+      return { booking: primary, companionBookings: created };
     });
 
-    return NextResponse.json({ booking });
+    return NextResponse.json({ booking, companionBookings });
   } catch (err) {
     console.error("Create booking error", err);
     return NextResponse.json(
