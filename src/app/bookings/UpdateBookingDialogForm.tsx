@@ -12,7 +12,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Typography,
 } from "@mui/material";
 import { FormProvider, useForm } from "react-hook-form";
 import UpdateBookingFormFields from "./UpdateBookingFormFields";
@@ -24,8 +23,6 @@ import DialogDeletion from "@/app/bookings/ConfirmDeleteBookingDialog";
 import handleDeleteBooking from "@/handlers/handleDeleteBooking";
 import { DateTime } from "luxon";
 import PayBookingDialog from "./PayBookingDialogForm";
-import { useSimilarClients } from "@/hooks/useSimilarClients";
-import ClientSearch from "@/app/calendar/ClientSearch";
 
 type Props = {
   open: boolean;
@@ -63,24 +60,6 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
   const methods = useForm<BookingUpdateSchemaType>({
     resolver: zodResolver(BookingUpdateSchema),
     defaultValues: defaultValuesUpdateBookingForm,
-  });
-
-  const watchedValues = methods.watch([
-    "client_name",
-    "client_surname",
-    "client_email",
-    "client_phone",
-  ]);
-
-  const {
-    clients,
-    loading: clientsLoading,
-    error: clientsError,
-  } = useSimilarClients({
-    client_name: watchedValues[0],
-    client_surname: watchedValues[1],
-    client_email: watchedValues[2],
-    client_phone: watchedValues[3],
   });
 
   const price = methods.watch("price");
@@ -202,7 +181,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
   return (
     <>
       <Dialog open={open} onClose={onCancel} maxWidth="md" fullWidth>
-        <DialogTitle>Update Booking</DialogTitle>
+        <DialogTitle sx={{ margin: 0, padding: 0 }}>Update Booking</DialogTitle>
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
             <DialogContent
@@ -212,7 +191,6 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
                 pointerEvents: loading ? "none" : "auto",
               }}
             >
-              <Typography fontSize="small">Booking ID: {bookingId}</Typography>
               <UpdateBookingFormFields
                 setIsPaymentDialogOpen={setIsPaymentDialogOpen}
                 paymentSummary={paymentSummary}
@@ -224,7 +202,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
               <Button
                 startIcon={<DeleteIcon />}
                 color="error"
-                variant="contained"
+                variant="outlined"
                 onClick={() => setIsConfirmDeleteDialogOpen(true)}
               >
                 Delete
@@ -244,12 +222,6 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
             </DialogActions>
           </form>
         </FormProvider>
-        <ClientSearch<BookingUpdateSchemaType>
-          setValue={methods.setValue}
-          clients={clients}
-          loading={clientsLoading}
-          error={clientsError}
-        />
         {loading && (
           <div
             style={{

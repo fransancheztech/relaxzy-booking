@@ -12,6 +12,7 @@ import {
   Button,
   Container,
   DialogContentText,
+  Divider,
   FormControl,
   FormHelperText,
   Grid,
@@ -51,8 +52,16 @@ const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Pro
   const { totalPrice, totalPaid, remainingBalance } = paymentSummary;
 
   return (
-    <Grid container sx={{ paddingTop: "1rem" }} spacing={{ xs: 1, xl: 2 }}>
+    <Grid container spacing={{ xs: 1  , xl: 2 }}>
+      <Grid size={12}>
+        <Typography variant="subtitle2" color="text.secondary">Client</Typography>
+        <Divider />
+      </Grid>
       <BookingClientSection autoFocus />
+      <Grid size={12}>
+        <Typography variant="subtitle2" color="text.secondary">Booking Details</Typography>
+        <Divider />
+      </Grid>
       <Grid size={6}>
         <Controller
           name="start_time"

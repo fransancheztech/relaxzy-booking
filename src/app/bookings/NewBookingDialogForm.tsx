@@ -5,8 +5,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Typography,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import handleSubmitCreateBooking from "@/handlers/handleSubmitCreateBooking";
@@ -75,17 +77,21 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
         },
       }}
     >
-      <DialogTitle>Add Booking</DialogTitle>
+      <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        Add Booking
+        <Tooltip
+          title="Create one booking per person. For couples or groups, create separate bookings and use the Notes field to link them."
+          arrow
+          placement="right"
+        >
+          <IconButton size="small" sx={{ color: "info.main" }}>
+            <InfoOutlinedIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </DialogTitle>
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
           <DialogContent>
-            <Typography variant="body1" color="warning">
-              WARNING!: Please, create one booking per person. If it is a couple, you need
-              to create two separate bookings with a note in both of them to
-              indicate that they are together. Feel free to use the same Contact
-              Information for both of them if you find it necessary. The same
-              principle applies for triple, quadruple bookings, etc.
-            </Typography>
             <NewBookingFormFields />
           </DialogContent>
           <DialogActions>

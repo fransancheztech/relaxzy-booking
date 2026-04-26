@@ -8,6 +8,7 @@ import {
   Alert,
   Autocomplete,
   Container,
+  Divider,
   FormControl,
   FormHelperText,
   Grid,
@@ -15,6 +16,7 @@ import {
   MenuItem,
   Select,
   TextField,
+  Typography,
 } from "@mui/material";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -31,7 +33,15 @@ const NewBookingFormFields = () => {
 
   return (
     <Grid container sx={{ paddingTop: "1rem" }} spacing={{ xs: 1, xl: 2 }}>
+      <Grid size={12}>
+        <Typography variant="subtitle2" color="text.secondary">Client</Typography>
+        <Divider />
+      </Grid>
       <BookingClientSection autoFocus />
+      <Grid size={12}>
+        <Typography variant="subtitle2" color="text.secondary">Booking Details</Typography>
+        <Divider />
+      </Grid>
       <Grid size={6}>
         <Controller
           name="start_time"
