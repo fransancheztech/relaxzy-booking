@@ -50,6 +50,21 @@ export default function LayoutContent({
 
   const [user, setUser] = useState<User | null>(null);
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const isAdmin = user?.app_metadata?.role === "admin";
+  const visiblePages = menuPages.filter(
+    (page) => page.href !== "/stats" || isAdmin
+  );
+
   const appBarHeight = 64; // typical MUI AppBar height in px
 
   const handleLogout = async () => {
@@ -106,7 +121,7 @@ export default function LayoutContent({
           >
             <Stack sx={{ flexGrow: 1 }}>
               <List>
-                {menuPages.map((page) => (
+                {visiblePages.map((page) => (
                   <ListItem key={page.href} disablePadding>
                     <ListItemButton
                       selected={pathname === page.href}
