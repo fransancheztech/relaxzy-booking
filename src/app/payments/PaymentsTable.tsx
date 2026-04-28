@@ -5,7 +5,6 @@ import { FETCH_LIMIT } from "@/constants";
 import { payments as PaymentsType } from "generated/prisma/client";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
-import Decimal from "decimal.js";
 import { formatMoney } from "@/utils/formatMoney";
 
 interface Props {
@@ -43,7 +42,8 @@ export const PaymentsTable = ({
   // Columns for DataGrid
   // -------------------------------
   const columns: GridColDef[] = [
-    { field: "booking_id", headerName: "Bookind ID", flex: 1 },
+    { field: "booking_id", headerName: "Booking ID", flex: 1 },
+    { field: "voucher_id", headerName: "Voucher ID", flex: 1 },
     {
       field: "amount",
       headerName: "Amount",
