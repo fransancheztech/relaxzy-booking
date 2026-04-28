@@ -135,7 +135,6 @@ const UpdateClientDialogForm = ({
               <Container sx={{ display: "flex", justifyContent: "flex-end" }}>
                 <Button
                   startIcon={<CloseIcon />}
-                  color="error"
                   onClick={onCancel}
                 >
                   Cancel
@@ -162,6 +161,7 @@ const UpdateClientDialogForm = ({
         open={confirmDeleteOpen}
         onClose={closeDeleteDialog}
         onConfirm={onConfirmDelete}
+        clientName={[methods.watch("client_name"), methods.watch("client_surname")].filter(Boolean).join(" ")}
       />
     </>
   );

@@ -6,6 +6,8 @@ import { BookingListItem } from "@/types/bookings";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
 import { formatMoney } from "@/utils/formatMoney";
+import { formatNullable } from "@/utils/formatNullable";
+import { formatDateTime } from "@/utils/formatDateTime";
 
 interface Props {
   setSelectedBookingId: (id: string) => void;
@@ -125,7 +127,7 @@ export const BookingsTable = ({
       valueFormatter: (value) => formatMoney(value),
     },
 
-    { field: "notes", headerName: "Notes", flex: 1 },
+    { field: "notes", headerName: "Notes", flex: 1, valueFormatter: formatNullable },
     {
       field: "created_at",
       headerName: "Created",
@@ -133,18 +135,7 @@ export const BookingsTable = ({
       flex: 1,
       valueGetter: (_, row) =>
         row.created_at ? new Date(row.created_at) : null,
-      valueFormatter: (value: Date | null) =>
-        value
-          ? value.toLocaleString("es-ES", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-              hour12: false,
-            })
-          : "",
+      valueFormatter: formatDateTime,
     },
     {
       field: "start_time",

@@ -9,6 +9,8 @@ import { FETCH_LIMIT } from "@/constants";
 import { clients as ClientType } from "generated/prisma/client";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import { formatNullable } from "@/utils/formatNullable";
+import { formatDateTime } from "@/utils/formatDateTime";
 
 interface Props {
   setSelectedClientId: (id: string) => void;
@@ -39,11 +41,11 @@ export const ClientsTable = ({
   fetchError,
 }: Props) => {
   const columns: GridColDef[] = [
-    { field: "client_name", headerName: "Name", flex: 1 },
-    { field: "client_surname", headerName: "Surname", flex: 1 },
-    { field: "client_email", headerName: "Email", flex: 1 },
-    { field: "client_phone", headerName: "Phone", flex: 1 },
-    { field: "client_notes", headerName: "Notes", flex: 1 },
+    { field: "client_name", headerName: "Name", flex: 1, valueFormatter: formatNullable },
+    { field: "client_surname", headerName: "Surname", flex: 1, valueFormatter: formatNullable },
+    { field: "client_email", headerName: "Email", flex: 1, valueFormatter: formatNullable },
+    { field: "client_phone", headerName: "Phone", flex: 1, valueFormatter: formatNullable },
+    { field: "client_notes", headerName: "Notes", flex: 1, valueFormatter: formatNullable },
     {
       field: "created_at",
       headerName: "Created",
@@ -51,18 +53,7 @@ export const ClientsTable = ({
       flex: 1,
       valueGetter: (_, row) =>
         row.created_at ? new Date(row.created_at) : null,
-      valueFormatter: (value: Date | null) =>
-        value
-          ? value.toLocaleString("es-ES", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-              hour12: false,
-            })
-          : "",
+      valueFormatter: formatDateTime,
     },
     // Actions column
     {

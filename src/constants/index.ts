@@ -39,7 +39,7 @@ export const FORM_FIELDS_EDIT_BOOKING: FormFieldConfigModel<BookingModel>[] = [
   { formKey: 'client_email', label: 'Email', size: 6, type: 'textfield', disabled: true },
   { formKey: "start_time", label: "Date & Time", size: 6, type: "datepicker", disabled: false },
   { formKey: 'duration', label: 'Duration', size: 6, type: 'select', elements: BOOKING_DEFAULT_DURATIONS, disabled: false },
-  { formKey: "service_name", label: "Massage", size: 6,  type: "select", elements: BOOKING_DEFAULT_SERVICES, disabled: false },
+  { formKey: "service_name", label: "Service", size: 6,  type: "select", elements: BOOKING_DEFAULT_SERVICES, disabled: false },
   { formKey: "notes", label: "Notes", size: 6, type: "textfield", disabled: false },
   { formKey: "status", label: "Status", size: 6, type: "select", elements: BOOKING_DEFAULT_STATUSES, disabled: false },
   { formKey: "price", label: "Price", size: 6, type: "textfield", disabled: false },

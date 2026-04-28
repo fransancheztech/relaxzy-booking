@@ -153,6 +153,7 @@ const ServicesPage = () => {
         open={isOpenConfirmDelete}
         onClose={closeDeleteDialog}
         onConfirm={onConfirmDelete}
+        serviceName={services.find((s) => s.id === selectedServiceId)?.name ?? undefined}
       />
     </main>
   );

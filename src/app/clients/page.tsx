@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import debounce from "lodash.debounce";
 import { clients as ClientType } from "generated/prisma/client";
-import DialogConfirmDeleteClient from "./ConfirmDeleteClientDialog";
 import { toast } from "react-toastify";
 import NewClientDialogForm from "./NewClientDialogForm";
 import UpdateClientDialogForm from "./UpdateClientDialogForm";
@@ -114,7 +113,7 @@ useEffect(() => {
         console.error(err);
         setClients([]);
         setRowCount(0);
-        setFetchError("Error searching bookings");
+        setFetchError("Error searching clients");
       } finally {
         setLoading(false);
       }

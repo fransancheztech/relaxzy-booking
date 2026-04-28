@@ -129,7 +129,7 @@ const VoucherPaymentEventDialog = ({
         {error && <FormHelperText error>{error}</FormHelperText>}
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} color="error" disabled={submitting}>
+        <Button onClick={handleClose} disabled={submitting}>
           Cancel
         </Button>
         <Button onClick={handleSubmit} color="success" disabled={submitting}>

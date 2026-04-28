@@ -10,6 +10,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
   Divider,
   IconButton,
@@ -85,6 +86,7 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
   const [selectedEvent, setSelectedEvent] = useState<PaymentEvent | null>(null);
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDeleteUse, setPendingDeleteUse] = useState<VoucherUse | null>(null);
 
   const loadDetails = useCallback(async () => {
     setLoading(true);
@@ -112,8 +114,10 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
     window.dispatchEvent(new CustomEvent("refreshVouchersData"));
   }, [loadDetails]);
 
-  const handleDeleteUse = async (use: VoucherUse) => {
-    if (!window.confirm(`Delete voucher use of ${formatMoney(Number(use.amount))}? This will restore the balance.`)) return;
+  const confirmDeleteUse = async () => {
+    if (!pendingDeleteUse) return;
+    const use = pendingDeleteUse;
+    setPendingDeleteUse(null);
     setDeletingId(use.id);
     try {
       const res = await fetch(`/api/voucher-uses/${use.id}/delete`, { method: "POST" });
@@ -279,7 +283,7 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                             <IconButton
                               size="small"
                               color="error"
-                              onClick={() => handleDeleteUse(vu)}
+                              onClick={() => setPendingDeleteUse(vu)}
                               disabled={deletingId === vu.id}
                             >
                               <DeleteIcon fontSize="small" />
@@ -298,6 +302,23 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
         <DialogActions>
           <Button onClick={onClose} color="inherit">
             Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={!!pendingDeleteUse} onClose={() => setPendingDeleteUse(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>Delete Voucher Use</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this voucher use of{" "}
+            <strong>{pendingDeleteUse ? formatMoney(Math.abs(Number(pendingDeleteUse.amount))) : ""}</strong>?
+            The balance will be restored.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPendingDeleteUse(null)}>Cancel</Button>
+          <Button color="error" variant="contained" startIcon={<DeleteIcon />} onClick={confirmDeleteUse}>
+            Delete
           </Button>
         </DialogActions>
       </Dialog>

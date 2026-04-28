@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import { useState } from "react";
+import { toast } from "react-toastify";
 import { z } from "zod";
 
 type Props = {
@@ -56,8 +57,10 @@ export default function AddTherapistDialogForm({ open, onClose }: Props) {
       });
 
       if (!res.ok) throw new Error("Failed to add therapist");
+      toast.success("Therapist added");
     } catch (err) {
       console.error(err);
+      toast.error("Failed to add therapist");
     } finally {
       methods.reset(defaultValues);
       setLoading(false);
@@ -150,7 +153,7 @@ export default function AddTherapistDialogForm({ open, onClose }: Props) {
           </DialogContent>
 
           <DialogActions sx={{ justifyContent: "space-between" }}>
-            <Button startIcon={<CloseIcon />} color="error" onClick={onCancel}>
+            <Button startIcon={<CloseIcon />} onClick={onCancel}>
               Cancel
             </Button>
             <Button

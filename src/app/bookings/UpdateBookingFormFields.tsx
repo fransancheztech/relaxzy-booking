@@ -97,8 +97,8 @@ const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Pro
           control={control}
           render={({ field }) => (
             <FormControl fullWidth size="small" error={!!errors.service_name}>
-              <InputLabel id="service_name">Massage</InputLabel>
-              <Select labelId="service_name" {...field} label="Massage">
+              <InputLabel id="service_name">Service</InputLabel>
+              <Select labelId="service_name" {...field} label="Service">
                 {BOOKING_DEFAULT_SERVICES.map((service) => (
                   <MenuItem key={service} value={service}>
                     {service}

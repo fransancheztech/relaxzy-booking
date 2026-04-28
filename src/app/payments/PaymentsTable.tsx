@@ -6,6 +6,8 @@ import { payments as PaymentsType } from "generated/prisma/client";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
 import { formatMoney } from "@/utils/formatMoney";
+import { formatNullable } from "@/utils/formatNullable";
+import { formatDateTime } from "@/utils/formatDateTime";
 
 interface Props {
   setSelectedPaymentId: (id: string) => void;
@@ -42,8 +44,8 @@ export const PaymentsTable = ({
   // Columns for DataGrid
   // -------------------------------
   const columns: GridColDef[] = [
-    { field: "booking_id", headerName: "Booking ID", flex: 1 },
-    { field: "voucher_id", headerName: "Voucher ID", flex: 1 },
+    { field: "booking_id", headerName: "Booking ID", flex: 1, valueFormatter: formatNullable },
+    { field: "voucher_id", headerName: "Voucher ID", flex: 1, valueFormatter: formatNullable },
     {
       field: "amount",
       headerName: "Amount",
@@ -57,18 +59,7 @@ export const PaymentsTable = ({
       flex: 1,
       valueGetter: (_, row) =>
         row.created_at ? new Date(row.created_at) : null,
-      valueFormatter: (value: Date | null) =>
-        value
-          ? value.toLocaleString("es-ES", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-              hour12: false,
-            })
-          : "",
+      valueFormatter: formatDateTime,
     },
 
     // Actions column

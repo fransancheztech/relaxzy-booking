@@ -210,7 +210,6 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
               <Container sx={{ display: "flex", justifyContent: "flex-end" }}>
                 <Button
                   startIcon={<CloseIcon />}
-                  color="error"
                   onClick={onCancel}
                 >
                   Cancel
@@ -249,6 +248,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
         confirmDeleteOpen={isConfirmDeleteDialogOpen}
         setConfirmDeleteOpen={setIsConfirmDeleteDialogOpen}
         handleDelete={handleDelete}
+        clientName={[methods.watch("client_name"), methods.watch("client_surname")].filter(Boolean).join(" ")}
       />
     </>
   );

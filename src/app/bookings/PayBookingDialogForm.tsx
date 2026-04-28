@@ -196,7 +196,7 @@ const PayBookingDialogForm = ({
             </Grid>
           </DialogContent>
           <DialogActions>
-            <Button color="error" onClick={onCancel} startIcon={<CloseIcon />}>
+            <Button onClick={onCancel} startIcon={<CloseIcon />}>
               Cancel
             </Button>
             <Button color="success" type="submit" startIcon={<AddCircleIcon />}>

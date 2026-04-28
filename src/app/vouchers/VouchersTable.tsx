@@ -7,6 +7,8 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VoucherDetailDialog from "./VoucherDetailDialog";
 import { FETCH_LIMIT } from "@/constants/index";
 import { formatMoney } from "@/utils/formatMoney";
+import { formatNullable } from "@/utils/formatNullable";
+import { formatDateTime } from "@/utils/formatDateTime";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
 
@@ -78,7 +80,7 @@ const columns: GridColDef<VoucherRow>[] = [
     headerName: "Notes",
     flex: 1.5,
     sortable: false,
-    valueFormatter: (value) => value ?? "",
+    valueFormatter: formatNullable,
   },
   {
     field: "created_at",
@@ -86,17 +88,7 @@ const columns: GridColDef<VoucherRow>[] = [
     flex: 1,
     type: "dateTime",
     valueGetter: (_value, row) => (row.created_at ? new Date(row.created_at) : null),
-    valueFormatter: (value: Date | null) =>
-      value
-        ? value.toLocaleString("es-ES", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-          })
-        : "",
+    valueFormatter: formatDateTime,
   },
 ];
 

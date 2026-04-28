@@ -1,12 +1,14 @@
 "use client";
 
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { Paper, Tooltip, CircularProgress } from "@mui/material";
+import { Paper, Tooltip } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import { formatNullable } from "@/utils/formatNullable";
+import { formatDateTime } from "@/utils/formatDateTime";
 import { therapists } from "generated/prisma/client";
 
 interface Props {
@@ -35,10 +37,10 @@ const TherapistsTable = ({
   onEdit,
 }: Props) => {
   const columns: GridColDef<therapists>[] = [
-    { field: "full_name", headerName: "Full Name", flex: 1 },
-    { field: "email", headerName: "Email", flex: 1 },
-    { field: "phone", headerName: "Phone", flex: 1 },
-    { field: "notes", headerName: "Notes", flex: 1 },
+    { field: "full_name", headerName: "Full Name", flex: 1, valueFormatter: formatNullable },
+    { field: "email", headerName: "Email", flex: 1, valueFormatter: formatNullable },
+    { field: "phone", headerName: "Phone", flex: 1, valueFormatter: formatNullable },
+    { field: "notes", headerName: "Notes", flex: 1, valueFormatter: formatNullable },
     {
       field: "active",
       headerName: "Active",
@@ -57,18 +59,7 @@ const TherapistsTable = ({
       flex: 1,
       valueGetter: (_, row) =>
         row.created_at ? new Date(row.created_at) : null,
-      valueFormatter: (value: Date | null) =>
-        value
-          ? value.toLocaleString("es-ES", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-              hour12: false,
-            })
-          : "",
+      valueFormatter: formatDateTime,
     },
     {
       field: "actions",
@@ -100,8 +91,8 @@ const TherapistsTable = ({
         flexDirection: "column",
       }}
     >
-      {loading && <CircularProgress sx={{ alignSelf: "center", m: 2 }} />}
       <DataGrid
+        loading={loading}
         rows={therapists}
         columns={columns}
         getRowId={(row) => row.id}

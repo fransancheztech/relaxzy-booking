@@ -96,7 +96,7 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
             <NewBookingFormFields />
           </DialogContent>
           <DialogActions>
-            <Button color="error" onClick={onCancel} startIcon={<CloseIcon />}>
+            <Button onClick={onCancel} startIcon={<CloseIcon />}>
               Cancel
             </Button>
             <Button type="submit" color="success" startIcon={<AddCircleIcon />}>

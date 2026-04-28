@@ -110,7 +110,7 @@ const BookingClientSection = ({ autoFocus }: Props) => {
             elevation={4}
             sx={{
               position: "absolute",
-              top: "calc(100% + 52px)",
+              top: "calc(100% + 8px)",
               left: 0,
               right: 0,
               zIndex: 1300,
