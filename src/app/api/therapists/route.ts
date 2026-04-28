@@ -23,9 +23,10 @@ export async function POST(req: NextRequest) {
         where,
         skip: page * limit,
         take: limit,
-        orderBy: {
-          [sort?.field ?? "created_at"]: sort?.sort ?? "desc",
-        },
+        orderBy: [
+          { active: "desc" },
+          { [sort?.field ?? "created_at"]: sort?.sort ?? "desc" },
+        ],
       }),
       prisma.therapists.count({ where }),
     ]);

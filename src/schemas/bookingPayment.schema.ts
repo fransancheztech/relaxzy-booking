@@ -28,7 +28,13 @@ export const BookingPaymentSchema = z
     cashPayment: z.preprocess(moneyPreprocess, moneySchema),
     cardPayment: z.preprocess(moneyPreprocess, moneySchema),
     voucherPayment: z.preprocess(moneyPreprocess, moneySchema),
-    voucherCode: z.string().optional(),
+    voucherCode: z
+      .string()
+      .optional()
+      .refine(
+        (val) => !val?.trim() || /^V-\d{6}-\d+$/i.test(val.trim()),
+        { message: "Invalid format (e.g. V-280426-1)" }
+      ),
     price: z.number().nonnegative().optional(),
   })
   .superRefine((data, ctx) => {

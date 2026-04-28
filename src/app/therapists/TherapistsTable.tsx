@@ -3,6 +3,8 @@
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { Paper, Tooltip, CircularProgress } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { therapists } from "generated/prisma/client";
@@ -11,11 +13,13 @@ interface Props {
   therapists: therapists[];
   rowCount: number;
   page: number;
+  pageSize: number;
   loading: boolean;
   fetchError: string | null;
   loadTherapists: (
     pageToLoad: number,
-    sort?: { field: string; sort: "asc" | "desc" }
+    sort?: { field: string; sort: "asc" | "desc" },
+    limit?: number
   ) => void;
   onEdit: (id: string) => void;
 }
@@ -24,6 +28,7 @@ const TherapistsTable = ({
   therapists,
   rowCount,
   page,
+  pageSize,
   loading,
   fetchError,
   loadTherapists,
@@ -34,7 +39,17 @@ const TherapistsTable = ({
     { field: "email", headerName: "Email", flex: 1 },
     { field: "phone", headerName: "Phone", flex: 1 },
     { field: "notes", headerName: "Notes", flex: 1 },
-    { field: "active", headerName: "Active", flex: 1 },
+    {
+      field: "active",
+      headerName: "Active",
+      width: 80,
+      align: "center",
+      headerAlign: "center",
+      renderCell: ({ value }) =>
+        value
+          ? <CheckCircleIcon fontSize="small" sx={{ color: "success.main" }} />
+          : <CancelIcon fontSize="small" sx={{ color: "error.main" }} />,
+    },
     {
       field: "created_at",
       headerName: "Created",
@@ -95,13 +110,13 @@ const TherapistsTable = ({
         paginationMode="server"
         sortingMode="server"
         pageSizeOptions={[5, 10, 25]}
-        paginationModel={{ page, pageSize: 5 }}
-        onPaginationModelChange={(model) => loadTherapists(model.page)}
+        paginationModel={{ page, pageSize }}
+        onPaginationModelChange={(model) => loadTherapists(model.page, undefined, model.pageSize)}
         onSortModelChange={(model) => {
           if (!model.length) return;
           const sortItem = model[0];
           if (!sortItem.sort) return;
-          loadTherapists(0, { field: sortItem.field, sort: sortItem.sort });
+          loadTherapists(0, { field: sortItem.field, sort: sortItem.sort }, pageSize);
         }}
         slots={{
           loadingOverlay: LoadingOverlay,

@@ -129,11 +129,13 @@ export async function POST(
       if (cashPayment > 0) {
         await tx.$queryRaw`
           SELECT register_payment_event(
-            ${id}::uuid,
             'CHARGE'::payment_types,
             ${cashPayment}::numeric,
             'cash'::payment_methods,
-            ${performed_by}::uuid
+            ${performed_by}::uuid,
+            NULL::text,
+            ${id}::uuid,
+            NULL::uuid
           )
         `;
       }
@@ -141,11 +143,13 @@ export async function POST(
       if (cardPayment > 0) {
         await tx.$queryRaw`
           SELECT register_payment_event(
-            ${id}::uuid,
             'CHARGE'::payment_types,
             ${cardPayment}::numeric,
             'credit_card'::payment_methods,
-            ${performed_by}::uuid
+            ${performed_by}::uuid,
+            NULL::text,
+            ${id}::uuid,
+            NULL::uuid
           )
         `;
       }

@@ -15,6 +15,7 @@ export default function TherapistsPage() {
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const [rowCount, setRowCount] = useState(0);
 
   const [addOpen, setAddOpen] = useState(false);
@@ -31,16 +32,18 @@ export default function TherapistsPage() {
   }, [setButtonLabel, setOnButtonClick]);
 
   const loadTherapists = useCallback(
-    async (pageToLoad: number, sort?: { field: string; sort: "asc" | "desc" }) => {
+    async (pageToLoad: number, sort?: { field: string; sort: "asc" | "desc" }, limit?: number) => {
       setLoading(true);
       setFetchError(null);
       try {
+        const actualLimit = limit ?? pageSize;
+        setPageSize(actualLimit);
         const res = await fetch("/api/therapists", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             page: pageToLoad,
-            limit: 5,
+            limit: actualLimit,
             sort,
           }),
         });
@@ -56,7 +59,7 @@ export default function TherapistsPage() {
         setLoading(false);
       }
     },
-    []
+    [pageSize]
   );
 
   useEffect(() => {
@@ -74,6 +77,7 @@ export default function TherapistsPage() {
         therapists={therapists}
         rowCount={rowCount}
         page={page}
+        pageSize={pageSize}
         loading={loading}
         fetchError={fetchError}
         loadTherapists={loadTherapists}

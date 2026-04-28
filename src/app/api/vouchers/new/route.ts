@@ -223,7 +223,7 @@ export async function POST(request: Request) {
               ${amount}::numeric,
               ${body.payment_method}::payment_methods,
               ${performedBy}::uuid,
-              ${paymentRef}::text,
+              ${`Payment reference code: ${paymentRef}`}::text,
               NULL::uuid,
               ${v.id}::uuid
             )

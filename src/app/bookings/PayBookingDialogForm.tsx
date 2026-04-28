@@ -7,8 +7,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   Grid,
   TextField,
+  Typography,
 } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CloseIcon from "@mui/icons-material/Close";
@@ -22,6 +24,7 @@ import {
 } from "@/schemas/bookingPayment.schema";
 import handleSubmitPayBooking from "@/handlers/handleSubmitPayBooking";
 import { normalizeMoneyInput } from "@/utils/normalizeMoney";
+import VoucherPickerField from "./VoucherPickerField";
 
 interface DialogFormProps {
   open: boolean;
@@ -142,22 +145,19 @@ const PayBookingDialogForm = ({
                   )}
                 ></Controller>
               </Grid>
+              <Grid size={12}>
+                <Divider>
+                  <Typography variant="caption" color="text.secondary">
+                    Voucher
+                  </Typography>
+                </Divider>
+              </Grid>
               <Grid size={6}>
-                <Controller
-                  name="voucherCode"
+                <VoucherPickerField
+                  key={String(open)}
                   control={methods.control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      label="Voucher Code"
-                      fullWidth
-                      size="small"
-                      variant="outlined"
-                      error={!!methods.formState.errors.voucherCode}
-                      helperText={methods.formState.errors.voucherCode?.message}
-                      slotProps={{ htmlInput: { style: { textTransform: "uppercase" } } }}
-                    />
-                  )}
+                  setValue={methods.setValue}
+                  remainingAmount={Math.max(0, price - paidCash - paidCard)}
                 />
               </Grid>
               <Grid size={6}>
@@ -168,7 +168,7 @@ const PayBookingDialogForm = ({
                     <TextField
                       {...field}
                       value={field.value === "0" ? "" : field.value}
-                      label="Voucher"
+                      label="Voucher Amount"
                       fullWidth
                       size="small"
                       variant="outlined"
