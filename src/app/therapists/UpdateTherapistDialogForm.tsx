@@ -7,7 +7,9 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   Grid,
+  Switch,
   TextField,
 } from "@mui/material";
 import { useForm, Controller, FormProvider } from "react-hook-form";
@@ -29,6 +31,7 @@ const defaultValues: UpdateTherapistSchemaType = {
   email: "",
   phone: "",
   notes: "",
+  active: true,
 };
 
 export default function UpdateTherapistDialogForm({
@@ -52,7 +55,13 @@ export default function UpdateTherapistDialogForm({
         const res = await fetch(`/api/therapists/${therapistId}`);
         if (!res.ok) throw new Error("Failed to load therapist");
         const data = await res.json();
-        methods.reset(data);
+        methods.reset({
+          full_name: data.full_name ?? "",
+          email: data.email ?? "",
+          phone: data.phone ?? "",
+          notes: data.notes ?? "",
+          active: data.active ?? true,
+        });
       } catch (err) {
         console.error(err);
       } finally {
@@ -156,6 +165,24 @@ export default function UpdateTherapistDialogForm({
                       size="small"
                       error={!!methods.formState.errors.notes}
                       helperText={methods.formState.errors.notes?.message}
+                    />
+                  )}
+                />
+              </Grid>
+
+              <Grid size={12}>
+                <Controller
+                  name="active"
+                  control={methods.control}
+                  render={({ field }) => (
+                    <FormControlLabel
+                      label="Active"
+                      control={
+                        <Switch
+                          checked={field.value ?? true}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                        />
+                      }
                     />
                   )}
                 />

@@ -5,6 +5,7 @@ export const UpdateTherapistSchema = z.object({
   email: z.string().email("Invalid email").optional(),
   phone: z.string().optional(),
   notes: z.string().max(500).optional(),
+  active: z.boolean().optional(),
 });
 
 export type UpdateTherapistSchemaType = z.infer<typeof UpdateTherapistSchema>;

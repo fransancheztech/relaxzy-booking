@@ -24,10 +24,10 @@ export async function PUT(
 ) {
   const { id } = await context.params;
   const body = await req.json();
-  const { full_name, email, phone, notes } = body;
+  const { full_name, email, phone, notes, active } = body;
   const updated = await prisma.therapists.update({
     where: { id },
-    data: { full_name, email, phone, notes },
+    data: { full_name, email, phone, notes, ...(active !== undefined && { active }) },
   });
   return NextResponse.json(updated);
 }
