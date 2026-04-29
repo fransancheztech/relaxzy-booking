@@ -26,6 +26,7 @@ model bookings {
   services_names services_names? @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "bookings_service_name_fkey")
   therapists     therapists?     @relation(fields: [therapist_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   payments       payments[]
+  tips           tips[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -92,15 +93,17 @@ model payments_log {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model therapists {
-  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  full_name  String
-  email      String?
-  phone      String?
-  notes      String?
-  created_at DateTime   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
-  active     Boolean    @default(false)
-  deleted_at DateTime?  @db.Timestamptz(6)
-  bookings   bookings[]
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  full_name   String
+  email       String?
+  phone       String?
+  notes       String?
+  created_at  DateTime      @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  active      Boolean       @default(false)
+  deleted_at  DateTime?     @db.Timestamptz(6)
+  bookings    bookings[]
+  tip_payouts tip_payouts[]
+  tips        tips[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -301,6 +304,47 @@ model voucher_uses_history {
   recipient_id     String?      @db.Uuid
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model tip_payouts {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  therapist_id String     @db.Uuid
+  period_year  Int        @db.SmallInt
+  period_month Int        @db.SmallInt
+  gross_amount Decimal    @db.Decimal(10, 2)
+  iva_amount   Decimal    @db.Decimal(10, 2)
+  net_amount   Decimal    @db.Decimal(10, 2)
+  paid_at      DateTime?  @db.Timestamptz(6)
+  notes        String?
+  created_at   DateTime   @default(now()) @db.Timestamptz(6)
+  therapists   therapists @relation(fields: [therapist_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tips         tips[]
+
+  @@unique([therapist_id, period_year, period_month])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model tips {
+  id             String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  therapist_id   String             @db.Uuid
+  booking_id     String?            @db.Uuid
+  amount         Decimal            @db.Decimal(10, 2)
+  payment_method tip_payment_method @default(credit_card)
+  iva_applies    Boolean            @default(true)
+  notes          String?
+  created_at     DateTime           @default(now()) @db.Timestamptz(6)
+  deleted_at     DateTime?          @db.Timestamptz(6)
+  payout_id      String?            @db.Uuid
+  bookings       bookings?          @relation(fields: [booking_id], references: [id], onUpdate: NoAction)
+  tip_payouts    tip_payouts?       @relation(fields: [payout_id], references: [id], onUpdate: NoAction)
+  therapists     therapists         @relation(fields: [therapist_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([booking_id])
+  @@index([payout_id])
+  @@index([therapist_id])
+}
+
 view bookings_with_details {
   booking_id                  String?          @db.Uuid
   booking_start_time          DateTime?        @db.Timestamptz(6)
@@ -386,4 +430,10 @@ enum payment_methods {
 enum payment_types {
   CHARGE
   REFUND
+}
+
+enum tip_payment_method {
+  cash
+  credit_card
+  voucher
 }

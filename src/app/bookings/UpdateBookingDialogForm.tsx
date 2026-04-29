@@ -197,6 +197,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
               }}
             >
               <UpdateBookingFormFields
+                bookingId={bookingId}
                 setIsPaymentDialogOpen={setIsPaymentDialogOpen}
                 paymentSummary={paymentSummary}
               />

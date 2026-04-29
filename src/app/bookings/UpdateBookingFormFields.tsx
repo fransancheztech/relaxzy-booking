@@ -32,8 +32,10 @@ import BookingClientSection from "./BookingClientSection";
 import { normalizeMoney } from "@/utils/normalizeMoney";
 import { formatMoney, formatMoneyInput } from "@/utils/formatMoney";
 import { useTherapists } from "@/hooks/useTherapists";
+import TipSection from "./TipSection";
 
 interface Props {
+  bookingId: string;
   setIsPaymentDialogOpen: Dispatch<SetStateAction<boolean>>;
   paymentSummary: {
     totalPrice: number;
@@ -44,14 +46,16 @@ interface Props {
   };
 }
 
-const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Props) => {
+const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSummary }: Props) => {
   const {
     control,
+    watch,
     formState: { errors },
   } = useFormContext<BookingUpdateSchemaType>();
 
   const { totalPrice, totalPaid, remainingBalance } = paymentSummary;
   const therapists = useTherapists();
+  const therapistId = watch("therapist_id");
 
   return (
     <Grid container spacing={{ xs: 1  , xl: 2 }}>
@@ -291,6 +295,10 @@ const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Pro
             Add Payment
           </Button>
         </Paper>
+      </Grid>
+
+      <Grid size={12}>
+        <TipSection bookingId={bookingId} defaultTherapistId={therapistId ?? undefined} />
       </Grid>
 
       {(errors as any).form?.message && (

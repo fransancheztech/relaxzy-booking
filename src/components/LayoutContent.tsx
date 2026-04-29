@@ -61,8 +61,9 @@ export default function LayoutContent({
   }, []);
 
   const isAdmin = user?.app_metadata?.role === "admin";
+  const adminOnlyPaths = new Set(["/stats", "/tips"]);
   const visiblePages = menuPages.filter(
-    (page) => page.href !== "/stats" || isAdmin
+    (page) => !adminOnlyPaths.has(page.href) || isAdmin
   );
 
   const appBarHeight = 64; // typical MUI AppBar height in px

@@ -12,6 +12,7 @@ export const menuPages: menuPageModel[] = [
   { text: 'Therapists', href: '/therapists' },
   { text: 'Vouchers', href: '/vouchers' },
   { text: 'Stats', href: '/stats' },
+  { text: 'Tips', href: '/tips' },
 ];
 
 export const drawerWidth: number = 240;
