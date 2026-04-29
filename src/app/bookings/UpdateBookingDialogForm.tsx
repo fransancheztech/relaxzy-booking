@@ -184,7 +184,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
   return (
     <>
       <Dialog open={open} onClose={onCancel} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ margin: 0, padding: 0 }}>Update Booking</DialogTitle>
+        <DialogTitle>Update Booking</DialogTitle>
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
             <DialogContent

@@ -10,17 +10,17 @@ import {
   Autocomplete,
   Box,
   Button,
+  Chip,
   Container,
-  DialogContentText,
   Divider,
   FormControl,
   FormHelperText,
   Grid,
   InputLabel,
   MenuItem,
+  Paper,
   Select,
   TextField,
-  Tooltip,
   Typography,
 } from "@mui/material";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
@@ -178,7 +178,7 @@ const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Pro
           )}
         />
       </Grid>
-      <Grid size={6}>
+      <Grid size={12}>
         <Controller
           name="notes"
           control={control}
@@ -193,6 +193,8 @@ const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Pro
               size="small"
               type="text"
               variant="outlined"
+              multiline
+              rows={2}
             />
           )}
         ></Controller>
@@ -216,36 +218,43 @@ const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Pro
           )}
         />
       </Grid>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          mt: 2,
-          gap: 2,
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            maxWidth: 300,
-          }}
-        >
-          <DialogContentText>
-            Below is a summary of your booking:
-          </DialogContentText>
-
-          <Typography variant="body1">Price: {formatMoney(totalPrice)}</Typography>
-          <Typography variant="body1">Paid: {formatMoney(totalPaid)}</Typography>
-          <Typography variant="body1">
-            Due: {formatMoney(remainingBalance)}
-          </Typography>
-        </Box>
-
-        <Tooltip title="Add payment">
-          <Button variant="contained" onClick={() => setIsPaymentDialogOpen(true)}>Add Payment</Button>
-        </Tooltip>
-      </Box>
+      <Grid size={12}>
+        <Paper variant="outlined" sx={{ px: 2, py: 1.5, borderRadius: 2, display: "flex", alignItems: "center", gap: 2 }}>
+          <Box sx={{ flex: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary">Payment</Typography>
+              <Chip
+                label={remainingBalance <= 0 ? "Paid" : totalPaid > 0 ? "Partial" : "Unpaid"}
+                size="small"
+                color={remainingBalance <= 0 ? "success" : totalPaid > 0 ? "warning" : "default"}
+              />
+            </Box>
+            <Box sx={{ display: "flex", gap: 3 }}>
+              <Box>
+                <Typography variant="caption" color="text.secondary">Price</Typography>
+                <Typography variant="body2" fontWeight={500}>{formatMoney(totalPrice)}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">Paid</Typography>
+                <Typography variant="body2" fontWeight={500}>{formatMoney(totalPaid)}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">Due</Typography>
+                <Typography
+                  variant="body2"
+                  fontWeight={700}
+                  color={remainingBalance <= 0 ? "success.main" : "error.main"}
+                >
+                  {formatMoney(Math.max(0, remainingBalance))}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+          <Button variant="outlined" size="small" onClick={() => setIsPaymentDialogOpen(true)}>
+            Add Payment
+          </Button>
+        </Paper>
+      </Grid>
 
       {(errors as any).form?.message && (
         <Container sx={{ marginBottom: 2 }}>
