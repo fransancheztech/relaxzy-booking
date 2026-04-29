@@ -174,6 +174,10 @@ export async function POST(request: Request) {
     // ------------------------------------------------------
     // 10) CREATE PRIMARY + COMPANION BOOKINGS IN ONE TRANSACTION
     // ------------------------------------------------------
+    const isGroup = companions.length > 0;
+    const groupNote = (notes?: string | null) =>
+      isGroup ? (notes?.trim() ? `Group. ${notes.trim()}` : "Group.") : (notes ?? null);
+
     const { booking, companionBookings } = await prisma.$transaction(async (tx) => {
       const primary = await tx.bookings.create({
         data: {
@@ -181,7 +185,7 @@ export async function POST(request: Request) {
           service_id: serviceId,
           start_time: start,
           end_time: end,
-          notes: body.notes ?? null,
+          notes: groupNote(body.notes),
           price,
           status: "confirmed",
         },
@@ -202,7 +206,7 @@ export async function POST(request: Request) {
               service_id: companionServiceIds[i],
               start_time: start,
               end_time: companionEnd,
-              notes: c.notes ?? null,
+              notes: groupNote(c.notes),
               price: companionPrice,
               status: "confirmed",
             },

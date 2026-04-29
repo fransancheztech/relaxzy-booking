@@ -1,6 +1,5 @@
-- 8 Implementar los masajes múltiples, de forma que se sepa que están vinculados, que no sea necesario introducir información personal de más de un cliente, que permita saber qué terapeuta hace cada masaje y qué cada uno pueda tener su duración, masaje y precio
-- 8 Permitir usar bonos para pagos de reservas o implementar pagina/tablas de bonos a mantener manualmente
-- 8 Visualización de terapeutas
+TO-DO
+- 8 Probar pagos con vouchers
 - 8 Edición de terapeutas
 - 8 Elminación de terapeutas
 - 7 Añadir sistema para saber cuantas terapeutas hay ocupadas, para facilitar el conocimiento de la disponibilidad
@@ -30,8 +29,11 @@
 - Arreglar precio no se puede poner decimales
 - Hacer que los masajes, duraciones y precios recomendados al crear/modificar una reservan, vengan efectivamente del backend
 - Sidebar menu izquierda plegable
-- Multicalendar para varias terapeutas.
 - Añadir terapeutas esta fallando, arreglar.
 - crear tabla vouchers_with_details
 - Añadir columna opcional voucher_id a la tabla bookings
 - Añadir tipo de payment_event USAGE, para usos de balance de vouchers
+
+DONE
+- 8 Implementar los masajes múltiples, de forma que se sepa que están vinculados, que no sea necesario introducir información personal de más de un cliente, que permita saber qué terapeuta hace cada masaje y qué cada uno pueda tener su duración, masaje y precio
+- 8 Permitir usar bonos para pagos de reservas o implementar pagina/tablas de bonos a mantener manualmente

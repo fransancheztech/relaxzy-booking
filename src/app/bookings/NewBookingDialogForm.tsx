@@ -81,7 +81,7 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
       <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         Add Booking
         <Tooltip
-          title="Create one booking per person. For couples or groups, create separate bookings and use the Notes field to link them."
+          title="Always create one single booking per person. For couples or groups, feel free to use the Companions section below."
           arrow
           placement="right"
         >
