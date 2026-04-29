@@ -69,6 +69,15 @@ export async function GET(
       .filter((e) => e.method === "credit_card")
       .reduce((sum, e) => sum + Number(e.amount ?? 0), 0);
 
+    const voucherUses = await prisma.voucher_uses.findMany({
+      where: { booking_id: id, deleted_at: null },
+      select: { amount: true },
+    });
+    const paidVoucher = voucherUses.reduce(
+      (sum, v) => sum + Number(v.amount ?? 0),
+      0,
+    );
+
     /* -----------------------------
        Normalize nullable client
        ----------------------------- */
@@ -102,6 +111,7 @@ export async function GET(
       services_names,
       paidCash,
       paidCard,
+      paidVoucher,
     });
   } catch (error) {
     console.error("GET /bookings/[id] error:", error);

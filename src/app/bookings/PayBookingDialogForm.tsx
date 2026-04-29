@@ -36,6 +36,7 @@ interface DialogFormProps {
   price: number;
   paidCash: number;
   paidCard: number;
+  paidVoucher?: number;
   onPaymentSuccess: () => void;
 }
 
@@ -46,6 +47,7 @@ const PayBookingDialogForm = ({
   price,
   paidCash,
   paidCard,
+  paidVoucher = 0,
   onPaymentSuccess,
 }: DialogFormProps) => {
   const defaultValues = {
@@ -179,7 +181,7 @@ const PayBookingDialogForm = ({
                         key={String(open) + String(voucherOpen)}
                         control={methods.control}
                         setValue={methods.setValue}
-                        remainingAmount={Math.max(0, price - paidCash - paidCard)}
+                        remainingAmount={Math.max(0, price - paidCash - paidCard - paidVoucher)}
                       />
                     </Grid>
                     <Grid size={6}>

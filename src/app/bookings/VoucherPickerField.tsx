@@ -66,6 +66,7 @@ const VoucherPickerField = ({ control, setValue, remainingAmount }: Props) => {
             isOptionEqualToValue={(o, v) => o.code === v.code}
             loading={loading}
             clearOnBlur={false}
+            disablePortal
             onInputChange={(_, value, reason) => {
               if (reason === "input") {
                 fetchVouchers(value);

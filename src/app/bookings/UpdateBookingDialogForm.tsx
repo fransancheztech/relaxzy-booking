@@ -53,6 +53,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
     totalPrice: 0,
     paidCash: 0,
     paidCard: 0,
+    paidVoucher: 0,
     totalPaid: 0,
     remainingBalance: 0,
   });
@@ -79,13 +80,15 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
       const totalPrice = booking.price ?? 0;
       const paidCash = booking.paidCash ?? 0;
       const paidCard = booking.paidCard ?? 0;
-      const totalPaid = paidCash + paidCard;
+      const paidVoucher = booking.paidVoucher ?? 0;
+      const totalPaid = paidCash + paidCard + paidVoucher;
       const remainingBalance = totalPrice - totalPaid;
 
       setPaymentSummary({
         totalPrice,
         paidCash,
         paidCard,
+        paidVoucher,
         totalPaid,
         remainingBalance,
       });
@@ -241,6 +244,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
         price={price ?? 0}
         paidCash={paymentSummary.paidCash}
         paidCard={paymentSummary.paidCard}
+        paidVoucher={paymentSummary.paidVoucher}
         onPaymentSuccess={onPaymentSuccess}
       />
 
