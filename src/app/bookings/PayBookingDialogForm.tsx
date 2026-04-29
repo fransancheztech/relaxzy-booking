@@ -2,6 +2,7 @@ import {
   Alert,
   Button,
   CircularProgress,
+  Collapse,
   Container,
   Dialog,
   DialogActions,
@@ -14,6 +15,8 @@ import {
 } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CloseIcon from "@mui/icons-material/Close";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { Controller, useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -55,6 +58,7 @@ const PayBookingDialogForm = ({
     paidCard,
   };
   const [loading, setLoading] = useState(false);
+  const [voucherOpen, setVoucherOpen] = useState(false);
   const methods = useForm<
     BookingPaymentFormInput,
     any,
@@ -67,6 +71,7 @@ const PayBookingDialogForm = ({
   useEffect(() => {
     if (!open) return;
     methods.reset(defaultValues);
+    setVoucherOpen(false);
   }, [price, open]);
 
   const onSubmit = async (data: BookingPaymentFormOutput) => {
@@ -146,41 +151,61 @@ const PayBookingDialogForm = ({
                 ></Controller>
               </Grid>
               <Grid size={12}>
-                <Divider>
-                  <Typography variant="caption" color="text.secondary">
+                <Divider
+                  onClick={() => {
+                    if (voucherOpen) {
+                      methods.setValue("voucherCode", "");
+                      methods.setValue("voucherPayment", "0");
+                    }
+                    setVoucherOpen((prev) => !prev);
+                  }}
+                  sx={{ cursor: "pointer", userSelect: "none" }}
+                >
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                  >
+                    {voucherOpen ? <ExpandLessIcon fontSize="inherit" /> : <ExpandMoreIcon fontSize="inherit" />}
                     Voucher
                   </Typography>
                 </Divider>
               </Grid>
-              <Grid size={6}>
-                <VoucherPickerField
-                  key={String(open)}
-                  control={methods.control}
-                  setValue={methods.setValue}
-                  remainingAmount={Math.max(0, price - paidCash - paidCard)}
-                />
-              </Grid>
-              <Grid size={6}>
-                <Controller
-                  name="voucherPayment"
-                  control={methods.control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      value={field.value === "0" ? "" : field.value}
-                      label="Voucher Amount"
-                      fullWidth
-                      size="small"
-                      variant="outlined"
-                      error={!!methods.formState.errors.voucherPayment}
-                      helperText={methods.formState.errors.voucherPayment?.message}
-                      slotProps={{ htmlInput: { inputMode: "decimal" } }}
-                      onChange={(e) => {
-                        field.onChange(normalizeMoneyInput(e.target.value));
-                      }}
-                    />
-                  )}
-                />
+              <Grid size={12}>
+                <Collapse in={voucherOpen} unmountOnExit>
+                  <Grid container spacing={{ xs: 1, xl: 2 }}>
+                    <Grid size={6}>
+                      <VoucherPickerField
+                        key={String(open) + String(voucherOpen)}
+                        control={methods.control}
+                        setValue={methods.setValue}
+                        remainingAmount={Math.max(0, price - paidCash - paidCard)}
+                      />
+                    </Grid>
+                    <Grid size={6}>
+                      <Controller
+                        name="voucherPayment"
+                        control={methods.control}
+                        render={({ field }) => (
+                          <TextField
+                            {...field}
+                            value={field.value === "0" ? "" : field.value}
+                            label="Voucher Amount"
+                            fullWidth
+                            size="small"
+                            variant="outlined"
+                            error={!!methods.formState.errors.voucherPayment}
+                            helperText={methods.formState.errors.voucherPayment?.message}
+                            slotProps={{ htmlInput: { inputMode: "decimal" } }}
+                            onChange={(e) => {
+                              field.onChange(normalizeMoneyInput(e.target.value));
+                            }}
+                          />
+                        )}
+                      />
+                    </Grid>
+                  </Grid>
+                </Collapse>
               </Grid>
               <input type="hidden" {...methods.register("price")} />
               <input type="hidden" {...methods.register("paidCash")} />
