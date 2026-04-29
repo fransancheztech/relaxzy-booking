@@ -239,9 +239,25 @@ const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Pro
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
               <Typography variant="subtitle2" color="text.secondary">Payment</Typography>
               <Chip
-                label={remainingBalance <= 0 ? "Paid" : totalPaid > 0 ? "Partial" : "Unpaid"}
+                label={
+                  totalPrice === 0 && totalPaid === 0
+                    ? "No price set"
+                    : remainingBalance <= 0
+                    ? "Paid"
+                    : totalPaid > 0
+                    ? "Partial"
+                    : "Unpaid"
+                }
                 size="small"
-                color={remainingBalance <= 0 ? "success" : totalPaid > 0 ? "warning" : "default"}
+                color={
+                  totalPrice === 0 && totalPaid === 0
+                    ? "default"
+                    : remainingBalance <= 0
+                    ? "success"
+                    : totalPaid > 0
+                    ? "warning"
+                    : "default"
+                }
               />
             </Box>
             <Box sx={{ display: "flex", gap: 3 }}>
@@ -258,7 +274,13 @@ const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Pro
                 <Typography
                   variant="body2"
                   fontWeight={700}
-                  color={remainingBalance <= 0 ? "success.main" : "error.main"}
+                  color={
+                    totalPrice === 0 && totalPaid === 0
+                      ? "text.secondary"
+                      : remainingBalance <= 0
+                      ? "success.main"
+                      : "error.main"
+                  }
                 >
                   {formatMoney(Math.max(0, remainingBalance))}
                 </Typography>
