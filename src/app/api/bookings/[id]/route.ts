@@ -10,6 +10,7 @@ type Body = {
   start_time: string; // ISO
   duration?: string | number; // minutes
   service_name: string;
+  therapist_id?: string;
   notes?: string;
   price?: string | number;
   totalPaid?: string | number;
@@ -48,6 +49,7 @@ export async function GET(
         },
         clients: true,
         services_names: true,
+        therapists: true,
       },
     });
 
@@ -100,6 +102,10 @@ export async function GET(
         }
       : null;
 
+    const therapist = booking.therapists
+      ? { id: booking.therapists.id, full_name: booking.therapists.full_name }
+      : null;
+
     return NextResponse.json({
       id: booking.id,
       start_time: booking.start_time,
@@ -109,6 +115,7 @@ export async function GET(
       price: booking.price,
       client,
       services_names,
+      therapist,
       paidCash,
       paidCard,
       paidVoucher,
@@ -163,6 +170,7 @@ export async function PUT(
       "price",
       "notes",
       "status",
+      "therapist_id",
     ]);
 
     const bookingData: Record<string, any> = {};
@@ -182,6 +190,11 @@ export async function PUT(
       (body.client_surname === "" || body.client_surname == null) &&
       (body.client_email === "" || body.client_email == null) &&
       (body.client_phone === "" || body.client_phone == null);
+
+    // Normalize therapist_id: empty string → null
+    if ("therapist_id" in bookingData) {
+      bookingData.therapist_id = bookingData.therapist_id?.trim() || null;
+    }
 
     /* -----------------------------
        Update (soft-delete aware)

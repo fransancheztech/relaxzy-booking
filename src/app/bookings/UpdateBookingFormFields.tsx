@@ -31,6 +31,7 @@ import { Dispatch, SetStateAction } from "react";
 import BookingClientSection from "./BookingClientSection";
 import { normalizeMoney } from "@/utils/normalizeMoney";
 import { formatMoney, formatMoneyInput } from "@/utils/formatMoney";
+import { useTherapists } from "@/hooks/useTherapists";
 
 interface Props {
   setIsPaymentDialogOpen: Dispatch<SetStateAction<boolean>>;
@@ -50,6 +51,7 @@ const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Pro
   } = useFormContext<BookingUpdateSchemaType>();
 
   const { totalPrice, totalPaid, remainingBalance } = paymentSummary;
+  const therapists = useTherapists();
 
   return (
     <Grid container spacing={{ xs: 1  , xl: 2 }}>
@@ -112,36 +114,51 @@ const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Pro
       </Grid>
       <Grid size={6}>
         <Controller
+          name="therapist_id"
+          control={control}
+          render={({ field }) => (
+            <FormControl fullWidth size="small">
+              <InputLabel>Therapist</InputLabel>
+              <Select {...field} value={field.value ?? ""} label="Therapist">
+                <MenuItem value=""><em>None</em></MenuItem>
+                {therapists.map((t) => (
+                  <MenuItem key={t.id} value={t.id}>{t.full_name}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+        />
+      </Grid>
+      <Grid size={6}>
+        <Controller
           name="duration"
           control={control}
           render={({ field }) => (
-            <FormControl size="small" fullWidth>
-              <Autocomplete
-                freeSolo // <-- allows free text typing
-                options={BOOKING_DEFAULT_DURATIONS} // your list of available options
-                value={field.value ?? null}
-                onChange={(_, newValue) =>
-                  field.onChange(Number(newValue) ?? null)
-                }
-                onInputChange={(_, newInputValue) => {
-                  const num = parseInt(newInputValue, 10);
-                  field.onChange(isNaN(num) ? "" : num);
-                }}
-                getOptionLabel={(option) => String(option) || ""}
-                isOptionEqualToValue={(option, value) => option === value}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    error={!!errors.duration}
-                    helperText={errors.duration?.message}
-                    value={Number(field.value)}
-                    label="Duration"
-                    size="small"
-                    sx={{ borderRadius: "5px", width: "100%" }}
-                  />
-                )}
-              />
-            </FormControl>
+            <Autocomplete
+              freeSolo
+              options={BOOKING_DEFAULT_DURATIONS}
+              value={field.value ?? null}
+              onChange={(_, newValue) =>
+                field.onChange(Number(newValue) ?? null)
+              }
+              onInputChange={(_, newInputValue) => {
+                const num = parseInt(newInputValue, 10);
+                field.onChange(isNaN(num) ? "" : num);
+              }}
+              getOptionLabel={(option) => String(option) || ""}
+              isOptionEqualToValue={(option, value) => option === value}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  error={!!errors.duration}
+                  helperText={errors.duration?.message}
+                  value={Number(field.value)}
+                  label="Duration"
+                  size="small"
+                  fullWidth
+                />
+              )}
+            />
           )}
         />
       </Grid>
@@ -150,30 +167,47 @@ const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Pro
           name="price"
           control={control}
           render={({ field }) => (
-            <FormControl size="small" fullWidth>
-              <Autocomplete
-                freeSolo // <-- allows free text typing
-                options={BOOKING_DEFAULT_PRICES} // your list of available options
-                value={field.value ? formatMoneyInput(field.value) : null}
-                onChange={(_, newValue) =>
-                  field.onChange(normalizeMoney(newValue as any))
-                }
-                onInputChange={(_, newInputValue) => {
-                  field.onChange(normalizeMoney(newInputValue));
-                }}
-                getOptionLabel={(option) => String(option) || ""}
-                isOptionEqualToValue={(option, value) => option === value}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    error={!!errors.price}
-                    helperText={errors.price?.message}
-                    label="Price"
-                    size="small"
-                    sx={{ borderRadius: "5px", width: "100%" }}
-                  />
-                )}
-              />
+            <Autocomplete
+              freeSolo
+              options={BOOKING_DEFAULT_PRICES}
+              value={field.value ? formatMoneyInput(field.value) : null}
+              onChange={(_, newValue) =>
+                field.onChange(normalizeMoney(newValue as any))
+              }
+              onInputChange={(_, newInputValue) => {
+                field.onChange(normalizeMoney(newInputValue));
+              }}
+              getOptionLabel={(option) => String(option) || ""}
+              isOptionEqualToValue={(option, value) => option === value}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  error={!!errors.price}
+                  helperText={errors.price?.message}
+                  label="Price"
+                  size="small"
+                  fullWidth
+                />
+              )}
+            />
+          )}
+        />
+      </Grid>
+      <Grid size={6}>
+        <Controller
+          name="status"
+          control={control}
+          render={({ field }) => (
+            <FormControl fullWidth size="small" error={!!errors.status}>
+              <InputLabel id="status">Status</InputLabel>
+              <Select labelId="status" {...field} label="Status">
+                {BOOKING_DEFAULT_STATUSES.map((status) => (
+                  <MenuItem key={status} value={status}>
+                    {status[0].toUpperCase() + status.slice(1)}
+                  </MenuItem>
+                ))}
+              </Select>
+              <FormHelperText>{errors.status?.message}</FormHelperText>
             </FormControl>
           )}
         />
@@ -196,25 +230,6 @@ const UpdateBookingFormFields = ({ setIsPaymentDialogOpen, paymentSummary }: Pro
               multiline
               rows={2}
             />
-          )}
-        ></Controller>
-      </Grid>
-      <Grid size={6}>
-        <Controller
-          name="status"
-          control={control}
-          render={({ field }) => (
-            <FormControl fullWidth size="small" error={!!errors.status}>
-              <InputLabel id="status">Status</InputLabel>
-              <Select labelId="status" {...field} label="Status">
-                {BOOKING_DEFAULT_STATUSES.map((status) => (
-                  <MenuItem key={status} value={status}>
-                    {status[0].toUpperCase() + status.slice(1)}
-                  </MenuItem>
-                ))}
-              </Select>
-              <FormHelperText>{errors.status?.message}</FormHelperText>
-            </FormControl>
           )}
         />
       </Grid>

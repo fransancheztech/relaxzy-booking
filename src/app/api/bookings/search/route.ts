@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
       include: {
         clients: true,
         services_names: true,
+        therapists: true,
         payments: {
           include: { payment_events: true },
         },
@@ -89,6 +90,9 @@ export async function POST(req: NextRequest) {
             name: b.services_names.name,
             short_name: b.services_names.short_name,
           }
+        : null,
+      therapist: b.therapists
+        ? { id: b.therapists.id, full_name: b.therapists.full_name }
         : null,
       payments: b.payments.map((p) => {
         // infer refunded as sum of REFUND events

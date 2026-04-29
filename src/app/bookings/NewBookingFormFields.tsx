@@ -30,6 +30,7 @@ import { es } from "date-fns/locale";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import { normalizeMoney } from "@/utils/normalizeMoney";
 import BookingClientSection from "./BookingClientSection";
+import { useTherapists } from "@/hooks/useTherapists";
 
 const NewBookingFormFields = () => {
   const {
@@ -42,10 +43,12 @@ const NewBookingFormFields = () => {
     name: "companions",
   });
 
-  const [primaryService, primaryDuration, primaryPrice] = useWatch({
+  const [primaryService, primaryDuration, primaryPrice, primaryTherapistId] = useWatch({
     control,
-    name: ["service_name", "duration", "price"],
+    name: ["service_name", "duration", "price", "therapist_id"],
   });
+
+  const therapists = useTherapists();
 
   return (
     <Grid container spacing={{ xs: 1, xl: 2 }}>
@@ -102,6 +105,23 @@ const NewBookingFormFields = () => {
                 ))}
               </Select>
               <FormHelperText>{errors.service_name?.message}</FormHelperText>
+            </FormControl>
+          )}
+        />
+      </Grid>
+      <Grid size={6}>
+        <Controller
+          name="therapist_id"
+          control={control}
+          render={({ field }) => (
+            <FormControl fullWidth size="small">
+              <InputLabel>Therapist</InputLabel>
+              <Select {...field} value={field.value ?? ""} label="Therapist">
+                <MenuItem value=""><em>None</em></MenuItem>
+                {therapists.map((t) => (
+                  <MenuItem key={t.id} value={t.id}>{t.full_name}</MenuItem>
+                ))}
+              </Select>
             </FormControl>
           )}
         />
@@ -214,6 +234,7 @@ const NewBookingFormFields = () => {
               onClick={() =>
                 append({
                   service_name: primaryService ?? "",
+                  therapist_id: primaryTherapistId ?? "",
                   duration: primaryDuration ?? 60,
                   price: primaryPrice ?? undefined,
                   notes: "",
@@ -263,6 +284,23 @@ const NewBookingFormFields = () => {
                     <MenuItem value=""><em>None</em></MenuItem>
                     {BOOKING_DEFAULT_SERVICES.map((s) => (
                       <MenuItem key={s} value={s}>{s}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+            />
+
+            {/* Therapist */}
+            <Controller
+              name={`companions.${index}.therapist_id`}
+              control={control}
+              render={({ field }) => (
+                <FormControl size="small" sx={{ flex: 1.2 }}>
+                  <InputLabel>Therapist</InputLabel>
+                  <Select {...field} value={field.value ?? ""} label="Therapist">
+                    <MenuItem value=""><em>None</em></MenuItem>
+                    {therapists.map((t) => (
+                      <MenuItem key={t.id} value={t.id}>{t.full_name}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>

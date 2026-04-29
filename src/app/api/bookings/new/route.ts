@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 type CompanionInput = {
   service_name?: string;
+  therapist_id?: string;
   duration?: string | number;
   price?: string | number;
   notes?: string;
@@ -16,6 +17,7 @@ type Body = {
   start_time: string; // ISO
   duration?: string | number; // minutes
   service_name: string;
+  therapist_id?: string;
   notes?: string;
   price?: string | number;
   companions?: CompanionInput[];
@@ -183,6 +185,7 @@ export async function POST(request: Request) {
         data: {
           client_id: clientId,
           service_id: serviceId,
+          therapist_id: body.therapist_id?.trim() || null,
           start_time: start,
           end_time: end,
           notes: groupNote(body.notes),
@@ -204,6 +207,7 @@ export async function POST(request: Request) {
             data: {
               client_id: clientId,
               service_id: companionServiceIds[i],
+              therapist_id: c.therapist_id?.trim() || null,
               start_time: start,
               end_time: companionEnd,
               notes: groupNote(c.notes),

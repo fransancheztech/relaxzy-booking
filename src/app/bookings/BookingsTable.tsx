@@ -59,6 +59,14 @@ export const BookingsTable = ({
         row.service?.short_name ?? row.service?.name ?? "",
     },
     {
+      field: "therapist",
+      headerName: "Therapist",
+      flex: 1,
+      sortable: false,
+      valueGetter: (_, row) => row.therapist?.full_name ?? "",
+      valueFormatter: formatNullable,
+    },
+    {
       field: "date",
       headerName: "Date",
       flex: 1,

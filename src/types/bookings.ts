@@ -102,6 +102,11 @@ export type BookingListItem = {
     short_name: string | null;
   } | null;
 
+  therapist: {
+    id: string;
+    full_name: string;
+  } | null;
+
   payments: {
     id: string;
     amount: string;

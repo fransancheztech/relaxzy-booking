@@ -4,6 +4,7 @@ import { booking_status } from "generated/prisma";
 
 export const CompanionSchema = z.object({
   service_name: z.string().optional(),
+  therapist_id: z.string().optional(),
   duration: z
     .number({ message: "Duration must be a number" })
     .min(15, { message: "Duration must be at least 15 minutes" })
@@ -35,6 +36,7 @@ export const BookingSchema = z
         { message: "Invalid email address" },
       ),
     service_name: z.string().optional(),
+    therapist_id: z.string().optional(),
     start_time: z.date().nullable(),
     duration: z
       .number({ message: "Duration must be a number" })
