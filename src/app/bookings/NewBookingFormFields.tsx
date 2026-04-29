@@ -48,7 +48,7 @@ const NewBookingFormFields = () => {
   });
 
   return (
-    <Grid container sx={{ paddingTop: "1rem" }} spacing={{ xs: 1, xl: 2 }}>
+    <Grid container spacing={{ xs: 1, xl: 2 }}>
       <Grid size={12}>
         <Typography variant="subtitle2" color="text.secondary">Client</Typography>
         <Divider />
@@ -111,33 +111,31 @@ const NewBookingFormFields = () => {
           name="duration"
           control={control}
           render={({ field }) => (
-            <FormControl size="small" fullWidth>
-              <Autocomplete
-                freeSolo // <-- allows free text typing
-                options={BOOKING_DEFAULT_DURATIONS} // your list of available options
-                value={field.value ?? null}
-                onChange={(_, newValue) =>
-                  field.onChange(Number(newValue) ?? null)
-                }
-                onInputChange={(_, newInputValue) => {
-                  const num = parseInt(newInputValue, 10);
-                  field.onChange(isNaN(num) ? "" : num);
-                }}
-                getOptionLabel={(option) => String(option) || ""}
-                isOptionEqualToValue={(option, value) => option === value}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    error={!!errors.duration}
-                    helperText={errors.duration?.message}
-                    value={Number(field.value)}
-                    label="Duration"
-                    size="small"
-                    sx={{ borderRadius: "5px", width: "100%" }}
-                  />
-                )}
-              />
-            </FormControl>
+            <Autocomplete
+              freeSolo
+              options={BOOKING_DEFAULT_DURATIONS}
+              value={field.value ?? null}
+              onChange={(_, newValue) =>
+                field.onChange(Number(newValue) ?? null)
+              }
+              onInputChange={(_, newInputValue) => {
+                const num = parseInt(newInputValue, 10);
+                field.onChange(isNaN(num) ? "" : num);
+              }}
+              getOptionLabel={(option) => String(option) || ""}
+              isOptionEqualToValue={(option, value) => option === value}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  error={!!errors.duration}
+                  helperText={errors.duration?.message}
+                  value={Number(field.value)}
+                  label="Duration"
+                  size="small"
+                  fullWidth
+                />
+              )}
+            />
           )}
         />
       </Grid>
@@ -146,35 +144,33 @@ const NewBookingFormFields = () => {
           name="price"
           control={control}
           render={({ field }) => (
-            <FormControl size="small" fullWidth>
-              <Autocomplete
-                freeSolo // <-- allows free text typing
-                options={BOOKING_DEFAULT_PRICES} // your list of available options
-                value={field.value ?? null}
-                onChange={(_, newValue) =>
-                  field.onChange(normalizeMoney(newValue as any))
-                }
-                onInputChange={(_, newInputValue) => {
-                  field.onChange(normalizeMoney(newInputValue));
-                }}
-                getOptionLabel={(option) => String(option) || ""}
-                isOptionEqualToValue={(option, value) => option === value}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    error={!!errors.price}
-                    helperText={errors.price?.message}
-                    label="Price"
-                    size="small"
-                    sx={{ borderRadius: "5px", width: "100%" }}
-                  />
-                )}
-              />
-            </FormControl>
+            <Autocomplete
+              freeSolo
+              options={BOOKING_DEFAULT_PRICES}
+              value={field.value ?? null}
+              onChange={(_, newValue) =>
+                field.onChange(normalizeMoney(newValue as any))
+              }
+              onInputChange={(_, newInputValue) => {
+                field.onChange(normalizeMoney(newInputValue));
+              }}
+              getOptionLabel={(option) => String(option) || ""}
+              isOptionEqualToValue={(option, value) => option === value}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  error={!!errors.price}
+                  helperText={errors.price?.message}
+                  label="Price"
+                  size="small"
+                  fullWidth
+                />
+              )}
+            />
           )}
         />
       </Grid>
-      <Grid size={6}>
+      <Grid size={12}>
         <Controller
           name="notes"
           control={control}
@@ -189,6 +185,8 @@ const NewBookingFormFields = () => {
               size="small"
               type="text"
               variant="outlined"
+              multiline
+              rows={2}
             />
           )}
         ></Controller>
