@@ -1,39 +1,33 @@
 TO-DO
-- 8 Probar pagos con vouchers
-- 8 Edición de terapeutas
-- 8 Elminación de terapeutas
 - 7 Añadir sistema para saber cuantas terapeutas hay ocupadas, para facilitar el conocimiento de la disponibilidad
-- 7 Implementar sistema para saber qué terapeuta hace cada masaje
-- 7 Añadir stripe
-- 6 Añadir bizum
-- 6 Añadir propinas no en efectivo a reservas
 - 5 Creación de facturas, descarga y almacenamiento en Drive automático de las mismas
-- 4 Edición de clientes
-- 4 Creación de clientes
-- 4 Posibilidad de asignar clientes a reservas sin cliente ya creadas
+- 5 Cambiar react-big-calendar por full-calendar o añadir un calendario por terapeuta y uno para bookings sin asignar, para evitar bookings escondidos
 - 4 Actualizar precio onBlur al editar reserva, para no tener que cerrar y abrir la reserva para pagar
-- 4 Quitar el calendario las reservas canceladas
+- 4 Añadir columna de Estado a la tabla de reservas
+- 4 Arreglar filtros y ordenar de las tablas para que funcione con server
 - 4 Poner colores diferentes a las reservas pendientes, confirmadas y completadas
 - 3 Hacer que Massage, Duration y Price recomiende las opciones adecuadas de forma dinámica.
-- Mostrar Created At en tabla clientes y permitir creacion y modificacion de clientes, también desde el dialogo de modificacion de reservas
 - Poner repo privado
 - Añadir ayuda contextual
 - Traducir español-inglés-tailandés
-- Añadir un calendario por terapeuta y uno para bookings sin asignar, para evitar bookings escondidos
-- Permitir bookings dobles contemporáneas al mismo nombre
-- Cuando se borra una reserva, también hay que borrar su pagos y eventos pagos
-- Filtrado de elementos en la tabla no funciona
-- Auto actualizar tablas cuando se añade/modifica un elemento
-- Permitir añadir dos clientes con el mismo nombre a la misma hora
-- Arreglar precio sale sin decimales en modificar reserva si el precio tiene decimales
-- Arreglar precio no se puede poner decimales
-- Hacer que los masajes, duraciones y precios recomendados al crear/modificar una reservan, vengan efectivamente del backend
+- Evitar que se pueda borrar una reserva con payments y/o payment_events
+- Confirmar auto actualizar tablas cuando se añade/modifica un elemento
+- Confirmar que los masajes, duraciones y precios recomendados al crear/modificar una reservan, vengan efectivamente del backend
 - Sidebar menu izquierda plegable
-- Añadir terapeutas esta fallando, arreglar.
-- crear tabla vouchers_with_details
-- Añadir columna opcional voucher_id a la tabla bookings
-- Añadir tipo de payment_event USAGE, para usos de balance de vouchers
 
 DONE
 - 8 Implementar los masajes múltiples, de forma que se sepa que están vinculados, que no sea necesario introducir información personal de más de un cliente, que permita saber qué terapeuta hace cada masaje y qué cada uno pueda tener su duración, masaje y precio
 - 8 Permitir usar bonos para pagos de reservas o implementar pagina/tablas de bonos a mantener manualmente
+- 8 Probar pagos con vouchers
+- 8 Edición de terapeutas
+- 8 Elminación de terapeutas
+- 7 Implementar sistema para saber qué terapeuta hace cada masaje
+- 6 Añadir propinas no en efectivo a reservas
+- 4 Edición de clientes
+- 4 Creación de clientes
+- 4 Posibilidad de asignar clientes a reservas sin cliente ya creadas
+- Permitir bookings dobles contemporáneas al mismo nombre
+- Arreglar precio sale sin decimales en modificar reserva si el precio tiene decimales
+- Arreglar precio no se puede poner decimales
+- Añadir columna opcional voucher_id a la tabla bookings
+
