@@ -219,12 +219,7 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
 
       {/* Add tip form */}
       {showForm && (
-        <Box
-          component="form"
-          onSubmit={methods.handleSubmit(onSubmit)}
-          noValidate
-          sx={{ mt: 1, p: 1.5, bgcolor: "action.hover", borderRadius: 1 }}
-        >
+        <Box sx={{ mt: 1, p: 1.5, bgcolor: "action.hover", borderRadius: 1 }}>
           <Grid container spacing={1}>
             {/* Therapist */}
             <Grid size={6}>
@@ -322,8 +317,9 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
                 size="small"
                 variant="contained"
                 color="success"
-                type="submit"
+                type="button"
                 disabled={submitting}
+                onClick={methods.handleSubmit(onSubmit)}
                 startIcon={<AddIcon />}
               >
                 Save Tip
