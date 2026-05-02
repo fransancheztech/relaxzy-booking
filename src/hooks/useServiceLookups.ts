@@ -21,7 +21,8 @@ interface ServiceItem {
 export const useServiceLookups = () => {
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [availableServices, setAvailableServices] = useState<string[]>([]);
-  const [availableDurations, setAvailableDurations] = useState<string[]>([]);
+  const [availableDurations, setAvailableDurations] = useState<number[]>([]);
+  const [availablePrices, setAvailablePrices] = useState<number[]>([]);
 
   useEffect(() => {
     const fetchLookups = async () => {
@@ -32,18 +33,13 @@ export const useServiceLookups = () => {
         const data: ServiceItem[] = await res.json();
         setServices(data);
 
-        const uniqueServices = [
-          ...new Set(data.map((s) => s.name).filter(Boolean)),
-        ];
+        setAvailableServices([...new Set(data.map((s) => s.name).filter(Boolean))]);
 
-        const allDurations = data.flatMap((s) =>
-          s.durations.map((d) => String(d.duration_minutes))
-        );
+        const allDurations = data.flatMap((s) => s.durations.map((d) => d.duration_minutes));
+        setAvailableDurations([...new Set(allDurations)].sort((a, b) => a - b));
 
-        const uniqueDurations = [...new Set(allDurations)].filter(Boolean);
-
-        setAvailableServices(uniqueServices);
-        setAvailableDurations(uniqueDurations);
+        const allPrices = data.flatMap((s) => s.durations.map((d) => d.price));
+        setAvailablePrices([...new Set(allPrices)].sort((a, b) => a - b));
       } catch (err) {
         console.error("Lookup fetch error", err);
       }
@@ -68,5 +64,5 @@ export const useServiceLookups = () => {
     [services]
   );
 
-  return { availableServices, availableDurations, lookupPrice, lookupDuration };
+  return { availableServices, availableDurations, availablePrices, lookupPrice, lookupDuration };
 };

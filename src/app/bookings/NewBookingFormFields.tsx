@@ -43,6 +43,9 @@ interface CompanionRowProps {
   lookupPrice: (name: string, duration: number) => number | undefined;
   lookupDuration: (name: string, price: number) => number | undefined;
   therapists: { id: string; full_name: string }[];
+  serviceOptions: string[];
+  durationOptions: number[];
+  priceOptions: number[];
 }
 
 const CompanionRow = ({
@@ -51,6 +54,9 @@ const CompanionRow = ({
   lookupPrice,
   lookupDuration,
   therapists,
+  serviceOptions,
+  durationOptions,
+  priceOptions,
 }: CompanionRowProps) => {
   const {
     control,
@@ -147,7 +153,7 @@ const CompanionRow = ({
         render={({ field }) => (
           <Autocomplete
             freeSolo
-            options={BOOKING_DEFAULT_DURATIONS}
+            options={durationOptions}
             value={field.value ?? null}
             onChange={(_, v) => field.onChange(Number(v) ?? null)}
             onInputChange={(_, v) => {
@@ -177,7 +183,7 @@ const CompanionRow = ({
         render={({ field }) => (
           <Autocomplete
             freeSolo
-            options={BOOKING_DEFAULT_PRICES}
+            options={priceOptions}
             value={field.value ?? null}
             onChange={(_, v) => field.onChange(normalizeMoney(v as string))}
             onInputChange={(_, v) => field.onChange(normalizeMoney(v))}
@@ -235,7 +241,11 @@ const NewBookingFormFields = () => {
   });
 
   const therapists = useTherapists();
-  const { lookupPrice, lookupDuration } = useServiceLookups();
+  const { availableServices, availableDurations, availablePrices, lookupPrice, lookupDuration } = useServiceLookups();
+
+  const serviceOptions = availableServices.length > 0 ? availableServices : BOOKING_DEFAULT_SERVICES;
+  const durationOptions = availableDurations.length > 0 ? availableDurations : BOOKING_DEFAULT_DURATIONS;
+  const priceOptions = availablePrices.length > 0 ? availablePrices : BOOKING_DEFAULT_PRICES;
 
   // Autofill price when service + duration set and price is empty
   useEffect(() => {
@@ -303,7 +313,7 @@ const NewBookingFormFields = () => {
             <FormControl fullWidth size="small" error={!!errors.service_name}>
               <InputLabel id="service_name">Service</InputLabel>
               <Select labelId="service_name" {...field} label="Service">
-                {BOOKING_DEFAULT_SERVICES.map((service) => (
+                {serviceOptions.map((service) => (
                   <MenuItem key={service} value={service}>
                     {service}
                   </MenuItem>
@@ -338,7 +348,7 @@ const NewBookingFormFields = () => {
           render={({ field }) => (
             <Autocomplete
               freeSolo
-              options={BOOKING_DEFAULT_DURATIONS}
+              options={durationOptions}
               value={field.value ?? null}
               onChange={(_, newValue) =>
                 field.onChange(Number(newValue) ?? null)
@@ -371,7 +381,7 @@ const NewBookingFormFields = () => {
           render={({ field }) => (
             <Autocomplete
               freeSolo
-              options={BOOKING_DEFAULT_PRICES}
+              options={priceOptions}
               value={field.value ?? null}
               onChange={(_, newValue) =>
                 field.onChange(normalizeMoney(newValue as any))
@@ -465,6 +475,9 @@ const NewBookingFormFields = () => {
             lookupPrice={lookupPrice}
             lookupDuration={lookupDuration}
             therapists={therapists}
+            serviceOptions={serviceOptions}
+            durationOptions={durationOptions}
+            priceOptions={priceOptions}
           />
         </Grid>
       ))}

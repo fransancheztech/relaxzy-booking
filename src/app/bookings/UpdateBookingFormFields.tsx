@@ -4,6 +4,7 @@ import {
   BOOKING_DEFAULT_SERVICES,
   BOOKING_DEFAULT_STATUSES,
 } from "@/constants";
+import { useServiceLookups } from "@/hooks/useServiceLookups";
 import { BookingUpdateSchemaType } from "@/schemas/booking.schema";
 import {
   Alert,
@@ -57,6 +58,11 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSum
   const therapists = useTherapists();
   const therapistId = watch("therapist_id");
 
+  const { availableServices, availableDurations, availablePrices } = useServiceLookups();
+  const serviceOptions = availableServices.length > 0 ? availableServices : BOOKING_DEFAULT_SERVICES;
+  const durationOptions = availableDurations.length > 0 ? availableDurations : BOOKING_DEFAULT_DURATIONS;
+  const priceOptions = availablePrices.length > 0 ? availablePrices : BOOKING_DEFAULT_PRICES;
+
   return (
     <Grid container spacing={{ xs: 1  , xl: 2 }}>
       <Grid size={12}>
@@ -105,7 +111,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSum
             <FormControl fullWidth size="small" error={!!errors.service_name}>
               <InputLabel id="service_name">Service</InputLabel>
               <Select labelId="service_name" {...field} label="Service">
-                {BOOKING_DEFAULT_SERVICES.map((service) => (
+                {serviceOptions.map((service) => (
                   <MenuItem key={service} value={service}>
                     {service}
                   </MenuItem>
@@ -140,7 +146,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSum
           render={({ field }) => (
             <Autocomplete
               freeSolo
-              options={BOOKING_DEFAULT_DURATIONS}
+              options={durationOptions}
               value={field.value ?? null}
               onChange={(_, newValue) =>
                 field.onChange(Number(newValue) ?? null)
@@ -173,7 +179,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSum
           render={({ field }) => (
             <Autocomplete
               freeSolo
-              options={BOOKING_DEFAULT_PRICES}
+              options={priceOptions}
               value={field.value ? formatMoneyInput(field.value) : null}
               onChange={(_, newValue) =>
                 field.onChange(normalizeMoney(newValue as any))
