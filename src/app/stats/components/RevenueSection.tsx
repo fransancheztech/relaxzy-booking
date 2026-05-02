@@ -10,7 +10,7 @@ import { formatMoney } from "@/utils/formatMoney";
 
 const EMPTY = (
   <Typography variant="body2" color="text.disabled" sx={{ py: 4, textAlign: "center" }}>
-    No hay datos para este período
+    No data for this period
   </Typography>
 );
 
@@ -23,7 +23,7 @@ const PIE_COLORS = ["#002d04", "#60a561", "#a8d5a9"];
 
 const RevenueSection = ({ revenue, bucket }: Props) => {
   const hasData = revenue.over_time.length > 0;
-  const bucketLabel = bucket === "day" ? "día" : bucket === "week" ? "semana" : "mes";
+  const bucketLabel = bucket === "day" ? "day" : bucket === "week" ? "week" : "month";
 
   const barData = revenue.over_time.map((p) => {
     const d = new Date(p.period);
@@ -35,25 +35,25 @@ const RevenueSection = ({ revenue, bucket }: Props) => {
   });
 
   const pieData = [
-    { name: "Efectivo", value: revenue.cash },
-    { name: "Tarjeta", value: revenue.credit_card },
-    { name: "Bono", value: revenue.voucher },
+    { name: "Cash", value: revenue.cash },
+    { name: "Card", value: revenue.credit_card },
+    { name: "Voucher", value: revenue.voucher },
   ].filter((d) => d.value > 0);
 
   return (
     <Box>
-      <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>Ingresos</Typography>
+      <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>Revenue</Typography>
       <Grid container spacing={2}>
         {/* Revenue over time */}
         <Grid size={{ xs: 12, md: 8 }}>
           <Paper elevation={1} sx={{ p: 2, borderRadius: 2 }}>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
               <Typography variant="subtitle2" color="text.secondary">
-                Ingresos por {bucketLabel}
+                Revenue per {bucketLabel}
               </Typography>
               {revenue.refunds_total > 0 && (
                 <Chip
-                  label={`Reembolsos: −${formatMoney(revenue.refunds_total)}`}
+                  label={`Refunds: −${formatMoney(revenue.refunds_total)}`}
                   size="small" color="error" variant="outlined"
                   sx={{ fontSize: "0.7rem" }}
                 />
@@ -67,9 +67,9 @@ const RevenueSection = ({ revenue, bucket }: Props) => {
                   <YAxis tickFormatter={(v) => `${v} €`} tick={{ fontSize: 11 }} width={55} />
                   <Tooltip formatter={(v) => formatMoney(Number(v ?? 0))} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar dataKey="cash" name="Efectivo" stackId="a" fill="#002d04" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="credit_card" name="Tarjeta" stackId="a" fill="#60a561" />
-                  <Bar dataKey="voucher" name="Bono" stackId="a" fill="#a8d5a9" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="cash" name="Cash" stackId="a" fill="#002d04" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="credit_card" name="Card" stackId="a" fill="#60a561" />
+                  <Bar dataKey="voucher" name="Voucher" stackId="a" fill="#a8d5a9" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : EMPTY}
@@ -80,7 +80,7 @@ const RevenueSection = ({ revenue, bucket }: Props) => {
         <Grid size={{ xs: 12, md: 4 }}>
           <Paper elevation={1} sx={{ p: 2, borderRadius: 2, height: "100%" }}>
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-              Por método de pago
+              By payment method
             </Typography>
             {pieData.length > 0 ? (
               <ResponsiveContainer width="100%" height={180}>
@@ -101,9 +101,9 @@ const RevenueSection = ({ revenue, bucket }: Props) => {
             ) : EMPTY}
             <Box sx={{ mt: 1.5, display: "flex", flexDirection: "column", gap: 0.5 }}>
               {[
-                { label: "Efectivo", value: revenue.cash, color: "#002d04" },
-                { label: "Tarjeta", value: revenue.credit_card, color: "#60a561" },
-                { label: "Bono", value: revenue.voucher, color: "#a8d5a9" },
+                { label: "Cash", value: revenue.cash, color: "#002d04" },
+                { label: "Card", value: revenue.credit_card, color: "#60a561" },
+                { label: "Voucher", value: revenue.voucher, color: "#a8d5a9" },
               ].map(({ label, value, color }) => (
                 <Box key={label} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>

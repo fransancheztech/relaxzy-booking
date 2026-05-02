@@ -47,11 +47,11 @@ const StatsPageContent = () => {
       const res = await fetch(`/api/stats?from=${f.toISOString()}&to=${t.toISOString()}`);
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error ?? "Error desconocido");
+        throw new Error(err.error ?? "Unknown error");
       }
       setData(await res.json());
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Error al cargar estadísticas");
+      setError(err instanceof Error ? err.message : "Error loading statistics");
     } finally {
       setLoading(false);
     }
@@ -106,23 +106,23 @@ const StatsPageContent = () => {
           <Grid container spacing={2} sx={{ mb: 4 }}>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
               <KpiCard
-                label="Ingresos totales"
+                label="Total revenue"
                 value={formatMoney(data.revenue.total)}
-                secondary={`Reembolsos: −${formatMoney(data.revenue.refunds_total)}`}
+                secondary={`Refunds: −${formatMoney(data.revenue.refunds_total)}`}
                 icon={<TrendingUpIcon fontSize="small" />}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
               <KpiCard
-                label="Reservas"
+                label="Bookings"
                 value={String(data.bookings.total)}
-                secondary={`Completadas: ${data.bookings.completed} · Canceladas: ${data.bookings.cancelled}`}
+                secondary={`Completed: ${data.bookings.completed} · Cancelled: ${data.bookings.cancelled}`}
                 icon={<CalendarMonthIcon fontSize="small" />}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
               <KpiCard
-                label="Ticket medio"
+                label="Avg. price"
                 value={formatMoney(data.financial.avg_ticket)}
                 secondary={`P25: ${formatMoney(data.financial.p25_ticket)} · P75: ${formatMoney(data.financial.p75_ticket)}`}
                 icon={<EuroIcon fontSize="small" />}
@@ -130,26 +130,26 @@ const StatsPageContent = () => {
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
               <KpiCard
-                label="Ingresos / hora"
+                label="Revenue / hour"
                 value={formatMoney(data.financial.revenue_per_hour)}
-                secondary={`${data.bookings.total_booked_hours.toFixed(1)} h reservadas`}
+                secondary={`${data.bookings.total_booked_hours.toFixed(1)} h booked`}
                 icon={<TimerIcon fontSize="small" />}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
               <KpiCard
-                label="Clientes únicos"
+                label="Unique clients"
                 value={String(data.clients.total_unique)}
-                secondary={`Nuevos: ${data.clients.new_in_period} · Recurrentes: ${data.clients.returning_in_period}`}
+                secondary={`New: ${data.clients.new_in_period} · Returning: ${data.clients.returning_in_period}`}
                 icon={<PeopleIcon fontSize="small" />}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
               <KpiCard
-                label="Tasa retención"
+                label="Retention rate"
                 value={`${data.clients.retention_rate.toFixed(0)}%`}
                 secondary={data.clients.repeat_frequency_days > 0
-                  ? `Vuelven cada ${Math.round(data.clients.repeat_frequency_days)} días`
+                  ? `Return every ${Math.round(data.clients.repeat_frequency_days)} days`
                   : undefined}
                 icon={<LoopIcon fontSize="small" />}
               />

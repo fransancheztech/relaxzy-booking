@@ -79,7 +79,7 @@ const DateRangeFilter = ({ preset, customFrom, customTo, onChange }: Props) => {
         {preset === "custom" && (
           <Stack direction="row" spacing={1} alignItems="center">
             <DatePicker
-              label="Desde"
+              label="From"
               value={customFrom}
               onChange={(d) => {
                 if (d) onChange("custom", d, customTo ?? new Date());
@@ -89,7 +89,7 @@ const DateRangeFilter = ({ preset, customFrom, customTo, onChange }: Props) => {
             />
             <Typography variant="body2" color="text.secondary">—</Typography>
             <DatePicker
-              label="Hasta"
+              label="To"
               value={customTo}
               onChange={(d) => {
                 if (d) onChange("custom", customFrom ?? new Date(), d);

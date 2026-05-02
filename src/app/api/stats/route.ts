@@ -331,14 +331,14 @@ export async function GET(request: Request) {
     const revenuePerHour = totalBookedHours > 0 ? totalRevenue / totalBookedHours : 0;
 
     // Ticket distribution: bucket into €10 ranges
-    const bucketLabels = ["€30–39", "€40–49", "€50–59", "€60–69", "€70–79", "€80–89", "€90+"];
+    const bucketLabels = ["<€30", "€30–39", "€40–49", "€50–59", "€60–69", "€70–79", "€80–89", "€90+"];
     const bucketCounts = new Array(bucketLabels.length).fill(0);
     for (const { price } of allPricesRows) {
       const p = toNum(price);
-      if (p < 30) continue;
-      if (p >= 90) { bucketCounts[6]++; continue; }
-      const idx = Math.floor((p - 30) / 10);
-      if (idx >= 0 && idx < 6) bucketCounts[idx]++;
+      if (p < 30) { bucketCounts[0]++; continue; }
+      if (p >= 90) { bucketCounts[7]++; continue; }
+      const idx = Math.floor((p - 30) / 10) + 1;
+      if (idx >= 1 && idx < 7) bucketCounts[idx]++;
     }
     const ticketDistribution = bucketLabels.map((bucket, i) => ({
       bucket,
