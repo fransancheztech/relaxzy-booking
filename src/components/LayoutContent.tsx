@@ -35,6 +35,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import TipsAndUpdatesIcon from "@mui/icons-material/TipsAndUpdates";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
+import HelpButton from "./HelpButton";
 
 const supabase = createClient();
 
@@ -287,6 +288,7 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
           {children}
         </Container>
       </Stack>
+      <HelpButton />
     </Stack>
   );
 }
