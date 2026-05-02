@@ -80,32 +80,6 @@ const theme = createTheme({
         },
       },
     },
-    MuiListItemButton: {
-      styleOverrides: {
-        root: {
-          color: "#ffffff", // white text by default
-          transition: "background-color 0.2s, color 0.2s",
-          "&:hover": {
-            backgroundColor: "rgba(255,255,255,0.1)", // subtle hover bg
-            color: "#a8ffb5", // light green on hover
-          },
-          "&.Mui-selected": {
-            backgroundColor: "rgba(255,255,255,0.15)",
-            color: "#a8ffb5",
-            "&:hover": {
-              backgroundColor: "rgba(255,255,255,0.2)",
-            },
-          },
-        },
-      },
-    },
-    MuiListItemText: {
-      styleOverrides: {
-        primary: {
-          fontWeight: 500,
-        },
-      },
-    },
   },
 });
 
