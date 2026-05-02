@@ -1,5 +1,6 @@
-import { Container, Paper, Tooltip } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+import { Chip, Container, Paper, Tooltip } from "@mui/material";
+import { DataGrid, GridActionsCellItem, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
+import { booking_status } from "generated/prisma";
 import EditIcon from "@mui/icons-material/Edit";
 import { FETCH_LIMIT } from "@/constants";
 import { BookingListItem } from "@/types/bookings";
@@ -115,6 +116,30 @@ export const BookingsTable = ({
           return `${diffMinutes} min`;
         }
         return ""; // if either date is missing
+      },
+    },
+    {
+      field: "status",
+      headerName: "State",
+      flex: 1,
+      sortable: false,
+      renderCell: (params: GridRenderCellParams<BookingListItem, booking_status>) => {
+        const colorMap: Record<booking_status, "default" | "warning" | "info" | "success" | "error"> = {
+          pending:   "warning",
+          confirmed: "info",
+          completed: "success",
+          cancelled: "error",
+        };
+        const s = params.value;
+        if (!s) return null;
+        return (
+          <Chip
+            label={s.charAt(0).toUpperCase() + s.slice(1)}
+            color={colorMap[s] ?? "default"}
+            size="small"
+            variant="outlined"
+          />
+        );
       },
     },
     {

@@ -1,7 +1,6 @@
 TO-DO
 - 7 Añadir sistema para saber cuantas terapeutas hay ocupadas, para facilitar el conocimiento de la disponibilidad
 - 5 Creación de facturas, descarga y almacenamiento en Drive automático de las mismas
-- 5 Cambiar react-big-calendar por full-calendar o añadir un calendario por terapeuta y uno para bookings sin asignar, para evitar bookings escondidos
 - 4 Añadir columna de Estado a la tabla de reservas
 - 4 Arreglar filtros y ordenar de las tablas para que funcione con server
 - 4 Poner colores diferentes a las reservas pendientes, confirmadas y completadas
@@ -10,8 +9,10 @@ TO-DO
 - Traducir español-inglés-tailandés
 - Evitar que se pueda borrar una reserva con payments y/o payment_events
 - Confirmar auto actualizar tablas cuando se añade/modifica un elemento
-- Confirmar que los masajes, duraciones y precios recomendados al crear/modificar una reservan, vengan efectivamente del backend
+
+STILL DELIBERATING
 - Sidebar menu izquierda plegable
+
 
 DONE
 - 8 Implementar los masajes múltiples, de forma que se sepa que están vinculados, que no sea necesario introducir información personal de más de un cliente, que permita saber qué terapeuta hace cada masaje y qué cada uno pueda tener su duración, masaje y precio
@@ -29,4 +30,5 @@ DONE
 - Arreglar precio no se puede poner decimales
 - Añadir columna opcional voucher_id a la tabla bookings
 - Poner repo privado
-
+- Confirmar que los masajes, duraciones y precios recomendados al crear/modificar una reservan, vengan efectivamente del backend
+- 5 Cambiar react-big-calendar por full-calendar o añadir un calendario por terapeuta y uno para bookings sin asignar, para evitar bookings escondidos
