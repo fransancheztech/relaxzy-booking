@@ -323,6 +323,48 @@ export async function DELETE(
       );
     }
 
+    // Pre-flight: fetch status + payments before allowing deletion
+    const existing = await prisma.bookings.findUnique({
+      where: { id, deleted_at: null },
+      select: {
+        status: true,
+        payments: {
+          where: { deleted_at: null },
+          select: {
+            payment_events: {
+              where: { deleted_at: null },
+              select: { type: true, amount: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    }
+
+    if (existing.status === "completed") {
+      return NextResponse.json(
+        { error: "This booking is completed and cannot be deleted. Change its status first if needed." },
+        { status: 409 },
+      );
+    }
+
+    const totalPaid = existing.payments
+      .flatMap((p) => p.payment_events)
+      .reduce(
+        (sum, pe) => sum + (pe.type === "CHARGE" ? Number(pe.amount) : -Number(pe.amount)),
+        0,
+      );
+
+    if (totalPaid > 0) {
+      return NextResponse.json(
+        { error: `This booking has recorded payments (€${totalPaid.toFixed(2)}). Delete or refund them before deleting the booking.` },
+        { status: 409 },
+      );
+    }
+
     const now = new Date();
 
     const result = await prisma.$transaction(async (tx) => {
