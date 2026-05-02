@@ -27,15 +27,201 @@ import CloseIcon from "@mui/icons-material/Close";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
+import { useEffect } from "react";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import { normalizeMoney } from "@/utils/normalizeMoney";
 import BookingClientSection from "./BookingClientSection";
 import { useTherapists } from "@/hooks/useTherapists";
+import { useServiceLookups } from "@/hooks/useServiceLookups";
+
+// ─── Companion row ────────────────────────────────────────────────────────────
+// Extracted as its own component so useWatch + useEffect run per row.
+
+interface CompanionRowProps {
+  index: number;
+  onRemove: () => void;
+  lookupPrice: (name: string, duration: number) => number | undefined;
+  lookupDuration: (name: string, price: number) => number | undefined;
+  therapists: { id: string; full_name: string }[];
+}
+
+const CompanionRow = ({
+  index,
+  onRemove,
+  lookupPrice,
+  lookupDuration,
+  therapists,
+}: CompanionRowProps) => {
+  const {
+    control,
+    formState: { errors },
+    setValue,
+    getValues,
+  } = useFormContext<BookingSchemaType>();
+
+  const [companionService, companionDuration, companionPrice] = useWatch({
+    control,
+    name: [
+      `companions.${index}.service_name`,
+      `companions.${index}.duration`,
+      `companions.${index}.price`,
+    ],
+  });
+
+  // Autofill price when service + duration set and price is empty
+  useEffect(() => {
+    if (!companionService || !companionDuration) return;
+    const current = getValues(`companions.${index}.price`);
+    if (current != null && String(current) !== "") return;
+    const price = lookupPrice(String(companionService), Number(companionDuration));
+    if (price != null) setValue(`companions.${index}.price`, price);
+  }, [companionService, companionDuration, lookupPrice, index, getValues, setValue]);
+
+  // Autofill duration when service + price set and duration is empty
+  useEffect(() => {
+    if (!companionService || !companionPrice) return;
+    const current = getValues(`companions.${index}.duration`);
+    if (current != null && String(current) !== "") return;
+    const duration = lookupDuration(String(companionService), Number(companionPrice));
+    if (duration != null) setValue(`companions.${index}.duration`, duration);
+  }, [companionService, companionPrice, lookupDuration, index, getValues, setValue]);
+
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 1,
+        bgcolor: "action.hover",
+        borderRadius: 1,
+        px: 1.5,
+        py: 1,
+      }}
+    >
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ minWidth: 24, pt: 1.2, fontWeight: 600 }}
+      >
+        {index + 1}
+      </Typography>
+
+      {/* Service */}
+      <Controller
+        name={`companions.${index}.service_name`}
+        control={control}
+        render={({ field }) => (
+          <FormControl size="small" sx={{ flex: 1.5 }}>
+            <InputLabel>Service</InputLabel>
+            <Select {...field} label="Service">
+              <MenuItem value=""><em>None</em></MenuItem>
+              {BOOKING_DEFAULT_SERVICES.map((s) => (
+                <MenuItem key={s} value={s}>{s}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+      />
+
+      {/* Therapist */}
+      <Controller
+        name={`companions.${index}.therapist_id`}
+        control={control}
+        render={({ field }) => (
+          <FormControl size="small" sx={{ flex: 1.2 }}>
+            <InputLabel>Therapist</InputLabel>
+            <Select {...field} value={field.value ?? ""} label="Therapist">
+              <MenuItem value=""><em>None</em></MenuItem>
+              {therapists.map((t) => (
+                <MenuItem key={t.id} value={t.id}>{t.full_name}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+      />
+
+      {/* Duration */}
+      <Controller
+        name={`companions.${index}.duration`}
+        control={control}
+        render={({ field }) => (
+          <Autocomplete
+            freeSolo
+            options={BOOKING_DEFAULT_DURATIONS}
+            value={field.value ?? null}
+            onChange={(_, v) => field.onChange(Number(v) ?? null)}
+            onInputChange={(_, v) => {
+              const n = parseInt(v, 10);
+              field.onChange(isNaN(n) ? "" : n);
+            }}
+            getOptionLabel={(o) => String(o) || ""}
+            isOptionEqualToValue={(o, v) => o === v}
+            sx={{ flex: 1 }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Duration"
+                size="small"
+                error={!!errors.companions?.[index]?.duration}
+                helperText={errors.companions?.[index]?.duration?.message}
+              />
+            )}
+          />
+        )}
+      />
+
+      {/* Price */}
+      <Controller
+        name={`companions.${index}.price`}
+        control={control}
+        render={({ field }) => (
+          <Autocomplete
+            freeSolo
+            options={BOOKING_DEFAULT_PRICES}
+            value={field.value ?? null}
+            onChange={(_, v) => field.onChange(normalizeMoney(v as string))}
+            onInputChange={(_, v) => field.onChange(normalizeMoney(v))}
+            getOptionLabel={(o) => String(o) || ""}
+            isOptionEqualToValue={(o, v) => o === v}
+            sx={{ flex: 1 }}
+            renderInput={(params) => (
+              <TextField {...params} label="Price" size="small" />
+            )}
+          />
+        )}
+      />
+
+      {/* Notes */}
+      <Controller
+        name={`companions.${index}.notes`}
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Notes"
+            size="small"
+            sx={{ flex: 1.5 }}
+          />
+        )}
+      />
+
+      <Tooltip title="Remove companion">
+        <IconButton size="small" color="error" onClick={onRemove} sx={{ mt: 0.5 }}>
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    </Box>
+  );
+};
+
+// ─── Main form ────────────────────────────────────────────────────────────────
 
 const NewBookingFormFields = () => {
   const {
     control,
     formState: { errors },
+    setValue,
+    getValues,
   } = useFormContext<BookingSchemaType>();
 
   const { fields: companions, append, remove } = useFieldArray({
@@ -49,6 +235,25 @@ const NewBookingFormFields = () => {
   });
 
   const therapists = useTherapists();
+  const { lookupPrice, lookupDuration } = useServiceLookups();
+
+  // Autofill price when service + duration set and price is empty
+  useEffect(() => {
+    if (!primaryService || !primaryDuration) return;
+    const current = getValues("price");
+    if (current != null && String(current) !== "") return;
+    const price = lookupPrice(String(primaryService), Number(primaryDuration));
+    if (price != null) setValue("price", price);
+  }, [primaryService, primaryDuration, lookupPrice, getValues, setValue]);
+
+  // Autofill duration when service + price set and duration is empty
+  useEffect(() => {
+    if (!primaryService || !primaryPrice) return;
+    const current = getValues("duration");
+    if (current != null && String(current) !== "") return;
+    const duration = lookupDuration(String(primaryService), Number(primaryPrice));
+    if (duration != null) setValue("duration", duration);
+  }, [primaryService, primaryPrice, lookupDuration, getValues, setValue]);
 
   return (
     <Grid container spacing={{ xs: 1, xl: 2 }}>
@@ -254,130 +459,13 @@ const NewBookingFormFields = () => {
 
       {companions.map((companion, index) => (
         <Grid size={12} key={companion.id}>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: 1,
-              bgcolor: "action.hover",
-              borderRadius: 1,
-              px: 1.5,
-              py: 1,
-            }}
-          >
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ minWidth: 24, pt: 1.2, fontWeight: 600 }}
-            >
-              {index + 1}
-            </Typography>
-
-            {/* Service */}
-            <Controller
-              name={`companions.${index}.service_name`}
-              control={control}
-              render={({ field }) => (
-                <FormControl size="small" sx={{ flex: 1.5 }}>
-                  <InputLabel>Service</InputLabel>
-                  <Select {...field} label="Service">
-                    <MenuItem value=""><em>None</em></MenuItem>
-                    {BOOKING_DEFAULT_SERVICES.map((s) => (
-                      <MenuItem key={s} value={s}>{s}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
-            />
-
-            {/* Therapist */}
-            <Controller
-              name={`companions.${index}.therapist_id`}
-              control={control}
-              render={({ field }) => (
-                <FormControl size="small" sx={{ flex: 1.2 }}>
-                  <InputLabel>Therapist</InputLabel>
-                  <Select {...field} value={field.value ?? ""} label="Therapist">
-                    <MenuItem value=""><em>None</em></MenuItem>
-                    {therapists.map((t) => (
-                      <MenuItem key={t.id} value={t.id}>{t.full_name}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
-            />
-
-            {/* Duration */}
-            <Controller
-              name={`companions.${index}.duration`}
-              control={control}
-              render={({ field }) => (
-                <Autocomplete
-                  freeSolo
-                  options={BOOKING_DEFAULT_DURATIONS}
-                  value={field.value ?? null}
-                  onChange={(_, v) => field.onChange(Number(v) ?? null)}
-                  onInputChange={(_, v) => {
-                    const n = parseInt(v, 10);
-                    field.onChange(isNaN(n) ? "" : n);
-                  }}
-                  getOptionLabel={(o) => String(o) || ""}
-                  isOptionEqualToValue={(o, v) => o === v}
-                  sx={{ flex: 1 }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Duration"
-                      size="small"
-                      error={!!errors.companions?.[index]?.duration}
-                      helperText={errors.companions?.[index]?.duration?.message}
-                    />
-                  )}
-                />
-              )}
-            />
-
-            {/* Price */}
-            <Controller
-              name={`companions.${index}.price`}
-              control={control}
-              render={({ field }) => (
-                <Autocomplete
-                  freeSolo
-                  options={BOOKING_DEFAULT_PRICES}
-                  value={field.value ?? null}
-                  onChange={(_, v) => field.onChange(normalizeMoney(v as string))}
-                  onInputChange={(_, v) => field.onChange(normalizeMoney(v))}
-                  getOptionLabel={(o) => String(o) || ""}
-                  isOptionEqualToValue={(o, v) => o === v}
-                  sx={{ flex: 1 }}
-                  renderInput={(params) => (
-                    <TextField {...params} label="Price" size="small" />
-                  )}
-                />
-              )}
-            />
-
-            {/* Notes */}
-            <Controller
-              name={`companions.${index}.notes`}
-              control={control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  label="Notes"
-                  size="small"
-                  sx={{ flex: 1.5 }}
-                />
-              )}
-            />
-
-            <Tooltip title="Remove companion">
-              <IconButton size="small" color="error" onClick={() => remove(index)} sx={{ mt: 0.5 }}>
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Box>
+          <CompanionRow
+            index={index}
+            onRemove={() => remove(index)}
+            lookupPrice={lookupPrice}
+            lookupDuration={lookupDuration}
+            therapists={therapists}
+          />
         </Grid>
       ))}
     </Grid>

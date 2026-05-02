@@ -1,5 +1,5 @@
 // src/hooks/useServiceLookups.ts
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface ServiceDuration {
   service_details_id: string;
@@ -19,6 +19,7 @@ interface ServiceItem {
 }
 
 export const useServiceLookups = () => {
+  const [services, setServices] = useState<ServiceItem[]>([]);
   const [availableServices, setAvailableServices] = useState<string[]>([]);
   const [availableDurations, setAvailableDurations] = useState<string[]>([]);
 
@@ -29,13 +30,12 @@ export const useServiceLookups = () => {
         if (!res.ok) throw new Error(res.statusText);
 
         const data: ServiceItem[] = await res.json();
+        setServices(data);
 
-        // Extract unique service names
         const uniqueServices = [
           ...new Set(data.map((s) => s.name).filter(Boolean)),
         ];
 
-        // Extract all durations across all services
         const allDurations = data.flatMap((s) =>
           s.durations.map((d) => String(d.duration_minutes))
         );
@@ -52,5 +52,21 @@ export const useServiceLookups = () => {
     fetchLookups();
   }, []);
 
-  return { availableServices, availableDurations };
+  const lookupPrice = useCallback(
+    (serviceName: string, durationMinutes: number): number | undefined =>
+      services
+        .find((s) => s.name === serviceName)
+        ?.durations.find((d) => d.duration_minutes === durationMinutes)?.price,
+    [services]
+  );
+
+  const lookupDuration = useCallback(
+    (serviceName: string, price: number): number | undefined =>
+      services
+        .find((s) => s.name === serviceName)
+        ?.durations.find((d) => d.price === price)?.duration_minutes,
+    [services]
+  );
+
+  return { availableServices, availableDurations, lookupPrice, lookupDuration };
 };

@@ -2,12 +2,10 @@ TO-DO
 - 7 Añadir sistema para saber cuantas terapeutas hay ocupadas, para facilitar el conocimiento de la disponibilidad
 - 5 Creación de facturas, descarga y almacenamiento en Drive automático de las mismas
 - 5 Cambiar react-big-calendar por full-calendar o añadir un calendario por terapeuta y uno para bookings sin asignar, para evitar bookings escondidos
-- 4 Actualizar precio onBlur al editar reserva, para no tener que cerrar y abrir la reserva para pagar
 - 4 Añadir columna de Estado a la tabla de reservas
 - 4 Arreglar filtros y ordenar de las tablas para que funcione con server
 - 4 Poner colores diferentes a las reservas pendientes, confirmadas y completadas
 - 3 Hacer que Massage, Duration y Price recomiende las opciones adecuadas de forma dinámica.
-- Poner repo privado
 - Añadir ayuda contextual
 - Traducir español-inglés-tailandés
 - Evitar que se pueda borrar una reserva con payments y/o payment_events
@@ -30,4 +28,5 @@ DONE
 - Arreglar precio sale sin decimales en modificar reserva si el precio tiene decimales
 - Arreglar precio no se puede poner decimales
 - Añadir columna opcional voucher_id a la tabla bookings
+- Poner repo privado
 
