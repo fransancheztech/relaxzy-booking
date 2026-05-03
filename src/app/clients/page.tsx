@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import debounce from "lodash.debounce";
 import { clients as ClientType } from "generated/prisma/client";
 import { toast } from "react-toastify";
 import NewClientDialogForm from "./NewClientDialogForm";
@@ -9,121 +8,104 @@ import UpdateClientDialogForm from "./UpdateClientDialogForm";
 import { useLayout } from "../context/LayoutContext";
 import { ClientsTable } from "./ClientsTable";
 import { FETCH_LIMIT } from "@/constants";
+import { GridFilterItem, GridFilterModel } from "@mui/x-data-grid";
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<ClientType[]>([]);
   const [page, setPage] = useState(0);
   const [rowCount, setRowCount] = useState(0);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [isOpenEditClientDialog, setIsOpenEditClientDialog] = useState(false);
   const [isOpenNewClientDialog, setIsOpenNewClientDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [sortModel, setSortModel] = useState<{
-    field: string;
-    sort: "asc" | "desc";
-  }>({
+  const [sortModel, setSortModel] = useState<{ field: string; sort: "asc" | "desc" }>({
     field: "created_at",
     sort: "desc",
   });
+  const [filterItems, setFilterItems] = useState<GridFilterItem[]>([]);
 
   const { setButtonLabel, setOnButtonClick } = useLayout();
 
   // -------------------------------
-  // Load paginated clients normally
+  // Load clients
   // -------------------------------
   const loadClients = useCallback(async (
-  pageToLoad: number,
-  sort = sortModel,
-  search = searchTerm
-) => {
-  try {
-    setLoading(true);
-    setFetchError(null);
+    pageToLoad: number,
+    sort = sortModel,
+    filters = filterItems,
+  ) => {
+    try {
+      setLoading(true);
+      setFetchError(null);
 
-    const res = await fetch("/api/clients/search", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        page: pageToLoad,
-        limit: FETCH_LIMIT,
-        searchTerm: search,
-        sort,
-      }),
-    });
+      const res = await fetch("/api/clients/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          page: pageToLoad,
+          limit: FETCH_LIMIT,
+          sort,
+          filterItems: filters,
+        }),
+      });
 
-    if (!res.ok) {
-      console.error("Failed to load clients");
-      return;
-    }
-
-    const data = await res.json();
-    setClients(data.rows);
-    setRowCount(data.total);
-    setPage(pageToLoad);
-    setSortModel(sort);
-  } catch (err) {
-    console.error(err);
-    setClients([]);
-    setRowCount(0);
-    setFetchError("Error loading clients");
-  } finally {
-    setLoading(false);
-  }
-}, [sortModel, searchTerm]);
-
-useEffect(() => {
-  const eventSource = new EventSource("/api/clients/stream");
-
-  eventSource.onmessage = () => {
-    loadClients(page, sortModel, searchTerm);
-  };
-
-  return () => eventSource.close();
-}, [page, sortModel, searchTerm, loadClients]);
-
-
-  // -------------------------------
-  // Debounced fuzzy search (RPC)
-  // -------------------------------
-  const debouncedSearch = useRef(
-    debounce(async (text: string) => {
-      try {
-        setLoading(true);
-        setFetchError(null);
-        const res = await fetch("/api/clients/search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ searchTerm: text }),
-        });
-
-        if (!res.ok) {
-          console.error("Search failed");
-          return;
-        }
-
-        const data = await res.json();
-        setClients(data);
-        setRowCount(data.length);
-        setIsSearching(!!text);
-      } catch (err) {
-        console.error(err);
-        setClients([]);
-        setRowCount(0);
-        setFetchError("Error searching clients");
-      } finally {
-        setLoading(false);
+      if (!res.ok) {
+        console.error("Failed to load clients");
+        return;
       }
-    }, 300),
-  ).current;
+
+      const data = await res.json();
+      setClients(data.rows);
+      setRowCount(data.total);
+      setPage(pageToLoad);
+      setSortModel(sort);
+    } catch (err) {
+      console.error(err);
+      setClients([]);
+      setRowCount(0);
+      setFetchError("Error loading clients");
+    } finally {
+      setLoading(false);
+    }
+  }, [sortModel, filterItems]);
+
+  // -------------------------------
+  // Realtime subscription — stable, recreated only on mount/unmount
+  // -------------------------------
+  const loadClientsRef = useRef(loadClients);
+  loadClientsRef.current = loadClients;
+  const pageRef = useRef(page);
+  pageRef.current = page;
+  const sortModelRef = useRef(sortModel);
+  sortModelRef.current = sortModel;
+  const filterItemsRef = useRef(filterItems);
+  filterItemsRef.current = filterItems;
+
+  useEffect(() => {
+    const eventSource = new EventSource("/api/clients/stream");
+    eventSource.onmessage = () => {
+      loadClientsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current);
+    };
+    return () => eventSource.close();
+  }, []);
+
+  // -------------------------------
+  // Filter handler
+  // -------------------------------
+  const handleFilterModelChange = (model: GridFilterModel) => {
+    const activeItems = model.items.filter(
+      (item) => item.value !== undefined && item.value !== null && item.value !== ""
+    );
+    setFilterItems(activeItems);
+    loadClients(0, sortModel, activeItems);
+  };
 
   // Load initial page
   useEffect(() => {
     loadClients(0);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setButtonLabel("New Client");
@@ -132,7 +114,7 @@ useEffect(() => {
       setButtonLabel("");
       setOnButtonClick(null);
     };
-  }, [setButtonLabel, setOnButtonClick, setIsOpenNewClientDialog]);
+  }, [setButtonLabel, setOnButtonClick]);
 
   // -------------------------------
   // Delete client
@@ -159,12 +141,7 @@ useEffect(() => {
       }
 
       toast.success("The client has been deleted successfully.");
-
-      // Reload the list after delete
-      setTimeout(() => {
-        if (isSearching) debouncedSearch(searchTerm);
-        else loadClients(page);
-      }, 300);
+      setTimeout(() => loadClients(page), 300);
     } catch (err) {
       console.error("Network or server error deleting client", err);
       toast.error("Network or server error");
@@ -181,10 +158,7 @@ useEffect(() => {
     setSelectedClientId(null);
   };
 
-  const closeNewClientDialog = () => {
-    setIsOpenNewClientDialog(false);
-    setSelectedClientId(null);
-  };
+  const closeNewClientDialog = () => setIsOpenNewClientDialog(false);
 
   const closeDeleteDialog = () => {
     setConfirmDeleteOpen(false);
@@ -194,13 +168,11 @@ useEffect(() => {
   return (
     <main className="p-4">
       <ClientsTable
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        debouncedSearch={debouncedSearch}
         clients={clients}
         rowCount={rowCount}
         page={page}
         loadClients={loadClients}
+        onFilterModelChange={handleFilterModelChange}
         setSelectedClientId={setSelectedClientId}
         setIsOpenEditClientDialog={setIsOpenEditClientDialog}
         loading={loading}

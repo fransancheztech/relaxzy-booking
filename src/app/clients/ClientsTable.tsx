@@ -3,7 +3,7 @@ import {
   Paper,
   Tooltip,
 } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem, GridColDef, GridFilterModel } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import { FETCH_LIMIT } from "@/constants";
 import { clients as ClientType } from "generated/prisma/client";
@@ -11,6 +11,7 @@ import NoRowsOverlay from "@/components/NoRowsOverlay";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { formatNullable } from "@/utils/formatNullable";
 import { formatDateTime } from "@/utils/formatDateTime";
+import { GridFilterItem } from "@mui/x-data-grid";
 
 interface Props {
   setSelectedClientId: (id: string) => void;
@@ -21,11 +22,9 @@ interface Props {
   loadClients: (
     pageToLoad: number,
     sort?: { field: string; sort: "asc" | "desc" },
-    search?: string,
+    filters?: GridFilterItem[],
   ) => void;
-  searchTerm: string;
-  setSearchTerm: (text: string) => void;
-  debouncedSearch: (text: string) => void;
+  onFilterModelChange: (model: GridFilterModel) => void;
   loading: boolean;
   fetchError: string | null;
 }
@@ -37,6 +36,7 @@ export const ClientsTable = ({
   rowCount,
   page,
   loadClients,
+  onFilterModelChange,
   loading,
   fetchError,
 }: Props) => {
@@ -55,7 +55,6 @@ export const ClientsTable = ({
         row.created_at ? new Date(row.created_at) : null,
       valueFormatter: formatDateTime,
     },
-    // Actions column
     {
       field: "actions",
       type: "actions",
@@ -96,21 +95,18 @@ export const ClientsTable = ({
           pageSizeOptions={[FETCH_LIMIT]}
           paginationMode="server"
           sortingMode="server"
+          filterMode="server"
+          onFilterModelChange={onFilterModelChange}
           pagination
           paginationModel={{ page, pageSize: FETCH_LIMIT }}
           onPaginationModelChange={(model) => loadClients(model.page)}
           loading={loading}
           onSortModelChange={(model) => {
-            if (model.length === 0) return;
-
             const sortItem = model[0];
-
-            if (!sortItem.sort) return; // guard against undefined
-
-            loadClients(0, {
-              field: sortItem.field,
-              sort: sortItem.sort,
-            });
+            loadClients(0, sortItem?.sort
+              ? { field: sortItem.field, sort: sortItem.sort }
+              : { field: "created_at", sort: "desc" }
+            );
           }}
           initialState={{
             sorting: {
