@@ -1,12 +1,10 @@
 TO-DO
-- 7 Añadir sistema para saber cuantas terapeutas hay ocupadas, para facilitar el conocimiento de la disponibilidad
-- 5 Creación de facturas, descarga y almacenamiento en Drive automático de las mismas
 - 4 Arreglar filtros y ordenar de las tablas para que funcione con server
-- 4 Poner colores diferentes a las reservas pendientes, confirmadas y completadas
 - Traducir español-inglés-tailandés
-- Confirmar auto actualizar tablas cuando se añade/modifica un elemento
 
 STILL DELIBERATING
+- 5 Creación de facturas, descarga y almacenamiento en Drive automático de las mismas
+- 4 Poner colores diferentes a las reservas pendientes, confirmadas y completadas
 - Sidebar menu izquierda plegable
 
 
@@ -31,3 +29,5 @@ DONE
 - 4 Añadir columna de Estado a la tabla de reservas
 - Añadir ayuda contextual
 - Evitar que se pueda borrar una reserva en estado completed o con payments y/o payment_events
+- 7 Añadir sistema para saber cuantas terapeutas hay ocupadas, para facilitar el conocimiento de la disponibilidad
+- Confirmar auto actualizar tablas cuando se añade/modifica un elemento

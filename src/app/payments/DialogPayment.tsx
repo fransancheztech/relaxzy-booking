@@ -129,17 +129,7 @@ const DialogPayment = ({
     }
   }, [open]);
 
-  useEffect(() => {
-    if (!open || !paymentId) return;
 
-    const eventSource = new EventSource("/api/payment-events/stream");
-
-    eventSource.onmessage = () => {
-      loadPaymentEvents(paymentId);
-    };
-
-    return () => eventSource.close();
-  }, [open, paymentId]);
   const handleClosePaymentDialog = () => {
     setPaymentEvents([]);
     setIsOpenRefundPaymentDialog(false); // make sure refund dialog closes
