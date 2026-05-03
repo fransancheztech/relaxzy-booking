@@ -7,7 +7,6 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid";
 import { DatesSetArg, EventClickArg } from "@fullcalendar/core";
-import esLocale from "@fullcalendar/core/locales/es";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useCalendarData } from "@/hooks/useCalendarData";
 import { useLayout } from "../context/LayoutContext";
@@ -93,7 +92,6 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
           events={events}
           eventClick={handleEventClick}
           datesSet={handleDatesSet}
-          locale={esLocale}
           firstDay={1}
           nowIndicator
           scrollTime="09:00:00"
