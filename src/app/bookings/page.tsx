@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import debounce from "lodash.debounce";
 import { useLayout } from "../context/LayoutContext";
 import NewBookingDialogForm from "@/app/bookings/NewBookingDialogForm";
 import { BookingsTable } from "./BookingsTable";
 import { BookingListItem } from "@/types/bookings";
 import UpdateBookingDialogForm from "@/app/bookings/UpdateBookingDialogForm";
 import { FETCH_LIMIT } from "@/constants";
+import { GridFilterItem, GridFilterModel } from "@mui/x-data-grid";
 
 export default function BookingsPage() {
   const { setButtonLabel, setOnButtonClick } = useLayout();
@@ -15,32 +15,26 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState<BookingListItem[]>([]);
   const [page, setPage] = useState(0);
   const [rowCount, setRowCount] = useState(0);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(
-    null,
-  );
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [isOpenNewBookingDialog, setIsOpenNewBookingDialog] = useState(false);
   const [isOpenEditBookingDialog, setIsOpenEditBookingDialog] = useState(false);
-  const [sortModel, setSortModel] = useState<{
-    field: string;
-    sort: "asc" | "desc";
-  }>({
+  const [sortModel, setSortModel] = useState<{ field: string; sort: "asc" | "desc" }>({
     field: "start_time",
     sort: "desc",
   });
+  const [filterItems, setFilterItems] = useState<GridFilterItem[]>([]);
 
   // -------------------------------
   // Load bookings
   // -------------------------------
   const loadBookings = useCallback(async (
-  pageToLoad: number,
-  sort = sortModel,
-  search = searchTerm
-) => {
+    pageToLoad: number,
+    sort = sortModel,
+    filters = filterItems,
+  ) => {
     try {
       setLoading(true);
       setFetchError(null);
@@ -51,8 +45,9 @@ export default function BookingsPage() {
         body: JSON.stringify({
           page: pageToLoad,
           limit: FETCH_LIMIT,
-          searchTerm: search,
+          searchTerm: "",
           sort,
+          filterItems: filters,
         }),
       });
 
@@ -74,56 +69,38 @@ export default function BookingsPage() {
     } finally {
       setLoading(false);
     }
-  }, [sortModel, searchTerm]);
+  }, [sortModel, filterItems]);
 
   // -------------------------------
-  // Debounced search
+  // Realtime subscription — stable, recreated only on mount/unmount
   // -------------------------------
-  const debouncedSearch = useRef(
-    debounce(async (text: string) => {
-      try {
-        setLoading(true);
-        setFetchError(null);
+  const loadBookingsRef = useRef(loadBookings);
+  loadBookingsRef.current = loadBookings;
+  const pageRef = useRef(page);
+  pageRef.current = page;
+  const sortModelRef = useRef(sortModel);
+  sortModelRef.current = sortModel;
+  const filterItemsRef = useRef(filterItems);
+  filterItemsRef.current = filterItems;
 
-        const res = await fetch("/api/bookings/search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ searchTerm: text }),
-        });
-
-        if (!res.ok) {
-          console.error("Search failed");
-          return;
-        }
-
-        const data = await res.json();
-        setBookings(data);
-        setRowCount(data.length);
-        setIsSearching(!!text);
-      } catch (err) {
-        console.error(err);
-        setBookings([]);
-        setRowCount(0);
-        setFetchError("Error searching bookings");
-      } finally {
-        setLoading(false);
-      }
-    }, 300),
-  ).current;
-
-  // -------------------------------
-  // Realtime subscription
-  // -------------------------------
   useEffect(() => {
-  const eventSource = new EventSource("/api/bookings/stream");
+    const eventSource = new EventSource("/api/bookings/stream");
+    eventSource.onmessage = () => {
+      loadBookingsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current);
+    };
+    return () => eventSource.close();
+  }, []);
 
-  eventSource.onmessage = () => {
-    loadBookings(page, sortModel, searchTerm);
+  // -------------------------------
+  // Filter handler
+  // -------------------------------
+  const handleFilterModelChange = (model: GridFilterModel) => {
+    const activeItems = model.items.filter(
+      (item) => item.value !== undefined && item.value !== null && item.value !== ""
+    );
+    setFilterItems(activeItems);
+    loadBookings(0, sortModel, activeItems);
   };
-
-  return () => eventSource.close();
-}, [page, sortModel, searchTerm, loadBookings]); // <-- empty deps
-
 
   // -------------------------------
   // Dialog handlers
@@ -149,7 +126,7 @@ export default function BookingsPage() {
   // Load initial bookings
   useEffect(() => {
     loadBookings(0);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <main className="p-4">
@@ -158,7 +135,7 @@ export default function BookingsPage() {
         rowCount={rowCount}
         page={page}
         loadBookings={loadBookings}
-        debouncedSearch={debouncedSearch}
+        onFilterModelChange={handleFilterModelChange}
         setSelectedBookingId={setSelectedBookingId}
         setIsOpenEditBookingDialog={setIsOpenEditBookingDialog}
         loading={loading}

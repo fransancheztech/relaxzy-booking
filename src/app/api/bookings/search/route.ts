@@ -1,71 +1,167 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { BookingListItem } from "@/types/bookings";
-import { Prisma } from "generated/prisma";
+import { Prisma, booking_status } from "generated/prisma";
+
+const VALID_STATUSES: booking_status[] = ["pending", "confirmed", "completed", "cancelled"];
+
+function getMadridDateRange(dateStr: string): { gte: Date; lt: Date } | null {
+  const m = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return null;
+  const day = parseInt(m[1]), month = parseInt(m[2]), year = parseInt(m[3]);
+  if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+
+  const probe = new Date(Date.UTC(year, month - 1, day, 12));
+  const localStr = probe.toLocaleString("sv", { timeZone: "Europe/Madrid" });
+  const offsetMs = probe.getTime() - new Date(localStr.replace(" ", "T") + "Z").getTime();
+
+  const gte = new Date(Date.UTC(year, month - 1, day, 0, 0, 0) + offsetMs);
+  const lt  = new Date(gte.getTime() + 24 * 60 * 60 * 1000);
+  return { gte, lt };
+}
+
+function buildOrderBy(field: string, direction: "asc" | "desc"): Prisma.bookingsOrderByWithRelationInput {
+  switch (field) {
+    case "customer_name":  return { clients: { client_name: direction } };
+    case "customer_phone": return { clients: { client_phone: direction } };
+    case "service":        return { services_names: { name: direction } };
+    case "therapist":      return { therapists: { full_name: direction } };
+    case "status":         return { status: direction };
+    case "notes":          return { notes: direction };
+    case "price":          return { price: direction };
+    case "created_at":     return { created_at: direction };
+    case "time":
+    case "start_time":
+    default:               return { start_time: direction };
+  }
+}
+
+function buildFilterCondition(
+  field: string,
+  operator: string,
+  value: string,
+): Prisma.bookingsWhereInput | null {
+  switch (field) {
+    case "start_time": {
+      const range = getMadridDateRange(value);
+      return range ? { start_time: { gte: range.gte, lt: range.lt } } : null;
+    }
+    case "customer_name":
+      return {
+        clients: {
+          OR: [
+            { client_name: { contains: value, mode: "insensitive" } },
+            { client_surname: { contains: value, mode: "insensitive" } },
+          ],
+        },
+      };
+    case "customer_phone":
+      return { clients: { client_phone: { contains: value, mode: "insensitive" } } };
+    case "service":
+      return { services_names: { short_name: { contains: value, mode: "insensitive" } } };
+    case "therapist":
+      return { therapists: { full_name: { contains: value, mode: "insensitive" } } };
+    case "status":
+      return VALID_STATUSES.includes(value as booking_status)
+        ? { status: value as booking_status }
+        : null;
+    case "price": {
+      const num = parseFloat(value);
+      if (isNaN(num)) return null;
+      switch (operator) {
+        case "!=":  return { NOT: { price: num } };
+        case ">":   return { price: { gt: num } };
+        case ">=":  return { price: { gte: num } };
+        case "<":   return { price: { lt: num } };
+        case "<=":  return { price: { lte: num } };
+        default:    return { price: num };
+      }
+    }
+    case "notes":
+      return { notes: { contains: value, mode: "insensitive" } };
+    case "created_at": {
+      const parsed = new Date(value);
+      if (isNaN(parsed.getTime())) return null;
+      const dateStr = parsed.toLocaleDateString("es-ES");
+      const range = getMadridDateRange(dateStr);
+      if (!range) return null;
+      switch (operator) {
+        case "not":        return { NOT: { created_at: { gte: range.gte, lt: range.lt } } };
+        case "after":      return { created_at: { gte: range.lt } };
+        case "onOrAfter":  return { created_at: { gte: range.gte } };
+        case "before":     return { created_at: { lt: range.gte } };
+        case "onOrBefore": return { created_at: { lt: range.lt } };
+        default:           return { created_at: { gte: range.gte, lt: range.lt } };
+      }
+    }
+    default:
+      return null;
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const { page, limit, searchTerm, sort } = await req.json();
+    const { page, limit, searchTerm, sort, filterItems } = await req.json();
 
     if (typeof searchTerm !== "string") {
-      return NextResponse.json(
-        { error: "Invalid searchTerm" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid searchTerm" }, { status: 400 });
     }
 
-    const where: Prisma.bookingsWhereInput = {
-  deleted_at: null,
-};
+    const where: Prisma.bookingsWhereInput = { deleted_at: null };
+
+    if (Array.isArray(filterItems)) {
+      const conditions: Prisma.bookingsWhereInput[] = [];
+      for (const item of filterItems) {
+        if (item.field && typeof item.value === "string" && item.value !== "") {
+          const cond = buildFilterCondition(item.field, item.operator ?? "contains", item.value);
+          if (cond) conditions.push(cond);
+        }
+      }
+      if (conditions.length > 0) {
+        where.AND = conditions;
+      }
+    }
 
     if (searchTerm) {
-  where.OR = [
-    {
-      notes: { contains: searchTerm, mode: "insensitive" },
-    },
-    {
-      clients: {
-        OR: [
-          { client_name: { contains: searchTerm, mode: "insensitive" } },
-          { client_surname: { contains: searchTerm, mode: "insensitive" } },
-          { client_email: { contains: searchTerm, mode: "insensitive" } },
-          { client_phone: { contains: searchTerm, mode: "insensitive" } },
-        ],
-      },
-    },
-    {
-      services_names: {
-        OR: [
-          { name: { contains: searchTerm, mode: "insensitive" } },
-          { short_name: { contains: searchTerm, mode: "insensitive" } },
-        ],
-      },
-    },
-  ];
-}
+      where.OR = [
+        { notes: { contains: searchTerm, mode: "insensitive" } },
+        {
+          clients: {
+            OR: [
+              { client_name: { contains: searchTerm, mode: "insensitive" } },
+              { client_surname: { contains: searchTerm, mode: "insensitive" } },
+              { client_email: { contains: searchTerm, mode: "insensitive" } },
+              { client_phone: { contains: searchTerm, mode: "insensitive" } },
+            ],
+          },
+        },
+        {
+          services_names: {
+            OR: [
+              { name: { contains: searchTerm, mode: "insensitive" } },
+              { short_name: { contains: searchTerm, mode: "insensitive" } },
+            ],
+          },
+        },
+      ];
+    }
 
-    // Query bookings with related client, service, and payments (including payment_events)
     const [rows, total] = await Promise.all([
       prisma.bookings.findMany({
-      where,
-      include: {
-        clients: true,
-        services_names: true,
-        therapists: true,
-        payments: {
-          include: { payment_events: true },
+        where,
+        include: {
+          clients: true,
+          services_names: true,
+          therapists: true,
+          payments: { include: { payment_events: true } },
         },
-      },
-      skip: page * limit,
-      take: limit,
-      orderBy: {
-        [sort?.field ?? "start_time"]: sort?.sort ?? "desc",
-      },
-    }),
-    prisma.bookings.count({where})
-  ])
+        skip: page * limit,
+        take: limit,
+        orderBy: buildOrderBy(sort?.field ?? "start_time", sort?.sort ?? "desc"),
+      }),
+      prisma.bookings.count({ where }),
+    ]);
 
-    // Map response for front-end table
     const data: BookingListItem[] = rows.map((b) => ({
       id: b.id,
       start_time: b.start_time,
@@ -95,13 +191,11 @@ export async function POST(req: NextRequest) {
         ? { id: b.therapists.id, full_name: b.therapists.full_name }
         : null,
       payments: b.payments.map((p) => {
-        // infer refunded as sum of REFUND events
         const refunded = Math.abs(
           p.payment_events
             .filter((e) => e.type === "REFUND")
             .reduce((sum, e) => sum + Number(e.amount ?? 0), 0)
         );
-
         return {
           id: p.id,
           amount: p.amount?.toString() ?? "0",
@@ -111,13 +205,9 @@ export async function POST(req: NextRequest) {
       }),
     }));
 
-    // Return mapped rows (frontend expects `client` and `service` keys)
     return NextResponse.json({ rows: data, total });
   } catch (err) {
     console.error("Error fetching bookings:", err);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
