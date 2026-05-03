@@ -52,6 +52,7 @@ export async function GET(req: NextRequest) {
       updated_at: b.updated_at,
 
       price: b.price,
+      therapist_id: b.therapist_id ?? null,
     }));
 
     return NextResponse.json(formatted);
