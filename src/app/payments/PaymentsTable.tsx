@@ -1,5 +1,5 @@
 import { Container, Paper, Tooltip } from "@mui/material";
-import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridActionsCellItem, GridColDef, GridFilterModel } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { FETCH_LIMIT } from "@/constants";
 import { payments as PaymentsType } from "generated/prisma/client";
@@ -8,23 +8,21 @@ import NoRowsOverlay from "@/components/NoRowsOverlay";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatNullable } from "@/utils/formatNullable";
 import { formatDateTime } from "@/utils/formatDateTime";
+import { GridFilterItem } from "@mui/x-data-grid";
 
 interface Props {
   setSelectedPaymentId: (id: string) => void;
   setSelectedPaymentAmount: (amount: number | null) => void;
   setIsOpenViewPaymentDialog: (open: boolean) => void;
-  setIsOpenRefundPaymentDialog: (open: boolean) => void;
-  setConfirmRefundOpen: (open: boolean) => void;
   payments: PaymentsType[];
   rowCount: number;
   page: number;
   loadPayments: (
     pageToLoad: number,
     sort?: { field: string; sort: "asc" | "desc" },
+    filters?: GridFilterItem[],
   ) => void;
-  searchTerm: string;
-  setSearchTerm: (text: string) => void;
-  debouncedSearch: (text: string) => void;
+  onFilterModelChange: (model: GridFilterModel) => void;
   loading: boolean;
   fetchError: string | null;
 }
@@ -37,19 +35,18 @@ export const PaymentsTable = ({
   rowCount,
   page,
   loadPayments,
+  onFilterModelChange,
   loading,
   fetchError,
 }: Props) => {
-  // -------------------------------
-  // Columns for DataGrid
-  // -------------------------------
   const columns: GridColDef[] = [
-    { field: "booking_id", headerName: "Booking ID", flex: 1, valueFormatter: formatNullable },
-    { field: "voucher_id", headerName: "Voucher ID", flex: 1, valueFormatter: formatNullable },
+    { field: "booking_id", headerName: "Booking ID", flex: 1, filterable: false, valueFormatter: formatNullable },
+    { field: "voucher_id", headerName: "Voucher ID", flex: 1, filterable: false, valueFormatter: formatNullable },
     {
       field: "amount",
       headerName: "Amount",
       flex: 1,
+      type: "number",
       valueFormatter: (value) => formatMoney(value),
     },
     {
@@ -61,8 +58,6 @@ export const PaymentsTable = ({
         row.created_at ? new Date(row.created_at) : null,
       valueFormatter: formatDateTime,
     },
-
-    // Actions column
     {
       field: "actions",
       type: "actions",
@@ -104,21 +99,18 @@ export const PaymentsTable = ({
           pageSizeOptions={[FETCH_LIMIT]}
           paginationMode="server"
           sortingMode="server"
+          filterMode="server"
+          onFilterModelChange={onFilterModelChange}
           pagination
           paginationModel={{ page, pageSize: FETCH_LIMIT }}
           onPaginationModelChange={(model) => loadPayments(model.page)}
           loading={loading}
           onSortModelChange={(model) => {
-            if (model.length === 0) return;
-
             const sortItem = model[0];
-
-            if (!sortItem.sort) return; // guard against undefined
-
-            loadPayments(0, {
-              field: sortItem.field,
-              sort: sortItem.sort,
-            });
+            loadPayments(0, sortItem?.sort
+              ? { field: sortItem.field, sort: sortItem.sort }
+              : { field: "created_at", sort: "desc" }
+            );
           }}
           initialState={{
             sorting: {
