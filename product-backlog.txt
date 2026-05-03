@@ -1,5 +1,4 @@
 TO-DO
-- 4 Arreglar filtros y ordenar de las tablas para que funcione con server
 - Traducir español-inglés-tailandés
 
 STILL DELIBERATING
@@ -31,3 +30,4 @@ DONE
 - Evitar que se pueda borrar una reserva en estado completed o con payments y/o payment_events
 - 7 Añadir sistema para saber cuantas terapeutas hay ocupadas, para facilitar el conocimiento de la disponibilidad
 - Confirmar auto actualizar tablas cuando se añade/modifica un elemento
+- 4 Arreglar filtros y ordenar de las tablas para que funcione con server
