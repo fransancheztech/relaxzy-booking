@@ -4,7 +4,6 @@ TO-DO
 - 4 Arreglar filtros y ordenar de las tablas para que funcione con server
 - 4 Poner colores diferentes a las reservas pendientes, confirmadas y completadas
 - Traducir español-inglés-tailandés
-- Evitar que se pueda borrar una reserva con payments y/o payment_events
 - Confirmar auto actualizar tablas cuando se añade/modifica un elemento
 
 STILL DELIBERATING
@@ -31,3 +30,4 @@ DONE
 - 5 Cambiar react-big-calendar por full-calendar o añadir un calendario por terapeuta y uno para bookings sin asignar, para evitar bookings escondidos
 - 4 Añadir columna de Estado a la tabla de reservas
 - Añadir ayuda contextual
+- Evitar que se pueda borrar una reserva en estado completed o con payments y/o payment_events
