@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Container, IconButton, Paper, Tooltip } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridFilterItem, GridFilterModel } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VoucherDetailDialog from "./VoucherDetailDialog";
 import { FETCH_LIMIT } from "@/constants/index";
@@ -29,16 +29,7 @@ type VoucherRow = {
   recipient_surname: string | null;
 };
 
-const formatDate = (value: string | null) => {
-  if (!value) return "";
-  return new Date(value).toLocaleDateString("es-ES", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-};
-
-const columns: GridColDef<VoucherRow>[] = [
+const baseColumns: GridColDef<VoucherRow>[] = [
   {
     field: "code",
     headerName: "Code",
@@ -67,19 +58,25 @@ const columns: GridColDef<VoucherRow>[] = [
     field: "balance",
     headerName: "Balance",
     flex: 0.8,
-    valueFormatter: (value) => (value != null ? formatMoney(Number(value)) : "—"),
+    type: "number",
+    valueGetter: (_, row) => (row.balance != null ? Number(row.balance) : null),
+    valueFormatter: (value: number | null) => (value != null ? formatMoney(value) : "—"),
   },
   {
     field: "expiration_date",
     headerName: "Expires",
     flex: 1,
-    valueFormatter: (value) => formatDate(value),
+    type: "date",
+    valueGetter: (_, row) => (row.expiration_date ? new Date(row.expiration_date) : null),
+    valueFormatter: (value: Date | null) =>
+      value
+        ? value.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" })
+        : "",
   },
   {
     field: "notes",
     headerName: "Notes",
     flex: 1.5,
-    sortable: false,
     valueFormatter: formatNullable,
   },
   {
@@ -102,17 +99,19 @@ const VouchersTable = () => {
     field: "created_at",
     sort: "desc",
   });
+  const [filterItems, setFilterItems] = useState<GridFilterItem[]>([]);
   const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
   const allColumns = useMemo<GridColDef<VoucherRow>[]>(
     () => [
-      ...columns,
+      ...baseColumns,
       {
         field: "actions",
         headerName: "Actions",
         width: 80,
         sortable: false,
+        filterable: false,
         renderCell: (params) => (
           <Tooltip title="View details">
             <IconButton
@@ -132,7 +131,7 @@ const VouchersTable = () => {
   );
 
   const loadVouchers = useCallback(
-    async (pageToLoad: number, sort = sortModel) => {
+    async (pageToLoad: number, sort = sortModel, filters = filterItems) => {
       try {
         setLoading(true);
         setFetchError(null);
@@ -140,7 +139,7 @@ const VouchersTable = () => {
         const res = await fetch("/api/vouchers/list", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ page: pageToLoad, limit: FETCH_LIMIT, sort }),
+          body: JSON.stringify({ page: pageToLoad, limit: FETCH_LIMIT, sort, filterItems: filters }),
         });
 
         if (!res.ok) {
@@ -161,61 +160,85 @@ const VouchersTable = () => {
         setLoading(false);
       }
     },
-    [sortModel],
+    [sortModel, filterItems],
   );
+
+  const handleFilterModelChange = (model: GridFilterModel) => {
+    const activeItems = model.items.filter(
+      (item) => item.value !== undefined && item.value !== null && item.value !== ""
+    );
+    setFilterItems(activeItems);
+    loadVouchers(0, sortModel, activeItems);
+  };
+
+  // Stable refs so event handlers never go stale
+  const loadVouchersRef = useRef(loadVouchers);
+  loadVouchersRef.current = loadVouchers;
+  const pageRef = useRef(page);
+  pageRef.current = page;
+  const sortModelRef = useRef(sortModel);
+  sortModelRef.current = sortModel;
+  const filterItemsRef = useRef(filterItems);
+  filterItemsRef.current = filterItems;
 
   useEffect(() => {
     loadVouchers(0);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    const handler = () => loadVouchers(0);
+    const handler = () =>
+      loadVouchersRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current);
     window.addEventListener("refreshVouchersData", handler);
     return () => window.removeEventListener("refreshVouchersData", handler);
-  }, [loadVouchers]);
+  }, []);
 
   return (
     <>
-    <Container sx={{ py: 3 }} disableGutters>
-      <Paper
-        elevation={2}
-        sx={{ maxHeight: "calc(100vh - 144px)", display: "flex", flexDirection: "column" }}
-      >
-        <DataGrid
-          rows={rows}
-          columns={allColumns}
-          getRowId={(row) => row.id}
-          rowCount={rowCount}
-          pageSizeOptions={[FETCH_LIMIT]}
-          paginationMode="server"
-          sortingMode="server"
-          pagination
-          paginationModel={{ page, pageSize: FETCH_LIMIT }}
-          onPaginationModelChange={(model) => loadVouchers(model.page)}
-          loading={loading}
-          onSortModelChange={(model) => {
-            if (!model.length || !model[0].sort) return;
-            loadVouchers(0, { field: model[0].field, sort: model[0].sort });
-          }}
-          initialState={{
-            sorting: { sortModel: [{ field: "created_at", sort: "desc" }] },
-          }}
-          slots={{
-            loadingOverlay: LoadingOverlay,
-            noRowsOverlay: () => <NoRowsOverlay error={fetchError} />,
-          }}
-          sx={{ opacity: loading ? 0.5 : 1, backgroundColor: loading ? "#ddd" : "" }}
-        />
-      </Paper>
-    </Container>
+      <Container sx={{ py: 3 }} disableGutters>
+        <Paper
+          elevation={2}
+          sx={{ maxHeight: "calc(100vh - 144px)", display: "flex", flexDirection: "column" }}
+        >
+          <DataGrid
+            rows={rows}
+            columns={allColumns}
+            getRowId={(row) => row.id}
+            rowCount={rowCount}
+            pageSizeOptions={[FETCH_LIMIT]}
+            paginationMode="server"
+            sortingMode="server"
+            filterMode="server"
+            onFilterModelChange={handleFilterModelChange}
+            pagination
+            paginationModel={{ page, pageSize: FETCH_LIMIT }}
+            onPaginationModelChange={(model) => loadVouchers(model.page)}
+            loading={loading}
+            onSortModelChange={(model) => {
+              const sortItem = model[0];
+              loadVouchers(0, sortItem?.sort
+                ? { field: sortItem.field, sort: sortItem.sort }
+                : { field: "created_at", sort: "desc" }
+              );
+            }}
+            initialState={{
+              sorting: { sortModel: [{ field: "created_at", sort: "desc" }] },
+            }}
+            slots={{
+              loadingOverlay: LoadingOverlay,
+              noRowsOverlay: () => <NoRowsOverlay error={fetchError} />,
+            }}
+            sx={{ opacity: loading ? 0.5 : 1, backgroundColor: loading ? "#ddd" : "" }}
+          />
+        </Paper>
+      </Container>
 
-    {selectedVoucherId && (
-      <VoucherDetailDialog
-        voucherId={selectedVoucherId}
-        open={detailOpen}
-        onClose={() => setDetailOpen(false)}
-      />
-    )}
+      {selectedVoucherId && (
+        <VoucherDetailDialog
+          voucherId={selectedVoucherId}
+          open={detailOpen}
+          onClose={() => setDetailOpen(false)}
+        />
+      )}
     </>
   );
 };

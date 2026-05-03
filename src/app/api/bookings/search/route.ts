@@ -39,14 +39,16 @@ function buildOrderBy(field: string, direction: "asc" | "desc"): Prisma.bookings
 function buildFilterCondition(
   field: string,
   operator: string,
-  value: string,
+  value: string | number,
 ): Prisma.bookingsWhereInput | null {
   switch (field) {
     case "start_time": {
+      if (typeof value !== "string") return null;
       const range = getMadridDateRange(value);
       return range ? { start_time: { gte: range.gte, lt: range.lt } } : null;
     }
-    case "customer_name":
+    case "customer_name": {
+      if (typeof value !== "string") return null;
       return {
         clients: {
           OR: [
@@ -55,18 +57,23 @@ function buildFilterCondition(
           ],
         },
       };
+    }
     case "customer_phone":
+      if (typeof value !== "string") return null;
       return { clients: { client_phone: { contains: value, mode: "insensitive" } } };
     case "service":
+      if (typeof value !== "string") return null;
       return { services_names: { short_name: { contains: value, mode: "insensitive" } } };
     case "therapist":
+      if (typeof value !== "string") return null;
       return { therapists: { full_name: { contains: value, mode: "insensitive" } } };
     case "status":
+      if (typeof value !== "string") return null;
       return VALID_STATUSES.includes(value as booking_status)
         ? { status: value as booking_status }
         : null;
     case "price": {
-      const num = parseFloat(value);
+      const num = typeof value === "number" ? value : parseFloat(value);
       if (isNaN(num)) return null;
       switch (operator) {
         case "!=":  return { NOT: { price: num } };
@@ -78,8 +85,10 @@ function buildFilterCondition(
       }
     }
     case "notes":
+      if (typeof value !== "string") return null;
       return { notes: { contains: value, mode: "insensitive" } };
     case "created_at": {
+      if (typeof value !== "string") return null;
       const parsed = new Date(value);
       if (isNaN(parsed.getTime())) return null;
       const dateStr = parsed.toLocaleDateString("es-ES");
@@ -112,8 +121,8 @@ export async function POST(req: NextRequest) {
     if (Array.isArray(filterItems)) {
       const conditions: Prisma.bookingsWhereInput[] = [];
       for (const item of filterItems) {
-        if (item.field && typeof item.value === "string" && item.value !== "") {
-          const cond = buildFilterCondition(item.field, item.operator ?? "contains", item.value);
+        if (item.field && item.value !== undefined && item.value !== null && item.value !== "") {
+          const cond = buildFilterCondition(item.field, item.operator ?? "contains", item.value as string | number);
           if (cond) conditions.push(cond);
         }
       }

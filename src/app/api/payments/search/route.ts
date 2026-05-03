@@ -22,11 +22,11 @@ function getMadridDateRange(dateStr: string): { gte: Date; lt: Date } | null {
 function buildFilterCondition(
   field: string,
   operator: string,
-  value: string,
+  value: string | number,
 ): Prisma.paymentsWhereInput | null {
   switch (field) {
     case "amount": {
-      const num = parseFloat(value);
+      const num = typeof value === "number" ? value : parseFloat(value);
       if (isNaN(num)) return null;
       switch (operator) {
         case "!=":  return { NOT: { amount: num } };
@@ -38,6 +38,7 @@ function buildFilterCondition(
       }
     }
     case "created_at": {
+      if (typeof value !== "string") return null;
       const parsed = new Date(value);
       if (isNaN(parsed.getTime())) return null;
       const dateStr = parsed.toLocaleDateString("es-ES");
@@ -66,8 +67,8 @@ export async function POST(req: NextRequest) {
     if (Array.isArray(filterItems)) {
       const conditions: Prisma.paymentsWhereInput[] = [];
       for (const item of filterItems) {
-        if (item.field && typeof item.value === "string" && item.value !== "") {
-          const cond = buildFilterCondition(item.field, item.operator ?? "contains", item.value);
+        if (item.field && item.value !== undefined && item.value !== null && item.value !== "") {
+          const cond = buildFilterCondition(item.field, item.operator ?? "contains", item.value as string | number);
           if (cond) conditions.push(cond);
         }
       }
