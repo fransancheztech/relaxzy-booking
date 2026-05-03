@@ -70,3 +70,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_URL
 SUPABASE_SERVICE_ROLE_KEY
 ```
+
+## Planning Conventions
+   When generating a plan, save it to `plans/YYYY-MM-DD-<short-description>.md`
+   instead of overwriting any existing plan file.
