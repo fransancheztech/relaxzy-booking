@@ -1,3 +1,5 @@
+"use client";
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, DialogActions, DialogContent, Dialog, DialogTitle } from '@mui/material'
 import { FormProvider, useForm } from 'react-hook-form'
@@ -7,6 +9,7 @@ import handleSubmitCreateVoucher from '@/handlers/handleSubmitCreateVoucher';
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CloseIcon from "@mui/icons-material/Close";
 import NewVoucherFormFields from './NewVoucherFormFields';
+import { useTranslations } from "next-intl";
 
 type Props = {
     open: boolean;
@@ -14,6 +17,8 @@ type Props = {
 };
 
 const NewVoucherDialog = ({ open, onClose }: Props) => {
+    const t = useTranslations("Vouchers");
+    const tCommon = useTranslations("Common");
     const defaultValues = {
         recipient_name: "",
         recipient_surname: "",
@@ -61,7 +66,7 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
                 },
             }}
         >
-            <DialogTitle>New Voucher</DialogTitle>
+            <DialogTitle>{t("newVoucher")}</DialogTitle>
             <FormProvider {...methods}>
                 <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
                     <DialogContent>
@@ -69,10 +74,10 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={onCancel} startIcon={<CloseIcon />}>
-                            Cancel
+                            {tCommon("cancel")}
                         </Button>
                         <Button type="submit" color="success" startIcon={<AddCircleIcon />}>
-                            Create Voucher
+                            {t("createVoucher")}
                         </Button>
                     </DialogActions>
                 </form>

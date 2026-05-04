@@ -1,3 +1,5 @@
+"use client";
+
 import { BookingSchema, BookingSchemaType } from "@/schemas/booking.schema";
 import {
   Button,
@@ -17,6 +19,7 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CloseIcon from "@mui/icons-material/Close";
 import { roundToNearestMinutes } from "date-fns";
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 type Props = {
   open: boolean;
@@ -24,6 +27,9 @@ type Props = {
 };
 
 const NewBookingDialogForm = ({ open, onClose }: Props) => {
+  const t = useTranslations("BookingForm");
+  const tCommon = useTranslations("Common");
+
   const defaultValues = {
     client_name: "",
     client_surname: "",
@@ -43,7 +49,6 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
   });
 
   const onSubmit = async (data: BookingSchemaType) => {
-    // Normalize client_email
     const normalizedData = {
       ...data,
       client_email: data.client_email?.trim() || undefined,
@@ -71,20 +76,16 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
       fullWidth
       sx={{
         "& .MuiDialog-container": {
-          alignItems: "flex-start", // 👈 aligns dialog to top instead of center
+          alignItems: "flex-start",
         },
         "& .MuiPaper-root": {
-          marginTop: "2rem", // 👈 add some spacing from top
+          marginTop: "2rem",
         },
       }}
     >
       <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        Add Booking
-        <Tooltip
-          title="Always create one single booking per person. For couples or groups, feel free to use the Companions section below."
-          arrow
-          placement="right"
-        >
+        {t("addBooking")}
+        <Tooltip title={t("tooltipInfo")} arrow placement="right">
           <IconButton size="small" sx={{ color: "info.main" }}>
             <InfoOutlinedIcon fontSize="small" />
           </IconButton>
@@ -97,10 +98,10 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
           </DialogContent>
           <DialogActions>
             <Button onClick={onCancel} startIcon={<CloseIcon />}>
-              Cancel
+              {tCommon("cancel")}
             </Button>
             <Button type="submit" color="success" startIcon={<AddCircleIcon />}>
-              Add Booking
+              {t("addBooking")}
             </Button>
           </DialogActions>
         </form>

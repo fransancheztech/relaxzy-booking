@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Alert,
   Button,
@@ -16,6 +18,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { payment_methods } from "generated/prisma";
+import { useTranslations } from "next-intl";
 
 import {
   PaymentRefundSchema,
@@ -43,6 +46,9 @@ const DialogRefund = ({
   loadPayments,
   loadPaymentEvents,
 }: Props) => {
+  const t = useTranslations("Payments");
+  const tCommon = useTranslations("Common");
+
   const [loading, setLoading] = useState(false);
 
   const methods = useForm<PaymentRefundFormInput, any, PaymentRefundFormOutput>(
@@ -93,7 +99,7 @@ const DialogRefund = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Refund Payment</DialogTitle>
+      <DialogTitle>{t("refundPayment")}</DialogTitle>
 
       <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
         <DialogContent>
@@ -106,7 +112,7 @@ const DialogRefund = ({
                   <TextField
                     {...field}
                     value={field.value === "0" ? "" : field.value}
-                    label="Refund amount"
+                    label={t("refundAmount")}
                     fullWidth
                     size="small"
                     variant="outlined"
@@ -129,7 +135,7 @@ const DialogRefund = ({
                   <TextField
                     {...field}
                     select
-                    label="Method"
+                    label={tCommon("method")}
                     fullWidth
                     size="small"
                     error={!!methods.formState.errors.method}
@@ -151,7 +157,7 @@ const DialogRefund = ({
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Notes"
+                    label={tCommon("notes")}
                     fullWidth
                     size="small"
                     multiline
@@ -178,7 +184,7 @@ const DialogRefund = ({
             startIcon={<CloseIcon />}
             disabled={loading}
           >
-            Cancel
+            {tCommon("cancel")}
           </Button>
 
           <Button
@@ -188,7 +194,7 @@ const DialogRefund = ({
             disabled={loading}
             variant="contained"
           >
-            Refund
+            {tCommon("refund")}
           </Button>
         </DialogActions>
       </form>

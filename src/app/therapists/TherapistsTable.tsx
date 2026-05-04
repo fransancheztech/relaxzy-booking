@@ -10,6 +10,7 @@ import LoadingOverlay from "@/components/LoadingOverlay";
 import { formatNullable } from "@/utils/formatNullable";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { therapists } from "generated/prisma/client";
+import { useTranslations } from "next-intl";
 
 interface Props {
   therapists: therapists[];
@@ -36,14 +37,17 @@ const TherapistsTable = ({
   loadTherapists,
   onEdit,
 }: Props) => {
+  const t = useTranslations("Therapists");
+  const tCommon = useTranslations("Common");
+
   const columns: GridColDef<therapists>[] = [
-    { field: "full_name", headerName: "Full Name", flex: 1, valueFormatter: formatNullable },
-    { field: "email", headerName: "Email", flex: 1, valueFormatter: formatNullable },
-    { field: "phone", headerName: "Phone", flex: 1, valueFormatter: formatNullable },
-    { field: "notes", headerName: "Notes", flex: 1, valueFormatter: formatNullable },
+    { field: "full_name", headerName: t("fullName"), flex: 1, valueFormatter: formatNullable },
+    { field: "email", headerName: tCommon("email"), flex: 1, valueFormatter: formatNullable },
+    { field: "phone", headerName: tCommon("phone"), flex: 1, valueFormatter: formatNullable },
+    { field: "notes", headerName: tCommon("notes"), flex: 1, valueFormatter: formatNullable },
     {
       field: "active",
-      headerName: "Active",
+      headerName: t("active"),
       width: 80,
       align: "center",
       headerAlign: "center",
@@ -54,7 +58,7 @@ const TherapistsTable = ({
     },
     {
       field: "created_at",
-      headerName: "Created",
+      headerName: tCommon("created"),
       type: "dateTime",
       flex: 1,
       valueGetter: (_, row) =>
@@ -64,16 +68,16 @@ const TherapistsTable = ({
     {
       field: "actions",
       type: "actions",
-      headerName: "Actions",
+      headerName: tCommon("actions"),
       getActions: (params) => [
         <GridActionsCellItem
           key="edit"
           icon={
-            <Tooltip title="Edit">
+            <Tooltip title={tCommon("edit")}>
               <EditIcon color="primary" />
             </Tooltip>
           }
-          label="Edit"
+          label={tCommon("edit")}
           onClick={() => onEdit(params.row.id)}
         />,
       ],

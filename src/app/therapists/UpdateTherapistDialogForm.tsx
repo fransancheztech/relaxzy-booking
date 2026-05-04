@@ -21,6 +21,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { UpdateTherapistSchema, UpdateTherapistSchemaType } from "@/schemas/therapist.schema";
+import { useTranslations } from "next-intl";
 
 type Props = {
   open: boolean;
@@ -41,6 +42,9 @@ export default function UpdateTherapistDialogForm({
   onClose,
   therapistId,
 }: Props) {
+  const t = useTranslations("Therapists");
+  const tCommon = useTranslations("Common");
+
   const methods = useForm<UpdateTherapistSchemaType>({
     resolver: zodResolver(UpdateTherapistSchema),
     defaultValues,
@@ -86,10 +90,10 @@ export default function UpdateTherapistDialogForm({
         body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error("Failed to save therapist");
-      toast.success("Therapist saved");
+      toast.success(t("therapistSaved"));
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save therapist");
+      toast.error(t("updateTherapist"));
     } finally {
       setLoading(false);
       onClose();
@@ -102,10 +106,10 @@ export default function UpdateTherapistDialogForm({
     try {
       const res = await fetch(`/api/therapists/${therapistId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete therapist");
-      toast.success("Therapist deleted");
+      toast.success(t("therapistDeleted"));
     } catch (err) {
       console.error(err);
-      toast.error("Failed to delete therapist");
+      toast.error(t("deleteTitle"));
     } finally {
       setLoading(false);
       onClose();
@@ -120,7 +124,7 @@ export default function UpdateTherapistDialogForm({
   return (
     <>
       <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
-        <DialogTitle>Update Therapist</DialogTitle>
+        <DialogTitle>{t("updateTherapist")}</DialogTitle>
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
             <DialogContent sx={{ opacity: loading ? 0.5 : 1, pointerEvents: loading ? "none" : "auto" }}>
@@ -132,7 +136,7 @@ export default function UpdateTherapistDialogForm({
                     render={({ field }) => (
                       <TextField
                         {...field}
-                        label="Full Name"
+                        label={t("fullName")}
                         fullWidth
                         size="small"
                         error={!!methods.formState.errors.full_name}
@@ -149,7 +153,7 @@ export default function UpdateTherapistDialogForm({
                     render={({ field }) => (
                       <TextField
                         {...field}
-                        label="Email"
+                        label={tCommon("email")}
                         fullWidth
                         size="small"
                         error={!!methods.formState.errors.email}
@@ -166,7 +170,7 @@ export default function UpdateTherapistDialogForm({
                     render={({ field }) => (
                       <TextField
                         {...field}
-                        label="Phone"
+                        label={tCommon("phone")}
                         fullWidth
                         size="small"
                         error={!!methods.formState.errors.phone}
@@ -183,7 +187,7 @@ export default function UpdateTherapistDialogForm({
                     render={({ field }) => (
                       <TextField
                         {...field}
-                        label="Notes"
+                        label={tCommon("notes")}
                         fullWidth
                         multiline
                         rows={3}
@@ -201,7 +205,7 @@ export default function UpdateTherapistDialogForm({
                     control={methods.control}
                     render={({ field }) => (
                       <FormControlLabel
-                        label="Active"
+                        label={t("active")}
                         control={
                           <Switch
                             checked={field.value ?? true}
@@ -222,15 +226,15 @@ export default function UpdateTherapistDialogForm({
                 variant="contained"
                 onClick={() => setConfirmDeleteOpen(true)}
               >
-                Delete
+                {tCommon("delete")}
               </Button>
 
               <div>
                 <Button startIcon={<CloseIcon />} onClick={onCancel}>
-                  Cancel
+                  {tCommon("cancel")}
                 </Button>
                 <Button type="submit" startIcon={<SaveIcon />} color="success">
-                  Save Changes
+                  {tCommon("saveChanges")}
                 </Button>
               </div>
             </DialogActions>
@@ -250,16 +254,16 @@ export default function UpdateTherapistDialogForm({
       </Dialog>
 
       <Dialog open={confirmDeleteOpen} onClose={() => setConfirmDeleteOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Delete Therapist</DialogTitle>
+        <DialogTitle>{t("deleteTitle")}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete <strong>{therapistName}</strong>? This action cannot be undone.
+            {t("deleteMessage", { name: therapistName })}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDeleteOpen(false)}>Cancel</Button>
+          <Button onClick={() => setConfirmDeleteOpen(false)}>{tCommon("cancel")}</Button>
           <Button color="error" variant="contained" startIcon={<DeleteIcon />} onClick={handleDelete}>
-            Delete
+            {tCommon("delete")}
           </Button>
         </DialogActions>
       </Dialog>

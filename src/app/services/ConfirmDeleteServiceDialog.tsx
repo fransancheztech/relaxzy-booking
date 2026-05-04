@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Dialog,
   DialogTitle,
@@ -7,6 +9,7 @@ import {
   Button,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useTranslations } from "next-intl";
 
 type Props = {
   open: boolean;
@@ -21,18 +24,21 @@ const ConfirmDeleteServiceDialog = ({
   onConfirm,
   serviceName,
 }: Props) => {
+  const t = useTranslations("Services");
+  const tCommon = useTranslations("Common");
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Delete Service?</DialogTitle>
+      <DialogTitle>{t("deleteTitle")}</DialogTitle>
       <DialogContent>
         <DialogContentText>
           {serviceName
-            ? <>Are you sure you want to delete <strong>{serviceName}</strong>? This action cannot be undone.</>
-            : "Are you sure you want to delete this service? This action cannot be undone."}
+            ? t("deleteWithName", { name: serviceName })
+            : t("deleteWithoutName")}
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{tCommon("cancel")}</Button>
         <Button
           variant="contained"
           color="error"
@@ -42,7 +48,7 @@ const ConfirmDeleteServiceDialog = ({
             onClose();
           }}
         >
-          Delete
+          {tCommon("delete")}
         </Button>
       </DialogActions>
     </Dialog>

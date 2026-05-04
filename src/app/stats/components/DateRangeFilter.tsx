@@ -11,6 +11,7 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
 import { startOfWeek, startOfMonth, startOfYear, subDays } from "date-fns";
+import { useTranslations } from "next-intl";
 
 export type Preset = "week" | "month" | "year" | "12months" | "all" | "custom";
 
@@ -39,16 +40,18 @@ export function resolvePreset(preset: Preset): { from: Date; to: Date } {
   }
 }
 
-const PRESETS: { value: Preset; label: string }[] = [
-  { value: "week", label: "This week" },
-  { value: "month", label: "This month" },
-  { value: "year", label: "This year" },
-  { value: "12months", label: "Last 12 months" },
-  { value: "all", label: "All" },
-  { value: "custom", label: "Custom" },
-];
-
 const DateRangeFilter = ({ preset, customFrom, customTo, onChange }: Props) => {
+  const t = useTranslations("Stats");
+
+  const PRESETS: { value: Preset; label: string }[] = [
+    { value: "week", label: t("thisWeek") },
+    { value: "month", label: t("thisMonth") },
+    { value: "year", label: t("thisYear") },
+    { value: "12months", label: t("last12Months") },
+    { value: "all", label: t("all") },
+    { value: "custom", label: t("custom") },
+  ];
+
   const handlePreset = (_: React.MouseEvent, value: Preset | null) => {
     if (!value) return;
     if (value === "custom") {
@@ -79,7 +82,7 @@ const DateRangeFilter = ({ preset, customFrom, customTo, onChange }: Props) => {
         {preset === "custom" && (
           <Stack direction="row" spacing={1} alignItems="center">
             <DatePicker
-              label="From"
+              label={t("from")}
               value={customFrom}
               onChange={(d) => {
                 if (d) onChange("custom", d, customTo ?? new Date());
@@ -89,7 +92,7 @@ const DateRangeFilter = ({ preset, customFrom, customTo, onChange }: Props) => {
             />
             <Typography variant="body2" color="text.secondary">—</Typography>
             <DatePicker
-              label="To"
+              label={t("to")}
               value={customTo}
               onChange={(d) => {
                 if (d) onChange("custom", customFrom ?? new Date(), d);

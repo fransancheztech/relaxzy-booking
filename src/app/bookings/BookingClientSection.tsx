@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useClientSearch } from "@/hooks/useClientSearch";
 import { ClientRow } from "@/hooks/useSimilarClients";
 import { BookingSchemaType } from "@/schemas/booking.schema";
@@ -44,6 +45,7 @@ function HighlightedText({ text, query }: { text?: string | null; query?: string
 }
 
 const BookingClientSection = ({ autoFocus }: Props) => {
+  const t = useTranslations("Common");
   const { control, setValue, formState: { errors } } = useFormContext<BookingSchemaType>();
 
   const [nameVal, surnameVal, phoneVal, emailVal] = useWatch({
@@ -91,7 +93,7 @@ const BookingClientSection = ({ autoFocus }: Props) => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Name"
+              label={t("name")}
               error={!!errors.client_name}
               helperText={errors.client_name?.message}
               fullWidth
@@ -158,7 +160,7 @@ const BookingClientSection = ({ autoFocus }: Props) => {
                       {[c.client_email, c.client_phone].filter(Boolean).join(" · ")}
                     </Typography>
                   </Box>
-                  <Chip label="existing" size="small" sx={{ fontSize: 10, height: 20, flexShrink: 0 }} />
+                  <Chip label={t("existing")} size="small" sx={{ fontSize: 10, height: 20, flexShrink: 0 }} />
                 </Box>
               );
             })}
@@ -173,7 +175,7 @@ const BookingClientSection = ({ autoFocus }: Props) => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Surname(s)"
+              label={t("surname")}
               error={!!errors.client_surname}
               helperText={errors.client_surname?.message}
               fullWidth
@@ -195,7 +197,7 @@ const BookingClientSection = ({ autoFocus }: Props) => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Phone"
+              label={t("phone")}
               error={!!errors.client_phone}
               helperText={errors.client_phone?.message}
               fullWidth
@@ -217,7 +219,7 @@ const BookingClientSection = ({ autoFocus }: Props) => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Email"
+              label={t("email")}
               error={!!errors.client_email}
               helperText={errors.client_email?.message}
               fullWidth

@@ -1,3 +1,5 @@
+"use client";
+
 import handleSubmitUpdateBooking from "@/handlers/handleSubmitUpdateBooking";
 import {
   BookingUpdateSchema,
@@ -23,6 +25,7 @@ import DialogDeletion from "@/app/bookings/ConfirmDeleteBookingDialog";
 import handleDeleteBooking from "@/handlers/handleDeleteBooking";
 import { DateTime } from "luxon";
 import PayBookingDialog from "./PayBookingDialogForm";
+import { useTranslations } from "next-intl";
 
 type Props = {
   open: boolean;
@@ -46,6 +49,9 @@ export const defaultValuesUpdateBookingForm: Partial<BookingUpdateSchemaType> =
   };
 
 const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
+  const t = useTranslations("BookingForm");
+  const tCommon = useTranslations("Common");
+
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] =
     useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -150,7 +156,6 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
   const onSubmit = async (data: BookingUpdateSchemaType) => {
     if (!bookingId) return;
 
-    // Normalize client_email: trim and convert empty string to undefined
     const normalizedData = {
       ...data,
       client_email: data.client_email?.trim() || undefined,
@@ -186,7 +191,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
   return (
     <>
       <Dialog open={open} onClose={onCancel} maxWidth="md" fullWidth>
-        <DialogTitle>Update Booking</DialogTitle>
+        <DialogTitle>{t("updateBooking")}</DialogTitle>
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
             <DialogContent
@@ -211,17 +216,14 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
                 variant="outlined"
                 onClick={() => setIsConfirmDeleteDialogOpen(true)}
               >
-                Delete
+                {tCommon("delete")}
               </Button>
               <Container sx={{ display: "flex", justifyContent: "flex-end" }}>
-                <Button
-                  startIcon={<CloseIcon />}
-                  onClick={onCancel}
-                >
-                  Cancel
+                <Button startIcon={<CloseIcon />} onClick={onCancel}>
+                  {tCommon("cancel")}
                 </Button>
                 <Button startIcon={<SaveIcon />} color="success" type="submit">
-                  Save Changes
+                  {tCommon("saveChanges")}
                 </Button>
               </Container>
             </DialogActions>

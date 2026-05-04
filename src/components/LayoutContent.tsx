@@ -36,6 +36,8 @@ import TipsAndUpdatesIcon from "@mui/icons-material/TipsAndUpdates";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import HelpButton from "./HelpButton";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useTranslations } from "next-intl";
 
 const supabase = createClient();
 
@@ -71,6 +73,7 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const t = useTranslations("Nav");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
@@ -87,7 +90,8 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
   );
 
   const appBarHeight = 64;
-  const currentPage = menuPages.find((p) => p.href === pathname)?.text ?? "";
+  const currentPageHref = menuPages.find((p) => p.href === pathname)?.href;
+  const currentPage = currentPageHref ? t(currentPageHref.slice(1) as Parameters<typeof t>[0]) : "";
   const isLoggedIn = pathname !== "/login";
 
   const handleLogout = async () => {
@@ -187,13 +191,15 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
                           {PAGE_ICONS[page.href]}
                         </ListItemIcon>
                         <ListItemText
-                          primary={page.text}
-                          primaryTypographyProps={{
-                            sx: {
-                              fontSize: "0.875rem",
-                              fontWeight: isActive ? 600 : 400,
-                              color: isActive ? "#ffffff" : "rgba(255,255,255,0.6)",
-                              letterSpacing: 0.2,
+                          primary={t(page.href.slice(1) as Parameters<typeof t>[0])}
+                          slotProps={{
+                            primary: {
+                              sx: {
+                                fontSize: "0.875rem",
+                                fontWeight: isActive ? 600 : 400,
+                                color: isActive ? "#ffffff" : "rgba(255,255,255,0.6)",
+                                letterSpacing: 0.2,
+                              },
                             },
                           }}
                         />
@@ -214,6 +220,9 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
                 })}
               </List>
             </Box>
+
+            {/* Language switcher */}
+            <LanguageSwitcher />
 
             {/* User + logout */}
             <Box>
@@ -276,7 +285,7 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
                     },
                   }}
                 >
-                  Log out
+                  {t("logout")}
                 </Button>
               </Box>
             </Box>

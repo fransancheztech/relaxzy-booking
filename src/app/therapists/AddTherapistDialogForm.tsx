@@ -17,6 +17,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { z } from "zod";
+import { useTranslations } from "next-intl";
 
 type Props = {
   open: boolean;
@@ -40,6 +41,9 @@ const defaultValues: AddTherapistSchemaType = {
 };
 
 export default function AddTherapistDialogForm({ open, onClose }: Props) {
+  const t = useTranslations("Therapists");
+  const tCommon = useTranslations("Common");
+
   const methods = useForm<AddTherapistSchemaType>({
     resolver: zodResolver(AddTherapistSchema),
     defaultValues,
@@ -57,10 +61,10 @@ export default function AddTherapistDialogForm({ open, onClose }: Props) {
       });
 
       if (!res.ok) throw new Error("Failed to add therapist");
-      toast.success("Therapist added");
+      toast.success(t("therapistAdded"));
     } catch (err) {
       console.error(err);
-      toast.error("Failed to add therapist");
+      toast.error(t("addTherapist"));
     } finally {
       methods.reset(defaultValues);
       setLoading(false);
@@ -75,7 +79,7 @@ export default function AddTherapistDialogForm({ open, onClose }: Props) {
 
   return (
     <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
-      <DialogTitle>Add Therapist</DialogTitle>
+      <DialogTitle>{t("addTherapist")}</DialogTitle>
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
           <DialogContent>
@@ -87,7 +91,7 @@ export default function AddTherapistDialogForm({ open, onClose }: Props) {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Full Name"
+                      label={t("fullName")}
                       fullWidth
                       size="small"
                       error={!!methods.formState.errors.full_name}
@@ -104,7 +108,7 @@ export default function AddTherapistDialogForm({ open, onClose }: Props) {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Email"
+                      label={tCommon("email")}
                       fullWidth
                       size="small"
                       error={!!methods.formState.errors.email}
@@ -121,7 +125,7 @@ export default function AddTherapistDialogForm({ open, onClose }: Props) {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Phone"
+                      label={tCommon("phone")}
                       fullWidth
                       size="small"
                       error={!!methods.formState.errors.phone}
@@ -138,7 +142,7 @@ export default function AddTherapistDialogForm({ open, onClose }: Props) {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Notes"
+                      label={tCommon("notes")}
                       fullWidth
                       multiline
                       rows={3}
@@ -154,7 +158,7 @@ export default function AddTherapistDialogForm({ open, onClose }: Props) {
 
           <DialogActions sx={{ justifyContent: "space-between" }}>
             <Button startIcon={<CloseIcon />} onClick={onCancel}>
-              Cancel
+              {tCommon("cancel")}
             </Button>
             <Button
               type="submit"
@@ -162,7 +166,7 @@ export default function AddTherapistDialogForm({ open, onClose }: Props) {
               color="success"
               disabled={loading}
             >
-              {loading ? "Saving..." : "Save"}
+              {loading ? tCommon("saving") : tCommon("save")}
             </Button>
           </DialogActions>
         </form>

@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import {
   BOOKING_DEFAULT_DURATIONS,
   BOOKING_DEFAULT_PRICES,
@@ -58,6 +61,8 @@ const CompanionRow = ({
   durationOptions,
   priceOptions,
 }: CompanionRowProps) => {
+  const t = useTranslations("BookingForm");
+  const tCommon = useTranslations("Common");
   const {
     control,
     formState: { errors },
@@ -118,9 +123,9 @@ const CompanionRow = ({
         control={control}
         render={({ field }) => (
           <FormControl size="small" sx={{ flex: 1.5 }}>
-            <InputLabel>Service</InputLabel>
-            <Select {...field} label="Service">
-              <MenuItem value=""><em>None</em></MenuItem>
+            <InputLabel>{tCommon("service")}</InputLabel>
+            <Select {...field} label={tCommon("service")}>
+              <MenuItem value=""><em>{tCommon("none")}</em></MenuItem>
               {BOOKING_DEFAULT_SERVICES.map((s) => (
                 <MenuItem key={s} value={s}>{s}</MenuItem>
               ))}
@@ -135,9 +140,9 @@ const CompanionRow = ({
         control={control}
         render={({ field }) => (
           <FormControl size="small" sx={{ flex: 1.2 }}>
-            <InputLabel>Therapist</InputLabel>
-            <Select {...field} value={field.value ?? ""} label="Therapist">
-              <MenuItem value=""><em>None</em></MenuItem>
+            <InputLabel>{tCommon("therapist")}</InputLabel>
+            <Select {...field} value={field.value ?? ""} label={tCommon("therapist")}>
+              <MenuItem value=""><em>{tCommon("none")}</em></MenuItem>
               {therapists.map((t) => (
                 <MenuItem key={t.id} value={t.id}>{t.full_name}</MenuItem>
               ))}
@@ -166,7 +171,7 @@ const CompanionRow = ({
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Duration"
+                label={tCommon("duration")}
                 size="small"
                 error={!!errors.companions?.[index]?.duration}
                 helperText={errors.companions?.[index]?.duration?.message}
@@ -191,7 +196,7 @@ const CompanionRow = ({
             isOptionEqualToValue={(o, v) => o === v}
             sx={{ flex: 1 }}
             renderInput={(params) => (
-              <TextField {...params} label="Price" size="small" />
+              <TextField {...params} label={tCommon("price")} size="small" />
             )}
           />
         )}
@@ -204,14 +209,14 @@ const CompanionRow = ({
         render={({ field }) => (
           <TextField
             {...field}
-            label="Notes"
+            label={tCommon("notes")}
             size="small"
             sx={{ flex: 1.5 }}
           />
         )}
       />
 
-      <Tooltip title="Remove companion">
+      <Tooltip title={t("removeCompanion")}>
         <IconButton size="small" color="error" onClick={onRemove} sx={{ mt: 0.5 }}>
           <CloseIcon fontSize="small" />
         </IconButton>
@@ -223,6 +228,8 @@ const CompanionRow = ({
 // ─── Main form ────────────────────────────────────────────────────────────────
 
 const NewBookingFormFields = () => {
+  const t = useTranslations("BookingForm");
+  const tCommon = useTranslations("Common");
   const {
     control,
     formState: { errors },
@@ -268,12 +275,12 @@ const NewBookingFormFields = () => {
   return (
     <Grid container spacing={{ xs: 1, xl: 2 }}>
       <Grid size={12}>
-        <Typography variant="subtitle2" color="text.secondary">Client</Typography>
+        <Typography variant="subtitle2" color="text.secondary">{t("clientSection")}</Typography>
         <Divider />
       </Grid>
       <BookingClientSection autoFocus />
       <Grid size={12}>
-        <Typography variant="subtitle2" color="text.secondary">Booking Details</Typography>
+        <Typography variant="subtitle2" color="text.secondary">{t("bookingDetails")}</Typography>
         <Divider />
       </Grid>
       <Grid size={6}>
@@ -287,7 +294,7 @@ const NewBookingFormFields = () => {
             >
               <DateTimePicker
                 {...field}
-                label="Date & Time"
+                label={t("dateTime")}
                 value={field.value}
                 onChange={(date) => field.onChange(date)}
                 format="dd/MM/yyyy HH:mm"
@@ -311,8 +318,8 @@ const NewBookingFormFields = () => {
           control={control}
           render={({ field }) => (
             <FormControl fullWidth size="small" error={!!errors.service_name}>
-              <InputLabel id="service_name">Service</InputLabel>
-              <Select labelId="service_name" {...field} label="Service">
+              <InputLabel id="service_name">{tCommon("service")}</InputLabel>
+              <Select labelId="service_name" {...field} label={tCommon("service")}>
                 {serviceOptions.map((service) => (
                   <MenuItem key={service} value={service}>
                     {service}
@@ -330,9 +337,9 @@ const NewBookingFormFields = () => {
           control={control}
           render={({ field }) => (
             <FormControl fullWidth size="small">
-              <InputLabel>Therapist</InputLabel>
-              <Select {...field} value={field.value ?? ""} label="Therapist">
-                <MenuItem value=""><em>None</em></MenuItem>
+              <InputLabel>{tCommon("therapist")}</InputLabel>
+              <Select {...field} value={field.value ?? ""} label={tCommon("therapist")}>
+                <MenuItem value=""><em>{tCommon("none")}</em></MenuItem>
                 {therapists.map((t) => (
                   <MenuItem key={t.id} value={t.id}>{t.full_name}</MenuItem>
                 ))}
@@ -365,7 +372,7 @@ const NewBookingFormFields = () => {
                   error={!!errors.duration}
                   helperText={errors.duration?.message}
                   value={Number(field.value)}
-                  label="Duration"
+                  label={tCommon("duration")}
                   size="small"
                   fullWidth
                 />
@@ -396,7 +403,7 @@ const NewBookingFormFields = () => {
                   {...params}
                   error={!!errors.price}
                   helperText={errors.price?.message}
-                  label="Price"
+                  label={tCommon("price")}
                   size="small"
                   fullWidth
                 />
@@ -412,7 +419,7 @@ const NewBookingFormFields = () => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Notes"
+              label={tCommon("notes")}
               error={!!errors.notes}
               helperText={errors.notes?.message}
               fullWidth
@@ -438,10 +445,10 @@ const NewBookingFormFields = () => {
       <Grid size={12} sx={{ mt: 0.5 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Typography variant="subtitle2" color="text.secondary">
-            Companions
+            {t("companions")}
           </Typography>
           <Divider sx={{ flex: 1 }} />
-          <Tooltip title="Add companion (same client, same time)">
+          <Tooltip title={t("addCompanion")}>
             <Button
               size="small"
               variant="outlined"
@@ -456,13 +463,13 @@ const NewBookingFormFields = () => {
                 })
               }
             >
-              Add
+              {tCommon("add")}
             </Button>
           </Tooltip>
         </Box>
         {companions.length === 0 && (
           <Typography variant="caption" color="text.disabled" sx={{ mt: 0.5, display: "block" }}>
-            No companions — same client info and start time, no extra data needed.
+            {t("noCompanions")}
           </Typography>
         )}
       </Grid>

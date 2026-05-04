@@ -1,3 +1,5 @@
+"use client";
+
 import { Container, Paper, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef, GridFilterModel } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -9,6 +11,7 @@ import { formatMoney } from "@/utils/formatMoney";
 import { formatNullable } from "@/utils/formatNullable";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { GridFilterItem } from "@mui/x-data-grid";
+import { useTranslations } from "next-intl";
 
 interface Props {
   setSelectedPaymentId: (id: string) => void;
@@ -39,19 +42,22 @@ export const PaymentsTable = ({
   loading,
   fetchError,
 }: Props) => {
+  const t = useTranslations("Payments");
+  const tCommon = useTranslations("Common");
+
   const columns: GridColDef[] = [
-    { field: "booking_id", headerName: "Booking ID", flex: 1, filterable: false, valueFormatter: formatNullable },
-    { field: "voucher_id", headerName: "Voucher ID", flex: 1, filterable: false, valueFormatter: formatNullable },
+    { field: "booking_id", headerName: t("bookingId"), flex: 1, filterable: false, valueFormatter: formatNullable },
+    { field: "voucher_id", headerName: t("voucherId"), flex: 1, filterable: false, valueFormatter: formatNullable },
     {
       field: "amount",
-      headerName: "Amount",
+      headerName: tCommon("amount"),
       flex: 1,
       type: "number",
       valueFormatter: (value) => formatMoney(value),
     },
     {
       field: "created_at",
-      headerName: "Created",
+      headerName: tCommon("created"),
       type: "dateTime",
       flex: 1,
       valueGetter: (_, row) =>
@@ -61,15 +67,15 @@ export const PaymentsTable = ({
     {
       field: "actions",
       type: "actions",
-      headerName: "Actions",
+      headerName: tCommon("actions"),
       getActions: (params) => [
         <GridActionsCellItem
           icon={
-            <Tooltip title="View">
+            <Tooltip title={tCommon("view")}>
               <VisibilityIcon color="primary" />
             </Tooltip>
           }
-          label="View"
+          label={tCommon("view")}
           onClick={() => {
             setSelectedPaymentId(params.row.id);
             setSelectedPaymentAmount(params.row.amount);

@@ -15,6 +15,7 @@ import {
   TextField,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import { useTranslations } from "next-intl";
 
 type Props = {
   open: boolean;
@@ -35,6 +36,8 @@ const VoucherPaymentEventDialog = ({
   onClose,
   onSuccess,
 }: Props) => {
+  const t = useTranslations("Vouchers");
+  const tCommon = useTranslations("Common");
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<string>("cash");
   const [notes, setNotes] = useState("");
@@ -57,7 +60,7 @@ const VoucherPaymentEventDialog = ({
   const handleSubmit = async () => {
     const numAmount = Number(amount);
     if (!amount || !Number.isFinite(numAmount) || numAmount <= 0) {
-      setError("Amount must be a positive number");
+      setError(t("amountPositive"));
       return;
     }
     setError(null);
@@ -76,16 +79,16 @@ const VoucherPaymentEventDialog = ({
       });
       const result = await res.json();
       if (!res.ok) {
-        toast.error(result?.error || "Error processing payment");
+        toast.error(result?.error || t("errorProcessingPayment"));
         return;
       }
       toast.success(
-        mode === "charge" ? "Balance added successfully" : "Refund registered",
+        mode === "charge" ? t("balanceAddedSuccess") : t("refundRegistered"),
       );
       onSuccess();
       onClose();
     } catch {
-      toast.error("Network error");
+      toast.error(t("networkError"));
     } finally {
       setSubmitting(false);
     }
@@ -94,13 +97,13 @@ const VoucherPaymentEventDialog = ({
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
       <DialogTitle>
-        {mode === "charge" ? "Add Balance" : "Refund Payment"}
+        {mode === "charge" ? t("addBalance") : t("refundPayment")}
       </DialogTitle>
       <DialogContent
         sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "1rem !important" }}
       >
         <TextField
-          label="Amount (€) *"
+          label={t("amountEur")}
           type="number"
           size="small"
           fullWidth
@@ -109,18 +112,18 @@ const VoucherPaymentEventDialog = ({
           slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
         />
         <FormControl fullWidth size="small">
-          <InputLabel>Payment Method *</InputLabel>
+          <InputLabel>{t("paymentMethod")}</InputLabel>
           <Select
             value={method}
             onChange={(e) => setMethod(e.target.value)}
-            label="Payment Method *"
+            label={t("paymentMethod")}
           >
-            <MenuItem value="cash">Cash</MenuItem>
-            <MenuItem value="credit_card">Credit Card</MenuItem>
+            <MenuItem value="cash">{t("cash")}</MenuItem>
+            <MenuItem value="credit_card">{t("creditCard")}</MenuItem>
           </Select>
         </FormControl>
         <TextField
-          label="Notes"
+          label={tCommon("notes")}
           size="small"
           fullWidth
           value={notes}
@@ -130,10 +133,10 @@ const VoucherPaymentEventDialog = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={submitting}>
-          Cancel
+          {tCommon("cancel")}
         </Button>
         <Button onClick={handleSubmit} color="success" disabled={submitting}>
-          {mode === "charge" ? "Add Balance" : "Refund"}
+          {mode === "charge" ? t("addBalance") : tCommon("refund")}
         </Button>
       </DialogActions>
     </Dialog>

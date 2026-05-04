@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Container,
   Paper,
@@ -12,6 +14,7 @@ import LoadingOverlay from "@/components/LoadingOverlay";
 import { formatNullable } from "@/utils/formatNullable";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { GridFilterItem } from "@mui/x-data-grid";
+import { useTranslations } from "next-intl";
 
 interface Props {
   setSelectedClientId: (id: string) => void;
@@ -40,15 +43,18 @@ export const ClientsTable = ({
   loading,
   fetchError,
 }: Props) => {
+  const t = useTranslations("Clients");
+  const tCommon = useTranslations("Common");
+
   const columns: GridColDef[] = [
-    { field: "client_name", headerName: "Name", flex: 1, valueFormatter: formatNullable },
-    { field: "client_surname", headerName: "Surname", flex: 1, valueFormatter: formatNullable },
-    { field: "client_email", headerName: "Email", flex: 1, valueFormatter: formatNullable },
-    { field: "client_phone", headerName: "Phone", flex: 1, valueFormatter: formatNullable },
-    { field: "client_notes", headerName: "Notes", flex: 1, valueFormatter: formatNullable },
+    { field: "client_name", headerName: t("name"), flex: 1, valueFormatter: formatNullable },
+    { field: "client_surname", headerName: t("surname"), flex: 1, valueFormatter: formatNullable },
+    { field: "client_email", headerName: t("email"), flex: 1, valueFormatter: formatNullable },
+    { field: "client_phone", headerName: t("phone"), flex: 1, valueFormatter: formatNullable },
+    { field: "client_notes", headerName: t("notes"), flex: 1, valueFormatter: formatNullable },
     {
       field: "created_at",
-      headerName: "Created",
+      headerName: t("created"),
       type: "dateTime",
       flex: 1,
       valueGetter: (_, row) =>
@@ -58,15 +64,15 @@ export const ClientsTable = ({
     {
       field: "actions",
       type: "actions",
-      headerName: "Actions",
+      headerName: t("actions"),
       getActions: (params) => [
         <GridActionsCellItem
           icon={
-            <Tooltip title="Edit">
+            <Tooltip title={tCommon("edit")}>
               <EditIcon color="primary" />
             </Tooltip>
           }
-          label="Edit"
+          label={tCommon("edit")}
           onClick={() => {
             setSelectedClientId(params.row.id);
             setIsOpenEditClientDialog(true);

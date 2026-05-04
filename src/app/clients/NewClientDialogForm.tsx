@@ -20,6 +20,7 @@ import UpdateClientFormFields from "./NewClientFormFields";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
 import handleSubmitCreateClient from "@/handlers/handleSubmitCreateClient";
+import { useTranslations } from "next-intl";
 
 type Props = {
   open: boolean;
@@ -36,6 +37,8 @@ export const defaultValuesClientForm: Partial<ClientUpdateSchemaType> = {
 };
 
 const NewClientDialogForm = ({ open, onClose }: Props) => {
+  const t = useTranslations("Clients");
+  const tCommon = useTranslations("Common");
   const [loading, setLoading] = useState(false);
 
   const methods = useForm<ClientUpdateSchemaType>({
@@ -59,7 +62,7 @@ const NewClientDialogForm = ({ open, onClose }: Props) => {
   return (
     <>
       <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
-        <DialogTitle>New Client</DialogTitle>
+        <DialogTitle>{t("newClient")}</DialogTitle>
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
             <DialogContent
@@ -79,10 +82,10 @@ const NewClientDialogForm = ({ open, onClose }: Props) => {
                   color="error"
                   onClick={onCancel}
                 >
-                  Cancel
+                  {tCommon("cancel")}
                 </Button>
                 <Button startIcon={<SaveIcon />} color="success" type="submit">
-                  Save
+                  {tCommon("save")}
                 </Button>
               </Container>
             </DialogActions>

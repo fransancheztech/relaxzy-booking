@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Alert,
   Button,
@@ -28,6 +30,7 @@ import {
 import handleSubmitPayBooking from "@/handlers/handleSubmitPayBooking";
 import { normalizeMoneyInput } from "@/utils/normalizeMoney";
 import VoucherPickerField from "./VoucherPickerField";
+import { useTranslations } from "next-intl";
 
 interface DialogFormProps {
   open: boolean;
@@ -50,6 +53,9 @@ const PayBookingDialogForm = ({
   paidVoucher = 0,
   onPaymentSuccess,
 }: DialogFormProps) => {
+  const t = useTranslations("BookingPayment");
+  const tCommon = useTranslations("Common");
+
   const defaultValues = {
     cashPayment: "0",
     cardPayment: "0",
@@ -101,7 +107,7 @@ const PayBookingDialogForm = ({
   return (
     <>
       <Dialog open={open} onClose={onClose}>
-        <DialogTitle>Pay Booking</DialogTitle>
+        <DialogTitle>{t("payBooking")}</DialogTitle>
         <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
           <DialogContent>
             <Grid
@@ -117,7 +123,7 @@ const PayBookingDialogForm = ({
                     <TextField
                       {...field}
                       value={field.value === "0" ? "" : field.value}
-                      label="Cash"
+                      label={t("cash")}
                       fullWidth
                       size="small"
                       variant="outlined"
@@ -139,7 +145,7 @@ const PayBookingDialogForm = ({
                     <TextField
                       {...field}
                       value={field.value === "0" ? "" : field.value}
-                      label="Credit card"
+                      label={t("card")}
                       fullWidth
                       size="small"
                       error={!!methods.formState.errors.cardPayment}
@@ -169,7 +175,7 @@ const PayBookingDialogForm = ({
                     sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                   >
                     {voucherOpen ? <ExpandLessIcon fontSize="inherit" /> : <ExpandMoreIcon fontSize="inherit" />}
-                    Voucher
+                    {t("voucher")}
                   </Typography>
                 </Divider>
               </Grid>
@@ -192,7 +198,7 @@ const PayBookingDialogForm = ({
                           <TextField
                             {...field}
                             value={field.value === "0" ? "" : field.value}
-                            label="Voucher Amount"
+                            label={t("voucherAmount")}
                             fullWidth
                             size="small"
                             variant="outlined"
@@ -224,10 +230,10 @@ const PayBookingDialogForm = ({
           </DialogContent>
           <DialogActions>
             <Button onClick={onCancel} startIcon={<CloseIcon />}>
-              Cancel
+              {tCommon("cancel")}
             </Button>
             <Button color="success" type="submit" startIcon={<AddCircleIcon />}>
-              Add Payment
+              {t("addPayment")}
             </Button>
           </DialogActions>
         </form>

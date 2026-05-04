@@ -4,13 +4,8 @@ import { Box, Chip, Grid, Paper, Stack, Typography } from "@mui/material";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
+import { useTranslations } from "next-intl";
 import { StatsResponse } from "@/types/stats";
-
-const EMPTY = (
-  <Typography variant="body2" color="text.disabled" sx={{ py: 3, textAlign: "center" }}>
-    No data for this period
-  </Typography>
-);
 
 interface Props {
   clients: StatsResponse["clients"];
@@ -18,6 +13,14 @@ interface Props {
 }
 
 const ClientSection = ({ clients, bucket }: Props) => {
+  const t = useTranslations("Stats");
+
+  const empty = (
+    <Typography variant="body2" color="text.disabled" sx={{ py: 3, textAlign: "center" }}>
+      {t("noDataForPeriod")}
+    </Typography>
+  );
+
   const chartData = clients.new_over_time.map((p) => {
     const d = new Date(p.period);
     let label: string;
@@ -27,19 +30,24 @@ const ClientSection = ({ clients, bucket }: Props) => {
     return { label, count: p.count };
   });
 
+  const newVsReturning = [
+    { label: t("new"), value: clients.new_in_period, color: "#60a561" },
+    { label: t("returning"), value: clients.returning_in_period, color: "#002d04" },
+  ];
+
   return (
     <Box>
-      <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>Clients</Typography>
+      <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>{t("clientsSectionTitle")}</Typography>
 
       <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 2 }}>
-        <Chip label={`All-time total: ${clients.total_all_time}`} size="small" variant="outlined" />
-        <Chip label={`In period: ${clients.total_unique}`} size="small" variant="outlined" />
-        <Chip label={`New: ${clients.new_in_period}`} size="small" color="success" variant="outlined" />
-        <Chip label={`Returning: ${clients.returning_in_period}`} size="small" color="primary" variant="outlined" />
-        <Chip label={`Retention: ${clients.retention_rate.toFixed(1)}%`} size="small" color={clients.retention_rate >= 50 ? "success" : "default"} variant="outlined" />
-        <Chip label={`Avg. bookings/client: ${clients.avg_bookings_per_client.toFixed(1)}`} size="small" variant="outlined" />
+        <Chip label={t("allTimeTotalChip", { count: clients.total_all_time })} size="small" variant="outlined" />
+        <Chip label={t("inPeriodChip", { count: clients.total_unique })} size="small" variant="outlined" />
+        <Chip label={t("newChip", { count: clients.new_in_period })} size="small" color="success" variant="outlined" />
+        <Chip label={t("returningChip", { count: clients.returning_in_period })} size="small" color="primary" variant="outlined" />
+        <Chip label={t("retentionChip", { rate: clients.retention_rate.toFixed(1) })} size="small" color={clients.retention_rate >= 50 ? "success" : "default"} variant="outlined" />
+        <Chip label={t("avgBookingsPerClient", { count: clients.avg_bookings_per_client.toFixed(1) })} size="small" variant="outlined" />
         {clients.repeat_frequency_days > 0 && (
-          <Chip label={`Repeat frequency: ${Math.round(clients.repeat_frequency_days)} days`} size="small" variant="outlined" />
+          <Chip label={t("repeatFrequency", { days: Math.round(clients.repeat_frequency_days) })} size="small" variant="outlined" />
         )}
       </Stack>
 
@@ -47,7 +55,7 @@ const ClientSection = ({ clients, bucket }: Props) => {
         <Grid size={{ xs: 12, md: 8 }}>
           <Paper elevation={1} sx={{ p: 2, borderRadius: 2 }}>
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-              New clients over time
+              {t("newClientsOverTime")}
             </Typography>
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height={240}>
@@ -65,7 +73,7 @@ const ClientSection = ({ clients, bucket }: Props) => {
                   <Area
                     type="monotone"
                     dataKey="count"
-                    name="New clients"
+                    name={t("newClientsBarName")}
                     stroke="#002d04"
                     strokeWidth={2}
                     fill="url(#clientGradient)"
@@ -73,20 +81,17 @@ const ClientSection = ({ clients, bucket }: Props) => {
                   />
                 </AreaChart>
               </ResponsiveContainer>
-            ) : EMPTY}
+            ) : empty}
           </Paper>
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
           <Paper elevation={1} sx={{ p: 2, borderRadius: 2, height: "100%" }}>
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
-              New vs. Returning
+              {t("newVsReturning")}
             </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              {[
-                { label: "New", value: clients.new_in_period, color: "#60a561" },
-                { label: "Returning", value: clients.returning_in_period, color: "#002d04" },
-              ].map(({ label, value, color }) => {
+              {newVsReturning.map(({ label, value, color }) => {
                 const pct = clients.total_unique > 0 ? (value / clients.total_unique) * 100 : 0;
                 return (
                   <Box key={label}>

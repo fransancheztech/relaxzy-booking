@@ -1,3 +1,5 @@
+"use client";
+
 import { Chip, Container, Paper, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef, GridFilterModel, GridRenderCellParams } from "@mui/x-data-grid";
 import { booking_status } from "generated/prisma";
@@ -9,6 +11,7 @@ import NoRowsOverlay from "@/components/NoRowsOverlay";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatNullable } from "@/utils/formatNullable";
 import { formatDateTime } from "@/utils/formatDateTime";
+import { useTranslations } from "next-intl";
 
 interface Props {
   setSelectedBookingId: (id: string) => void;
@@ -36,10 +39,13 @@ export const BookingsTable = ({
   loading,
   fetchError,
 }: Props) => {
+  const t = useTranslations("Bookings");
+  const tCommon = useTranslations("Common");
+
   const columns: GridColDef<BookingListItem>[] = [
     {
       field: "customer_name",
-      headerName: "Customer",
+      headerName: t("customer"),
       flex: 1,
       valueGetter: (_, row) =>
         row.client
@@ -48,28 +54,28 @@ export const BookingsTable = ({
     },
     {
       field: "customer_phone",
-      headerName: "Phone",
+      headerName: t("phone"),
       flex: 1,
       valueGetter: (_, row) =>
         row.client ? `${row.client.phone ?? ""}`.trim() : "",
     },
     {
       field: "service",
-      headerName: "Service",
+      headerName: t("service"),
       flex: 1,
       valueGetter: (_, row) =>
         row.service?.short_name ?? row.service?.name ?? "",
     },
     {
       field: "therapist",
-      headerName: "Therapist",
+      headerName: t("therapist"),
       flex: 1,
       valueGetter: (_, row) => row.therapist?.full_name ?? "",
       valueFormatter: formatNullable,
     },
     {
       field: "start_time",
-      headerName: "Date",
+      headerName: t("date"),
       flex: 1,
       valueGetter: (_, row) =>
         row.start_time
@@ -82,7 +88,7 @@ export const BookingsTable = ({
     },
     {
       field: "time",
-      headerName: "Time",
+      headerName: t("time"),
       flex: 1,
       sortable: false,
       filterable: false,
@@ -96,7 +102,7 @@ export const BookingsTable = ({
     },
     {
       field: "duration",
-      headerName: "Duration",
+      headerName: t("duration"),
       flex: 1,
       sortable: false,
       filterable: false,
@@ -105,21 +111,21 @@ export const BookingsTable = ({
           const start = new Date(row.start_time).getTime();
           const end = new Date(row.end_time).getTime();
           const diffMinutes = Math.round((end - start) / 60000);
-          return `${diffMinutes} min`;
+          return `${diffMinutes} ${tCommon("min")}`;
         }
         return "";
       },
     },
     {
       field: "status",
-      headerName: "State",
+      headerName: t("state"),
       flex: 1,
       type: "singleSelect",
       valueOptions: [
-        { value: "pending",   label: "Pending" },
-        { value: "confirmed", label: "Confirmed" },
-        { value: "completed", label: "Completed" },
-        { value: "cancelled", label: "Cancelled" },
+        { value: "pending",   label: t("pending") },
+        { value: "confirmed", label: t("confirmed") },
+        { value: "completed", label: t("completed") },
+        { value: "cancelled", label: t("cancelled") },
       ],
       renderCell: (params: GridRenderCellParams<BookingListItem, booking_status>) => {
         const colorMap: Record<booking_status, "default" | "warning" | "info" | "success" | "error"> = {
@@ -132,7 +138,7 @@ export const BookingsTable = ({
         if (!s) return null;
         return (
           <Chip
-            label={s.charAt(0).toUpperCase() + s.slice(1)}
+            label={t(s)}
             color={colorMap[s] ?? "default"}
             size="small"
             variant="outlined"
@@ -142,14 +148,14 @@ export const BookingsTable = ({
     },
     {
       field: "price",
-      headerName: "Price",
+      headerName: t("price"),
       flex: 1,
       type: "number",
       valueFormatter: (value) => formatMoney(value),
     },
     {
       field: "paid",
-      headerName: "Paid",
+      headerName: t("paid"),
       flex: 1,
       sortable: false,
       filterable: false,
@@ -162,13 +168,13 @@ export const BookingsTable = ({
     },
     {
       field: "notes",
-      headerName: "Notes",
+      headerName: t("notes"),
       flex: 1,
       valueFormatter: formatNullable,
     },
     {
       field: "created_at",
-      headerName: "Created",
+      headerName: t("created"),
       type: "dateTime",
       flex: 1,
       valueGetter: (_, row) =>
@@ -180,15 +186,15 @@ export const BookingsTable = ({
     {
       field: "actions",
       type: "actions",
-      headerName: "Actions",
+      headerName: t("actions"),
       getActions: (params) => [
         <GridActionsCellItem
           icon={
-            <Tooltip title="Edit">
+            <Tooltip title={tCommon("edit")}>
               <EditIcon color="primary" />
             </Tooltip>
           }
-          label="Edit"
+          label={tCommon("edit")}
           onClick={() => {
             setSelectedBookingId(params.row.id);
             setIsOpenEditBookingDialog(true);

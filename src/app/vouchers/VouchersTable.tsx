@@ -11,6 +11,7 @@ import { formatNullable } from "@/utils/formatNullable";
 import { formatDateTime } from "@/utils/formatDateTime";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
+import { useTranslations } from "next-intl";
 
 type VoucherRow = {
   id: string;
@@ -29,67 +30,8 @@ type VoucherRow = {
   recipient_surname: string | null;
 };
 
-const baseColumns: GridColDef<VoucherRow>[] = [
-  {
-    field: "code",
-    headerName: "Code",
-    flex: 1,
-    minWidth: 130,
-  },
-  {
-    field: "buyer_name",
-    headerName: "Buyer",
-    flex: 1.5,
-    sortable: false,
-    valueGetter: (_value, row) =>
-      [row.buyer_name, row.buyer_surname].filter(Boolean).join(" ") || "—",
-  },
-  {
-    field: "recipient_name",
-    headerName: "Recipient",
-    flex: 1.5,
-    sortable: false,
-    valueGetter: (_value, row) => {
-      if (!row.recipient_id || row.recipient_id === row.buyer_id) return "Same as buyer";
-      return [row.recipient_name, row.recipient_surname].filter(Boolean).join(" ") || "—";
-    },
-  },
-  {
-    field: "balance",
-    headerName: "Balance",
-    flex: 0.8,
-    type: "number",
-    valueGetter: (_, row) => (row.balance != null ? Number(row.balance) : null),
-    valueFormatter: (value: number | null) => (value != null ? formatMoney(value) : "—"),
-  },
-  {
-    field: "expiration_date",
-    headerName: "Expires",
-    flex: 1,
-    type: "date",
-    valueGetter: (_, row) => (row.expiration_date ? new Date(row.expiration_date) : null),
-    valueFormatter: (value: Date | null) =>
-      value
-        ? value.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" })
-        : "",
-  },
-  {
-    field: "notes",
-    headerName: "Notes",
-    flex: 1.5,
-    valueFormatter: formatNullable,
-  },
-  {
-    field: "created_at",
-    headerName: "Created",
-    flex: 1,
-    type: "dateTime",
-    valueGetter: (_value, row) => (row.created_at ? new Date(row.created_at) : null),
-    valueFormatter: formatDateTime,
-  },
-];
-
 const VouchersTable = () => {
+  const t = useTranslations("Vouchers");
   const [rows, setRows] = useState<VoucherRow[]>([]);
   const [rowCount, setRowCount] = useState(0);
   const [page, setPage] = useState(0);
@@ -105,15 +47,71 @@ const VouchersTable = () => {
 
   const allColumns = useMemo<GridColDef<VoucherRow>[]>(
     () => [
-      ...baseColumns,
+      {
+        field: "code",
+        headerName: t("code"),
+        flex: 1,
+        minWidth: 130,
+      },
+      {
+        field: "buyer_name",
+        headerName: t("buyer"),
+        flex: 1.5,
+        sortable: false,
+        valueGetter: (_value, row) =>
+          [row.buyer_name, row.buyer_surname].filter(Boolean).join(" ") || "—",
+      },
+      {
+        field: "recipient_name",
+        headerName: t("recipient"),
+        flex: 1.5,
+        sortable: false,
+        valueGetter: (_value, row) => {
+          if (!row.recipient_id || row.recipient_id === row.buyer_id) return t("sameAsBuyer");
+          return [row.recipient_name, row.recipient_surname].filter(Boolean).join(" ") || "—";
+        },
+      },
+      {
+        field: "balance",
+        headerName: t("balance"),
+        flex: 0.8,
+        type: "number",
+        valueGetter: (_, row) => (row.balance != null ? Number(row.balance) : null),
+        valueFormatter: (value: number | null) => (value != null ? formatMoney(value) : "—"),
+      },
+      {
+        field: "expiration_date",
+        headerName: t("expires"),
+        flex: 1,
+        type: "date",
+        valueGetter: (_, row) => (row.expiration_date ? new Date(row.expiration_date) : null),
+        valueFormatter: (value: Date | null) =>
+          value
+            ? value.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" })
+            : "",
+      },
+      {
+        field: "notes",
+        headerName: t("notes"),
+        flex: 1.5,
+        valueFormatter: formatNullable,
+      },
+      {
+        field: "created_at",
+        headerName: t("created"),
+        flex: 1,
+        type: "dateTime",
+        valueGetter: (_value, row) => (row.created_at ? new Date(row.created_at) : null),
+        valueFormatter: formatDateTime,
+      },
       {
         field: "actions",
-        headerName: "Actions",
+        headerName: t("actions"),
         width: 80,
         sortable: false,
         filterable: false,
         renderCell: (params) => (
-          <Tooltip title="View details">
+          <Tooltip title={t("viewDetails")}>
             <IconButton
               size="small"
               onClick={() => {
@@ -127,7 +125,7 @@ const VouchersTable = () => {
         ),
       },
     ],
-    [],
+    [t],
   );
 
   const loadVouchers = useCallback(
@@ -143,7 +141,7 @@ const VouchersTable = () => {
         });
 
         if (!res.ok) {
-          setFetchError("Error loading vouchers");
+          setFetchError(t("errorLoadingVouchers"));
           return;
         }
 
@@ -153,7 +151,7 @@ const VouchersTable = () => {
         setPage(pageToLoad);
         setSortModel(sort);
       } catch {
-        setFetchError("Error loading vouchers");
+        setFetchError(t("errorLoadingVouchers"));
         setRows([]);
         setRowCount(0);
       } finally {

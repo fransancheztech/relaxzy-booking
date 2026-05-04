@@ -8,6 +8,7 @@ import LoopIcon from "@mui/icons-material/Loop";
 import TimerIcon from "@mui/icons-material/Timer";
 import EuroIcon from "@mui/icons-material/Euro";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useLayout } from "@/app/context/LayoutContext";
 import { StatsResponse } from "@/types/stats";
 import { formatMoney } from "@/utils/formatMoney";
@@ -19,6 +20,7 @@ import ClientSection from "./components/ClientSection";
 import TipsSection from "./components/TipsSection";
 
 const StatsPageContent = () => {
+  const t = useTranslations("Stats");
   const { setButtonLabel, setOnButtonClick } = useLayout();
 
   const [preset, setPreset] = useState<Preset>("month");
@@ -106,23 +108,23 @@ const StatsPageContent = () => {
           <Grid container spacing={2} sx={{ mb: 4 }}>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
               <KpiCard
-                label="Total revenue"
+                label={t("totalRevenue")}
                 value={formatMoney(data.revenue.total)}
-                secondary={`Refunds: −${formatMoney(data.revenue.refunds_total)}`}
+                secondary={`${t("refunds")} −${formatMoney(data.revenue.refunds_total)}`}
                 icon={<TrendingUpIcon fontSize="small" />}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
               <KpiCard
-                label="Bookings"
+                label={t("bookings")}
                 value={String(data.bookings.total)}
-                secondary={`Completed: ${data.bookings.completed} · Cancelled: ${data.bookings.cancelled}`}
+                secondary={`${t("completed")} ${data.bookings.completed} · ${t("cancelled")} ${data.bookings.cancelled}`}
                 icon={<CalendarMonthIcon fontSize="small" />}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
               <KpiCard
-                label="Avg. price"
+                label={t("avgPrice")}
                 value={formatMoney(data.financial.avg_ticket)}
                 secondary={`P25: ${formatMoney(data.financial.p25_ticket)} · P75: ${formatMoney(data.financial.p75_ticket)}`}
                 icon={<EuroIcon fontSize="small" />}
@@ -130,26 +132,26 @@ const StatsPageContent = () => {
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
               <KpiCard
-                label="Revenue / hour"
+                label={t("revenuePerHour")}
                 value={formatMoney(data.financial.revenue_per_hour)}
-                secondary={`${data.bookings.total_booked_hours.toFixed(1)} h booked`}
+                secondary={`${data.bookings.total_booked_hours.toFixed(1)} ${t("hoursBooked")}`}
                 icon={<TimerIcon fontSize="small" />}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
               <KpiCard
-                label="Unique clients"
+                label={t("uniqueClients")}
                 value={String(data.clients.total_unique)}
-                secondary={`New: ${data.clients.new_in_period} · Returning: ${data.clients.returning_in_period}`}
+                secondary={`${t("new")} ${data.clients.new_in_period} · ${t("returning")} ${data.clients.returning_in_period}`}
                 icon={<PeopleIcon fontSize="small" />}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
               <KpiCard
-                label="Retention rate"
+                label={t("retentionRate")}
                 value={`${data.clients.retention_rate.toFixed(0)}%`}
                 secondary={data.clients.repeat_frequency_days > 0
-                  ? `Return every ${Math.round(data.clients.repeat_frequency_days)} days`
+                  ? t("returnEvery", { days: Math.round(data.clients.repeat_frequency_days) })
                   : undefined}
                 icon={<LoopIcon fontSize="small" />}
               />

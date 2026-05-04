@@ -28,6 +28,7 @@ import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
 import { formatMoney } from "@/utils/formatMoney";
 import { toast } from "react-toastify";
 import VoucherPaymentEventDialog from "./VoucherPaymentEventDialog";
+import { useTranslations } from "next-intl";
 
 type PaymentEvent = {
   id: string;
@@ -77,6 +78,8 @@ const formatDateTime = (value: string | null) => {
 };
 
 const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
+  const t = useTranslations("Vouchers");
+  const tCommon = useTranslations("Common");
   const [details, setDetails] = useState<Details | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -94,12 +97,12 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
     try {
       const res = await fetch(`/api/vouchers/${voucherId}/details`);
       if (!res.ok) {
-        setFetchError("Error loading voucher details");
+        setFetchError(t("errorLoadingDetails"));
         return;
       }
       setDetails(await res.json());
     } catch {
-      setFetchError("Error loading voucher details");
+      setFetchError(t("errorLoadingDetails"));
     } finally {
       setLoading(false);
     }
@@ -126,11 +129,11 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
         toast.error(result?.error || "Error deleting voucher use");
         return;
       }
-      toast.success("Voucher use deleted");
+      toast.success(t("voucherUseDeleted"));
       loadDetails();
       window.dispatchEvent(new CustomEvent("refreshVouchersData"));
     } catch {
-      toast.error("Network error");
+      toast.error(t("networkError"));
     } finally {
       setDeletingId(null);
     }
@@ -158,7 +161,7 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
             <span>Voucher {details?.voucher.code ?? ""}</span>
             {details?.voucher.balance != null && (
               <Chip
-                label={`Balance: ${formatMoney(Number(details.voucher.balance))}`}
+                label={`${t("balanceLabel")} ${formatMoney(Number(details.voucher.balance))}`}
                 color="success"
                 size="small"
               />
@@ -172,7 +175,7 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
             size="small"
             disabled={loading}
           >
-            Add Balance
+            {t("addBalance")}
           </Button>
         </DialogTitle>
 
@@ -187,24 +190,24 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
           {details && !loading && (
             <>
               <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
-                Payment Events
+                {t("paymentEvents")}
               </Typography>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Amount</TableCell>
+                    <TableCell>{tCommon("amount")}</TableCell>
                     <TableCell>Type</TableCell>
-                    <TableCell>Method</TableCell>
-                    <TableCell>Notes</TableCell>
-                    <TableCell>Date</TableCell>
-                    <TableCell align="center">Action</TableCell>
+                    <TableCell>{tCommon("method")}</TableCell>
+                    <TableCell>{tCommon("notes")}</TableCell>
+                    <TableCell>{t("date")}</TableCell>
+                    <TableCell align="center">{t("action")}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {details.paymentEvents.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={6} align="center" sx={{ color: "text.secondary" }}>
-                        No payment events
+                        {t("noPaymentEvents")}
                       </TableCell>
                     </TableRow>
                   )}
@@ -223,9 +226,9 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                       </TableCell>
                       <TableCell>
                         {pe.method === "cash"
-                          ? "Cash"
+                          ? t("cash")
                           : pe.method === "credit_card"
-                            ? "Credit Card"
+                            ? t("creditCard")
                             : "—"}
                       </TableCell>
                       <TableCell>{pe.notes ?? "—"}</TableCell>
@@ -251,23 +254,23 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
               <Divider sx={{ my: 2 }} />
 
               <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
-                Voucher Uses
+                {t("voucherUses")}
               </Typography>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Amount</TableCell>
-                    <TableCell>Booking</TableCell>
-                    <TableCell>Notes</TableCell>
-                    <TableCell>Date</TableCell>
-                    <TableCell align="center">Action</TableCell>
+                    <TableCell>{tCommon("amount")}</TableCell>
+                    <TableCell>{t("booking")}</TableCell>
+                    <TableCell>{tCommon("notes")}</TableCell>
+                    <TableCell>{t("date")}</TableCell>
+                    <TableCell align="center">{t("action")}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {details.voucherUses.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} align="center" sx={{ color: "text.secondary" }}>
-                        No voucher uses
+                        {t("noVoucherUses")}
                       </TableCell>
                     </TableRow>
                   )}
@@ -278,7 +281,7 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                       <TableCell>{vu.notes ?? "—"}</TableCell>
                       <TableCell>{formatDateTime(vu.created_at)}</TableCell>
                       <TableCell align="center">
-                        <Tooltip title="Delete">
+                        <Tooltip title={tCommon("delete")}>
                           <span>
                             <IconButton
                               size="small"
@@ -301,24 +304,24 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
 
         <DialogActions>
           <Button onClick={onClose} color="inherit">
-            Close
+            {tCommon("close")}
           </Button>
         </DialogActions>
       </Dialog>
 
       <Dialog open={!!pendingDeleteUse} onClose={() => setPendingDeleteUse(null)} maxWidth="xs" fullWidth>
-        <DialogTitle>Delete Voucher Use</DialogTitle>
+        <DialogTitle>{t("deleteUseTitle")}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this voucher use of{" "}
-            <strong>{pendingDeleteUse ? formatMoney(Math.abs(Number(pendingDeleteUse.amount))) : ""}</strong>?
-            The balance will be restored.
+            {pendingDeleteUse
+              ? t("deleteUseMessage", { amount: formatMoney(Math.abs(Number(pendingDeleteUse.amount))) })
+              : ""}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPendingDeleteUse(null)}>Cancel</Button>
+          <Button onClick={() => setPendingDeleteUse(null)}>{tCommon("cancel")}</Button>
           <Button color="error" variant="contained" startIcon={<DeleteIcon />} onClick={confirmDeleteUse}>
-            Delete
+            {tCommon("delete")}
           </Button>
         </DialogActions>
       </Dialog>
