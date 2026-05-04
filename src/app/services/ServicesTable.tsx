@@ -1,3 +1,5 @@
+"use client";
+
 import { FETCH_LIMIT } from "@/constants";
 import { services_names } from "generated/prisma/client";
 import { Container, Paper, Tooltip } from "@mui/material";
@@ -5,6 +7,7 @@ import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import { useTranslations } from "next-intl";
 
 interface Props {
   setSelectedServiceId: (id: string) => void;
@@ -32,8 +35,8 @@ const ServicesTable = ({
   loading,
   fetchError,
 }: Props) => {
-
-  
+  const t = useTranslations("Services");
+  const tCommon = useTranslations("Common");
 
   // -------------------------------
   // Columns for DataGrid
@@ -41,17 +44,17 @@ const ServicesTable = ({
   const columns: GridColDef<services_names>[] = [
     {
       field: "name",
-      headerName: "Service Name",
+      headerName: t("serviceName"),
       flex: 1,
     },
     {
       field: "short_name",
-      headerName: "Short Name",
+      headerName: t("shortName"),
       flex: 1,
     },
     {
       field: "created_at",
-      headerName: "Created",
+      headerName: tCommon("created"),
       type: "dateTime",
       flex: 1,
       valueGetter: (_, row) =>
@@ -73,15 +76,15 @@ const ServicesTable = ({
     {
       field: "actions",
       type: "actions",
-      headerName: "Actions",
+      headerName: tCommon("actions"),
       getActions: (params) => [
         <GridActionsCellItem
           icon={
-            <Tooltip title="Edit">
+            <Tooltip title={tCommon("edit")}>
               <EditIcon color="primary" />
             </Tooltip>
           }
-          label="Edit"
+          label={tCommon("edit")}
           onClick={() => {
             setSelectedServiceId(params.row.id);
             setIsOpenEditServiceDialog(true);

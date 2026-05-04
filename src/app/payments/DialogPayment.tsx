@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Button,
   Container,
@@ -18,6 +20,7 @@ import LoadingOverlay from "@/components/LoadingOverlay";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
 import Decimal from "decimal.js";
 import { formatMoney } from "@/utils/formatMoney";
+import { useTranslations } from "next-intl";
 
 interface Props {
   open: boolean;
@@ -39,6 +42,9 @@ const DialogPayment = ({
   setPaymentId,
   loadPayments,
 }: Props) => {
+  const t = useTranslations("Payments");
+  const tCommon = useTranslations("Common");
+
   const [isOpenRefundPaymentDialog, setIsOpenRefundPaymentDialog] =
     useState(false);
   const [paymentEvents, setPaymentEvents] = useState<PaymentEventType[]>([]);
@@ -81,17 +87,17 @@ const DialogPayment = ({
   // Columns for DataGrid
   // -------------------------------
   const columns: GridColDef[] = [
-    { field: "type", headerName: "Type", flex: 1 },
-    { field: "method", headerName: "Method", flex: 1 },
+    { field: "type", headerName: tCommon("type"), flex: 1 },
+    { field: "method", headerName: tCommon("method"), flex: 1 },
     {
       field: "amount",
-      headerName: "Amount",
+      headerName: tCommon("amount"),
       flex: 1,
       valueFormatter: (value) => formatMoney(value),
     },
     {
       field: "created_at",
-      headerName: "Created",
+      headerName: tCommon("created"),
       type: "dateTime",
       flex: 1,
       valueGetter: (_, row) =>
@@ -111,9 +117,9 @@ const DialogPayment = ({
     },
     {
       field: "email",
-      headerName: "Performed by",
+      headerName: t("performedBy"),
       flex: 1,
-      valueGetter: (_, row) => row.email ?? "System",
+      valueGetter: (_, row) => row.email ?? t("system"),
     },
   ];
 
@@ -158,7 +164,7 @@ const DialogPayment = ({
           },
         }}
       >
-        <DialogTitle>View Payment</DialogTitle>
+        <DialogTitle>{t("viewPayment")}</DialogTitle>
         <DialogContent
           sx={{
             display: "flex",
@@ -166,9 +172,9 @@ const DialogPayment = ({
             overflow: "hidden", // critical
           }}
         >
-          <Typography fontSize="small">Payment ID: {paymentId}</Typography>
+          <Typography fontSize="small">{t("paymentId")}: {paymentId}</Typography>
           <Typography variant="body1">
-            Total paid: {totalPaid.toFixed(2)} €
+            {t("totalPaid")}: {totalPaid.toFixed(2)} €
           </Typography>
           <Paper
             elevation={2}
@@ -210,11 +216,11 @@ const DialogPayment = ({
             color="warning"
             onClick={() => setIsOpenRefundPaymentDialog(true)}
           >
-            Refund
+            {tCommon("refund")}
           </Button>
           <Container sx={{ display: "flex", justifyContent: "flex-end" }}>
             <Button startIcon={<CloseIcon />} color="error" onClick={onClose}>
-              Close
+              {tCommon("close")}
             </Button>
           </Container>
         </DialogActions>

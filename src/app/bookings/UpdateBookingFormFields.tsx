@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import {
   BOOKING_DEFAULT_DURATIONS,
   BOOKING_DEFAULT_PRICES,
@@ -48,6 +51,9 @@ interface Props {
 }
 
 const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSummary }: Props) => {
+  const t = useTranslations("BookingForm");
+  const tCommon = useTranslations("Common");
+  const tBookings = useTranslations("Bookings");
   const {
     control,
     watch,
@@ -66,12 +72,12 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSum
   return (
     <Grid container spacing={{ xs: 1  , xl: 2 }}>
       <Grid size={12}>
-        <Typography variant="subtitle2" color="text.secondary">Client</Typography>
+        <Typography variant="subtitle2" color="text.secondary">{t("clientSection")}</Typography>
         <Divider />
       </Grid>
       <BookingClientSection autoFocus />
       <Grid size={12}>
-        <Typography variant="subtitle2" color="text.secondary">Booking Details</Typography>
+        <Typography variant="subtitle2" color="text.secondary">{t("bookingDetails")}</Typography>
         <Divider />
       </Grid>
       <Grid size={6}>
@@ -85,7 +91,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSum
             >
               <DateTimePicker
                 {...field}
-                label="Date & Time"
+                label={t("dateTime")}
                 value={field.value}
                 onChange={(date) => field.onChange(date)}
                 format="dd/MM/yyyy HH:mm"
@@ -109,8 +115,8 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSum
           control={control}
           render={({ field }) => (
             <FormControl fullWidth size="small" error={!!errors.service_name}>
-              <InputLabel id="service_name">Service</InputLabel>
-              <Select labelId="service_name" {...field} label="Service">
+              <InputLabel id="service_name">{tCommon("service")}</InputLabel>
+              <Select labelId="service_name" {...field} label={tCommon("service")}>
                 {serviceOptions.map((service) => (
                   <MenuItem key={service} value={service}>
                     {service}
@@ -128,11 +134,11 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSum
           control={control}
           render={({ field }) => (
             <FormControl fullWidth size="small">
-              <InputLabel>Therapist</InputLabel>
-              <Select {...field} value={field.value ?? ""} label="Therapist">
-                <MenuItem value=""><em>None</em></MenuItem>
-                {therapists.map((t) => (
-                  <MenuItem key={t.id} value={t.id}>{t.full_name}</MenuItem>
+              <InputLabel>{tCommon("therapist")}</InputLabel>
+              <Select {...field} value={field.value ?? ""} label={tCommon("therapist")}>
+                <MenuItem value=""><em>{tCommon("none")}</em></MenuItem>
+                {therapists.map((th) => (
+                  <MenuItem key={th.id} value={th.id}>{th.full_name}</MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -163,7 +169,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSum
                   error={!!errors.duration}
                   helperText={errors.duration?.message}
                   value={Number(field.value)}
-                  label="Duration"
+                  label={tCommon("duration")}
                   size="small"
                   fullWidth
                 />
@@ -194,7 +200,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSum
                   {...params}
                   error={!!errors.price}
                   helperText={errors.price?.message}
-                  label="Price"
+                  label={tCommon("price")}
                   size="small"
                   fullWidth
                 />
@@ -209,11 +215,11 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSum
           control={control}
           render={({ field }) => (
             <FormControl fullWidth size="small" error={!!errors.status}>
-              <InputLabel id="status">Status</InputLabel>
-              <Select labelId="status" {...field} label="Status">
+              <InputLabel id="status">{t("status")}</InputLabel>
+              <Select labelId="status" {...field} label={t("status")}>
                 {BOOKING_DEFAULT_STATUSES.map((status) => (
                   <MenuItem key={status} value={status}>
-                    {status[0].toUpperCase() + status.slice(1)}
+                    {tBookings(status as "pending" | "confirmed" | "completed" | "cancelled")}
                   </MenuItem>
                 ))}
               </Select>
@@ -229,7 +235,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSum
           render={({ field }) => (
             <TextField
               {...field}
-              label="Notes"
+              label={tCommon("notes")}
               error={!!errors.notes}
               helperText={errors.notes?.message}
               fullWidth
@@ -247,16 +253,16 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSum
         <Paper variant="outlined" sx={{ px: 2, py: 1.5, borderRadius: 2, display: "flex", alignItems: "center", gap: 2 }}>
           <Box sx={{ flex: 1 }}>
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-              <Typography variant="subtitle2" color="text.secondary">Payment</Typography>
+              <Typography variant="subtitle2" color="text.secondary">{t("payment")}</Typography>
               <Chip
                 label={
                   totalPrice === 0 && totalPaid === 0
-                    ? "No price set"
+                    ? t("noPriceSet")
                     : remainingBalance <= 0
-                    ? "Paid"
+                    ? t("paidStatus")
                     : totalPaid > 0
-                    ? "Partial"
-                    : "Unpaid"
+                    ? t("partial")
+                    : t("unpaid")
                 }
                 size="small"
                 color={
@@ -272,15 +278,15 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSum
             </Box>
             <Box sx={{ display: "flex", gap: 3 }}>
               <Box>
-                <Typography variant="caption" color="text.secondary">Price</Typography>
+                <Typography variant="caption" color="text.secondary">{tCommon("price")}</Typography>
                 <Typography variant="body2" fontWeight={500}>{formatMoney(totalPrice)}</Typography>
               </Box>
               <Box>
-                <Typography variant="caption" color="text.secondary">Paid</Typography>
+                <Typography variant="caption" color="text.secondary">{tBookings("paid")}</Typography>
                 <Typography variant="body2" fontWeight={500}>{formatMoney(totalPaid)}</Typography>
               </Box>
               <Box>
-                <Typography variant="caption" color="text.secondary">Due</Typography>
+                <Typography variant="caption" color="text.secondary">{t("due")}</Typography>
                 <Typography
                   variant="body2"
                   fontWeight={700}
@@ -298,7 +304,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSum
             </Box>
           </Box>
           <Button variant="outlined" size="small" onClick={() => setIsPaymentDialogOpen(true)}>
-            Add Payment
+            {t("addPayment")}
           </Button>
         </Paper>
       </Grid>

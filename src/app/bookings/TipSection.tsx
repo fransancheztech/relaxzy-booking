@@ -28,6 +28,7 @@ import { TipSchema, TipFormInput, TipFormOutput } from "@/schemas/tip.schema";
 import { useTherapists } from "@/hooks/useTherapists";
 import { formatMoney } from "@/utils/formatMoney";
 import { toast } from "react-toastify";
+import { useTranslations } from "next-intl";
 
 interface Tip {
   id: string;
@@ -44,13 +45,9 @@ interface Props {
   defaultTherapistId?: string;
 }
 
-const METHOD_LABELS: Record<string, string> = {
-  cash: "Cash",
-  credit_card: "Credit card",
-  voucher: "Voucher",
-};
-
 const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
+  const t = useTranslations("Tips");
+  const tCommon = useTranslations("Common");
   const therapists = useTherapists();
   const [tips, setTips] = useState<Tip[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -95,6 +92,9 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
     fetchTips();
   }, [fetchTips]);
 
+  const methodLabel = (method: string) =>
+    ({ cash: t("cash"), credit_card: t("creditCard"), voucher: t("voucher") }[method] ?? method);
+
   const onSubmit = async (data: TipFormOutput) => {
     setSubmitting(true);
     try {
@@ -113,11 +113,11 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
 
       if (!res.ok) {
         const err = await res.json();
-        toast.error(err.error ?? "Failed to add tip");
+        toast.error(err.error ?? t("failedAddTip"));
         return;
       }
 
-      toast.success("Tip added");
+      toast.success(t("tipAdded"));
       methods.reset({
         therapist_id: defaultTherapistId ?? "",
         amount: "",
@@ -128,7 +128,7 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
       setShowForm(false);
       fetchTips();
     } catch {
-      toast.error("Failed to add tip");
+      toast.error(t("failedAddTip"));
     } finally {
       setSubmitting(false);
     }
@@ -139,13 +139,13 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
       const res = await fetch(`/api/tips/${tipId}`, { method: "DELETE" });
       if (!res.ok) {
         const err = await res.json();
-        toast.error(err.error ?? "Failed to delete tip");
+        toast.error(err.error ?? t("failedDeleteTip"));
         return;
       }
-      toast.success("Tip removed");
+      toast.success(t("tipRemoved"));
       fetchTips();
     } catch {
-      toast.error("Failed to delete tip");
+      toast.error(t("failedDeleteTip"));
     }
   };
 
@@ -154,17 +154,17 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
       {/* Section header */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
         <Typography variant="subtitle2" color="text.secondary">
-          Tips
+          {t("sectionHeader")}
         </Typography>
         <Divider sx={{ flex: 1 }} />
-        <Tooltip title="Record a tip">
+        <Tooltip title={t("recordTip")}>
           <Button
             size="small"
             variant="outlined"
             startIcon={<AddIcon />}
             onClick={() => setShowForm((v) => !v)}
           >
-            Add
+            {tCommon("add")}
           </Button>
         </Tooltip>
       </Box>
@@ -172,7 +172,7 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
       {/* Existing tips */}
       {tips.length === 0 && !showForm && (
         <Typography variant="caption" color="text.disabled" sx={{ display: "block", mb: 0.5 }}>
-          No tips recorded for this booking.
+          {t("noTips")}
         </Typography>
       )}
 
@@ -196,7 +196,7 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
             {formatMoney(Number(tip.amount))}
           </Typography>
           <Chip
-            label={METHOD_LABELS[tip.payment_method]}
+            label={methodLabel(tip.payment_method)}
             size="small"
             variant="outlined"
             sx={{ fontSize: "0.7rem" }}
@@ -209,7 +209,7 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
               {tip.notes}
             </Typography>
           )}
-          <Tooltip title="Remove tip">
+          <Tooltip title={t("removeTip")}>
             <IconButton size="small" color="error" onClick={() => handleDelete(tip.id)}>
               <DeleteIcon fontSize="small" />
             </IconButton>
@@ -228,11 +228,11 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
                 control={methods.control}
                 render={({ field }) => (
                   <FormControl fullWidth size="small" error={!!methods.formState.errors.therapist_id}>
-                    <InputLabel>Therapist</InputLabel>
-                    <Select {...field} value={field.value ?? ""} label="Therapist">
-                      <MenuItem value=""><em>None</em></MenuItem>
-                      {therapists.map((t) => (
-                        <MenuItem key={t.id} value={t.id}>{t.full_name}</MenuItem>
+                    <InputLabel>{tCommon("therapist")}</InputLabel>
+                    <Select {...field} value={field.value ?? ""} label={tCommon("therapist")}>
+                      <MenuItem value=""><em>{tCommon("none")}</em></MenuItem>
+                      {therapists.map((th) => (
+                        <MenuItem key={th.id} value={th.id}>{th.full_name}</MenuItem>
                       ))}
                     </Select>
                   </FormControl>
@@ -248,7 +248,7 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Amount"
+                    label={tCommon("amount")}
                     size="small"
                     fullWidth
                     error={!!methods.formState.errors.amount}
@@ -266,9 +266,9 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
                 control={methods.control}
                 render={({ field }) => (
                   <RadioGroup row {...field}>
-                    <FormControlLabel value="credit_card" control={<Radio size="small" />} label="Credit card" />
-                    <FormControlLabel value="cash" control={<Radio size="small" />} label="Cash" />
-                    <FormControlLabel value="voucher" control={<Radio size="small" />} label="Voucher" />
+                    <FormControlLabel value="credit_card" control={<Radio size="small" />} label={t("creditCard")} />
+                    <FormControlLabel value="cash" control={<Radio size="small" />} label={t("cash")} />
+                    <FormControlLabel value="voucher" control={<Radio size="small" />} label={t("voucher")} />
                   </RadioGroup>
                 )}
               />
@@ -283,7 +283,7 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
                   render={({ field }) => (
                     <FormControlLabel
                       control={<Switch {...field} checked={field.value} size="small" />}
-                      label={<Typography variant="caption">IVA applies (21%)</Typography>}
+                      label={<Typography variant="caption">{t("ivaApplies")}</Typography>}
                     />
                   )}
                 />
@@ -298,7 +298,7 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Notes (optional)"
+                    label={t("notesOptional")}
                     size="small"
                     fullWidth
                     multiline
@@ -311,7 +311,7 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
             {/* Actions */}
             <Grid size={12} sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
               <Button size="small" onClick={() => { setShowForm(false); methods.reset(); }}>
-                Cancel
+                {tCommon("cancel")}
               </Button>
               <Button
                 size="small"
@@ -322,7 +322,7 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
                 onClick={methods.handleSubmit(onSubmit)}
                 startIcon={<AddIcon />}
               >
-                Save Tip
+                {t("saveTip")}
               </Button>
             </Grid>
           </Grid>

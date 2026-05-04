@@ -1,8 +1,12 @@
+"use client";
+
 import { TextField, Grid } from "@mui/material";
 import { Controller, useFormContext } from "react-hook-form";
 import { ClientUpdateSchemaType } from "@/schemas/client.schema";
+import { useTranslations } from "next-intl";
 
 const UpdateClientFormFields = () => {
+  const t = useTranslations("Clients");
   const {
     control,
     formState: { errors },
@@ -17,7 +21,7 @@ const UpdateClientFormFields = () => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Name"
+              label={t("name")}
               fullWidth
               size="small"
               error={!!errors.client_name}
@@ -33,7 +37,7 @@ const UpdateClientFormFields = () => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Surname"
+              label={t("surname")}
               fullWidth
               size="small"
               error={!!errors.client_surname}
@@ -49,7 +53,7 @@ const UpdateClientFormFields = () => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Email"
+              label={t("email")}
               fullWidth
               size="small"
               error={!!errors.client_email}
@@ -65,7 +69,7 @@ const UpdateClientFormFields = () => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Phone"
+              label={t("phone")}
               fullWidth
               size="small"
               error={!!errors.client_phone}
@@ -81,7 +85,7 @@ const UpdateClientFormFields = () => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Notes"
+              label={t("notes")}
               fullWidth
               multiline
               rows={3}

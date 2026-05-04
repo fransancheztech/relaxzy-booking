@@ -1,17 +1,23 @@
-import { Box } from "@mui/material";
+"use client";
 
-const NoRowsOverlay = ({ error }: { error: string | null }) => (
-  <Box
-    sx={{
-      height: "100%",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: error ? "error.main" : "text.secondary",
-    }}
-  >
-    {error ? `Error loading items: ${error}` : "No items found"}
-  </Box>
-);
+import { Box } from "@mui/material";
+import { useTranslations } from "next-intl";
+
+const NoRowsOverlay = ({ error }: { error: string | null }) => {
+  const t = useTranslations("Common");
+  return (
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: error ? "error.main" : "text.secondary",
+      }}
+    >
+      {error ? `${t("errorLoading")}: ${error}` : t("noRowsFound")}
+    </Box>
+  );
+};
 
 export default NoRowsOverlay;

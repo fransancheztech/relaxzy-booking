@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import FullCalendar from "@fullcalendar/react";
+import esLocale from "@fullcalendar/core/locales/es";
+import thLocale from "@fullcalendar/core/locales/th";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -32,13 +35,9 @@ const OCCUPANCY_COLORS: Record<number, string> = {
   5: "#e57373",
 };
 
-const COLOR_LEGEND = [
-  { label: "1 booked", color: "#c8e6c9" },
-  { label: "2 booked", color: "#81c784" },
-  { label: "3 booked", color: "#fff176" },
-  { label: "4 booked", color: "#ffb74d" },
-  { label: "5+ booked", color: "#e57373" },
-];
+const COLOR_LEGEND_COLORS = ["#c8e6c9", "#81c784", "#fff176", "#ffb74d", "#e57373"];
+const LEGEND_KEYS = ["booked1", "booked2", "booked3", "booked4", "booked5plus"] as const;
+const FC_LOCALES = [esLocale, thLocale];
 
 function getOccupancyColor(count: number): string {
   return OCCUPANCY_COLORS[Math.min(count, 5)] ?? OCCUPANCY_COLORS[5];
@@ -47,6 +46,8 @@ function getOccupancyColor(count: number): string {
 function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
   const { setSelectedBookingId } = useLayout();
   const therapists = useTherapists();
+  const t = useTranslations("Calendar");
+  const locale = useLocale();
 
   const [range, setRange] = useState<{ start: Date; end: Date } | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -70,9 +71,9 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
   );
 
   const resources = useMemo(() => [
-    ...therapists.map((t) => ({ id: t.id, title: t.full_name })),
-    { id: "none", title: "No therapist" },
-  ], [therapists]);
+    ...therapists.map((th) => ({ id: th.id, title: th.full_name })),
+    { id: "none", title: t("noTherapist") },
+  ], [therapists, t]);
 
   const events = useMemo(() =>
     bookings.map((b) => ({
@@ -176,6 +177,8 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, resourceTimeGridPlugin]}
           schedulerLicenseKey="CC-Attribution-NonCommercial-NoDerivatives"
+          locales={FC_LOCALES}
+          locale={locale}
           initialView="resourceTimeGridDay"
           headerToolbar={{
             left: "prev,next today",
@@ -183,14 +186,14 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
             right: "resourceTimeGridDay,timeGridDay,timeGridWeek,dayGridMonth",
           }}
           buttonText={{
-            today: "Today",
-            week: "Week",
-            month: "Month",
+            today: t("today"),
+            week: t("week"),
+            month: t("month"),
           }}
           views={{
-            timeGridDay: { buttonText: "Day" },
+            timeGridDay: { buttonText: t("day") },
             resourceTimeGridDay: {
-              buttonText: "By therapist",
+              buttonText: t("byTherapist"),
               titleFormat: { weekday: "long", day: "numeric", month: "long", year: "numeric" },
             },
           }}
@@ -250,14 +253,14 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
       )}
 
       {fetchError && (
-        <div style={{ color: "red", marginTop: 8 }}>Error loading bookings: {fetchError}</div>
+        <div style={{ color: "red", marginTop: 8 }}>{t("errorLoadingBookings")} {fetchError}</div>
       )}
 
       {currentView === "resourceTimeGridDay" && (
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 11, color: "#666", fontWeight: 500 }}>Occupancy:</span>
-          {COLOR_LEGEND.map(({ label, color }) => (
-            <span key={label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ fontSize: 11, color: "#666", fontWeight: 500 }}>{t("occupancy")}</span>
+          {COLOR_LEGEND_COLORS.map((color, i) => (
+            <span key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <span style={{
                 display: "inline-block",
                 width: 14,
@@ -266,7 +269,7 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
                 borderRadius: 3,
                 border: "1px solid rgba(0,0,0,0.15)",
               }} />
-              <span style={{ fontSize: 11, color: "#555" }}>{label}</span>
+              <span style={{ fontSize: 11, color: "#555" }}>{t(LEGEND_KEYS[i])}</span>
             </span>
           ))}
         </div>

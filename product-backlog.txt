@@ -1,5 +1,6 @@
 TO-DO
-- Traducir español-inglés-tailandés
+- Permitir crear reservas ya con un pago.
+- Crear un tipo de cuenta view-only que solo permita visualizar el calendario
 
 STILL DELIBERATING
 - 5 Creación de facturas, descarga y almacenamiento en Drive automático de las mismas
@@ -31,3 +32,4 @@ DONE
 - 7 Añadir sistema para saber cuantas terapeutas hay ocupadas, para facilitar el conocimiento de la disponibilidad
 - Confirmar auto actualizar tablas cuando se añade/modifica un elemento
 - 4 Arreglar filtros y ordenar de las tablas para que funcione con server
+- Traducir español-inglés-tailandés

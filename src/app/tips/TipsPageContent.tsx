@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useLayout } from "@/app/context/LayoutContext";
 import { formatMoney } from "@/utils/formatMoney";
 import { toast } from "react-toastify";
@@ -37,6 +38,7 @@ interface PendingGroup {
 }
 
 const TipsPageContent = () => {
+  const t = useTranslations("TipsPage");
   const { setButtonLabel, setOnButtonClick } = useLayout();
   const [groups, setGroups] = useState<PendingGroup[]>([]);
   const [loading, setLoading] = useState(false);
@@ -50,7 +52,7 @@ const TipsPageContent = () => {
       const data = await res.json();
       setGroups(data.groups ?? []);
     } catch {
-      toast.error("Failed to load pending tips");
+      toast.error(t("failedLoadTips"));
     } finally {
       setLoading(false);
     }
@@ -86,16 +88,16 @@ const TipsPageContent = () => {
 
       if (!res.ok) {
         const err = await res.json();
-        toast.error(err.error ?? "Failed to release tips");
+        toast.error(err.error ?? t("failedReleaseTips"));
         return;
       }
 
       toast.success(
-        `Tips released for ${group.therapist_name} — ${MONTH_NAMES[group.period_month - 1]} ${group.period_year}`
+        t("tipsReleasedFor", { name: group.therapist_name, month: MONTH_NAMES[group.period_month - 1], year: group.period_year })
       );
       loadPending();
     } catch {
-      toast.error("Failed to release tips");
+      toast.error(t("failedReleaseTips"));
     } finally {
       setReleasing(null);
     }
@@ -106,11 +108,11 @@ const TipsPageContent = () => {
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
         <PaymentsIcon color="action" />
         <Typography variant="h6" fontWeight={600}>
-          Pending Tips
+          {t("pendingTips")}
         </Typography>
         {!loading && (
           <Chip
-            label={groups.length === 0 ? "All clear" : `${groups.length} group${groups.length !== 1 ? "s" : ""}`}
+            label={groups.length === 0 ? t("allClear") : groups.length === 1 ? t("groups", { count: groups.length }) : t("groupsPlural", { count: groups.length })}
             size="small"
             color={groups.length === 0 ? "success" : "warning"}
           />
@@ -119,7 +121,7 @@ const TipsPageContent = () => {
 
       {groups.length === 0 && !loading && (
         <Typography variant="body2" color="text.secondary">
-          No pending tips — all tips have been paid out.
+          {t("noPendingTips")}
         </Typography>
       )}
 
@@ -128,12 +130,12 @@ const TipsPageContent = () => {
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell><strong>Therapist</strong></TableCell>
-                <TableCell><strong>Period</strong></TableCell>
-                <TableCell align="right"><strong>Tips</strong></TableCell>
-                <TableCell align="right"><strong>Gross</strong></TableCell>
-                <TableCell align="right"><strong>IVA (21%)</strong></TableCell>
-                <TableCell align="right"><strong>Net</strong></TableCell>
+                <TableCell><strong>{t("therapist")}</strong></TableCell>
+                <TableCell><strong>{t("period")}</strong></TableCell>
+                <TableCell align="right"><strong>{t("tips")}</strong></TableCell>
+                <TableCell align="right"><strong>{t("gross")}</strong></TableCell>
+                <TableCell align="right"><strong>{t("iva")}</strong></TableCell>
+                <TableCell align="right"><strong>{t("net")}</strong></TableCell>
                 <TableCell align="right"></TableCell>
               </TableRow>
             </TableHead>
@@ -162,7 +164,7 @@ const TipsPageContent = () => {
                         disabled={releasing === key}
                         onClick={() => handleRelease(group)}
                       >
-                        Release
+                        {t("release")}
                       </Button>
                     </TableCell>
                   </TableRow>

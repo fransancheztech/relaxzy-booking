@@ -45,6 +45,7 @@
     "lodash.debounce": "^4.0.8",
     "luxon": "^3.7.1",
     "next": "^16.1.6",
+    "next-intl": "^4.11.0",
     "pg": "^8.20.0",
     "react": "^19.2.1",
     "react-big-calendar": "^1.19.4",

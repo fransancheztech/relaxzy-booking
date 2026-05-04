@@ -12,11 +12,13 @@ import {
   Stack,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [userChecked, setUserChecked] = useState(false);
+  const t = useTranslations("Auth");
 
   const router = useRouter();
   const supabase = createClient();
@@ -75,7 +77,7 @@ export default function LoginPage() {
         sx={{ p: 4, maxWidth: 400, width: "100%", borderRadius: 2 }}
       >
         <Typography variant="h5" component="h1" gutterBottom fontWeight={600}>
-          Login
+          {t("loginTitle")}
         </Typography>
 
         <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 2 }}>
@@ -84,7 +86,7 @@ export default function LoginPage() {
               id="email"
               name="email"
               type="email"
-              label="Email"
+              label={t("email")}
               variant="outlined"
               required
               fullWidth
@@ -93,7 +95,7 @@ export default function LoginPage() {
               id="password"
               name="password"
               type="password"
-              label="Password"
+              label={t("password")}
               variant="outlined"
               required
               fullWidth
@@ -105,7 +107,7 @@ export default function LoginPage() {
               fullWidth
               disabled={loading}
             >
-              {loading ? "Logging in..." : "Log In"}
+              {loading ? t("loggingIn") : t("login")}
             </Button>
           </Stack>
         </Box>

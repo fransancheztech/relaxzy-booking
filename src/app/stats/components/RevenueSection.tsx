@@ -5,14 +5,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
+import { useTranslations } from "next-intl";
 import { StatsResponse } from "@/types/stats";
 import { formatMoney } from "@/utils/formatMoney";
-
-const EMPTY = (
-  <Typography variant="body2" color="text.disabled" sx={{ py: 4, textAlign: "center" }}>
-    No data for this period
-  </Typography>
-);
 
 interface Props {
   revenue: StatsResponse["revenue"];
@@ -22,8 +17,15 @@ interface Props {
 const PIE_COLORS = ["#002d04", "#60a561", "#a8d5a9"];
 
 const RevenueSection = ({ revenue, bucket }: Props) => {
+  const t = useTranslations("Stats");
   const hasData = revenue.over_time.length > 0;
-  const bucketLabel = bucket === "day" ? "day" : bucket === "week" ? "week" : "month";
+  const bucketLabel = bucket === "day" ? t("revenuePerDay") : bucket === "week" ? t("revenuePerWeek") : t("revenuePerMonth");
+
+  const empty = (
+    <Typography variant="body2" color="text.disabled" sx={{ py: 4, textAlign: "center" }}>
+      {t("noDataForPeriod")}
+    </Typography>
+  );
 
   const barData = revenue.over_time.map((p) => {
     const d = new Date(p.period);
@@ -35,25 +37,25 @@ const RevenueSection = ({ revenue, bucket }: Props) => {
   });
 
   const pieData = [
-    { name: "Cash", value: revenue.cash },
-    { name: "Card", value: revenue.credit_card },
-    { name: "Voucher", value: revenue.voucher },
+    { name: t("cash"), value: revenue.cash },
+    { name: t("card"), value: revenue.credit_card },
+    { name: t("voucher"), value: revenue.voucher },
   ].filter((d) => d.value > 0);
 
   return (
     <Box>
-      <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>Revenue</Typography>
+      <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>{t("revenueSectionTitle")}</Typography>
       <Grid container spacing={2}>
         {/* Revenue over time */}
         <Grid size={{ xs: 12, md: 8 }}>
           <Paper elevation={1} sx={{ p: 2, borderRadius: 2 }}>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
               <Typography variant="subtitle2" color="text.secondary">
-                Revenue per {bucketLabel}
+                {bucketLabel}
               </Typography>
               {revenue.refunds_total > 0 && (
                 <Chip
-                  label={`Refunds: −${formatMoney(revenue.refunds_total)}`}
+                  label={t("refundsChip", { amount: formatMoney(revenue.refunds_total) })}
                   size="small" color="error" variant="outlined"
                   sx={{ fontSize: "0.7rem" }}
                 />
@@ -67,12 +69,12 @@ const RevenueSection = ({ revenue, bucket }: Props) => {
                   <YAxis tickFormatter={(v) => `${v} €`} tick={{ fontSize: 11 }} width={55} />
                   <Tooltip formatter={(v) => formatMoney(Number(v ?? 0))} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar dataKey="cash" name="Cash" stackId="a" fill="#002d04" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="credit_card" name="Card" stackId="a" fill="#60a561" />
-                  <Bar dataKey="voucher" name="Voucher" stackId="a" fill="#a8d5a9" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="cash" name={t("cash")} stackId="a" fill="#002d04" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="credit_card" name={t("card")} stackId="a" fill="#60a561" />
+                  <Bar dataKey="voucher" name={t("voucher")} stackId="a" fill="#a8d5a9" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-            ) : EMPTY}
+            ) : empty}
           </Paper>
         </Grid>
 
@@ -80,7 +82,7 @@ const RevenueSection = ({ revenue, bucket }: Props) => {
         <Grid size={{ xs: 12, md: 4 }}>
           <Paper elevation={1} sx={{ p: 2, borderRadius: 2, height: "100%" }}>
             <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-              By payment method
+              {t("byPaymentMethod")}
             </Typography>
             {pieData.length > 0 ? (
               <ResponsiveContainer width="100%" height={180}>
@@ -98,12 +100,12 @@ const RevenueSection = ({ revenue, bucket }: Props) => {
                   <Tooltip formatter={(v) => formatMoney(Number(v ?? 0))} />
                 </PieChart>
               </ResponsiveContainer>
-            ) : EMPTY}
+            ) : empty}
             <Box sx={{ mt: 1.5, display: "flex", flexDirection: "column", gap: 0.5 }}>
               {[
-                { label: "Cash", value: revenue.cash, color: "#002d04" },
-                { label: "Card", value: revenue.credit_card, color: "#60a561" },
-                { label: "Voucher", value: revenue.voucher, color: "#a8d5a9" },
+                { label: t("cash"), value: revenue.cash, color: "#002d04" },
+                { label: t("card"), value: revenue.credit_card, color: "#60a561" },
+                { label: t("voucher"), value: revenue.voucher, color: "#a8d5a9" },
               ].map(({ label, value, color }) => (
                 <Box key={label} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>

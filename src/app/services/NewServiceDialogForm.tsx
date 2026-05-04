@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Alert,
   Button,
@@ -21,6 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CloseIcon from "@mui/icons-material/Close";
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import {
   BaseServiceSchema,
   BaseServiceSchemaType,
@@ -42,6 +45,9 @@ const defaultValues: BaseServiceSchemaType = {
 };
 
 const NewServiceDialogForm = ({ open, onClose }: Props) => {
+  const t = useTranslations("Services");
+  const tCommon = useTranslations("Common");
+
   const methods = useForm<
     BaseServiceSchemaTypeInput,
     any,
@@ -87,7 +93,7 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
 
   return (
     <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
-      <DialogTitle>Add Service</DialogTitle>
+      <DialogTitle>{t("addService")}</DialogTitle>
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <DialogContent>
@@ -103,7 +109,7 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Service name"
+                      label={t("serviceNameLabel")}
                       fullWidth
                       size="small"
                       error={!!formState.errors.name}
@@ -120,7 +126,7 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Short name"
+                      label={t("shortNameLabel")}
                       fullWidth
                       size="small"
                       error={!!formState.errors.short_name}
@@ -137,7 +143,7 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Notes"
+                      label={tCommon("notes")}
                       fullWidth
                       multiline
                       rows={3}
@@ -150,7 +156,7 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
               </Grid>
               <Grid size={12}>
                 <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                  Durations & Prices
+                  {t("durationsAndPrices")}
                 </Typography>
               </Grid>
               {fields.map((field, index) => (
@@ -163,7 +169,7 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
                         <TextField
                           {...field}
                           value={field.value === 0 ? "" : field.value}
-                          label="Minutes"
+                          label={tCommon("minutes")}
                           type="number"
                           size="small"
                           fullWidth
@@ -188,7 +194,7 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
                         <TextField
                           {...field}
                           value={field.value === 0 ? "" : field.value}
-                          label="Price (€)"
+                          label={t("priceEur")}
                           type="number"
                           size="small"
                           fullWidth
@@ -222,17 +228,17 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
                   startIcon={<AddCircleIcon />}
                   onClick={addDuration}
                 >
-                  Add duration
+                  {t("addDuration")}
                 </Button>
               </Grid>
             </Grid>
           </DialogContent>
           <DialogActions>
             <Button onClick={onCancel} startIcon={<CloseIcon />}>
-              Cancel
+              {tCommon("cancel")}
             </Button>
             <Button type="submit" color="success" startIcon={<AddCircleIcon />}>
-              Add Service
+              {t("addService")}
             </Button>
           </DialogActions>
         </form>

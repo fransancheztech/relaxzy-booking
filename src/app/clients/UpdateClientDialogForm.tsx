@@ -23,6 +23,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import handleSubmitUpdateClient from "@/handlers/handleSubmitUpdateClient";
 import DialogConfirmDeleteClient from "./ConfirmDeleteClientDialog";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useTranslations } from "next-intl";
 
 type Props = {
   open: boolean;
@@ -51,6 +52,8 @@ const UpdateClientDialogForm = ({
   closeDeleteDialog,
   setConfirmDeleteOpen,
 }: Props) => {
+  const t = useTranslations("Clients");
+  const tCommon = useTranslations("Common");
   const [loading, setLoading] = useState(false);
 
   const methods = useForm<ClientUpdateSchemaType>({
@@ -109,7 +112,7 @@ const UpdateClientDialogForm = ({
   return (
     <>
       <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit Client</DialogTitle>
+        <DialogTitle>{t("editClient")}</DialogTitle>
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
             <DialogContent
@@ -118,7 +121,7 @@ const UpdateClientDialogForm = ({
                 pointerEvents: loading ? "none" : "auto",
               }}
             >
-              <Typography fontSize="small">Client ID: {clientId}</Typography>
+              <Typography fontSize="small">{t("clientId")}: {clientId}</Typography>
               <UpdateClientFormFields />
             </DialogContent>
             <DialogActions
@@ -130,17 +133,17 @@ const UpdateClientDialogForm = ({
                 variant="contained"
                 onClick={() => setConfirmDeleteOpen(true)}
               >
-                Delete
+                {tCommon("delete")}
               </Button>
               <Container sx={{ display: "flex", justifyContent: "flex-end" }}>
                 <Button
                   startIcon={<CloseIcon />}
                   onClick={onCancel}
                 >
-                  Cancel
+                  {tCommon("cancel")}
                 </Button>
                 <Button startIcon={<SaveIcon />} color="success" type="submit">
-                  Save
+                  {tCommon("save")}
                 </Button>
               </Container>
             </DialogActions>

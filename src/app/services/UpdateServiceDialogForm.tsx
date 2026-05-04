@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Alert,
   Box,
@@ -25,6 +27,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   BaseServiceSchema,
   BaseServiceSchemaType,
@@ -54,6 +57,9 @@ const UpdateServiceDialogForm = ({
   serviceId,
   setIsOpenConfirmDelete,
 }: Props) => {
+  const t = useTranslations("Services");
+  const tCommon = useTranslations("Common");
+
   const [loading, setLoading] = useState(false);
 
   const methods = useForm<
@@ -141,7 +147,7 @@ const UpdateServiceDialogForm = ({
 
   return (
     <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
-      <DialogTitle>Update Service</DialogTitle>
+      <DialogTitle>{t("updateService")}</DialogTitle>
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <DialogContent
@@ -150,7 +156,7 @@ const UpdateServiceDialogForm = ({
               pointerEvents: loading ? "none" : "auto",
             }}
           >
-            <Typography fontSize="small">Service ID: {serviceId}</Typography>
+            <Typography fontSize="small">{t("serviceId")}: {serviceId}</Typography>
             <Grid container spacing={{ xs: 1, xl: 2 }} sx={{ pt: 2 }}>
               <Grid size={12}>
                 <Controller
@@ -159,7 +165,7 @@ const UpdateServiceDialogForm = ({
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Service name"
+                      label={t("serviceNameLabel")}
                       fullWidth
                       size="small"
                       error={!!formState.errors.name}
@@ -175,7 +181,7 @@ const UpdateServiceDialogForm = ({
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Short name"
+                      label={t("shortNameLabel")}
                       fullWidth
                       size="small"
                       error={!!formState.errors.short_name}
@@ -191,7 +197,7 @@ const UpdateServiceDialogForm = ({
                   render={({ field }) => (
                     <TextField
                       {...field}
-                      label="Notes"
+                      label={tCommon("notes")}
                       fullWidth
                       multiline
                       rows={3}
@@ -205,7 +211,7 @@ const UpdateServiceDialogForm = ({
 
               <Grid size={12}>
                 <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                  Durations & Prices:
+                  {t("durationsAndPrices")}:
                 </Typography>
               </Grid>
 
@@ -219,7 +225,7 @@ const UpdateServiceDialogForm = ({
                         <TextField
                           {...field}
                           value={field.value === 0 ? "" : field.value}
-                          label="Minutes"
+                          label={tCommon("minutes")}
                           type="number"
                           size="small"
                           fullWidth
@@ -244,7 +250,7 @@ const UpdateServiceDialogForm = ({
                         <TextField
                           {...field}
                           value={field.value === 0 ? "" : field.value}
-                          label="Price (€)"
+                          label={t("priceEur")}
                           type="number"
                           size="small"
                           fullWidth
@@ -286,7 +292,7 @@ const UpdateServiceDialogForm = ({
                   startIcon={<AddCircleIcon />}
                   onClick={addDuration}
                 >
-                  Add duration
+                  {t("addDuration")}
                 </Button>
               </Grid>
             </Grid>
@@ -301,7 +307,7 @@ const UpdateServiceDialogForm = ({
               variant="contained"
               onClick={() => setIsOpenConfirmDelete(true)}
             >
-              Delete
+              {tCommon("delete")}
             </Button>
             <Box>
               <Button
@@ -309,10 +315,10 @@ const UpdateServiceDialogForm = ({
                 color="error"
                 onClick={onCancel}
               >
-                Cancel
+                {tCommon("cancel")}
               </Button>
               <Button startIcon={<SaveIcon />} color="success" type="submit">
-                Save Changes
+                {tCommon("saveChanges")}
               </Button>
             </Box>
           </DialogActions>

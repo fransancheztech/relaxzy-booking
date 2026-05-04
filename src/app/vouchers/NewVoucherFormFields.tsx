@@ -1,3 +1,5 @@
+"use client";
+
 import { VoucherSchemaType } from "@/schemas/voucher.schema";
 import { Divider, FormControl, FormHelperText, Grid, InputLabel, MenuItem, Select, TextField, Typography } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
@@ -5,8 +7,11 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
 import { Controller, useFormContext } from "react-hook-form";
 import VoucherClientSection from "./VoucherClientSection";
+import { useTranslations } from "next-intl";
 
 const NewVoucherFormFields = () => {
+  const t = useTranslations("Vouchers");
+  const tCommon = useTranslations("Common");
   const {
     control,
     formState: { errors },
@@ -15,11 +20,11 @@ const NewVoucherFormFields = () => {
   return (
     <Grid container sx={{ paddingTop: "1rem" }} spacing={{ xs: 1, xl: 2 }}>
 
-      <VoucherClientSection prefix="buyer" label="Buyer" autoFocus />
-      <VoucherClientSection prefix="recipient" label="Recipient (optional — defaults to buyer)" />
+      <VoucherClientSection prefix="buyer" label={t("buyerLabel")} autoFocus />
+      <VoucherClientSection prefix="recipient" label={t("recipientLabel")} />
 
       <Grid size={12}>
-        <Typography variant="subtitle2" color="text.secondary">Voucher Details</Typography>
+        <Typography variant="subtitle2" color="text.secondary">{t("voucherDetails")}</Typography>
         <Divider />
       </Grid>
 
@@ -29,7 +34,7 @@ const NewVoucherFormFields = () => {
           control={control}
           render={({ field }) => (
             <TextField
-              label="Balance (€) *"
+              label={t("balanceEur")}
               error={!!errors.initial_balance}
               helperText={errors.initial_balance?.message}
               fullWidth
@@ -56,14 +61,14 @@ const NewVoucherFormFields = () => {
           control={control}
           render={({ field }) => (
             <FormControl fullWidth size="small" error={!!errors.payment_method}>
-              <InputLabel id="payment-method-label">Payment Method *</InputLabel>
+              <InputLabel id="payment-method-label">{t("paymentMethod")}</InputLabel>
               <Select
                 {...field}
                 labelId="payment-method-label"
-                label="Payment Method *"
+                label={t("paymentMethod")}
               >
-                <MenuItem value="cash">Cash</MenuItem>
-                <MenuItem value="credit_card">Credit Card</MenuItem>
+                <MenuItem value="cash">{t("cash")}</MenuItem>
+                <MenuItem value="credit_card">{t("creditCard")}</MenuItem>
               </Select>
               {errors.payment_method && (
                 <FormHelperText>{errors.payment_method.message}</FormHelperText>
@@ -80,7 +85,7 @@ const NewVoucherFormFields = () => {
           render={({ field }) => (
             <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
               <DatePicker
-                label="Expiration Date *"
+                label={t("expirationDate")}
                 value={field.value ?? null}
                 onChange={(date) => field.onChange(date)}
                 format="dd/MM/yyyy"
@@ -108,7 +113,7 @@ const NewVoucherFormFields = () => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Payment Reference"
+              label={t("paymentReference")}
               error={!!errors.initial_payment_code}
               helperText={errors.initial_payment_code?.message}
               fullWidth
@@ -128,7 +133,7 @@ const NewVoucherFormFields = () => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Notes"
+              label={tCommon("notes")}
               error={!!errors.notes}
               helperText={errors.notes?.message}
               fullWidth

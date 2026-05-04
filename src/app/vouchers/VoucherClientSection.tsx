@@ -6,6 +6,7 @@ import { VoucherSchemaType } from "@/schemas/voucher.schema";
 import { Avatar, Box, Chip, Divider, Grid, Paper, TextField, Typography } from "@mui/material";
 import { useRef, useState } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
+import { useTranslations } from "next-intl";
 
 type Prefix = "buyer" | "recipient";
 
@@ -53,6 +54,7 @@ function HighlightedText({ text, query }: { text?: string | null; query?: string
 }
 
 const VoucherClientSection = ({ prefix, label, autoFocus }: Props) => {
+  const tCommon = useTranslations("Common");
   const { control, setValue, formState: { errors } } = useFormContext<VoucherSchemaType>();
 
   const nameField    = `${prefix}_name`    as NameField;
@@ -111,7 +113,7 @@ const VoucherClientSection = ({ prefix, label, autoFocus }: Props) => {
           render={({ field }) => (
             <TextField
               {...field}
-              label={prefix === "buyer" ? "Name *" : "Name"}
+              label={prefix === "buyer" ? tCommon("name") + " *" : tCommon("name")}
               error={!!errors[nameField]}
               helperText={errors[nameField]?.message}
               fullWidth
@@ -161,7 +163,7 @@ const VoucherClientSection = ({ prefix, label, autoFocus }: Props) => {
                       {[c.client_email, c.client_phone].filter(Boolean).join(" · ")}
                     </Typography>
                   </Box>
-                  <Chip label="existing" size="small" sx={{ fontSize: 10, height: 20, flexShrink: 0 }} />
+                  <Chip label={tCommon("existing")} size="small" sx={{ fontSize: 10, height: 20, flexShrink: 0 }} />
                 </Box>
               );
             })}
@@ -176,7 +178,7 @@ const VoucherClientSection = ({ prefix, label, autoFocus }: Props) => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Surname(s)"
+              label={tCommon("surname")}
               error={!!errors[surnameField]}
               helperText={errors[surnameField]?.message}
               fullWidth
@@ -199,7 +201,7 @@ const VoucherClientSection = ({ prefix, label, autoFocus }: Props) => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Phone"
+              label={tCommon("phone")}
               error={!!errors[phoneField]}
               helperText={errors[phoneField]?.message}
               fullWidth
@@ -221,7 +223,7 @@ const VoucherClientSection = ({ prefix, label, autoFocus }: Props) => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Email"
+              label={tCommon("email")}
               error={!!errors[emailField]}
               helperText={errors[emailField]?.message}
               fullWidth

@@ -1,6 +1,9 @@
+"use client";
+
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import React from 'react';
+import { useTranslations } from 'next-intl';
 
 type DialogConfirmProps = {
     confirmDeleteOpen: boolean;
@@ -10,18 +13,21 @@ type DialogConfirmProps = {
 }
 
 const ConfirmDeleteBookingDialog = ({confirmDeleteOpen, setConfirmDeleteOpen, handleDelete, clientName}: DialogConfirmProps) => {
+    const t = useTranslations("BookingDelete");
+    const tCommon = useTranslations("Common");
+
     return (
         <Dialog open={confirmDeleteOpen} onClose={() => setConfirmDeleteOpen(false)} maxWidth="xs" fullWidth>
-            <DialogTitle>Delete Booking?</DialogTitle>
+            <DialogTitle>{t("title")}</DialogTitle>
             <DialogContent>
                 <DialogContentText>
                     {clientName
-                        ? <>Are you sure you want to delete the booking for <strong>{clientName}</strong>? This action cannot be undone.</>
-                        : "Are you sure you want to delete this booking? This action cannot be undone."}
+                        ? t("messageWithName", { name: clientName })
+                        : t("messageWithoutName")}
                 </DialogContentText>
             </DialogContent>
             <DialogActions>
-                <Button onClick={() => setConfirmDeleteOpen(false)}>Cancel</Button>
+                <Button onClick={() => setConfirmDeleteOpen(false)}>{tCommon("cancel")}</Button>
                 <Button
                     color='error'
                     variant='contained'
@@ -30,7 +36,7 @@ const ConfirmDeleteBookingDialog = ({confirmDeleteOpen, setConfirmDeleteOpen, ha
                         handleDelete();
                         setConfirmDeleteOpen(false);
                     }}>
-                    Delete
+                    {tCommon("delete")}
                 </Button>
             </DialogActions>
         </Dialog>
