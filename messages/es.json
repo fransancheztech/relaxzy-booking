@@ -118,6 +118,7 @@
     "card": "Tarjeta",
     "voucher": "Bono",
     "voucherAmount": "Importe del bono",
+    "voucherCode": "Código de bono",
     "addPayment": "Añadir pago"
   },
   "BookingDelete": {

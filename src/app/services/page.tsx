@@ -1,6 +1,7 @@
 "use client";
 
 import { services_names as ServicesType } from "generated/prisma/client";
+import { useTranslations } from "next-intl";
 import ServicesTable from "./ServicesTable";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FETCH_LIMIT } from "@/constants";
@@ -13,6 +14,7 @@ import { useLayout } from "../context/LayoutContext";
 
 const ServicesPage = () => {
   const { setButtonLabel, setOnButtonClick } = useLayout();
+  const t = useTranslations("Services");
 
   const [services, setServices] = useState<ServicesType[]>([]);
   const [rowCount, setRowCount] = useState(0);
@@ -38,13 +40,13 @@ const ServicesPage = () => {
   // Layout button
   // -------------------------------
   useEffect(() => {
-    setButtonLabel("New Service");
+    setButtonLabel(t("newService"));
     setOnButtonClick(() => () => setIsOpenNewServiceDialog((prev) => !prev));
     return () => {
       setButtonLabel("");
       setOnButtonClick(null);
     };
-  }, [setButtonLabel, setOnButtonClick]);
+  }, [setButtonLabel, setOnButtonClick, t]);
 
   // -------------------------------
   // Load services

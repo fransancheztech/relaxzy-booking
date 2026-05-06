@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useLayout } from "../context/LayoutContext";
+import { useTranslations } from "next-intl";
 import NewBookingDialogForm from "@/app/bookings/NewBookingDialogForm";
 import { BookingsTable } from "./BookingsTable";
 import { BookingListItem } from "@/types/bookings";
@@ -11,6 +12,7 @@ import { GridFilterItem, GridFilterModel } from "@mui/x-data-grid";
 
 export default function BookingsPage() {
   const { setButtonLabel, setOnButtonClick } = useLayout();
+  const t = useTranslations("Bookings");
 
   const [bookings, setBookings] = useState<BookingListItem[]>([]);
   const [page, setPage] = useState(0);
@@ -115,13 +117,13 @@ export default function BookingsPage() {
   // Layout button
   // -------------------------------
   useEffect(() => {
-    setButtonLabel("New Booking");
+    setButtonLabel(t("newBooking"));
     setOnButtonClick(() => () => setIsOpenNewBookingDialog((prev) => !prev));
     return () => {
       setButtonLabel("");
       setOnButtonClick(null);
     };
-  }, [setButtonLabel, setOnButtonClick]);
+  }, [setButtonLabel, setOnButtonClick, t]);
 
   // Load initial bookings
   useEffect(() => {

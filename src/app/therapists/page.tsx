@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { Container } from "@mui/material";
 import AddTherapistDialog from "./AddTherapistDialogForm";
 import UpdateTherapistDialog from "./UpdateTherapistDialogForm";
@@ -10,6 +11,7 @@ import { therapists } from "generated/prisma/client";
 
 export default function TherapistsPage() {
   const { setButtonLabel, setOnButtonClick } = useLayout();
+  const t = useTranslations("Therapists");
 
   const [therapists, setTherapists] = useState<therapists[]>([]);
   const [loading, setLoading] = useState(false);
@@ -23,13 +25,13 @@ export default function TherapistsPage() {
   const [selectedId, setSelectedId] = useState<string>("");
 
   useEffect(() => {
-    setButtonLabel("New Therapist");
+    setButtonLabel(t("newTherapist"));
     setOnButtonClick(() => () => setAddOpen(true));
     return () => {
       setButtonLabel("");
       setOnButtonClick(null);
     };
-  }, [setButtonLabel, setOnButtonClick]);
+  }, [setButtonLabel, setOnButtonClick, t]);
 
   const loadTherapists = useCallback(
     async (pageToLoad: number, sort?: { field: string; sort: "asc" | "desc" }, limit?: number) => {

@@ -186,8 +186,9 @@ const PayBookingDialogForm = ({
                       <VoucherPickerField
                         key={String(open) + String(voucherOpen)}
                         control={methods.control}
-                        setValue={methods.setValue}
+                        voucherCodeName="voucherCode"
                         remainingAmount={Math.max(0, price - paidCash - paidCard - paidVoucher)}
+                        onSetVoucherPayment={(val) => methods.setValue("voucherPayment", val)}
                       />
                     </Grid>
                     <Grid size={6}>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { clients as ClientType } from "generated/prisma/client";
 import { toast } from "react-toastify";
 import NewClientDialogForm from "./NewClientDialogForm";
@@ -27,6 +28,7 @@ export default function ClientsPage() {
   const [filterItems, setFilterItems] = useState<GridFilterItem[]>([]);
 
   const { setButtonLabel, setOnButtonClick } = useLayout();
+  const t = useTranslations("Clients");
 
   // -------------------------------
   // Load clients
@@ -108,13 +110,13 @@ export default function ClientsPage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    setButtonLabel("New Client");
+    setButtonLabel(t("newClient"));
     setOnButtonClick(() => () => setIsOpenNewClientDialog((prev) => !prev));
     return () => {
       setButtonLabel("");
       setOnButtonClick(null);
     };
-  }, [setButtonLabel, setOnButtonClick]);
+  }, [setButtonLabel, setOnButtonClick, t]);
 
   // -------------------------------
   // Delete client

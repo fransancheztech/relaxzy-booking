@@ -14,6 +14,10 @@ export const CompanionSchema = z.object({
     .nonnegative({ message: "Price must be a positive number" })
     .optional(),
   notes: z.string().optional(),
+  cashPayment: z.number().nonnegative().optional(),
+  cardPayment: z.number().nonnegative().optional(),
+  voucherPayment: z.number().nonnegative().optional(),
+  voucherCode: z.string().optional(),
 });
 
 export type CompanionSchemaType = z.infer<typeof CompanionSchema>;
@@ -50,6 +54,10 @@ export const BookingSchema = z
       })
       .optional(),
     notes: z.string().optional(),
+    cashPayment: z.number().nonnegative().optional(),
+    cardPayment: z.number().nonnegative().optional(),
+    voucherPayment: z.number().nonnegative().optional(),
+    voucherCode: z.string().optional(),
     companions: z.array(CompanionSchema).optional(),
   })
   .superRefine((data, ctx) => {

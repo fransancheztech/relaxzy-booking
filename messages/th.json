@@ -118,6 +118,7 @@
     "card": "บัตรเครดิต",
     "voucher": "บัตรกำนัล",
     "voucherAmount": "จำนวนบัตรกำนัล",
+    "voucherCode": "รหัสบัตรกำนัล",
     "addPayment": "เพิ่มการชำระเงิน"
   },
   "BookingDelete": {

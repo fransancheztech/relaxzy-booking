@@ -12,6 +12,7 @@ import {
   Autocomplete,
   Box,
   Button,
+  Collapse,
   Container,
   Divider,
   FormControl,
@@ -27,18 +28,191 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
-import { normalizeMoney } from "@/utils/normalizeMoney";
+import { normalizeMoney, normalizeMoneyInput } from "@/utils/normalizeMoney";
+
+const toPaymentNumber = (raw: string): number | undefined => {
+  const filtered = normalizeMoneyInput(raw);
+  if (filtered === "") return undefined;
+  const n = parseFloat(filtered);
+  return isNaN(n) || n <= 0 ? undefined : n;
+};
 import BookingClientSection from "./BookingClientSection";
 import { useTherapists } from "@/hooks/useTherapists";
 import { useServiceLookups } from "@/hooks/useServiceLookups";
+import VoucherPickerField from "./VoucherPickerField";
+
+// ─── Inline payment section ──────────────────────────────────────────────────
+
+interface InlinePaymentSectionProps {
+  cashName: string;
+  cardName: string;
+  voucherAmountName: string;
+  voucherCodeName: string;
+  priceName: string;
+}
+
+const InlinePaymentSection = ({
+  cashName,
+  cardName,
+  voucherAmountName,
+  voucherCodeName,
+  priceName,
+}: InlinePaymentSectionProps) => {
+  const tPayment = useTranslations("BookingPayment");
+  const tForm = useTranslations("BookingForm");
+  const { control, setValue } = useFormContext<BookingSchemaType>();
+
+  const [watchedPrice, watchedCash, watchedCard] = useWatch({
+    control,
+    name: [priceName as any, cashName as any, cardName as any],
+  });
+  const remainingAmount = Math.max(
+    0,
+    (watchedPrice ?? 0) - (watchedCash ?? 0) - (watchedCard ?? 0)
+  );
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [voucherOpen, setVoucherOpen] = useState(false);
+
+  const closePayment = () => {
+    setValue(cashName as any, undefined);
+    setValue(cardName as any, undefined);
+    setValue(voucherAmountName as any, undefined);
+    setValue(voucherCodeName as any, undefined);
+    setVoucherOpen(false);
+    setPaymentOpen(false);
+  };
+
+  return (
+    <Box sx={{ mt: 0.5 }}>
+      <Divider
+        onClick={() => (paymentOpen ? closePayment() : setPaymentOpen(true))}
+        sx={{ cursor: "pointer", userSelect: "none" }}
+      >
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+        >
+          {paymentOpen ? (
+            <ExpandLessIcon fontSize="inherit" />
+          ) : (
+            <ExpandMoreIcon fontSize="inherit" />
+          )}
+          {tForm("addPayment")}
+        </Typography>
+      </Divider>
+
+      <Collapse in={paymentOpen} unmountOnExit>
+        <Grid container spacing={1} sx={{ mt: 0.5 }}>
+          <Grid size={6}>
+            <Controller
+              name={cashName as any}
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  value={field.value != null ? String(field.value) : ""}
+                  onChange={(e) => field.onChange(toPaymentNumber(e.target.value))}
+                  label={tPayment("cash")}
+                  fullWidth
+                  size="small"
+                  slotProps={{ htmlInput: { inputMode: "decimal" } }}
+                />
+              )}
+            />
+          </Grid>
+          <Grid size={6}>
+            <Controller
+              name={cardName as any}
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  value={field.value != null ? String(field.value) : ""}
+                  onChange={(e) => field.onChange(toPaymentNumber(e.target.value))}
+                  label={tPayment("card")}
+                  fullWidth
+                  size="small"
+                  slotProps={{ htmlInput: { inputMode: "decimal" } }}
+                />
+              )}
+            />
+          </Grid>
+
+          {/* Voucher sub-section */}
+          <Grid size={12}>
+            <Divider
+              onClick={() => {
+                if (voucherOpen) {
+                  setValue(voucherAmountName as any, undefined);
+                  setValue(voucherCodeName as any, undefined);
+                }
+                setVoucherOpen((p) => !p);
+              }}
+              sx={{ cursor: "pointer", userSelect: "none" }}
+            >
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+              >
+                {voucherOpen ? (
+                  <ExpandLessIcon fontSize="inherit" />
+                ) : (
+                  <ExpandMoreIcon fontSize="inherit" />
+                )}
+                {tPayment("voucher")}
+              </Typography>
+            </Divider>
+          </Grid>
+          <Grid size={12}>
+            <Collapse in={voucherOpen} unmountOnExit>
+              <Grid container spacing={1}>
+                <Grid size={6}>
+                  <VoucherPickerField
+                    key={String(voucherOpen)}
+                    control={control}
+                    voucherCodeName={voucherCodeName as any}
+                    remainingAmount={remainingAmount}
+                    onSetVoucherPayment={(val) =>
+                      setValue(
+                        voucherAmountName as any,
+                        val === "0" ? undefined : (Number(val) || undefined)
+                      )
+                    }
+                  />
+                </Grid>
+                <Grid size={6}>
+                  <Controller
+                    name={voucherAmountName as any}
+                    control={control}
+                    render={({ field }) => (
+                      <TextField
+                        value={field.value != null ? String(field.value) : ""}
+                        onChange={(e) => field.onChange(toPaymentNumber(e.target.value))}
+                        label={tPayment("voucherAmount")}
+                        fullWidth
+                        size="small"
+                        slotProps={{ htmlInput: { inputMode: "decimal" } }}
+                      />
+                    )}
+                  />
+                </Grid>
+              </Grid>
+            </Collapse>
+          </Grid>
+        </Grid>
+      </Collapse>
+    </Box>
+  );
+};
 
 // ─── Companion row ────────────────────────────────────────────────────────────
-// Extracted as its own component so useWatch + useEffect run per row.
 
 interface CompanionRowProps {
   index: number;
@@ -100,127 +274,134 @@ const CompanionRow = ({
   return (
     <Box
       sx={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 1,
         bgcolor: "action.hover",
         borderRadius: 1,
         px: 1.5,
         py: 1,
       }}
     >
-      <Typography
-        variant="caption"
-        color="text.secondary"
-        sx={{ minWidth: 24, pt: 1.2, fontWeight: 600 }}
-      >
-        {index + 1}
-      </Typography>
+      <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ minWidth: 24, pt: 1.2, fontWeight: 600 }}
+        >
+          {index + 1}
+        </Typography>
 
-      {/* Service */}
-      <Controller
-        name={`companions.${index}.service_name`}
-        control={control}
-        render={({ field }) => (
-          <FormControl size="small" sx={{ flex: 1.5 }}>
-            <InputLabel>{tCommon("service")}</InputLabel>
-            <Select {...field} label={tCommon("service")}>
-              <MenuItem value=""><em>{tCommon("none")}</em></MenuItem>
-              {BOOKING_DEFAULT_SERVICES.map((s) => (
-                <MenuItem key={s} value={s}>{s}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        )}
+        {/* Service */}
+        <Controller
+          name={`companions.${index}.service_name`}
+          control={control}
+          render={({ field }) => (
+            <FormControl size="small" sx={{ flex: 1.5 }}>
+              <InputLabel>{tCommon("service")}</InputLabel>
+              <Select {...field} label={tCommon("service")}>
+                <MenuItem value=""><em>{tCommon("none")}</em></MenuItem>
+                {serviceOptions.map((s) => (
+                  <MenuItem key={s} value={s}>{s}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+        />
+
+        {/* Therapist */}
+        <Controller
+          name={`companions.${index}.therapist_id`}
+          control={control}
+          render={({ field }) => (
+            <FormControl size="small" sx={{ flex: 1.2 }}>
+              <InputLabel>{tCommon("therapist")}</InputLabel>
+              <Select {...field} value={field.value ?? ""} label={tCommon("therapist")}>
+                <MenuItem value=""><em>{tCommon("none")}</em></MenuItem>
+                {therapists.map((t) => (
+                  <MenuItem key={t.id} value={t.id}>{t.full_name}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+        />
+
+        {/* Duration */}
+        <Controller
+          name={`companions.${index}.duration`}
+          control={control}
+          render={({ field }) => (
+            <Autocomplete
+              freeSolo
+              options={durationOptions}
+              value={field.value ?? null}
+              onChange={(_, v) => field.onChange(Number(v) ?? null)}
+              onInputChange={(_, v) => {
+                const n = parseInt(v, 10);
+                field.onChange(isNaN(n) ? "" : n);
+              }}
+              getOptionLabel={(o) => String(o) || ""}
+              isOptionEqualToValue={(o, v) => o === v}
+              sx={{ flex: 1 }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label={tCommon("duration")}
+                  size="small"
+                  error={!!errors.companions?.[index]?.duration}
+                  helperText={errors.companions?.[index]?.duration?.message}
+                />
+              )}
+            />
+          )}
+        />
+
+        {/* Price */}
+        <Controller
+          name={`companions.${index}.price`}
+          control={control}
+          render={({ field }) => (
+            <Autocomplete
+              freeSolo
+              options={priceOptions}
+              value={field.value ?? null}
+              onChange={(_, v) => field.onChange(normalizeMoney(v as string))}
+              onInputChange={(_, v) => field.onChange(normalizeMoney(v))}
+              getOptionLabel={(o) => String(o) || ""}
+              isOptionEqualToValue={(o, v) => o === v}
+              sx={{ flex: 1 }}
+              renderInput={(params) => (
+                <TextField {...params} label={tCommon("price")} size="small" />
+              )}
+            />
+          )}
+        />
+
+        {/* Notes */}
+        <Controller
+          name={`companions.${index}.notes`}
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label={tCommon("notes")}
+              size="small"
+              sx={{ flex: 1.5 }}
+            />
+          )}
+        />
+
+        <Tooltip title={t("removeCompanion")}>
+          <IconButton size="small" color="error" onClick={onRemove} sx={{ mt: 0.5 }}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Box>
+
+      <InlinePaymentSection
+        cashName={`companions.${index}.cashPayment`}
+        cardName={`companions.${index}.cardPayment`}
+        voucherAmountName={`companions.${index}.voucherPayment`}
+        voucherCodeName={`companions.${index}.voucherCode`}
+        priceName={`companions.${index}.price`}
       />
-
-      {/* Therapist */}
-      <Controller
-        name={`companions.${index}.therapist_id`}
-        control={control}
-        render={({ field }) => (
-          <FormControl size="small" sx={{ flex: 1.2 }}>
-            <InputLabel>{tCommon("therapist")}</InputLabel>
-            <Select {...field} value={field.value ?? ""} label={tCommon("therapist")}>
-              <MenuItem value=""><em>{tCommon("none")}</em></MenuItem>
-              {therapists.map((t) => (
-                <MenuItem key={t.id} value={t.id}>{t.full_name}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        )}
-      />
-
-      {/* Duration */}
-      <Controller
-        name={`companions.${index}.duration`}
-        control={control}
-        render={({ field }) => (
-          <Autocomplete
-            freeSolo
-            options={durationOptions}
-            value={field.value ?? null}
-            onChange={(_, v) => field.onChange(Number(v) ?? null)}
-            onInputChange={(_, v) => {
-              const n = parseInt(v, 10);
-              field.onChange(isNaN(n) ? "" : n);
-            }}
-            getOptionLabel={(o) => String(o) || ""}
-            isOptionEqualToValue={(o, v) => o === v}
-            sx={{ flex: 1 }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label={tCommon("duration")}
-                size="small"
-                error={!!errors.companions?.[index]?.duration}
-                helperText={errors.companions?.[index]?.duration?.message}
-              />
-            )}
-          />
-        )}
-      />
-
-      {/* Price */}
-      <Controller
-        name={`companions.${index}.price`}
-        control={control}
-        render={({ field }) => (
-          <Autocomplete
-            freeSolo
-            options={priceOptions}
-            value={field.value ?? null}
-            onChange={(_, v) => field.onChange(normalizeMoney(v as string))}
-            onInputChange={(_, v) => field.onChange(normalizeMoney(v))}
-            getOptionLabel={(o) => String(o) || ""}
-            isOptionEqualToValue={(o, v) => o === v}
-            sx={{ flex: 1 }}
-            renderInput={(params) => (
-              <TextField {...params} label={tCommon("price")} size="small" />
-            )}
-          />
-        )}
-      />
-
-      {/* Notes */}
-      <Controller
-        name={`companions.${index}.notes`}
-        control={control}
-        render={({ field }) => (
-          <TextField
-            {...field}
-            label={tCommon("notes")}
-            size="small"
-            sx={{ flex: 1.5 }}
-          />
-        )}
-      />
-
-      <Tooltip title={t("removeCompanion")}>
-        <IconButton size="small" color="error" onClick={onRemove} sx={{ mt: 0.5 }}>
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
     </Box>
   );
 };
@@ -433,6 +614,18 @@ const NewBookingFormFields = () => {
           )}
         ></Controller>
       </Grid>
+
+      {/* Main booking payment */}
+      <Grid size={12}>
+        <InlinePaymentSection
+          cashName="cashPayment"
+          cardName="cardPayment"
+          voucherAmountName="voucherPayment"
+          voucherCodeName="voucherCode"
+          priceName="price"
+        />
+      </Grid>
+
       {(errors as any).booking_creation_form?.message && (
         <Container sx={{ marginBottom: 2 }}>
           <Alert severity="error" variant="standard">

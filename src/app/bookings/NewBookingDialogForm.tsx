@@ -94,7 +94,7 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
           <DialogContent>
-            <NewBookingFormFields />
+            <NewBookingFormFields key={String(open)} />
           </DialogContent>
           <DialogActions>
             <Button onClick={onCancel} startIcon={<CloseIcon />}>

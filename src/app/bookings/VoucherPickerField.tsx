@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Autocomplete, Box, CircularProgress, TextField, Typography } from "@mui/material";
-import { Control, Controller, UseFormSetValue } from "react-hook-form";
-import { BookingPaymentFormInput } from "@/schemas/bookingPayment.schema";
+import { Control, Controller, FieldValues, Path } from "react-hook-form";
 import { formatMoney } from "@/utils/formatMoney";
+import { useTranslations } from "next-intl";
 
 type VoucherOption = {
   id: string;
@@ -20,13 +20,20 @@ function getClientName(v: VoucherOption): string {
   return [first, last].filter(Boolean).join(" ");
 }
 
-type Props = {
-  control: Control<BookingPaymentFormInput>;
-  setValue: UseFormSetValue<BookingPaymentFormInput>;
+type Props<TFieldValues extends FieldValues> = {
+  control: Control<TFieldValues>;
+  voucherCodeName: Path<TFieldValues>;
   remainingAmount: number;
+  onSetVoucherPayment: (value: string) => void;
 };
 
-const VoucherPickerField = ({ control, setValue, remainingAmount }: Props) => {
+function VoucherPickerField<TFieldValues extends FieldValues>({
+  control,
+  voucherCodeName,
+  remainingAmount,
+  onSetVoucherPayment,
+}: Props<TFieldValues>) {
+  const t = useTranslations("BookingPayment");
   const [options, setOptions] = useState<VoucherOption[]>([]);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -53,7 +60,7 @@ const VoucherPickerField = ({ control, setValue, remainingAmount }: Props) => {
 
   return (
     <Controller
-      name="voucherCode"
+      name={voucherCodeName}
       control={control}
       render={({ field, fieldState }) => {
         const selectedOption = options.find((o) => o.code === field.value) ?? null;
@@ -71,22 +78,22 @@ const VoucherPickerField = ({ control, setValue, remainingAmount }: Props) => {
               if (reason === "input") {
                 fetchVouchers(value);
                 field.onChange(value);
-                if (!value) (setValue as any)("voucherPayment", "0");
+                if (!value) onSetVoucherPayment("0");
               } else if (reason === "clear") {
                 fetchVouchers("");
                 field.onChange("");
-                (setValue as any)("voucherPayment", "0");
+                onSetVoucherPayment("0");
               }
             }}
             onChange={(_, selected) => {
               if (!selected) {
                 field.onChange("");
-                (setValue as any)("voucherPayment", "0");
+                onSetVoucherPayment("0");
               } else {
                 field.onChange(selected.code);
                 if (selected.balance != null) {
                   const auto = Math.min(Number(selected.balance), remainingAmount);
-                  (setValue as any)("voucherPayment", auto > 0 ? String(auto) : "0");
+                  onSetVoucherPayment(auto > 0 ? String(auto) : "0");
                 }
               }
             }}
@@ -111,7 +118,7 @@ const VoucherPickerField = ({ control, setValue, remainingAmount }: Props) => {
                 {...params}
                 inputRef={field.ref}
                 onBlur={field.onBlur}
-                label="Voucher Code"
+                label={t("voucherCode")}
                 size="small"
                 fullWidth
                 error={!!fieldState.error}
@@ -134,6 +141,6 @@ const VoucherPickerField = ({ control, setValue, remainingAmount }: Props) => {
       }}
     />
   );
-};
+}
 
 export default VoucherPickerField;

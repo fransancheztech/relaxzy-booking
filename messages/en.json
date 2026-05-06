@@ -118,6 +118,7 @@
     "card": "Credit card",
     "voucher": "Voucher",
     "voucherAmount": "Voucher Amount",
+    "voucherCode": "Voucher Code",
     "addPayment": "Add Payment"
   },
   "BookingDelete": {
