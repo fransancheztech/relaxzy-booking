@@ -98,7 +98,7 @@
     "bookingDetails": "Detalles de la reserva",
     "companions": "Acompañantes",
     "addCompanion": "Añadir acompañante (mismo cliente, misma hora)",
-    "add": "Añadir",
+    "add": "Añadir acompañante",
     "noCompanions": "Sin acompañantes — misma información de cliente y hora de inicio, no se necesitan datos adicionales.",
     "dateTime": "Fecha y hora",
     "removeCompanion": "Eliminar acompañante",
@@ -128,7 +128,7 @@
   },
   "Tips": {
     "sectionHeader": "Propinas",
-    "add": "Añadir",
+    "add": "Añadir propina",
     "recordTip": "Registrar propina",
     "noTips": "No hay propinas registradas para esta reserva.",
     "cash": "Efectivo",

@@ -164,7 +164,7 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
             startIcon={<AddIcon />}
             onClick={() => setShowForm((v) => !v)}
           >
-            {tCommon("add")}
+            {t("add")}
           </Button>
         </Tooltip>
       </Box>

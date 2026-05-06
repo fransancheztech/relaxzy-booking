@@ -656,7 +656,7 @@ const NewBookingFormFields = () => {
                 })
               }
             >
-              {tCommon("add")}
+              {t("add")}
             </Button>
           </Tooltip>
         </Box>

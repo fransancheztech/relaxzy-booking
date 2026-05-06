@@ -98,7 +98,7 @@
     "bookingDetails": "Booking Details",
     "companions": "Companions",
     "addCompanion": "Add companion (same client, same time)",
-    "add": "Add",
+    "add": "Add companion",
     "noCompanions": "No companions — same client info and start time, no extra data needed.",
     "dateTime": "Date & Time",
     "removeCompanion": "Remove companion",
@@ -128,7 +128,7 @@
   },
   "Tips": {
     "sectionHeader": "Tips",
-    "add": "Add",
+    "add": "Add tip",
     "recordTip": "Record a tip",
     "noTips": "No tips recorded for this booking.",
     "cash": "Cash",
