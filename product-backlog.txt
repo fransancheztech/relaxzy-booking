@@ -1,10 +1,11 @@
 TO-DO
-- Permitir crear reservas con pagos.
+- Arreglar fechas de los elementos insertados en supabase
+- Chequear validación teléfonos insertados
+- Valorar si mantenemos gestión manual de estado de pendientes, confirmadas, completadas y canceladas, o si lo derivamos de otros datos, y como los mostramos.
 - Crear un tipo de cuenta view-only que solo permita visualizar el calendario
 
 STILL DELIBERATING
 - 5 Creación de facturas, descarga y almacenamiento en Drive automático de las mismas
-- 4 Poner colores diferentes a las reservas pendientes, confirmadas y completadas
 - Sidebar menu izquierda plegable
 
 
@@ -33,3 +34,4 @@ DONE
 - Confirmar auto actualizar tablas cuando se añade/modifica un elemento
 - 4 Arreglar filtros y ordenar de las tablas para que funcione con server
 - Traducir español-inglés-tailandés
+- Permitir crear reservas con pagos.

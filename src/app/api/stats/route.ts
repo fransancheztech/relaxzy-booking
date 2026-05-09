@@ -160,12 +160,21 @@ export async function GET(request: Request) {
     const totalAllTimeRows = await prisma.$queryRaw<{ total_all_time: number }[]>`
       SELECT COUNT(*)::int AS total_all_time FROM clients WHERE deleted_at IS NULL
     `;
-    const newClientsRows = await prisma.$queryRaw<{ new_in_period: number }[]>`
-      SELECT COUNT(*)::int AS new_in_period FROM (
-        SELECT client_id, MIN(start_time) AS first_booking
-        FROM bookings WHERE deleted_at IS NULL AND client_id IS NOT NULL GROUP BY client_id
-      ) sub WHERE first_booking >= ${from} AND first_booking < ${to}
-    `;
+    const isAllTime = from.getFullYear() < 1990;
+    const newClientsRows = isAllTime
+      ? await prisma.$queryRaw<{ new_in_period: number }[]>`
+          SELECT COUNT(*)::int AS new_in_period FROM (
+            SELECT client_id FROM bookings
+            WHERE deleted_at IS NULL AND client_id IS NOT NULL
+            GROUP BY client_id HAVING COUNT(*) = 1
+          ) sub
+        `
+      : await prisma.$queryRaw<{ new_in_period: number }[]>`
+          SELECT COUNT(*)::int AS new_in_period FROM (
+            SELECT client_id, MIN(start_time) AS first_booking
+            FROM bookings WHERE deleted_at IS NULL AND client_id IS NOT NULL GROUP BY client_id
+          ) sub WHERE first_booking >= ${from} AND first_booking < ${to}
+        `;
     const avgBookingsRows = await prisma.$queryRaw<{ avg_bookings_per_client: number }[]>`
       SELECT COALESCE(AVG(cnt), 0)::float AS avg_bookings_per_client FROM (
         SELECT client_id, COUNT(*)::int AS cnt
