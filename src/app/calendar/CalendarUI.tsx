@@ -15,6 +15,7 @@ import { useCalendarData } from "@/hooks/useCalendarData";
 import { useLayout } from "../context/LayoutContext";
 import { useTherapists } from "@/hooks/useTherapists";
 import { DateTime } from "luxon";
+import { STATUS_COLORS } from "@/constants";
 
 interface CalendarUIProps {
   setIsOpenBookingDialog: React.Dispatch<React.SetStateAction<boolean>>;
@@ -25,6 +26,8 @@ const SLOT_MS = 5 * 60 * 1000;
 const DAY_START_HOUR = 10;
 const DAY_END_HOUR = 22;
 const MINUTES_IN_VIEW = (DAY_END_HOUR - DAY_START_HOUR) * 60;
+
+const STATUS_KEYS = ["confirmed", "completed", "cancelled", "pending"] as const;
 
 const OCCUPANCY_COLORS: Record<number, string> = {
   0: "transparent",
@@ -76,17 +79,20 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
   ], [therapists, t]);
 
   const events = useMemo(() =>
-    bookings.map((b) => ({
-      id: b.id,
-      title: `${b.client_name} · ${b.short_service_name ?? ""}`,
-      start: DateTime.fromISO(b.start_time!, { zone: "Europe/Madrid" }).toISO()!,
-      end: DateTime.fromISO(b.end_time!, { zone: "Europe/Madrid" }).toISO()!,
-      resourceId: b.therapist_id ?? "none",
-      extendedProps: { booking: b },
-      backgroundColor: "rgba(4,62,0,1)",
-      borderColor: "#6FBF73",
-      textColor: "#ffffff",
-    })),
+    bookings.map((b) => {
+      const colors = (b.status ? STATUS_COLORS[b.status as keyof typeof STATUS_COLORS] : null) ?? STATUS_COLORS.confirmed;
+      return {
+        id: b.id,
+        title: `${b.client_name} · ${b.short_service_name ?? ""}`,
+        start: DateTime.fromISO(b.start_time!, { zone: "Europe/Madrid" }).toISO()!,
+        end: DateTime.fromISO(b.end_time!, { zone: "Europe/Madrid" }).toISO()!,
+        resourceId: b.therapist_id ?? "none",
+        extendedProps: { booking: b },
+        backgroundColor: colors.bg,
+        borderColor: colors.border,
+        textColor: "#ffffff",
+      };
+    }),
   [bookings]);
 
   // Count active, therapist-assigned bookings per 5-min slot
@@ -257,21 +263,39 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
       )}
 
       {currentView === "resourceTimeGridDay" && (
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 11, color: "#666", fontWeight: 500 }}>{t("occupancy")}</span>
-          {COLOR_LEGEND_COLORS.map((color, i) => (
-            <span key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <span style={{
-                display: "inline-block",
-                width: 14,
-                height: 14,
-                background: color,
-                borderRadius: 3,
-                border: "1px solid rgba(0,0,0,0.15)",
-              }} />
-              <span style={{ fontSize: 11, color: "#555" }}>{t(LEGEND_KEYS[i])}</span>
-            </span>
-          ))}
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11, color: "#666", fontWeight: 500 }}>{t("occupancy")}</span>
+            {COLOR_LEGEND_COLORS.map((color, i) => (
+              <span key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{
+                  display: "inline-block",
+                  width: 14,
+                  height: 14,
+                  background: color,
+                  borderRadius: 3,
+                  border: "1px solid rgba(0,0,0,0.15)",
+                }} />
+                <span style={{ fontSize: 11, color: "#555" }}>{t(LEGEND_KEYS[i])}</span>
+              </span>
+            ))}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11, color: "#666", fontWeight: 500 }}>{t("statusLegend")}</span>
+            {STATUS_KEYS.map((key) => (
+              <span key={key} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{
+                  display: "inline-block",
+                  width: 14,
+                  height: 14,
+                  background: STATUS_COLORS[key].bg,
+                  borderRadius: 3,
+                  border: `1px solid ${STATUS_COLORS[key].border}`,
+                }} />
+                <span style={{ fontSize: 11, color: "#555" }}>{t(`status_${key}`)}</span>
+              </span>
+            ))}
+          </div>
         </div>
       )}
     </div>

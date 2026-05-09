@@ -69,7 +69,12 @@
     "booked4": "4 รายการ",
     "booked5plus": "5+ รายการ",
     "errorLoadingBookings": "เกิดข้อผิดพลาดในการโหลดการจอง:",
-    "noTherapist": "ไม่มีนักบำบัด"
+    "noTherapist": "ไม่มีนักบำบัด",
+    "statusLegend": "สถานะ:",
+    "status_confirmed": "ยืนยันแล้ว",
+    "status_completed": "เสร็จสิ้น",
+    "status_cancelled": "ยกเลิก",
+    "status_pending": "รอดำเนินการ"
   },
   "Bookings": {
     "newBooking": "การจองใหม่",

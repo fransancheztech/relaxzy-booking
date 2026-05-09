@@ -45,7 +45,7 @@ export const defaultValuesUpdateBookingForm: Partial<BookingUpdateSchemaType> =
     therapist_id: "",
     notes: "",
     price: undefined,
-    status: "pending",
+    status: "",
   };
 
 const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {

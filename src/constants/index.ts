@@ -25,6 +25,20 @@ export const BOOKING_DEFAULT_SERVICES = ['Traditional Thai', 'Thai Oil', 'Relaxz
 
 export const BOOKING_DEFAULT_STATUSES: booking_status[] = Object.values(booking_status) as booking_status[];
 
+export const ORDERED_BOOKING_STATUSES: booking_status[] = [
+  booking_status.completed,
+  booking_status.confirmed,
+  booking_status.pending,
+  booking_status.cancelled,
+];
+
+export const STATUS_COLORS: Record<booking_status, { bg: string; border: string }> = {
+  confirmed: { bg: "#1565c0", border: "#42a5f5" },
+  completed: { bg: "rgba(4,62,0,1)", border: "#6FBF73" },
+  cancelled:  { bg: "#546e7a", border: "#90a4ae" },
+  pending:    { bg: "#e65100", border: "#ffb300" },
+};
+
 export const AGENDA_LENGTH = 30;
 
 export const FETCH_LIMIT = 100;

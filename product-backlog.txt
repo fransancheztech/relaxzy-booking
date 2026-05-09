@@ -1,7 +1,7 @@
 TO-DO
-- Arreglar fechas de los elementos insertados en supabase
+- Arreglar status de reservas antiguas
+- Arreglar regalos de reservas antiguas
 - Chequear validación teléfonos insertados
-- Valorar si mantenemos gestión manual de estado de pendientes, confirmadas, completadas y canceladas, o si lo derivamos de otros datos, y como los mostramos.
 - Crear un tipo de cuenta view-only que solo permita visualizar el calendario
 
 STILL DELIBERATING
@@ -35,3 +35,4 @@ DONE
 - 4 Arreglar filtros y ordenar de las tablas para que funcione con server
 - Traducir español-inglés-tailandés
 - Permitir crear reservas con pagos.
+- Valorar si mantenemos gestión manual de estado de pendientes, confirmadas, completadas y canceladas, o si lo derivamos de otros datos, y como los mostramos.

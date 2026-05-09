@@ -69,7 +69,12 @@
     "booked4": "4 reservas",
     "booked5plus": "5+ reservas",
     "errorLoadingBookings": "Error al cargar reservas:",
-    "noTherapist": "Sin terapeuta"
+    "noTherapist": "Sin terapeuta",
+    "statusLegend": "Estado:",
+    "status_confirmed": "Confirmada",
+    "status_completed": "Completada",
+    "status_cancelled": "Cancelada",
+    "status_pending": "Pendiente"
   },
   "Bookings": {
     "newBooking": "Nueva reserva",

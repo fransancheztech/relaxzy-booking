@@ -5,7 +5,8 @@ import {
   BOOKING_DEFAULT_DURATIONS,
   BOOKING_DEFAULT_PRICES,
   BOOKING_DEFAULT_SERVICES,
-  BOOKING_DEFAULT_STATUSES,
+  ORDERED_BOOKING_STATUSES,
+  STATUS_COLORS,
 } from "@/constants";
 import { useServiceLookups } from "@/hooks/useServiceLookups";
 import { BookingUpdateSchemaType } from "@/schemas/booking.schema";
@@ -216,10 +217,31 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSum
           render={({ field }) => (
             <FormControl fullWidth size="small" error={!!errors.status}>
               <InputLabel id="status">{t("status")}</InputLabel>
-              <Select labelId="status" {...field} label={t("status")}>
-                {BOOKING_DEFAULT_STATUSES.map((status) => (
-                  <MenuItem key={status} value={status}>
-                    {tBookings(status as "pending" | "confirmed" | "completed" | "cancelled")}
+              <Select
+                labelId="status"
+                {...field}
+                label={t("status")}
+                sx={{
+                  backgroundColor: STATUS_COLORS[field.value as keyof typeof STATUS_COLORS]?.bg,
+                  color: "#fff",
+                  "& .MuiOutlinedInput-notchedOutline": {
+                    borderColor: STATUS_COLORS[field.value as keyof typeof STATUS_COLORS]?.border,
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: STATUS_COLORS[field.value as keyof typeof STATUS_COLORS]?.border,
+                  },
+                  "& .MuiSvgIcon-root": { color: "#fff" },
+                }}
+              >
+                {ORDERED_BOOKING_STATUSES.map((status) => (
+                  <MenuItem key={status} value={status} sx={{
+                    color: "#fff",
+                    backgroundColor: STATUS_COLORS[status].bg,
+                    "&:hover": { backgroundColor: STATUS_COLORS[status].border, color: "#fff" },
+                    "&.Mui-selected": { backgroundColor: STATUS_COLORS[status].bg, color: "#fff" },
+                    "&.Mui-selected:hover": { backgroundColor: STATUS_COLORS[status].border, color: "#fff" },
+                  }}>
+                    {tBookings(status)}
                   </MenuItem>
                 ))}
               </Select>
