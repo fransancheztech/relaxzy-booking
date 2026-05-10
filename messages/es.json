@@ -372,7 +372,10 @@
       "section2tip0": "Usa las flechas ← → para ir al día/semana/mes anterior o siguiente.",
       "section2tip1": "Haz clic en «Hoy» para volver a la fecha actual.",
       "section2tip2": "Cambia entre las vistas «Por terapeuta», «Día», «Semana» y «Mes» con los botones de la derecha.",
-      "section2tip3": "«Por terapeuta» muestra todos los terapeutas en columnas paralelas — útil para ver huecos libres."
+      "section2tip3": "«Por terapeuta» muestra todos los terapeutas en columnas paralelas — útil para ver huecos libres.",
+      "section3heading": "Formato de teléfono y correo",
+      "section3tip0": "Los teléfonos asumen formato español por defecto (p.ej. 666123456). Para números internacionales, escribe el prefijo de país con + (p.ej. +44 7700 900123).",
+      "section3tip1": "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com)."
     },
     "bookings": {
       "title": "Reservas",
@@ -391,7 +394,10 @@
       "section3heading": "Propinas",
       "section3tip0": "Abre una reserva, desplázate hasta la sección Propinas y haz clic en «Añadir».",
       "section3tip1": "Selecciona el terapeuta, el importe y el método de pago.",
-      "section3tip2": "El IVA se aplica automáticamente para las propinas con tarjeta y bono."
+      "section3tip2": "El IVA se aplica automáticamente para las propinas con tarjeta y bono.",
+      "section4heading": "Formato de teléfono y correo",
+      "section4tip0": "Los teléfonos asumen formato español por defecto (p.ej. 666123456). Para números internacionales, escribe el prefijo de país con + (p.ej. +44 7700 900123).",
+      "section4tip1": "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com)."
     },
     "clients": {
       "title": "Clientes",
@@ -402,7 +408,10 @@
       "section1tip0": "Haz clic en «Nuevo cliente» en la esquina superior derecha.",
       "section1tip1": "El nombre y el teléfono son los campos más importantes — el correo es opcional.",
       "section2heading": "Buscar un cliente",
-      "section2tip0": "Usa la barra de búsqueda para filtrar por nombre, teléfono o correo."
+      "section2tip0": "Usa la barra de búsqueda para filtrar por nombre, teléfono o correo.",
+      "section3heading": "Formato de teléfono y correo",
+      "section3tip0": "Los teléfonos asumen formato español por defecto (p.ej. 666123456). Para números internacionales, escribe el prefijo de país con + (p.ej. +44 7700 900123).",
+      "section3tip1": "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com)."
     },
     "payments": {
       "title": "Pagos",
@@ -434,7 +443,10 @@
       "section0tip2": "Los terapeutas aparecen en el formulario de reserva y en la vista Por terapeuta del calendario.",
       "section1heading": "Desactivar un terapeuta",
       "section1tip0": "Eliminar un terapeuta los quita de los desplegables de futuras reservas.",
-      "section1tip1": "Sus reservas pasadas no se ven afectadas."
+      "section1tip1": "Sus reservas pasadas no se ven afectadas.",
+      "section2heading": "Formato de teléfono y correo",
+      "section2tip0": "Los teléfonos asumen formato español por defecto (p.ej. 666123456). Para números internacionales, escribe el prefijo de país con + (p.ej. +44 7700 900123).",
+      "section2tip1": "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com)."
     },
     "vouchers": {
       "title": "Bonos",
@@ -446,7 +458,10 @@
       "section1tip1": "Introduce el código del bono — el saldo se descuenta automáticamente.",
       "section2heading": "Consultar el saldo de un bono",
       "section2tip0": "Busca por código del bono o nombre de cliente para encontrarlo en la tabla.",
-      "section2tip1": "La columna Saldo muestra el crédito restante."
+      "section2tip1": "La columna Saldo muestra el crédito restante.",
+      "section3heading": "Formato de teléfono y correo",
+      "section3tip0": "Los teléfonos asumen formato español por defecto (p.ej. 666123456). Para números internacionales, escribe el prefijo de país con + (p.ej. +44 7700 900123).",
+      "section3tip1": "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com)."
     },
     "stats": {
       "title": "Estadísticas",

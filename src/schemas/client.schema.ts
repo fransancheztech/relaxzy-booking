@@ -4,7 +4,7 @@ import { z } from "zod";
 export const ClientUpdateSchema = z
   .object({
     client_name: z.string().min(1, "Name is required"),
-    client_surname: z.string(),
+    client_surname: z.string().optional(),
     client_email: z
       .string()
       .optional()

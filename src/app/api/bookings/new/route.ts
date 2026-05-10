@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { ClientContactSchema } from "@/schemas/clientContact.schema";
+import { formatZodError } from "@/utils/zodApiError";
 
 type CompanionInput = {
   service_name?: string;
@@ -30,6 +32,17 @@ const normalize = (v?: string) =>
 export async function POST(request: Request) {
   try {
     const body: Body = await request.json();
+
+    // ------------------------------------------------------
+    // 0) VALIDATE CONTACT FIELD FORMAT
+    // ------------------------------------------------------
+    const contactCheck = ClientContactSchema.safeParse(body);
+    if (!contactCheck.success) {
+      return NextResponse.json(
+        { error: formatZodError(contactCheck.error) },
+        { status: 400 }
+      );
+    }
 
     // ------------------------------------------------------
     // 1) VALIDATE REQUIRED FIELDS

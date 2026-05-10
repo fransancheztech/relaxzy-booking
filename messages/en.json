@@ -372,7 +372,10 @@
       "section2tip0": "Use the ← → arrows to move to the previous or next day/week/month.",
       "section2tip1": "Click \"Today\" to jump back to the current date.",
       "section2tip2": "Switch between \"By therapist\", \"Day\", \"Week\", and \"Month\" views using the buttons top-right.",
-      "section2tip3": "\"By therapist\" shows all therapists as side-by-side columns — useful to spot free slots."
+      "section2tip3": "\"By therapist\" shows all therapists as side-by-side columns — useful to spot free slots.",
+      "section3heading": "Phone & email format",
+      "section3tip0": "Phone numbers default to Spanish format (e.g. 666123456). For international numbers, type the country code with a + prefix (e.g. +44 7700 900123).",
+      "section3tip1": "Emails must follow the standard format (e.g. name@example.com)."
     },
     "bookings": {
       "title": "Bookings",
@@ -391,7 +394,10 @@
       "section3heading": "Tips",
       "section3tip0": "Open a booking, scroll to the Tips section, and click \"Add\".",
       "section3tip1": "Select the therapist, amount, and payment method.",
-      "section3tip2": "IVA is applied automatically for credit card and voucher tips."
+      "section3tip2": "IVA is applied automatically for credit card and voucher tips.",
+      "section4heading": "Phone & email format",
+      "section4tip0": "Phone numbers default to Spanish format (e.g. 666123456). For international numbers, type the country code with a + prefix (e.g. +44 7700 900123).",
+      "section4tip1": "Emails must follow the standard format (e.g. name@example.com)."
     },
     "clients": {
       "title": "Clients",
@@ -402,7 +408,10 @@
       "section1tip0": "Click \"New Client\" in the top-right corner.",
       "section1tip1": "Name and phone are the most important fields — email is optional.",
       "section2heading": "Finding a client",
-      "section2tip0": "Use the search bar to filter by name, phone, or email."
+      "section2tip0": "Use the search bar to filter by name, phone, or email.",
+      "section3heading": "Phone & email format",
+      "section3tip0": "Phone numbers default to Spanish format (e.g. 666123456). For international numbers, type the country code with a + prefix (e.g. +44 7700 900123).",
+      "section3tip1": "Emails must follow the standard format (e.g. name@example.com)."
     },
     "payments": {
       "title": "Payments",
@@ -434,7 +443,10 @@
       "section0tip2": "Therapists appear in the booking form and in the By-therapist calendar view.",
       "section1heading": "Deactivating a therapist",
       "section1tip0": "Deleting a therapist removes them from future booking dropdowns.",
-      "section1tip1": "Their past bookings are not affected."
+      "section1tip1": "Their past bookings are not affected.",
+      "section2heading": "Phone & email format",
+      "section2tip0": "Phone numbers default to Spanish format (e.g. 666123456). For international numbers, type the country code with a + prefix (e.g. +44 7700 900123).",
+      "section2tip1": "Emails must follow the standard format (e.g. name@example.com)."
     },
     "vouchers": {
       "title": "Vouchers",
@@ -446,7 +458,10 @@
       "section1tip1": "Enter the voucher code — the balance is deducted automatically.",
       "section2heading": "Checking a voucher balance",
       "section2tip0": "Search by the voucher code or client name to find it in the table.",
-      "section2tip1": "The Balance column shows the remaining credit."
+      "section2tip1": "The Balance column shows the remaining credit.",
+      "section3heading": "Phone & email format",
+      "section3tip0": "Phone numbers default to Spanish format (e.g. 666123456). For international numbers, type the country code with a + prefix (e.g. +44 7700 900123).",
+      "section3tip1": "Emails must follow the standard format (e.g. name@example.com)."
     },
     "stats": {
       "title": "Stats",

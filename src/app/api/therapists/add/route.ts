@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createCustomServerClient } from "@/utils/supabase/server"; // para el usuario actual
 import { createAdminClient } from "@/utils/supabase/admin"; // para funciones admin
+import { UpdateTherapistSchema } from "@/schemas/therapist.schema";
+import { formatZodError } from "@/utils/zodApiError";
 
 export async function POST(req: Request) {
   const supabase = await createCustomServerClient();
@@ -15,11 +17,17 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json();
-  const { user_id, full_name, phone } = body;
+  const { user_id } = body;
 
-  if (!user_id || !full_name || !phone) {
+  if (!user_id) {
     return NextResponse.json({ error: "Faltan datos obligatorios" }, { status: 400 });
   }
+
+  const parsed = UpdateTherapistSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
+  }
+  const { full_name, phone } = parsed.data;
 
   const adminClient = createAdminClient();
   const { data: userData, error: userError } = await adminClient.auth.admin.getUserById(user_id);

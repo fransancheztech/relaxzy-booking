@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "generated/prisma";
 import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
+import { VoucherContactSchema } from "@/schemas/clientContact.schema";
+import { formatZodError } from "@/utils/zodApiError";
 
 type Body = {
   buyer_name?: string;
@@ -121,6 +123,14 @@ function isPrismaUniqueViolation(err: unknown): boolean {
 export async function POST(request: Request) {
   try {
     const body: Body = await request.json();
+
+    const contactCheck = VoucherContactSchema.safeParse(body);
+    if (!contactCheck.success) {
+      return NextResponse.json(
+        { error: formatZodError(contactCheck.error) },
+        { status: 400 }
+      );
+    }
 
     if (
       body.initial_balance === undefined ||

@@ -1,21 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-type Body = {
-  client_name: string;
-  client_surname?: string;
-  client_email?: string;
-  client_phone?: string;
-};
+import { ClientUpdateSchema } from "@/schemas/client.schema";
+import { formatZodError } from "@/utils/zodApiError";
 
 export async function POST(request: Request) {
   try {
-    const body: Body = await request.json();
-
-    // Basic validation
-    if (!body.client_name) {
-      return NextResponse.json({ error: "Client name is required" }, { status: 400 });
+    const raw = await request.json();
+    const parsed = ClientUpdateSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
     }
+    const body = parsed.data;
 
     // Check if client exists
     const existing = await prisma.clients.findFirst({

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { ClientUpdateSchema } from "@/schemas/client.schema";
+import { formatZodError } from "@/utils/zodApiError";
 
 type Params = {
   params: { clientId: string };
@@ -38,7 +40,12 @@ export async function PUT(
 ) {
   try {
     const { clientId } = await params;
-    const body = await request.json();
+    const raw = await request.json();
+    const parsed = ClientUpdateSchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
+    }
+    const body = parsed.data;
 
     const normalizedEmail =
       body.client_email?.trim() === ""

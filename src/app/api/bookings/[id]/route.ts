@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { PROTECTED_FIELDS } from "@/constants";
+import { ClientContactSchema } from "@/schemas/clientContact.schema";
+import { formatZodError } from "@/utils/zodApiError";
 
 type Body = {
   client_name?: string;
@@ -147,6 +149,17 @@ export async function PUT(
     }
 
     const body: Body = await req.json();
+
+    // ------------------------------------------------------
+    // VALIDATE CONTACT FIELD FORMAT
+    // ------------------------------------------------------
+    const contactCheck = ClientContactSchema.safeParse(body);
+    if (!contactCheck.success) {
+      return NextResponse.json(
+        { error: formatZodError(contactCheck.error) },
+        { status: 400 }
+      );
+    }
 
     // ------------------------------------------------------
     // 5) FIND OR CREATE CLIENT (allows anonymous walk-ins)

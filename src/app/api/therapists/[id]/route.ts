@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { UpdateTherapistSchema } from "@/schemas/therapist.schema";
+import { formatZodError } from "@/utils/zodApiError";
 
 export async function GET(
   req: NextRequest,
@@ -24,7 +26,11 @@ export async function PUT(
 ) {
   const { id } = await context.params;
   const body = await req.json();
-  const { full_name, email, phone, notes, active } = body;
+  const parsed = UpdateTherapistSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
+  }
+  const { full_name, email, phone, notes, active } = parsed.data;
   const updated = await prisma.therapists.update({
     where: { id },
     data: { full_name, email, phone, notes, ...(active !== undefined && { active }) },
