@@ -73,10 +73,33 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
     refreshKey,
   );
 
+  // Total booked minutes per therapist (and "none") for the visible range, excluding cancelled
+  const minutesPerResource = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const b of bookings) {
+      if (!b.start_time || !b.end_time) continue;
+      if (b.status === "cancelled") continue;
+      const ms = new Date(b.end_time as unknown as string).getTime() -
+        new Date(b.start_time as unknown as string).getTime();
+      if (ms <= 0) continue;
+      const key = b.therapist_id ?? "none";
+      map.set(key, (map.get(key) ?? 0) + Math.round(ms / 60_000));
+    }
+    return map;
+  }, [bookings]);
+
   const resources = useMemo(() => [
-    ...therapists.map((th) => ({ id: th.id, title: th.full_name })),
-    { id: "none", title: t("noTherapist") },
-  ], [therapists, t]);
+    ...therapists.map((th) => ({
+      id: th.id,
+      title: th.full_name,
+      extendedProps: { minutes: minutesPerResource.get(th.id) ?? 0 },
+    })),
+    {
+      id: "none",
+      title: t("noTherapist"),
+      extendedProps: { minutes: minutesPerResource.get("none") ?? 0 },
+    },
+  ], [therapists, t, minutesPerResource]);
 
   const events = useMemo(() =>
     bookings.map((b) => {
@@ -204,6 +227,22 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
             },
           }}
           resources={resources}
+          resourceLabelContent={(arg) => {
+            const minutes = (arg.resource.extendedProps as { minutes?: number }).minutes ?? 0;
+            const h = Math.floor(minutes / 60);
+            const m = minutes % 60;
+            const label = h > 0 && m > 0 ? `${h}h ${m}m` : h > 0 ? `${h}h` : `${m}m`;
+            return (
+              <div style={{ textAlign: "center", lineHeight: 1.2, padding: "2px 0" }}>
+                <div>{arg.resource.title}</div>
+                {minutes > 0 && (
+                  <div style={{ fontSize: 11, color: "#666", fontWeight: 400, marginTop: 1 }}>
+                    {label}
+                  </div>
+                )}
+              </div>
+            );
+          }}
           events={events}
           eventClick={handleEventClick}
           datesSet={handleDatesSet}
