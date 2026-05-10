@@ -1,7 +1,6 @@
 TO-DO
 - Arreglar status de reservas antiguas
 - Arreglar regalos de reservas antiguas
-- Chequear validación teléfonos insertados
 - Crear un tipo de cuenta view-only que solo permita visualizar el calendario
 
 STILL DELIBERATING
@@ -36,3 +35,4 @@ DONE
 - Traducir español-inglés-tailandés
 - Permitir crear reservas con pagos.
 - Valorar si mantenemos gestión manual de estado de pendientes, confirmadas, completadas y canceladas, o si lo derivamos de otros datos, y como los mostramos.
+- Chequear validación teléfonos insertados

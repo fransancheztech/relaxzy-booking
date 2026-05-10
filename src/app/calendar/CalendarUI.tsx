@@ -27,7 +27,7 @@ const DAY_START_HOUR = 10;
 const DAY_END_HOUR = 22;
 const MINUTES_IN_VIEW = (DAY_END_HOUR - DAY_START_HOUR) * 60;
 
-const STATUS_KEYS = ["confirmed", "completed", "cancelled", "pending"] as const;
+const STATUS_KEYS = ["completed", "confirmed", "pending", "cancelled"] as const;
 
 const OCCUPANCY_COLORS: Record<number, string> = {
   0: "transparent",
@@ -95,11 +95,11 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
     }),
   [bookings]);
 
-  // Count active, therapist-assigned bookings per 5-min slot
+  // Count active bookings per 5-min slot (including those with no therapist assigned)
   const slotCounts = useMemo(() => {
     const counts = new Map<number, number>();
     for (const b of bookings) {
-      if (!b.start_time || !b.end_time || !b.therapist_id) continue;
+      if (!b.start_time || !b.end_time) continue;
       if (b.status === "cancelled") continue;
       const bStart = new Date(b.start_time as unknown as string).getTime();
       const bEnd = new Date(b.end_time as unknown as string).getTime();
