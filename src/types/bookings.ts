@@ -18,6 +18,7 @@ export interface BookingDTO {
     paidCash?: string;
     paidCard?: string;
     therapist_id?: string | null;
+    paid_total?: number;
 }
 
 export interface BookingModel extends BookingDTO {

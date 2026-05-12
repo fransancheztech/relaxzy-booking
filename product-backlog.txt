@@ -1,8 +1,8 @@
 TO-DO
-- Arreglar status de reservas antiguas
 - Arreglar regalos de reservas antiguas
 - Crear un tipo de cuenta view-only que solo permita visualizar el calendario
 - Crear vouchers automaticamente cuando compren vouchers online
+- Poder acceder al pago de una reserva o al voucher usado cliceando su pago desde la reserva.
 
 STILL DELIBERATING
 - 5 Creación de facturas, descarga y almacenamiento en Drive automático de las mismas
@@ -37,3 +37,4 @@ DONE
 - Permitir crear reservas con pagos.
 - Valorar si mantenemos gestión manual de estado de pendientes, confirmadas, completadas y canceladas, o si lo derivamos de otros datos, y como los mostramos.
 - Chequear validación teléfonos insertados
+- Arreglar status de reservas antiguas

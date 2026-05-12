@@ -9,13 +9,14 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid";
-import { DatesSetArg, EventClickArg } from "@fullcalendar/core";
+import { DatesSetArg, EventClickArg, EventContentArg } from "@fullcalendar/core";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useCalendarData } from "@/hooks/useCalendarData";
 import { useLayout } from "../context/LayoutContext";
 import { TherapistOption, useTherapistsWithLoaded } from "@/hooks/useTherapists";
 import { DateTime } from "luxon";
 import { STATUS_COLORS } from "@/constants";
+import { BookingModel } from "@/types/bookings";
 
 interface CalendarUIProps {
   setIsOpenBookingDialog: React.Dispatch<React.SetStateAction<boolean>>;
@@ -204,6 +205,51 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
     return stripes;
   }, [range, currentView, slotCounts]);
 
+  const eventContent = useCallback((arg: EventContentArg) => {
+    const b = arg.event.extendedProps.booking as BookingModel;
+    const price = b.price != null ? Number(b.price) : null;
+    const paid = b.paid_total ?? 0;
+
+    let flagColor: string;
+    if (price === null) {
+      flagColor = "#777";
+    } else if (paid === 0) {
+      flagColor = "#c62828";
+    } else if (paid < price) {
+      flagColor = "#f57c00";
+    } else {
+      flagColor = "#1b5e20";
+    }
+
+    const fmt = (n: number) => Number.isInteger(n) ? String(n) : n.toFixed(2);
+    const priceStr = price != null ? `${fmt(price)}€` : "—";
+
+    return (
+      <div style={{ padding: "1px 3px", overflow: "hidden", height: "100%" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 3 }}>
+          <span style={{ fontSize: 10, opacity: 0.9, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>
+            {arg.timeText}
+          </span>
+          <span style={{
+            flexShrink: 0,
+            padding: "0 3px",
+            borderRadius: 3,
+            fontSize: 9,
+            fontWeight: 700,
+            background: "rgba(255,255,255,0.85)",
+            color: flagColor,
+            whiteSpace: "nowrap",
+          }}>
+            {fmt(paid)}€/{priceStr}
+          </span>
+        </div>
+        <div style={{ fontSize: 11, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {arg.event.title}
+        </div>
+      </div>
+    );
+  }, []);
+
   const handleEventClick = useCallback((info: EventClickArg) => {
     setSelectedBookingId(info.event.extendedProps.booking.id);
     setIsOpenBookingDialog(true);
@@ -310,6 +356,11 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
             );
           }}
           events={events}
+          eventContent={
+            (currentView === "resourceTimeGridDay" || currentView === "timeGridDay")
+              ? eventContent
+              : undefined
+          }
           eventClick={handleEventClick}
           datesSet={handleDatesSet}
           firstDay={1}
