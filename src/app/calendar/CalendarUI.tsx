@@ -10,7 +10,14 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid";
 import { DatesSetArg, EventClickArg, EventContentArg } from "@fullcalendar/core";
+import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+import { toast } from "react-toastify";
 import { useCalendarData } from "@/hooks/useCalendarData";
 import { useLayout } from "../context/LayoutContext";
 import { TherapistOption, useTherapistsWithLoaded } from "@/hooks/useTherapists";
@@ -205,6 +212,53 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
     return stripes;
   }, [range, currentView, slotCounts]);
 
+  const [batchCompleteOpen, setBatchCompleteOpen] = useState(false);
+
+  const confirmedCount = useMemo(
+    () => bookings.filter((b) => b.status === "confirmed").length,
+    [bookings],
+  );
+
+  const isFutureDay = useMemo(() => (range ? range.start > new Date() : false), [range]);
+
+  const formattedDate = useMemo(() => {
+    if (!range) return "";
+    return range.start.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" });
+  }, [range, locale]);
+
+  const confirmedCountRef = useRef(0);
+  confirmedCountRef.current = confirmedCount;
+  const isFutureDayRef = useRef(false);
+  isFutureDayRef.current = isFutureDay;
+
+  const customButtons = useMemo(() => ({
+    batchComplete: {
+      text: t("closeDayButton"),
+      click: () => {
+        if (confirmedCountRef.current === 0 || isFutureDayRef.current) return;
+        setBatchCompleteOpen(true);
+      },
+    },
+  }), [t]);
+
+  const handleBatchComplete = useCallback(async () => {
+    if (!range) return;
+    setBatchCompleteOpen(false);
+    try {
+      const res = await fetch("/api/bookings/batch-complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ start: range.start.toISOString(), end: range.end.toISOString() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? t("closeDayError"));
+      toast.success(t("closeDaySuccess", { count: data.updated }));
+      window.dispatchEvent(new CustomEvent("refreshCalendarData"));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("closeDayError"));
+    }
+  }, [range, t]);
+
   const eventContent = useCallback((arg: EventContentArg) => {
     const b = arg.event.extendedProps.booking as BookingModel;
     const price = b.price != null ? Number(b.price) : null;
@@ -304,10 +358,13 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
           locales={FC_LOCALES}
           locale={locale}
           initialView="resourceTimeGridDay"
+          customButtons={customButtons}
           headerToolbar={{
             left: "prev,next today",
             center: "title",
-            right: "resourceTimeGridDay,timeGridDay,timeGridWeek,dayGridMonth",
+            right: currentView === "resourceTimeGridDay"
+              ? "resourceTimeGridDay,timeGridDay,timeGridWeek,dayGridMonth batchComplete"
+              : "resourceTimeGridDay,timeGridDay,timeGridWeek,dayGridMonth",
           }}
           buttonText={{
             today: t("today"),
@@ -417,6 +474,21 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
       {fetchError && (
         <div style={{ color: "red", marginTop: 8 }}>{t("errorLoadingBookings")} {fetchError}</div>
       )}
+
+      <Dialog open={batchCompleteOpen} onClose={() => setBatchCompleteOpen(false)}>
+        <DialogTitle>{t("closeDayDialogTitle")}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {t("closeDayDialogBody", { count: confirmedCount, date: formattedDate })}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBatchCompleteOpen(false)}>{t("closeDayCancel")}</Button>
+          <Button onClick={handleBatchComplete} variant="contained" color="success">
+            {t("closeDayConfirm")}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {currentView === "resourceTimeGridDay" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>

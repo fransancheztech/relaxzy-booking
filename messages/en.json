@@ -76,7 +76,14 @@
     "status_cancelled": "Cancelled",
     "status_pending": "Pending",
     "inactive": "inactive",
-    "deleted": "deleted"
+    "deleted": "deleted",
+    "closeDayButton": "Close day",
+    "closeDayDialogTitle": "Close day",
+    "closeDayDialogBody": "Mark {count} confirmed booking(s) on {date} as completed? This cannot be undone.",
+    "closeDayCancel": "Cancel",
+    "closeDayConfirm": "Mark as completed",
+    "closeDaySuccess": "{count} booking(s) marked as completed.",
+    "closeDayError": "Failed to close day. Please try again."
   },
   "Bookings": {
     "newBooking": "New Booking",

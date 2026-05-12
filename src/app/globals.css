@@ -25,6 +25,21 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.fc-batchComplete-button.fc-button::before {
+  content: "✔";
+  margin-right: 5px;
+}
+
+.fc-batchComplete-button.fc-button {
+  background-color: #0e7490 !important;
+  border-color: #0e7490 !important;
+  color: #fff !important;
+}
+.fc-batchComplete-button.fc-button:hover {
+  background-color: #0c6179 !important;
+  border-color: #0c6179 !important;
+}
+
 .rbc-allday-cell,
 .rbc-allday-events {
   display: none !important;

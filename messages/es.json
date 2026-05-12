@@ -76,7 +76,14 @@
     "status_cancelled": "Cancelada",
     "status_pending": "Pendiente",
     "inactive": "inactivo",
-    "deleted": "eliminado"
+    "deleted": "eliminado",
+    "closeDayButton": "Cerrar día",
+    "closeDayDialogTitle": "Cerrar día",
+    "closeDayDialogBody": "¿Marcar {count} reserva(s) confirmada(s) el {date} como completadas? Esta acción no se puede deshacer.",
+    "closeDayCancel": "Cancelar",
+    "closeDayConfirm": "Marcar como completadas",
+    "closeDaySuccess": "{count} reserva(s) marcada(s) como completadas.",
+    "closeDayError": "Error al cerrar el día. Por favor, inténtalo de nuevo."
   },
   "Bookings": {
     "newBooking": "Nueva reserva",
