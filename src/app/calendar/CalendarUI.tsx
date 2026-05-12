@@ -13,7 +13,7 @@ import { DatesSetArg, EventClickArg } from "@fullcalendar/core";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useCalendarData } from "@/hooks/useCalendarData";
 import { useLayout } from "../context/LayoutContext";
-import { useTherapists } from "@/hooks/useTherapists";
+import { TherapistOption, useTherapistsWithLoaded } from "@/hooks/useTherapists";
 import { DateTime } from "luxon";
 import { STATUS_COLORS } from "@/constants";
 
@@ -48,7 +48,10 @@ function getOccupancyColor(count: number): string {
 
 function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
   const { setSelectedBookingId } = useLayout();
-  const therapists = useTherapists();
+  const { therapists, loaded: therapistsLoaded } = useTherapistsWithLoaded();
+  const [inactiveTherapists, setInactiveTherapists] = useState<
+    Array<TherapistOption & { state: "inactive" | "deleted" }>
+  >([]);
   const t = useTranslations("Calendar");
   const locale = useLocale();
 
@@ -88,18 +91,64 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
     return map;
   }, [bookings]);
 
+  // Fetch info for any therapists referenced by visible bookings that aren't in the active list
+  // (covers deactivated and soft-deleted therapists — without them, FullCalendar would drop their events)
+  useEffect(() => {
+    if (!therapistsLoaded) return;
+    const activeIds = new Set(therapists.map((th) => th.id));
+    const missingIds = Array.from(
+      new Set(
+        bookings
+          .map((b) => b.therapist_id)
+          .filter((id): id is string => !!id && !activeIds.has(id))
+      )
+    );
+    if (missingIds.length === 0) {
+      setInactiveTherapists((prev) => (prev.length === 0 ? prev : []));
+      return;
+    }
+    let cancelled = false;
+    fetch("/api/therapists/by-ids", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: missingIds }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        setInactiveTherapists(
+          (d.therapists ?? []).map(
+            (th: { id: string; full_name: string; active: boolean; deleted_at: string | null }) => ({
+              id: th.id,
+              full_name: th.full_name,
+              state: th.deleted_at ? "deleted" : "inactive",
+            })
+          )
+        );
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [bookings, therapists, therapistsLoaded]);
+
   const resources = useMemo(() => [
     ...therapists.map((th) => ({
       id: th.id,
       title: th.full_name,
-      extendedProps: { minutes: minutesPerResource.get(th.id) ?? 0 },
+      extendedProps: { minutes: minutesPerResource.get(th.id) ?? 0, inactive: false },
+    })),
+    ...inactiveTherapists.map((th) => ({
+      id: th.id,
+      title: th.full_name,
+      extendedProps: { minutes: minutesPerResource.get(th.id) ?? 0, state: th.state as "inactive" | "deleted" },
     })),
     {
       id: "none",
       title: t("noTherapist"),
       extendedProps: { minutes: minutesPerResource.get("none") ?? 0 },
     },
-  ], [therapists, t, minutesPerResource]);
+  ], [therapists, inactiveTherapists, t, minutesPerResource]);
 
   const events = useMemo(() =>
     bookings.map((b) => {
@@ -228,15 +277,32 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
           }}
           resources={resources}
           resourceLabelContent={(arg) => {
-            const minutes = (arg.resource.extendedProps as { minutes?: number }).minutes ?? 0;
+            const props = arg.resource.extendedProps as {
+              minutes?: number;
+              state?: "inactive" | "deleted";
+            };
+            const minutes = props.minutes ?? 0;
+            const state = props.state;
             const h = Math.floor(minutes / 60);
             const m = minutes % 60;
             const label = h > 0 && m > 0 ? `${h}h ${m}m` : h > 0 ? `${h}h` : `${m}m`;
+            const suffix =
+              state === "deleted" ? ` (${t("deleted")})`
+              : state === "inactive" ? ` (${t("inactive")})`
+              : "";
             return (
-              <div style={{ textAlign: "center", lineHeight: 1.2, padding: "2px 0" }}>
-                <div>{arg.resource.title}</div>
+              <div
+                style={{
+                  textAlign: "center",
+                  lineHeight: 1.2,
+                  padding: "2px 0",
+                  color: state ? "#999" : undefined,
+                  fontStyle: state ? "italic" : undefined,
+                }}
+              >
+                <div>{arg.resource.title}{suffix}</div>
                 {minutes > 0 && (
-                  <div style={{ fontSize: 11, color: "#666", fontWeight: 400, marginTop: 1 }}>
+                  <div style={{ fontSize: 11, color: state ? "#aaa" : "#666", fontWeight: 400, marginTop: 1 }}>
                     {label}
                   </div>
                 )}

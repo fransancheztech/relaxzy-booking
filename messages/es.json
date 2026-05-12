@@ -74,7 +74,9 @@
     "status_confirmed": "Confirmada",
     "status_completed": "Completada",
     "status_cancelled": "Cancelada",
-    "status_pending": "Pendiente"
+    "status_pending": "Pendiente",
+    "inactive": "inactivo",
+    "deleted": "eliminado"
   },
   "Bookings": {
     "newBooking": "Nueva reserva",

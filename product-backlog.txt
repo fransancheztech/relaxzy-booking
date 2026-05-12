@@ -2,6 +2,7 @@ TO-DO
 - Arreglar status de reservas antiguas
 - Arreglar regalos de reservas antiguas
 - Crear un tipo de cuenta view-only que solo permita visualizar el calendario
+- Crear vouchers automaticamente cuando compren vouchers online
 
 STILL DELIBERATING
 - 5 Creación de facturas, descarga y almacenamiento en Drive automático de las mismas

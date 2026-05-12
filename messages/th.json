@@ -74,7 +74,9 @@
     "status_confirmed": "ยืนยันแล้ว",
     "status_completed": "เสร็จสิ้น",
     "status_cancelled": "ยกเลิก",
-    "status_pending": "รอดำเนินการ"
+    "status_pending": "รอดำเนินการ",
+    "inactive": "ปิดใช้งาน",
+    "deleted": "ลบแล้ว"
   },
   "Bookings": {
     "newBooking": "การจองใหม่",

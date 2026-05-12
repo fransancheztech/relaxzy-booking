@@ -74,7 +74,9 @@
     "status_confirmed": "Confirmed",
     "status_completed": "Completed",
     "status_cancelled": "Cancelled",
-    "status_pending": "Pending"
+    "status_pending": "Pending",
+    "inactive": "inactive",
+    "deleted": "deleted"
   },
   "Bookings": {
     "newBooking": "New Booking",

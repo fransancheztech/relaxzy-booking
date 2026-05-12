@@ -14,3 +14,23 @@ export function useTherapists(): TherapistOption[] {
 
   return therapists;
 }
+
+export function useTherapistsWithLoaded(): {
+  therapists: TherapistOption[];
+  loaded: boolean;
+} {
+  const [therapists, setTherapists] = useState<TherapistOption[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/therapists/active")
+      .then((r) => r.json())
+      .then((d) => {
+        setTherapists(d.therapists ?? []);
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
+  }, []);
+
+  return { therapists, loaded };
+}
