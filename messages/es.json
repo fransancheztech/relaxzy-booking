@@ -377,7 +377,12 @@
       "section2tip3": "«Por terapeuta» muestra todos los terapeutas en columnas paralelas — útil para ver huecos libres.",
       "section3heading": "Formato de teléfono y correo",
       "section3tip0": "Los teléfonos asumen formato español por defecto (p.ej. 666123456). Para números internacionales, escribe el prefijo de país con + (p.ej. +44 7700 900123).",
-      "section3tip1": "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com)."
+      "section3tip1": "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com).",
+      "section4heading": "Estados de reserva",
+      "section4tip0": "Pendiente (transitorio): el cliente está interesado pero aún no ha confirmado. Úsalo para guardar sus datos y la hora deseada sin perderlos.",
+      "section4tip1": "Confirmada (transitorio): el cliente ha confirmado que va a venir. Úsalo una vez que la cita está fijada y lo estás esperando.",
+      "section4tip2": "Completada (final): la sesión ha terminado y el cliente se ha ido. Cámbialo a este estado una vez que la cita haya finalizado.",
+      "section4tip3": "Cancelada (final): el cliente no se presentó o canceló. Úsalo para ausencias y cancelaciones. No se pueden añadir pagos a una reserva cancelada."
     },
     "bookings": {
       "title": "Reservas",
@@ -399,7 +404,12 @@
       "section3tip2": "El IVA se aplica automáticamente para las propinas con tarjeta y bono.",
       "section4heading": "Formato de teléfono y correo",
       "section4tip0": "Los teléfonos asumen formato español por defecto (p.ej. 666123456). Para números internacionales, escribe el prefijo de país con + (p.ej. +44 7700 900123).",
-      "section4tip1": "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com)."
+      "section4tip1": "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com).",
+      "section5heading": "Estados de reserva",
+      "section5tip0": "Pendiente (transitorio): el cliente está interesado pero aún no ha confirmado. Úsalo para guardar sus datos y la hora deseada sin perderlos.",
+      "section5tip1": "Confirmada (transitorio): el cliente ha confirmado que va a venir. Úsalo una vez que la cita está fijada y lo estás esperando.",
+      "section5tip2": "Completada (final): la sesión ha terminado y el cliente se ha ido. Cámbialo a este estado una vez que la cita haya finalizado.",
+      "section5tip3": "Cancelada (final): el cliente no se presentó o canceló. Úsalo para ausencias y cancelaciones. No se pueden añadir pagos a una reserva cancelada."
     },
     "clients": {
       "title": "Clientes",

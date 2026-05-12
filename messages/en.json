@@ -377,7 +377,12 @@
       "section2tip3": "\"By therapist\" shows all therapists as side-by-side columns — useful to spot free slots.",
       "section3heading": "Phone & email format",
       "section3tip0": "Phone numbers default to Spanish format (e.g. 666123456). For international numbers, type the country code with a + prefix (e.g. +44 7700 900123).",
-      "section3tip1": "Emails must follow the standard format (e.g. name@example.com)."
+      "section3tip1": "Emails must follow the standard format (e.g. name@example.com).",
+      "section4heading": "Booking statuses",
+      "section4tip0": "Pending (transitional): the client is interested but hasn't confirmed yet. Use it to hold their details and desired time so you don't lose them.",
+      "section4tip1": "Confirmed (transitional): the client has confirmed they are coming. Use this once the appointment is set and you are expecting them.",
+      "section4tip2": "Completed (final): the session is done and the client has left. Switch to this once the appointment has finished.",
+      "section4tip3": "Cancelled (final): the client didn't show up or cancelled. Use this for no-shows and cancellations. No payments can be added to a cancelled booking."
     },
     "bookings": {
       "title": "Bookings",
@@ -399,7 +404,12 @@
       "section3tip2": "IVA is applied automatically for credit card and voucher tips.",
       "section4heading": "Phone & email format",
       "section4tip0": "Phone numbers default to Spanish format (e.g. 666123456). For international numbers, type the country code with a + prefix (e.g. +44 7700 900123).",
-      "section4tip1": "Emails must follow the standard format (e.g. name@example.com)."
+      "section4tip1": "Emails must follow the standard format (e.g. name@example.com).",
+      "section5heading": "Booking statuses",
+      "section5tip0": "Pending (transitional): the client is interested but hasn't confirmed yet. Use it to hold their details and desired time so you don't lose them.",
+      "section5tip1": "Confirmed (transitional): the client has confirmed they are coming. Use this once the appointment is set and you are expecting them.",
+      "section5tip2": "Completed (final): the session is done and the client has left. Switch to this once the appointment has finished.",
+      "section5tip3": "Cancelled (final): the client didn't show up or cancelled. Use this for no-shows and cancellations. No payments can be added to a cancelled booking."
     },
     "clients": {
       "title": "Clients",

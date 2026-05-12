@@ -42,8 +42,8 @@ const PAGE_KEYS: Record<string, PageKey> = {
 };
 
 const SECTION_COUNTS: Record<PageKey, number[]> = {
-  calendar:    [4, 3, 4, 2],
-  bookings:    [3, 3, 3, 3, 2],
+  calendar:    [4, 3, 4, 2, 4],
+  bookings:    [3, 3, 3, 3, 2, 4],
   clients:     [2, 2, 1, 2],
   payments:    [3, 2],
   services:    [2, 2, 2],
