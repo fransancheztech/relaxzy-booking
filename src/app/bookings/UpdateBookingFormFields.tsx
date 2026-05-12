@@ -42,6 +42,7 @@ import TipSection from "./TipSection";
 interface Props {
   bookingId: string;
   setIsPaymentDialogOpen: Dispatch<SetStateAction<boolean>>;
+  setIsManagePaymentsDialogOpen: Dispatch<SetStateAction<boolean>>;
   paymentSummary: {
     totalPrice: number;
     paidCash: number;
@@ -51,7 +52,7 @@ interface Props {
   };
 }
 
-const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSummary }: Props) => {
+const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManagePaymentsDialogOpen, paymentSummary }: Props) => {
   const t = useTranslations("BookingForm");
   const tCommon = useTranslations("Common");
   const tBookings = useTranslations("Bookings");
@@ -325,9 +326,15 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, paymentSum
               </Box>
             </Box>
           </Box>
-          <Button variant="outlined" size="small" onClick={() => setIsPaymentDialogOpen(true)}>
-            {t("addPayment")}
-          </Button>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <Button variant="outlined" size="small" onClick={() => setIsPaymentDialogOpen(true)}>
+              {t("addPayment")}
+            </Button>
+            <Button variant="text" size="small" color="inherit" onClick={() => setIsManagePaymentsDialogOpen(true)}
+              sx={{ fontSize: "0.7rem", color: "text.secondary" }}>
+              {t("managePayments")}
+            </Button>
+          </Box>
         </Paper>
       </Grid>
 

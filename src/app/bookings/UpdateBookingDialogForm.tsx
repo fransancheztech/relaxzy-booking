@@ -25,6 +25,7 @@ import DialogDeletion from "@/app/bookings/ConfirmDeleteBookingDialog";
 import handleDeleteBooking from "@/handlers/handleDeleteBooking";
 import { DateTime } from "luxon";
 import PayBookingDialog from "./PayBookingDialogForm";
+import ManagePaymentsDialog from "@/components/ManagePaymentsDialog";
 import { useTranslations } from "next-intl";
 
 type Props = {
@@ -55,6 +56,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] =
     useState(false);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isManagePaymentsDialogOpen, setIsManagePaymentsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [paymentSummary, setPaymentSummary] = useState({
     totalPrice: 0,
@@ -204,6 +206,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
               <UpdateBookingFormFields
                 bookingId={bookingId}
                 setIsPaymentDialogOpen={setIsPaymentDialogOpen}
+                setIsManagePaymentsDialogOpen={setIsManagePaymentsDialogOpen}
                 paymentSummary={paymentSummary}
               />
             </DialogContent>
@@ -251,6 +254,13 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
         paidCard={paymentSummary.paidCard}
         paidVoucher={paymentSummary.paidVoucher}
         onPaymentSuccess={onPaymentSuccess}
+      />
+
+      <ManagePaymentsDialog
+        open={isManagePaymentsDialogOpen}
+        onClose={() => setIsManagePaymentsDialogOpen(false)}
+        bookingId={bookingId}
+        onPaymentChanged={reloadPaymentsSummary}
       />
 
       <DialogDeletion
