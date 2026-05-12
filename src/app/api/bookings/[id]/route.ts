@@ -285,6 +285,21 @@ export async function PUT(
         }
       }
 
+      // Reject therapist assignment on cancelled bookings
+      if ("therapist_id" in bookingData && bookingData.therapist_id !== null) {
+        const current = await tx.bookings.findUnique({
+          where: { id, deleted_at: null },
+          select: { status: true },
+        });
+        const effectiveStatus = bookingData.status ?? current?.status;
+        if (effectiveStatus === "cancelled") {
+          throw Object.assign(
+            new Error("Cannot assign a therapist to a cancelled booking"),
+            { httpStatus: 409 },
+          );
+        }
+      }
+
       // BOOKING UPDATE
       if (resolvedServiceId) bookingData.service_id = resolvedServiceId;
       if (clientId) bookingData.client_id = clientId;
@@ -310,6 +325,10 @@ export async function PUT(
         { error: "Booking not found or already deleted" },
         { status: 404 },
       );
+    }
+
+    if (error.httpStatus) {
+      return NextResponse.json({ error: error.message }, { status: error.httpStatus });
     }
 
     return NextResponse.json(
