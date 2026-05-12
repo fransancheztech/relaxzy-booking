@@ -226,8 +226,8 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
 
     return (
       <div style={{ padding: "1px 3px", overflow: "hidden", height: "100%" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 3 }}>
-          <span style={{ fontSize: 10, opacity: 0.9, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 10, opacity: 0.9, whiteSpace: "nowrap" }}>
             {arg.timeText}
           </span>
           <span style={{
