@@ -37,13 +37,20 @@ export async function POST(
     // ---------------------------------------------------
     const booking = await prisma.bookings.findFirst({
       where: { id, deleted_at: null },
-      select: { id: true, price: true, client_id: true },
+      select: { id: true, price: true, client_id: true, status: true },
     });
 
     if (!booking) {
       return NextResponse.json(
         { error: "Booking not found or already deleted" },
         { status: 404 }
+      );
+    }
+
+    if (booking.status === "cancelled") {
+      return NextResponse.json(
+        { error: "Cannot add payments to a cancelled booking" },
+        { status: 409 }
       );
     }
 
