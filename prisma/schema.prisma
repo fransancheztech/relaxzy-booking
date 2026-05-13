@@ -346,55 +346,6 @@ model tips {
   @@index([therapist_id])
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model bookings_backup {
-  id           String?         @db.Uuid
-  client_id    String?         @db.Uuid
-  service_id   String?         @db.Uuid
-  start_time   DateTime?       @db.Timestamptz(6)
-  end_time     DateTime?       @db.Timestamptz(6)
-  notes        String?
-  status       booking_status?
-  created_at   DateTime?       @db.Timestamptz(6)
-  updated_at   DateTime?       @db.Timestamptz(6)
-  deleted_at   DateTime?       @db.Timestamptz(6)
-  price        Decimal?        @db.Decimal
-  therapist_id String?         @db.Uuid
-
-  @@ignore
-}
-
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model payment_events_backup {
-  id           String?          @db.Uuid
-  payment_id   String?          @db.Uuid
-  type         payment_types?
-  amount       Decimal?         @db.Decimal
-  notes        String?
-  deleted_at   DateTime?        @db.Timestamptz(6)
-  created_at   DateTime?        @db.Timestamptz(6)
-  performed_by String?          @db.Uuid
-  method       payment_methods?
-
-  @@ignore
-}
-
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model payments_backup {
-  id         String?   @db.Uuid
-  booking_id String?   @db.Uuid
-  amount     Decimal?  @db.Decimal
-  notes      String?
-  deleted_at DateTime? @db.Timestamptz(6)
-  created_at DateTime? @db.Timestamptz(6)
-  voucher_id String?   @db.Uuid
-
-  @@ignore
-}
-
 view bookings_with_details {
   booking_id                  String?          @db.Uuid
   booking_start_time          DateTime?        @db.Timestamptz(6)

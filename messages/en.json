@@ -83,7 +83,23 @@
     "closeDayCancel": "Cancel",
     "closeDayConfirm": "Mark as completed",
     "closeDaySuccess": "{count} booking(s) marked as completed.",
-    "closeDayError": "Failed to close day. Please try again."
+    "closeDayError": "Failed to close day. Please try again.",
+    "dailyTotalsButton": "Daily totals"
+  },
+  "DailyTotals": {
+    "title": "Daily totals",
+    "paymentsSection": "Payments",
+    "tipsSection": "Tips",
+    "endOfDaySection": "End of day",
+    "cash": "Cash",
+    "card": "Card",
+    "voucher": "Voucher",
+    "total": "Total",
+    "totalCash": "Total cash",
+    "totalCard": "Total card",
+    "therapist": "Therapist",
+    "noTips": "No tips recorded for this day.",
+    "loadError": "Failed to load daily totals."
   },
   "Bookings": {
     "newBooking": "New Booking",

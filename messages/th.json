@@ -83,7 +83,23 @@
     "closeDayCancel": "ยกเลิก",
     "closeDayConfirm": "ทำเครื่องหมายว่าเสร็จสิ้น",
     "closeDaySuccess": "{count} การจองถูกทำเครื่องหมายว่าเสร็จสิ้น",
-    "closeDayError": "ไม่สามารถปิดวันได้ กรุณาลองอีกครั้ง"
+    "closeDayError": "ไม่สามารถปิดวันได้ กรุณาลองอีกครั้ง",
+    "dailyTotalsButton": "ยอดรวมประจำวัน"
+  },
+  "DailyTotals": {
+    "title": "ยอดรวมประจำวัน",
+    "paymentsSection": "การชำระเงิน",
+    "tipsSection": "ทิป",
+    "endOfDaySection": "ปิดกะ",
+    "cash": "เงินสด",
+    "card": "บัตร",
+    "voucher": "บัตรกำนัล",
+    "total": "รวม",
+    "totalCash": "รวมเงินสด",
+    "totalCard": "รวมบัตร",
+    "therapist": "นักบำบัด",
+    "noTips": "ไม่มีทิปที่บันทึกไว้สำหรับวันนี้",
+    "loadError": "ไม่สามารถโหลดยอดรวมประจำวันได้"
   },
   "Bookings": {
     "newBooking": "การจองใหม่",

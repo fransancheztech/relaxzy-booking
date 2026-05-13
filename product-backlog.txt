@@ -1,7 +1,5 @@
 TO-DO
 - Añadir resumen al final de las view By therapist y day o en el header (pagos en efectivo, en tarjeta, en voucher, tips en efectivo, tarjeta o voucher).
-- Poder liberar propinas selectivamente.
-- Añadir fecha de recepción de la propina. 
 - Añadir propina de las reservas antiguas.
 - Añadir regalos de las reservas antiguas.
 - Crear un tipo de cuenta view-only que solo permita visualizar el calendario
@@ -44,3 +42,5 @@ DONE
 - El dialog de update bookigs no debería autofocusear el nombre on open.
 - Mover el dropdown a justo abajo del input focuseado.
 - Cambiar icono de las propinas.
+- Poder liberar propinas selectivamente.
+- Añadir fecha de recepción de la propina. 

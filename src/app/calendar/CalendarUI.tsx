@@ -24,6 +24,7 @@ import { TherapistOption, useTherapistsWithLoaded } from "@/hooks/useTherapists"
 import { DateTime } from "luxon";
 import { STATUS_COLORS } from "@/constants";
 import { BookingModel } from "@/types/bookings";
+import DailyTotalsDialog from "@/components/DailyTotalsDialog";
 
 interface CalendarUIProps {
   setIsOpenBookingDialog: React.Dispatch<React.SetStateAction<boolean>>;
@@ -213,6 +214,8 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
   }, [range, currentView, slotCounts]);
 
   const [batchCompleteOpen, setBatchCompleteOpen] = useState(false);
+  const [dailyTotalsOpen, setDailyTotalsOpen] = useState(false);
+  const rangeRef = useRef<{ start: Date; end: Date } | null>(null);
 
   const confirmedCount = useMemo(
     () => bookings.filter((b) => b.status === "confirmed").length,
@@ -230,6 +233,7 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
   confirmedCountRef.current = confirmedCount;
   const isFutureDayRef = useRef(false);
   isFutureDayRef.current = isFutureDay;
+  rangeRef.current = range;
 
   const customButtons = useMemo(() => ({
     batchComplete: {
@@ -237,6 +241,13 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
       click: () => {
         if (confirmedCountRef.current === 0 || isFutureDayRef.current) return;
         setBatchCompleteOpen(true);
+      },
+    },
+    dailyTotals: {
+      text: t("dailyTotalsButton"),
+      click: () => {
+        if (!rangeRef.current) return;
+        setDailyTotalsOpen(true);
       },
     },
   }), [t]);
@@ -363,7 +374,9 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
             left: "prev,next today",
             center: "title",
             right: currentView === "resourceTimeGridDay"
-              ? "resourceTimeGridDay,timeGridDay,timeGridWeek,dayGridMonth batchComplete"
+              ? "resourceTimeGridDay,timeGridDay,timeGridWeek,dayGridMonth dailyTotals batchComplete"
+              : currentView === "timeGridDay"
+              ? "resourceTimeGridDay,timeGridDay,timeGridWeek,dayGridMonth dailyTotals"
               : "resourceTimeGridDay,timeGridDay,timeGridWeek,dayGridMonth",
           }}
           buttonText={{
@@ -489,6 +502,13 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <DailyTotalsDialog
+        open={dailyTotalsOpen}
+        onClose={() => setDailyTotalsOpen(false)}
+        start={range?.start ?? null}
+        end={range?.end ?? null}
+      />
 
       {currentView === "resourceTimeGridDay" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8 }}>
