@@ -32,7 +32,7 @@ import SpaIcon from "@mui/icons-material/Spa";
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import BarChartIcon from "@mui/icons-material/BarChart";
-import TipsAndUpdatesIcon from "@mui/icons-material/TipsAndUpdates";
+import SavingsIcon from "@mui/icons-material/Savings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import HelpButton from "./HelpButton";
@@ -50,7 +50,7 @@ const PAGE_ICONS: Record<string, React.ReactNode> = {
   "/therapists": <HealthAndSafetyIcon sx={{ fontSize: 18 }} />,
   "/vouchers":   <CardGiftcardIcon sx={{ fontSize: 18 }} />,
   "/stats":      <BarChartIcon sx={{ fontSize: 18 }} />,
-  "/tips":       <TipsAndUpdatesIcon sx={{ fontSize: 18 }} />,
+  "/tips":       <SavingsIcon sx={{ fontSize: 18 }} />,
 };
 
 function HeaderButton() {
