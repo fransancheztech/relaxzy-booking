@@ -376,7 +376,7 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
             right: currentView === "resourceTimeGridDay"
               ? "resourceTimeGridDay,timeGridDay,timeGridWeek,dayGridMonth dailyTotals batchComplete"
               : currentView === "timeGridDay"
-              ? "resourceTimeGridDay,timeGridDay,timeGridWeek,dayGridMonth dailyTotals"
+              ? "resourceTimeGridDay,timeGridDay,timeGridWeek,dayGridMonth dailyTotals batchComplete"
               : "resourceTimeGridDay,timeGridDay,timeGridWeek,dayGridMonth",
           }}
           buttonText={{
