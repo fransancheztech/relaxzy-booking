@@ -73,7 +73,6 @@ function VoucherPickerField<TFieldValues extends FieldValues>({
             isOptionEqualToValue={(o, v) => o.code === v.code}
             loading={loading}
             clearOnBlur={false}
-            disablePortal
             onInputChange={(_, value, reason) => {
               if (reason === "input") {
                 fetchVouchers(value);

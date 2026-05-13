@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { useClientSearch } from "@/hooks/useClientSearch";
 import { ClientRow } from "@/hooks/useSimilarClients";
 import { BookingSchemaType } from "@/schemas/booking.schema";
-import { Avatar, Box, Chip, Grid, Paper, TextField, Typography } from "@mui/material";
+import { Avatar, Box, Chip, Grid, Paper, Popper, TextField, Typography } from "@mui/material";
 import { useRef, useState } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 
@@ -61,11 +61,17 @@ const BookingClientSection = ({ autoFocus }: Props) => {
   });
 
   const [focused, setFocused] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<HTMLDivElement | null>(null);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const nameRef    = useRef<HTMLDivElement | null>(null);
+  const surnameRef = useRef<HTMLDivElement | null>(null);
+  const phoneRef   = useRef<HTMLDivElement | null>(null);
+  const emailRef   = useRef<HTMLDivElement | null>(null);
 
-  const handleFocus = () => {
+  const handleFocus = (el: HTMLDivElement | null) => {
     if (blurTimerRef.current) clearTimeout(blurTimerRef.current);
     setFocused(true);
+    if (el) setAnchorEl(el);
   };
 
   const handleBlur = () => {
@@ -86,7 +92,7 @@ const BookingClientSection = ({ autoFocus }: Props) => {
 
   return (
     <>
-      <Grid size={6} sx={{ position: "relative" }}>
+      <Grid size={6} ref={nameRef}>
         <Controller
           name="client_name"
           control={control}
@@ -102,73 +108,69 @@ const BookingClientSection = ({ autoFocus }: Props) => {
               type="text"
               variant="outlined"
               autoFocus={autoFocus}
-              onFocus={handleFocus}
+              onFocus={() => handleFocus(nameRef.current)}
               onBlur={() => { field.onBlur(); handleBlur(); }}
             />
           )}
         />
-        {showDropdown && (
-          <Paper
-            elevation={4}
-            sx={{
-              position: "absolute",
-              top: "calc(100% + 8px)",
-              left: 0,
-              right: 0,
-              zIndex: 1300,
-              borderRadius: 1,
-              overflow: "hidden",
-              marginBottom: 20
-            }}
-            onMouseDown={(e) => e.preventDefault()}
-          >
-            {clients.map((c, i) => {
-              const ini = initials(c.client_name, c.client_surname);
-              const fullName = [c.client_name, c.client_surname].filter(Boolean).join(" ");
-              return (
-                <Box
-                  key={c.id}
-                  onClick={() => handleSelect(c)}
+      </Grid>
+      <Popper
+        open={showDropdown}
+        anchorEl={anchorEl}
+        placement="bottom-start"
+        sx={{ zIndex: 1400, width: anchorEl?.offsetWidth }}
+      >
+        <Paper
+          elevation={4}
+          sx={{ borderRadius: 1, overflow: "hidden" }}
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          {clients.map((c, i) => {
+            const ini = initials(c.client_name, c.client_surname);
+            const fullName = [c.client_name, c.client_surname].filter(Boolean).join(" ");
+            return (
+              <Box
+                key={c.id}
+                onClick={() => handleSelect(c)}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  px: 1.5,
+                  py: 1,
+                  cursor: "pointer",
+                  borderTop: i > 0 ? "1px solid" : "none",
+                  borderColor: "divider",
+                  "&:hover": { bgcolor: "action.hover" },
+                }}
+              >
+                <Avatar
                   sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.5,
-                    px: 1.5,
-                    py: 1,
-                    cursor: "pointer",
-                    borderTop: i > 0 ? "1px solid" : "none",
-                    borderColor: "divider",
-                    "&:hover": { bgcolor: "action.hover" },
+                    width: 32,
+                    height: 32,
+                    fontSize: 12,
+                    bgcolor: avatarColor(ini),
+                    flexShrink: 0,
                   }}
                 >
-                  <Avatar
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      fontSize: 12,
-                      bgcolor: avatarColor(ini),
-                      flexShrink: 0,
-                    }}
-                  >
-                    {ini}
-                  </Avatar>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" fontWeight={600} noWrap>
-                      <HighlightedText text={fullName} query={nameVal} />
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" noWrap>
-                      {[c.client_email, c.client_phone].filter(Boolean).join(" · ")}
-                    </Typography>
-                  </Box>
-                  <Chip label={t("existing")} size="small" sx={{ fontSize: 10, height: 20, flexShrink: 0 }} />
+                  {ini}
+                </Avatar>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography variant="body2" fontWeight={600} noWrap>
+                    <HighlightedText text={fullName} query={nameVal} />
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" noWrap>
+                    {[c.client_email, c.client_phone].filter(Boolean).join(" · ")}
+                  </Typography>
                 </Box>
-              );
-            })}
-          </Paper>
-        )}
-      </Grid>
+                <Chip label={t("existing")} size="small" sx={{ fontSize: 10, height: 20, flexShrink: 0 }} />
+              </Box>
+            );
+          })}
+        </Paper>
+      </Popper>
 
-      <Grid size={6}>
+      <Grid size={6} ref={surnameRef}>
         <Controller
           name="client_surname"
           control={control}
@@ -183,14 +185,14 @@ const BookingClientSection = ({ autoFocus }: Props) => {
               size="small"
               type="text"
               variant="outlined"
-              onFocus={handleFocus}
+              onFocus={() => handleFocus(surnameRef.current)}
               onBlur={() => { field.onBlur(); handleBlur(); }}
             />
           )}
         />
       </Grid>
 
-      <Grid size={6}>
+      <Grid size={6} ref={phoneRef}>
         <Controller
           name="client_phone"
           control={control}
@@ -205,14 +207,14 @@ const BookingClientSection = ({ autoFocus }: Props) => {
               size="small"
               type="text"
               variant="outlined"
-              onFocus={handleFocus}
+              onFocus={() => handleFocus(phoneRef.current)}
               onBlur={() => { field.onBlur(); handleBlur(); }}
             />
           )}
         />
       </Grid>
 
-      <Grid size={6}>
+      <Grid size={6} ref={emailRef}>
         <Controller
           name="client_email"
           control={control}
@@ -227,7 +229,7 @@ const BookingClientSection = ({ autoFocus }: Props) => {
               size="small"
               type="text"
               variant="outlined"
-              onFocus={handleFocus}
+              onFocus={() => handleFocus(emailRef.current)}
               onBlur={() => { field.onBlur(); handleBlur(); }}
             />
           )}
