@@ -180,6 +180,7 @@
     "paymentMethod": "วิธีชำระเงิน",
     "ivaApplies": "ภาษีมูลค่าเพิ่ม (21%)",
     "notesOptional": "หมายเหตุ (ถ้ามี)",
+    "receivedDate": "วันที่รับ",
     "saveTip": "บันทึกทิปส์",
     "removeTip": "ลบทิปส์",
     "tipAdded": "เพิ่มทิปส์แล้ว",

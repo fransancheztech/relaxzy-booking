@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { booking_id, therapist_id, amount, payment_method, iva_applies, notes } = body;
+    const { booking_id, therapist_id, amount, payment_method, iva_applies, notes, received_at } = body;
 
     if (!therapist_id) {
       return NextResponse.json({ error: "Missing therapist_id" }, { status: 400 });
@@ -51,6 +51,7 @@ export async function POST(request: Request) {
         payment_method: payment_method as tip_payment_method,
         iva_applies: Boolean(iva_applies),
         notes: notes?.trim() || null,
+        received_at: received_at ? new Date(received_at) : new Date(),
       },
       include: { therapists: { select: { id: true, full_name: true } } },
     });

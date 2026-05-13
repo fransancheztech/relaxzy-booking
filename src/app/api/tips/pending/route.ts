@@ -26,7 +26,7 @@ export async function GET() {
     const map = new Map<string, Group>();
 
     for (const tip of tips) {
-      const date = tip.created_at;
+      const date = tip.received_at;
       const year = date.getFullYear();
       const month = date.getMonth() + 1;
       const key = `${tip.therapist_id}_${year}_${month}`;

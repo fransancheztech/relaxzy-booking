@@ -180,6 +180,7 @@
     "paymentMethod": "Método de pago",
     "ivaApplies": "IVA (21%)",
     "notesOptional": "Notas (opcional)",
+    "receivedDate": "Fecha de recepción",
     "saveTip": "Guardar propina",
     "removeTip": "Eliminar propina",
     "tipAdded": "Propina añadida",

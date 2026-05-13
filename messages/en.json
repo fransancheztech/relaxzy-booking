@@ -180,6 +180,7 @@
     "paymentMethod": "Payment method",
     "ivaApplies": "IVA applies (21%)",
     "notesOptional": "Notes (optional)",
+    "receivedDate": "Received on",
     "saveTip": "Save Tip",
     "removeTip": "Remove tip",
     "tipAdded": "Tip added",

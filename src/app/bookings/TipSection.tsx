@@ -21,6 +21,9 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { es } from "date-fns/locale";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useState } from "react";
@@ -37,12 +40,23 @@ interface Tip {
   payment_method: "cash" | "credit_card" | "voucher";
   iva_applies: boolean;
   notes: string | null;
+  received_at: string;
   therapists: { id: string; full_name: string };
 }
 
 interface Props {
   bookingId: string;
   defaultTherapistId?: string;
+}
+
+function isToday(iso: string): boolean {
+  const d = new Date(iso);
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+}
+
+function formatShortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
@@ -61,6 +75,7 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
       payment_method: "credit_card",
       iva_applies: true,
       notes: "",
+      received_at: new Date(),
     },
   });
 
@@ -108,6 +123,7 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
           payment_method: data.payment_method,
           iva_applies: data.iva_applies,
           notes: data.notes,
+          received_at: data.received_at,
         }),
       });
 
@@ -124,6 +140,7 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
         payment_method: "credit_card",
         iva_applies: true,
         notes: "",
+        received_at: new Date(),
       });
       setShowForm(false);
       fetchTips();
@@ -203,6 +220,11 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
           />
           {tip.iva_applies && (
             <Chip label="IVA" size="small" color="warning" sx={{ fontSize: "0.7rem" }} />
+          )}
+          {!isToday(tip.received_at) && (
+            <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+              {formatShortDate(tip.received_at)}
+            </Typography>
           )}
           {tip.notes && (
             <Typography variant="caption" color="text.secondary" sx={{ maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -290,8 +312,28 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
               </Grid>
             )}
 
+            {/* Received date */}
+            <Grid size={6}>
+              <Controller
+                name="received_at"
+                control={methods.control}
+                render={({ field }) => (
+                  <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+                    <DatePicker
+                      label={t("receivedDate")}
+                      value={(field.value as Date) ?? null}
+                      onChange={(date) => field.onChange(date ?? new Date())}
+                      format="dd/MM/yyyy"
+                      disableFuture
+                      slotProps={{ textField: { size: "small", fullWidth: true } }}
+                    />
+                  </LocalizationProvider>
+                )}
+              />
+            </Grid>
+
             {/* Notes */}
-            <Grid size={12}>
+            <Grid size={6}>
               <Controller
                 name="notes"
                 control={methods.control}

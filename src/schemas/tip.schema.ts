@@ -20,6 +20,7 @@ export const TipSchema = z.object({
   payment_method: z.enum(["cash", "credit_card", "voucher"]),
   iva_applies: z.boolean(),
   notes: z.string().optional(),
+  received_at: z.coerce.date().default(() => new Date()),
 });
 
 export type TipFormInput = z.input<typeof TipSchema>;
