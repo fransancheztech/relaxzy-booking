@@ -77,7 +77,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
         <Typography variant="subtitle2" color="text.secondary">{t("clientSection")}</Typography>
         <Divider />
       </Grid>
-      <BookingClientSection autoFocus />
+      <BookingClientSection />
       <Grid size={12}>
         <Typography variant="subtitle2" color="text.secondary">{t("bookingDetails")}</Typography>
         <Divider />

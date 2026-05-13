@@ -1,8 +1,13 @@
 TO-DO
-- Arreglar regalos de reservas antiguas
+- Mover el dropdown a justo abajo del input focuseado.
+- Añadir resumen al final de las view By therapist y day o en el header (pagos en efectivo, en tarjeta, en voucher, tips en efectivo, tarjeta o voucher).
+- Poder liberar propinas selectivamente.
+- Añadir fecha de recepción de la propina. 
+- Cambiar icono de las propinas.
+- Añadir propina de las reservas antiguas.
+- Añadir regalos de las reservas antiguas.
 - Crear un tipo de cuenta view-only que solo permita visualizar el calendario
 - Crear vouchers automaticamente cuando compren vouchers online
-- Poder acceder al pago de una reserva o al voucher usado cliceando su pago desde la reserva.
 
 STILL DELIBERATING
 - 5 Creación de facturas, descarga y almacenamiento en Drive automático de las mismas
@@ -38,3 +43,4 @@ DONE
 - Valorar si mantenemos gestión manual de estado de pendientes, confirmadas, completadas y canceladas, o si lo derivamos de otros datos, y como los mostramos.
 - Chequear validación teléfonos insertados
 - Arreglar status de reservas antiguas
+- El dialog de update bookigs no debería autofocusear el nombre on open.
