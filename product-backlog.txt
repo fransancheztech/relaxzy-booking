@@ -1,8 +1,10 @@
 TO-DO
+- Añadir la posibilidad de crear vouchers con custom created_at o de cambiar el voucher.created_at
 - Añadir propina de las reservas antiguas.
 - Añadir regalos de las reservas antiguas.
 - Crear un tipo de cuenta view-only que solo permita visualizar el calendario
 - Crear vouchers automaticamente cuando compren vouchers online
+- Consultar si UEBEA tiene endpoints para conectar tarjetas regalos y reservas online
 
 STILL DELIBERATING
 - 5 Creación de facturas, descarga y almacenamiento en Drive automático de las mismas

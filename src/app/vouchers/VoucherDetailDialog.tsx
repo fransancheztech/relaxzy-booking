@@ -13,22 +13,37 @@ import {
   DialogContentText,
   DialogTitle,
   Divider,
+  Grid,
   IconButton,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
+  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
+import EditIcon from "@mui/icons-material/Edit";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { es } from "date-fns/locale";
 import { formatMoney } from "@/utils/formatMoney";
 import { toast } from "react-toastify";
 import VoucherPaymentEventDialog from "./VoucherPaymentEventDialog";
 import { useTranslations } from "next-intl";
+
+type Client = {
+  id: string;
+  client_name: string | null;
+  client_surname: string | null;
+  client_phone: string | null;
+  client_email: string | null;
+};
 
 type PaymentEvent = {
   id: string;
@@ -53,16 +68,44 @@ type Details = {
     code: string;
     balance: string | null;
     expiration_date: string;
+    created_at: string | null;
     notes: string | null;
+    buyer_id: string;
+    recipient_id: string | null;
   };
+  buyer: Client | null;
+  recipient: Client | null;
   paymentEvents: PaymentEvent[];
   voucherUses: VoucherUse[];
 };
+
+interface EditData {
+  buyer_name: string;
+  buyer_surname: string;
+  buyer_phone: string;
+  buyer_email: string;
+  recipient_name: string;
+  recipient_surname: string;
+  recipient_phone: string;
+  recipient_email: string;
+  created_at: Date | null;
+  expiration_date: Date | null;
+  notes: string;
+}
 
 type Props = {
   voucherId: string;
   open: boolean;
   onClose: () => void;
+};
+
+const formatDate = (value: string | null | undefined) => {
+  if (!value) return "—";
+  return new Date(value).toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 };
 
 const formatDateTime = (value: string | null) => {
@@ -75,6 +118,13 @@ const formatDateTime = (value: string | null) => {
     minute: "2-digit",
     hour12: false,
   });
+};
+
+const clientLabel = (c: Client | null) => {
+  if (!c) return "—";
+  const name = [c.client_name, c.client_surname].filter(Boolean).join(" ");
+  const contact = [c.client_phone, c.client_email].filter(Boolean).join(" · ");
+  return [name, contact].filter(Boolean).join("  ·  ");
 };
 
 const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
@@ -90,6 +140,10 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDeleteUse, setPendingDeleteUse] = useState<VoucherUse | null>(null);
+
+  const [editMode, setEditMode] = useState(false);
+  const [editData, setEditData] = useState<EditData | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const loadDetails = useCallback(async () => {
     setLoading(true);
@@ -111,6 +165,26 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
   useEffect(() => {
     if (open && voucherId) loadDetails();
   }, [open, voucherId, loadDetails]);
+
+  // Reset edit state when details load
+  useEffect(() => {
+    if (details) {
+      setEditData({
+        buyer_name: details.buyer?.client_name ?? "",
+        buyer_surname: details.buyer?.client_surname ?? "",
+        buyer_phone: details.buyer?.client_phone ?? "",
+        buyer_email: details.buyer?.client_email ?? "",
+        recipient_name: details.recipient?.client_name ?? "",
+        recipient_surname: details.recipient?.client_surname ?? "",
+        recipient_phone: details.recipient?.client_phone ?? "",
+        recipient_email: details.recipient?.client_email ?? "",
+        created_at: details.voucher.created_at ? new Date(details.voucher.created_at) : null,
+        expiration_date: details.voucher.expiration_date ? new Date(details.voucher.expiration_date) : null,
+        notes: details.voucher.notes ?? "",
+      });
+      setEditMode(false);
+    }
+  }, [details]);
 
   const handlePaymentSuccess = useCallback(() => {
     loadDetails();
@@ -139,6 +213,30 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
     }
   };
 
+  const handleSave = async () => {
+    if (!editData) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/vouchers/${voucherId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...editData,
+          created_at: editData.created_at?.toISOString(),
+          expiration_date: editData.expiration_date?.toISOString(),
+        }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success(t("detailsSaved"));
+      loadDetails();
+      window.dispatchEvent(new CustomEvent("refreshVouchersData"));
+    } catch {
+      toast.error(t("errorSavingDetails"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const openRefund = (event: PaymentEvent) => {
     setSelectedEvent(event);
     setPaymentDialogMode("refund");
@@ -150,6 +248,10 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
     setPaymentDialogMode("charge");
     setPaymentDialogOpen(true);
   };
+
+  const hasSeparateRecipient =
+    details?.voucher.recipient_id != null &&
+    details.voucher.recipient_id !== details.voucher.buyer_id;
 
   return (
     <>
@@ -189,6 +291,130 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
 
           {details && !loading && (
             <>
+              {/* Voucher info section */}
+              <Paper variant="outlined" sx={{ p: 1.5, mb: 2 }}>
+                {!editMode ? (
+                  <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+                    <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
+                      <Typography variant="body2">
+                        <strong>{t("buyer")}:</strong> {clientLabel(details.buyer)}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>{t("recipient")}:</strong>{" "}
+                        {hasSeparateRecipient ? clientLabel(details.recipient) : t("sameAsBuyer")}
+                      </Typography>
+                      <Typography variant="body2" sx={{ mt: 0.5 }}>
+                        <strong>{t("createdAt")}:</strong> {formatDate(details.voucher.created_at)}
+                        {"  ·  "}
+                        <strong>{t("expirationDate")}:</strong> {formatDate(details.voucher.expiration_date)}
+                        {details.voucher.notes && (
+                          <>{" · "}<strong>{tCommon("notes")}:</strong> {details.voucher.notes}</>
+                        )}
+                      </Typography>
+                    </Box>
+                    <Tooltip title={tCommon("edit")}>
+                      <IconButton size="small" onClick={() => setEditMode(true)}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                ) : (
+                  <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+                    <Grid container spacing={1.5}>
+                      <Grid size={12}>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                          {t("buyer")}
+                        </Typography>
+                      </Grid>
+                      <Grid size={3}>
+                        <TextField size="small" fullWidth label={tCommon("name")}
+                          value={editData?.buyer_name ?? ""}
+                          onChange={(e) => setEditData((p) => p && ({ ...p, buyer_name: e.target.value }))} />
+                      </Grid>
+                      <Grid size={3}>
+                        <TextField size="small" fullWidth label={tCommon("surname")}
+                          value={editData?.buyer_surname ?? ""}
+                          onChange={(e) => setEditData((p) => p && ({ ...p, buyer_surname: e.target.value }))} />
+                      </Grid>
+                      <Grid size={3}>
+                        <TextField size="small" fullWidth label={tCommon("phone")}
+                          value={editData?.buyer_phone ?? ""}
+                          onChange={(e) => setEditData((p) => p && ({ ...p, buyer_phone: e.target.value }))} />
+                      </Grid>
+                      <Grid size={3}>
+                        <TextField size="small" fullWidth label={tCommon("email")}
+                          value={editData?.buyer_email ?? ""}
+                          onChange={(e) => setEditData((p) => p && ({ ...p, buyer_email: e.target.value }))} />
+                      </Grid>
+
+                      {hasSeparateRecipient && (
+                        <>
+                          <Grid size={12}>
+                            <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                              {t("recipient")}
+                            </Typography>
+                          </Grid>
+                          <Grid size={3}>
+                            <TextField size="small" fullWidth label={tCommon("name")}
+                              value={editData?.recipient_name ?? ""}
+                              onChange={(e) => setEditData((p) => p && ({ ...p, recipient_name: e.target.value }))} />
+                          </Grid>
+                          <Grid size={3}>
+                            <TextField size="small" fullWidth label={tCommon("surname")}
+                              value={editData?.recipient_surname ?? ""}
+                              onChange={(e) => setEditData((p) => p && ({ ...p, recipient_surname: e.target.value }))} />
+                          </Grid>
+                          <Grid size={3}>
+                            <TextField size="small" fullWidth label={tCommon("phone")}
+                              value={editData?.recipient_phone ?? ""}
+                              onChange={(e) => setEditData((p) => p && ({ ...p, recipient_phone: e.target.value }))} />
+                          </Grid>
+                          <Grid size={3}>
+                            <TextField size="small" fullWidth label={tCommon("email")}
+                              value={editData?.recipient_email ?? ""}
+                              onChange={(e) => setEditData((p) => p && ({ ...p, recipient_email: e.target.value }))} />
+                          </Grid>
+                        </>
+                      )}
+
+                      <Grid size={3}>
+                        <DatePicker
+                          label={t("createdAt")}
+                          value={editData?.created_at ?? null}
+                          onChange={(d) => setEditData((p) => p && ({ ...p, created_at: d }))}
+                          format="dd/MM/yyyy"
+                          disableFuture
+                          slotProps={{ textField: { size: "small", fullWidth: true } }}
+                        />
+                      </Grid>
+                      <Grid size={3}>
+                        <DatePicker
+                          label={t("expirationDate")}
+                          value={editData?.expiration_date ?? null}
+                          onChange={(d) => setEditData((p) => p && ({ ...p, expiration_date: d }))}
+                          format="dd/MM/yyyy"
+                          slotProps={{ textField: { size: "small", fullWidth: true } }}
+                        />
+                      </Grid>
+                      <Grid size={6}>
+                        <TextField size="small" fullWidth label={tCommon("notes")}
+                          value={editData?.notes ?? ""}
+                          onChange={(e) => setEditData((p) => p && ({ ...p, notes: e.target.value }))} />
+                      </Grid>
+
+                      <Grid size={12} sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
+                        <Button size="small" onClick={() => setEditMode(false)} disabled={saving}>
+                          {tCommon("cancel")}
+                        </Button>
+                        <Button size="small" variant="contained" onClick={handleSave} disabled={saving}>
+                          {saving ? tCommon("saving") : tCommon("saveChanges")}
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </LocalizationProvider>
+                )}
+              </Paper>
+
               <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
                 {t("paymentEvents")}
               </Typography>

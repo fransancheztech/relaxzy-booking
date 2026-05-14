@@ -19,6 +19,7 @@ type Body = {
   initial_payment_code?: string | null;
   notes?: string;
   expiration_date?: string | Date;
+  created_at?: string | Date;
 };
 
 const normalizeString = (v?: string | null) =>
@@ -188,9 +189,12 @@ export async function POST(request: Request) {
         ? String(body.initial_payment_code).trim()
         : null;
 
-    const now = new Date();
-    const { start: dayStart, end: dayEnd } = utcDayBounds(now);
-    const ddmmyy = formatDdMmYyUtc(now);
+    const createdAt = body.created_at ? new Date(body.created_at as string | Date) : new Date();
+    if (Number.isNaN(createdAt.getTime())) {
+      return NextResponse.json({ error: "Invalid created_at date" }, { status: 400 });
+    }
+    const { start: dayStart, end: dayEnd } = utcDayBounds(createdAt);
+    const ddmmyy = formatDdMmYyUtc(createdAt);
     const codePrefix = `V-${ddmmyy}-`;
 
     let voucher: Awaited<ReturnType<typeof prisma.vouchers.create>> | undefined;
@@ -224,6 +228,7 @@ export async function POST(request: Request) {
               recipient_id: recipientId,
               expiration_date: expiration,
               notes: voucherNotes,
+              created_at: createdAt,
             },
           });
 
@@ -233,7 +238,7 @@ export async function POST(request: Request) {
               ${amount}::numeric,
               ${body.payment_method}::payment_methods,
               ${performedBy}::uuid,
-              ${`Payment reference code: ${paymentRef}`}::text,
+              ${paymentRef ? `Internal reference: ${paymentRef}` : null}::text,
               NULL::uuid,
               ${v.id}::uuid
             )

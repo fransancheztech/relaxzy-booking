@@ -289,7 +289,7 @@
     "balanceEur": "ยอด (€) *",
     "paymentMethod": "วิธีชำระเงิน *",
     "expirationDate": "วันหมดอายุ *",
-    "paymentReference": "อ้างอิงการชำระเงิน",
+    "paymentReference": "อ้างอิงภายใน",
     "buyerLabel": "ผู้ซื้อ",
     "recipientLabel": "ผู้รับ (ถ้ามี — ค่าเริ่มต้นคือผู้ซื้อ)",
     "addBalance": "เพิ่มยอด",
@@ -316,7 +316,10 @@
     "errorLoadingVouchers": "เกิดข้อผิดพลาดในการโหลดบัตรกำนัล",
     "viewDetails": "ดูรายละเอียด",
     "amountPositive": "จำนวนเงินต้องเป็นตัวเลขที่มากกว่าศูนย์",
-    "errorProcessingPayment": "เกิดข้อผิดพลาดในการประมวลผลการชำระเงิน"
+    "errorProcessingPayment": "เกิดข้อผิดพลาดในการประมวลผลการชำระเงิน",
+    "createdAt": "วันที่สร้าง",
+    "detailsSaved": "บันทึกรายละเอียดแล้ว",
+    "errorSavingDetails": "เกิดข้อผิดพลาดในการบันทึกรายละเอียด"
   },
   "Stats": {
     "totalRevenue": "รายได้รวม",

@@ -80,6 +80,35 @@ const NewVoucherFormFields = () => {
 
       <Grid size={4}>
         <Controller
+          name="created_at"
+          control={control}
+          render={({ field }) => (
+            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+              <DatePicker
+                label={t("createdAt")}
+                value={(field.value as Date) ?? null}
+                onChange={(date) => field.onChange(date ?? new Date())}
+                format="dd/MM/yyyy"
+                disableFuture
+                slotProps={{
+                  textField: {
+                    error: !!errors.created_at,
+                    helperText: errors.created_at?.message,
+                    size: "small",
+                    sx: { width: "100%" },
+                    onBlur: field.onBlur,
+                    name: field.name,
+                    inputRef: field.ref,
+                  },
+                }}
+              />
+            </LocalizationProvider>
+          )}
+        />
+      </Grid>
+
+      <Grid size={4}>
+        <Controller
           name="expiration_date"
           control={control}
           render={({ field }) => (
@@ -106,7 +135,7 @@ const NewVoucherFormFields = () => {
         />
       </Grid>
 
-      <Grid size={6}>
+      <Grid size={4}>
         <Controller
           name="initial_payment_code"
           control={control}
@@ -126,7 +155,7 @@ const NewVoucherFormFields = () => {
         />
       </Grid>
 
-      <Grid size={6}>
+      <Grid size={4}>
         <Controller
           name="notes"
           control={control}

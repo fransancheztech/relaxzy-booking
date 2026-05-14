@@ -23,6 +23,7 @@ export const VoucherSchema = z.object({
     initial_payment_code: z.string().optional(),
     notes: z.string().optional(),
     expiration_date: z.date({ error: "Expiration date is required" }),
+    created_at: z.date().optional(),
 }).superRefine((data, ctx) => {
     if (!data.buyer_email && !data.buyer_phone) {
         ctx.addIssue({

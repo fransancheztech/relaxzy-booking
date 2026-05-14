@@ -33,6 +33,7 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
         initial_payment_code: "",
         notes: "",
         expiration_date: new Date(Date.now() + 183 * 24 * 60 * 60 * 1000),
+        created_at: new Date(),
     };
 
     const methods = useForm<VoucherSchemaType>({

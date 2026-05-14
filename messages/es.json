@@ -289,7 +289,7 @@
     "balanceEur": "Saldo (€) *",
     "paymentMethod": "Método de pago *",
     "expirationDate": "Fecha de vencimiento *",
-    "paymentReference": "Referencia de pago",
+    "paymentReference": "Referencia interna",
     "buyerLabel": "Comprador",
     "recipientLabel": "Destinatario (opcional — por defecto el comprador)",
     "addBalance": "Añadir saldo",
@@ -316,7 +316,10 @@
     "errorLoadingVouchers": "Error al cargar los bonos",
     "viewDetails": "Ver detalles",
     "amountPositive": "El importe debe ser un número positivo",
-    "errorProcessingPayment": "Error al procesar el pago"
+    "errorProcessingPayment": "Error al procesar el pago",
+    "createdAt": "Fecha de creación",
+    "detailsSaved": "Detalles guardados",
+    "errorSavingDetails": "Error al guardar los detalles"
   },
   "Stats": {
     "totalRevenue": "Ingresos totales",

@@ -289,7 +289,7 @@
     "balanceEur": "Balance (€) *",
     "paymentMethod": "Payment Method *",
     "expirationDate": "Expiration Date *",
-    "paymentReference": "Payment Reference",
+    "paymentReference": "Internal Reference",
     "buyerLabel": "Buyer",
     "recipientLabel": "Recipient (optional — defaults to buyer)",
     "addBalance": "Add Balance",
@@ -316,7 +316,10 @@
     "errorLoadingVouchers": "Error loading vouchers",
     "viewDetails": "View details",
     "amountPositive": "Amount must be a positive number",
-    "errorProcessingPayment": "Error processing payment"
+    "errorProcessingPayment": "Error processing payment",
+    "createdAt": "Created at",
+    "detailsSaved": "Details saved",
+    "errorSavingDetails": "Error saving details"
   },
   "Stats": {
     "totalRevenue": "Total revenue",

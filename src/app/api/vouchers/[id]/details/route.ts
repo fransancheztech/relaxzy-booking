@@ -8,8 +8,23 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const [voucher, paymentEvents, voucherUses] = await Promise.all([
-      prisma.vouchers.findFirst({ where: { id, deleted_at: null } }),
+    const voucher = await prisma.vouchers.findFirst({ where: { id, deleted_at: null } });
+
+    if (!voucher) {
+      return NextResponse.json({ error: "Voucher not found" }, { status: 404 });
+    }
+
+    const [buyer, recipient, paymentEvents, voucherUses] = await Promise.all([
+      prisma.clients.findFirst({
+        where: { id: voucher.buyer_id, deleted_at: null },
+        select: { id: true, client_name: true, client_surname: true, client_phone: true, client_email: true },
+      }),
+      voucher.recipient_id && voucher.recipient_id !== voucher.buyer_id
+        ? prisma.clients.findFirst({
+            where: { id: voucher.recipient_id, deleted_at: null },
+            select: { id: true, client_name: true, client_surname: true, client_phone: true, client_email: true },
+          })
+        : Promise.resolve(null),
       prisma.payment_events.findMany({
         where: {
           deleted_at: null,
@@ -23,11 +38,7 @@ export async function GET(
       }),
     ]);
 
-    if (!voucher) {
-      return NextResponse.json({ error: "Voucher not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({ voucher, paymentEvents, voucherUses });
+    return NextResponse.json({ voucher, buyer, recipient, paymentEvents, voucherUses });
   } catch (err) {
     console.error("Error fetching voucher details", err);
     return NextResponse.json(
