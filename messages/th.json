@@ -428,7 +428,12 @@
     "releaseSelected": "จ่าย",
     "releaseSuccess": "จ่ายทิป {count} รายการแล้ว",
     "releaseError": "ไม่สามารถจ่ายทิปได้",
-    "failedLoadTips": "ไม่สามารถโหลดทิปได้"
+    "failedLoadTips": "ไม่สามารถโหลดทิปได้",
+    "editTip": "แก้ไขทิป",
+    "viewTip": "รายละเอียดทิป",
+    "ivaApplies": "ใช้ IVA",
+    "tipSaved": "บันทึกทิปแล้ว",
+    "errorSavingTip": "เกิดข้อผิดพลาดในการบันทึกทิป"
   },
   "Help": {
     "helpLabel": "ช่วยเหลือ",

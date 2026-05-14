@@ -428,7 +428,12 @@
     "releaseSelected": "Release",
     "releaseSuccess": "{count} tips released",
     "releaseError": "Failed to release tips",
-    "failedLoadTips": "Failed to load tips"
+    "failedLoadTips": "Failed to load tips",
+    "editTip": "Edit tip",
+    "viewTip": "Tip details",
+    "ivaApplies": "IVA applies",
+    "tipSaved": "Tip saved",
+    "errorSavingTip": "Error saving tip"
   },
   "Help": {
     "helpLabel": "Help",

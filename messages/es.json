@@ -428,7 +428,12 @@
     "releaseSelected": "Liberar",
     "releaseSuccess": "{count} propinas liberadas",
     "releaseError": "Error al liberar las propinas",
-    "failedLoadTips": "Error al cargar las propinas"
+    "failedLoadTips": "Error al cargar las propinas",
+    "editTip": "Editar propina",
+    "viewTip": "Detalle de propina",
+    "ivaApplies": "Aplica IVA",
+    "tipSaved": "Propina guardada",
+    "errorSavingTip": "Error al guardar la propina"
   },
   "Help": {
     "helpLabel": "Ayuda",

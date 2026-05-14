@@ -5,16 +5,21 @@ import {
   Button,
   Chip,
   FormControl,
+  IconButton,
   InputLabel,
   MenuItem,
   Paper,
   Select,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import PayoutIcon from "@mui/icons-material/AccountBalanceWallet";
+import EditIcon from "@mui/icons-material/Edit";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { DataGrid, GridColDef, GridRowId } from "@mui/x-data-grid";
+import TipDetailDialog from "@/components/TipDetailDialog";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
@@ -116,6 +121,7 @@ function getPeriodDates(
 
 const TipsPageContent = () => {
   const t = useTranslations("TipsPage");
+  const tCommon = useTranslations("Common");
   const { setButtonLabel, setOnButtonClick } = useLayout();
   const therapists = useTherapists();
 
@@ -123,6 +129,8 @@ const TipsPageContent = () => {
   const [loading, setLoading] = useState(false);
   const [releasing, setReleasing] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<GridRowId>>(new Set());
+
+  const [detailTip, setDetailTip] = useState<TipRow | null>(null);
 
   const [status, setStatus] = useState<StatusFilter>("pending");
   const [therapistId, setTherapistId] = useState("");
@@ -276,6 +284,21 @@ const TipsPageContent = () => {
       sortable: false,
       valueFormatter: (v: string | null) => v ?? "",
     },
+    {
+      field: "actions",
+      headerName: "",
+      width: 48,
+      sortable: false,
+      renderCell: ({ row }) => (
+        <Tooltip title={row.payout_id === null ? tCommon("edit") : tCommon("view")}>
+          <IconButton size="small" onClick={(e) => { e.stopPropagation(); setDetailTip(row); }}>
+            {row.payout_id === null
+              ? <EditIcon fontSize="small" />
+              : <VisibilityIcon fontSize="small" />}
+          </IconButton>
+        </Tooltip>
+      ),
+    },
   ];
 
   return (
@@ -407,6 +430,12 @@ const TipsPageContent = () => {
           sx={{ height: "100%", border: 0 }}
         />
       </Box>
+
+      <TipDetailDialog
+        tip={detailTip}
+        onClose={() => setDetailTip(null)}
+        onSaved={loadTips}
+      />
     </Box>
   );
 };
