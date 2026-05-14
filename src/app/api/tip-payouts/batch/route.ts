@@ -20,31 +20,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No eligible tips found" }, { status: 409 });
     }
 
-    // Group by therapist_id + received_at year+month
-    type Group = {
-      therapist_id: string;
-      period_year: number;
-      period_month: number;
-      tips: typeof tips;
-    };
-    const groupMap = new Map<string, Group>();
-
+    // One payout record per therapist in the selection
+    const groupMap = new Map<string, typeof tips>();
     for (const tip of tips) {
-      const year = tip.received_at.getFullYear();
-      const month = tip.received_at.getMonth() + 1;
-      const key = `${tip.therapist_id}|${year}|${month}`;
-      if (!groupMap.has(key)) {
-        groupMap.set(key, { therapist_id: tip.therapist_id, period_year: year, period_month: month, tips: [] });
-      }
-      groupMap.get(key)!.tips.push(tip);
+      const bucket = groupMap.get(tip.therapist_id) ?? [];
+      bucket.push(tip);
+      groupMap.set(tip.therapist_id, bucket);
     }
 
     let tipsReleased = 0;
     await prisma.$transaction(async (tx) => {
-      for (const group of groupMap.values()) {
+      for (const [therapist_id, bucket] of groupMap) {
         let gross = 0;
         let ivaTotal = 0;
-        for (const tip of group.tips) {
+        for (const tip of bucket) {
           const amount = Number(tip.amount);
           gross += amount;
           if (tip.iva_applies) ivaTotal += amount * IVA_RATE;
@@ -52,9 +41,7 @@ export async function POST(request: Request) {
 
         const payout = await tx.tip_payouts.create({
           data: {
-            therapist_id: group.therapist_id,
-            period_year: group.period_year,
-            period_month: group.period_month,
+            therapist_id,
             gross_amount: Math.round(gross * 100) / 100,
             iva_amount: Math.round(ivaTotal * 100) / 100,
             net_amount: Math.round((gross - ivaTotal) * 100) / 100,
@@ -63,11 +50,11 @@ export async function POST(request: Request) {
         });
 
         await tx.tips.updateMany({
-          where: { id: { in: group.tips.map((t) => t.id) } },
+          where: { id: { in: bucket.map((t) => t.id) } },
           data: { payout_id: payout.id },
         });
 
-        tipsReleased += group.tips.length;
+        tipsReleased += bucket.length;
       }
     });
 
