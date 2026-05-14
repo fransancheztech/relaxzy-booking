@@ -88,7 +88,8 @@
   },
   "DailyTotals": {
     "title": "Daily totals",
-    "paymentsSection": "Payments",
+    "paymentsSection": "Booking payments",
+    "voucherSalesSection": "Voucher sales",
     "tipsSection": "Tips",
     "endOfDaySection": "End of day",
     "cash": "Cash",
@@ -97,6 +98,7 @@
     "total": "Total",
     "totalCash": "Total cash",
     "totalCard": "Total card",
+    "grandTotal": "Grand total",
     "therapist": "Therapist",
     "noTips": "No tips recorded for this day.",
     "loadError": "Failed to load daily totals."

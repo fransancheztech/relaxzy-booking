@@ -1,5 +1,4 @@
 TO-DO
-- Añadir resumen al final de las view By therapist y day o en el header (pagos en efectivo, en tarjeta, en voucher, tips en efectivo, tarjeta o voucher).
 - Añadir propina de las reservas antiguas.
 - Añadir regalos de las reservas antiguas.
 - Crear un tipo de cuenta view-only que solo permita visualizar el calendario
@@ -44,3 +43,4 @@ DONE
 - Cambiar icono de las propinas.
 - Poder liberar propinas selectivamente.
 - Añadir fecha de recepción de la propina. 
+- Añadir resumen al final de las view By therapist y day o en el header (pagos en efectivo, en tarjeta, en voucher, tips en efectivo, tarjeta o voucher).

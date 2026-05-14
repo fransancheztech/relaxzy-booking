@@ -88,7 +88,8 @@
   },
   "DailyTotals": {
     "title": "ยอดรวมประจำวัน",
-    "paymentsSection": "การชำระเงิน",
+    "paymentsSection": "การชำระเงินของการจอง",
+    "voucherSalesSection": "การขายบัตรกำนัล",
     "tipsSection": "ทิป",
     "endOfDaySection": "ปิดกะ",
     "cash": "เงินสด",
@@ -97,6 +98,7 @@
     "total": "รวม",
     "totalCash": "รวมเงินสด",
     "totalCard": "รวมบัตร",
+    "grandTotal": "ยอดรวมทั้งหมด",
     "therapist": "นักบำบัด",
     "noTips": "ไม่มีทิปที่บันทึกไว้สำหรับวันนี้",
     "loadError": "ไม่สามารถโหลดยอดรวมประจำวันได้"

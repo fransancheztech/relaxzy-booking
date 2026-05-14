@@ -17,7 +17,8 @@ export async function GET(request: Request) {
     type PaymentRow = { payment_method: string; net: unknown };
     type TipRow = { therapist_id: string; full_name: string; payment_method: string; total: unknown };
 
-    const [paymentRows, tipRows] = await Promise.all([
+    const [bookingPaymentRows, voucherSaleRows, tipRows] = await Promise.all([
+      // Booking payments — date-scoped by when the booking took place
       prisma.$queryRaw<PaymentRow[]>`
         SELECT
           pe.method AS payment_method,
@@ -26,12 +27,27 @@ export async function GET(request: Request) {
         JOIN payments p ON p.id = pe.payment_id
         JOIN bookings b ON b.id = p.booking_id
         WHERE
-          pe.created_at >= ${startDate}
-          AND pe.created_at < ${endDate}
+          b.start_time >= ${startDate}
+          AND b.start_time < ${endDate}
           AND b.deleted_at IS NULL
           AND pe.deleted_at IS NULL
         GROUP BY pe.method
       `,
+      // Voucher sales — date-scoped by when the voucher was sold (pe.created_at)
+      prisma.$queryRaw<PaymentRow[]>`
+        SELECT
+          pe.method AS payment_method,
+          SUM(CASE WHEN pe.type = 'CHARGE' THEN pe.amount ELSE -pe.amount END) AS net
+        FROM payment_events pe
+        JOIN payments p ON p.id = pe.payment_id
+        WHERE
+          pe.created_at >= ${startDate}
+          AND pe.created_at < ${endDate}
+          AND p.voucher_id IS NOT NULL
+          AND pe.deleted_at IS NULL
+        GROUP BY pe.method
+      `,
+      // Tips — date-scoped by when the tip was physically received
       prisma.$queryRaw<TipRow[]>`
         SELECT
           t.therapist_id,
@@ -52,15 +68,23 @@ export async function GET(request: Request) {
     const toNum = (v: unknown) =>
       v != null ? Math.round(Number(v) * 100) / 100 : 0;
 
-    // Payment totals
-    const payments = { cash: 0, card: 0, voucher: 0, total: 0 };
-    for (const row of paymentRows) {
+    // Booking payments (cash / card only — payment_methods enum has no voucher)
+    const payments = { cash: 0, card: 0, total: 0 };
+    for (const row of bookingPaymentRows) {
       const net = toNum(row.net);
       if (row.payment_method === "cash") payments.cash += net;
       else if (row.payment_method === "credit_card") payments.card += net;
-      else if (row.payment_method === "voucher") payments.voucher += net;
     }
-    payments.total = Math.round((payments.cash + payments.card + payments.voucher) * 100) / 100;
+    payments.total = Math.round((payments.cash + payments.card) * 100) / 100;
+
+    // Voucher sales income
+    const voucherSales = { cash: 0, card: 0, total: 0 };
+    for (const row of voucherSaleRows) {
+      const net = toNum(row.net);
+      if (row.payment_method === "cash") voucherSales.cash += net;
+      else if (row.payment_method === "credit_card") voucherSales.card += net;
+    }
+    voucherSales.total = Math.round((voucherSales.cash + voucherSales.card) * 100) / 100;
 
     // Tips grouped by therapist
     type TherapistTips = { therapist_id: string; therapist_name: string; cash: number; card: number; voucher: number; total: number };
@@ -90,8 +114,13 @@ export async function GET(request: Request) {
     const tipsVoucher = byTherapist.reduce((s, e) => s + e.voucher, 0);
     const tipsTotal = Math.round((tipsCash + tipsCard + tipsVoucher) * 100) / 100;
 
+    const combinedCash = Math.round((payments.cash + voucherSales.cash + tipsCash) * 100) / 100;
+    const combinedCard = Math.round((payments.card + voucherSales.card + tipsCard) * 100) / 100;
+    const combinedTotal = Math.round((combinedCash + combinedCard + tipsVoucher) * 100) / 100;
+
     return NextResponse.json({
       payments,
+      voucher_sales: voucherSales,
       tips: {
         cash: Math.round(tipsCash * 100) / 100,
         card: Math.round(tipsCard * 100) / 100,
@@ -100,8 +129,9 @@ export async function GET(request: Request) {
         by_therapist: byTherapist,
       },
       combined: {
-        cash: Math.round((payments.cash + tipsCash) * 100) / 100,
-        card: Math.round((payments.card + tipsCard) * 100) / 100,
+        cash: combinedCash,
+        card: combinedCard,
+        total: combinedTotal,
       },
     });
   } catch (err) {

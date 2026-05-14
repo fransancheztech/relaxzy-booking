@@ -88,7 +88,8 @@
   },
   "DailyTotals": {
     "title": "Totales del día",
-    "paymentsSection": "Pagos",
+    "paymentsSection": "Pagos de reservas",
+    "voucherSalesSection": "Venta de bonos",
     "tipsSection": "Propinas",
     "endOfDaySection": "Cierre del día",
     "cash": "Efectivo",
@@ -97,6 +98,7 @@
     "total": "Total",
     "totalCash": "Total efectivo",
     "totalCard": "Total tarjeta",
+    "grandTotal": "Total general",
     "therapist": "Terapeuta",
     "noTips": "No hay propinas registradas para este día.",
     "loadError": "No se pudieron cargar los totales del día."
