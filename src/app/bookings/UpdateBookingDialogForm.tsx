@@ -203,6 +203,11 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
                 overflowY: "hidden",
                 opacity: loading ? 0.5 : 1,
                 pointerEvents: loading ? "none" : "auto",
+                ...(isTherapist && {
+                  "& .MuiInputBase-input.Mui-disabled": { WebkitTextFillColor: "rgba(0,0,0,0.87)" },
+                  "& .MuiSelect-select.Mui-disabled": { WebkitTextFillColor: "rgba(0,0,0,0.87)" },
+                  "& .MuiInputLabel-root.Mui-disabled": { color: "rgba(0,0,0,0.6)" },
+                }),
               }}
             >
               <UpdateBookingFormFields
