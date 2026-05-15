@@ -25,6 +25,7 @@ import { DateTime } from "luxon";
 import { STATUS_COLORS } from "@/constants";
 import { BookingModel } from "@/types/bookings";
 import DailyTotalsDialog from "@/components/DailyTotalsDialog";
+import { useRole } from "@/hooks/useRole";
 
 interface CalendarUIProps {
   setIsOpenBookingDialog: React.Dispatch<React.SetStateAction<boolean>>;
@@ -57,6 +58,7 @@ function getOccupancyColor(count: number): string {
 
 function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
   const { setSelectedBookingId } = useLayout();
+  const { isTherapist } = useRole();
   const { therapists, loaded: therapistsLoaded } = useTherapistsWithLoaded();
   const [inactiveTherapists, setInactiveTherapists] = useState<
     Array<TherapistOption & { state: "inactive" | "deleted" }>
@@ -373,9 +375,7 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
           headerToolbar={{
             left: "prev,next today",
             center: "title",
-            right: currentView === "resourceTimeGridDay"
-              ? "resourceTimeGridDay,timeGridDay,timeGridWeek,dayGridMonth dailyTotals batchComplete"
-              : currentView === "timeGridDay"
+            right: (currentView === "resourceTimeGridDay" || currentView === "timeGridDay") && !isTherapist
               ? "resourceTimeGridDay,timeGridDay,timeGridWeek,dayGridMonth dailyTotals batchComplete"
               : "resourceTimeGridDay,timeGridDay,timeGridWeek,dayGridMonth",
           }}

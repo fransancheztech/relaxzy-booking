@@ -27,6 +27,7 @@ import { DateTime } from "luxon";
 import PayBookingDialog from "./PayBookingDialogForm";
 import ManagePaymentsDialog from "@/components/ManagePaymentsDialog";
 import { useTranslations } from "next-intl";
+import { useRole } from "@/hooks/useRole";
 
 type Props = {
   open: boolean;
@@ -52,6 +53,7 @@ export const defaultValuesUpdateBookingForm: Partial<BookingUpdateSchemaType> =
 const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
   const t = useTranslations("BookingForm");
   const tCommon = useTranslations("Common");
+  const { isTherapist } = useRole();
 
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] =
     useState(false);
@@ -208,26 +210,31 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
                 setIsPaymentDialogOpen={setIsPaymentDialogOpen}
                 setIsManagePaymentsDialogOpen={setIsManagePaymentsDialogOpen}
                 paymentSummary={paymentSummary}
+                readOnly={isTherapist}
               />
             </DialogContent>
             <DialogActions
               sx={{ display: "flex", justifyContent: "space-between" }}
             >
-              <Button
-                startIcon={<DeleteIcon />}
-                color="error"
-                variant="outlined"
-                onClick={() => setIsConfirmDeleteDialogOpen(true)}
-              >
-                {tCommon("delete")}
-              </Button>
+              {!isTherapist && (
+                <Button
+                  startIcon={<DeleteIcon />}
+                  color="error"
+                  variant="outlined"
+                  onClick={() => setIsConfirmDeleteDialogOpen(true)}
+                >
+                  {tCommon("delete")}
+                </Button>
+              )}
               <Container sx={{ display: "flex", justifyContent: "flex-end" }}>
                 <Button startIcon={<CloseIcon />} onClick={onCancel}>
                   {tCommon("cancel")}
                 </Button>
-                <Button startIcon={<SaveIcon />} color="success" type="submit">
-                  {tCommon("saveChanges")}
-                </Button>
+                {!isTherapist && (
+                  <Button startIcon={<SaveIcon />} color="success" type="submit">
+                    {tCommon("saveChanges")}
+                  </Button>
+                )}
               </Container>
             </DialogActions>
           </form>

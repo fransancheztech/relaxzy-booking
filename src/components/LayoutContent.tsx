@@ -84,10 +84,14 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
   }, []);
 
   const isAdmin = user?.app_metadata?.role === "admin";
+  const isTherapist = user?.app_metadata?.role === "therapist";
   const adminOnlyPaths = new Set(["/stats", "/tips"]);
-  const visiblePages = menuPages.filter(
-    (page) => !adminOnlyPaths.has(page.href) || isAdmin
-  );
+  const therapistOnlyPaths = new Set(["/calendar"]);
+  const visiblePages = menuPages.filter((page) => {
+    if (adminOnlyPaths.has(page.href) && !isAdmin) return false;
+    if (isTherapist && !therapistOnlyPaths.has(page.href)) return false;
+    return true;
+  });
 
   const appBarHeight = 64;
   const currentPageHref = menuPages.find((p) => p.href === pathname)?.href;
@@ -135,7 +139,7 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
               </>
             )}
           </Box>
-          <HeaderButton />
+          {!isTherapist && <HeaderButton />}
         </Toolbar>
       </AppBar>
 

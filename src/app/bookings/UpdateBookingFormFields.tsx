@@ -50,9 +50,10 @@ interface Props {
     totalPaid: number;
     remainingBalance: number;
   };
+  readOnly?: boolean;
 }
 
-const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManagePaymentsDialogOpen, paymentSummary }: Props) => {
+const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManagePaymentsDialogOpen, paymentSummary, readOnly }: Props) => {
   const t = useTranslations("BookingForm");
   const tCommon = useTranslations("Common");
   const tBookings = useTranslations("Bookings");
@@ -77,7 +78,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
         <Typography variant="subtitle2" color="text.secondary">{t("clientSection")}</Typography>
         <Divider />
       </Grid>
-      <BookingClientSection />
+      <BookingClientSection readOnly={readOnly} />
       <Grid size={12}>
         <Typography variant="subtitle2" color="text.secondary">{t("bookingDetails")}</Typography>
         <Divider />
@@ -98,6 +99,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
                 onChange={(date) => field.onChange(date)}
                 format="dd/MM/yyyy HH:mm"
                 ampm={false}
+                disabled={readOnly}
                 slotProps={{
                   textField: {
                     error: !!errors.start_time,
@@ -116,7 +118,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
           name="service_name"
           control={control}
           render={({ field }) => (
-            <FormControl fullWidth size="small" error={!!errors.service_name}>
+            <FormControl fullWidth size="small" error={!!errors.service_name} disabled={readOnly}>
               <InputLabel id="service_name">{tCommon("service")}</InputLabel>
               <Select labelId="service_name" {...field} label={tCommon("service")}>
                 {serviceOptions.map((service) => (
@@ -135,7 +137,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
           name="therapist_id"
           control={control}
           render={({ field }) => (
-            <FormControl fullWidth size="small">
+            <FormControl fullWidth size="small" disabled={readOnly}>
               <InputLabel>{tCommon("therapist")}</InputLabel>
               <Select {...field} value={field.value ?? ""} label={tCommon("therapist")}>
                 <MenuItem value=""><em>{tCommon("none")}</em></MenuItem>
@@ -154,6 +156,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
           render={({ field }) => (
             <Autocomplete
               freeSolo
+              disabled={readOnly}
               options={durationOptions}
               value={field.value ?? null}
               onChange={(_, newValue) =>
@@ -187,6 +190,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
           render={({ field }) => (
             <Autocomplete
               freeSolo
+              disabled={readOnly}
               options={priceOptions}
               value={field.value ? formatMoneyInput(field.value) : null}
               onChange={(_, newValue) =>
@@ -216,7 +220,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
           name="status"
           control={control}
           render={({ field }) => (
-            <FormControl fullWidth size="small" error={!!errors.status}>
+            <FormControl fullWidth size="small" error={!!errors.status} disabled={readOnly}>
               <InputLabel id="status">{t("status")}</InputLabel>
               <Select
                 labelId="status"
@@ -268,6 +272,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
               variant="outlined"
               multiline
               rows={2}
+              disabled={readOnly}
             />
           )}
         />
@@ -326,20 +331,22 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
               </Box>
             </Box>
           </Box>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <Button variant="outlined" size="small" onClick={() => setIsPaymentDialogOpen(true)}>
-              {t("addPayment")}
-            </Button>
-            <Button variant="text" size="small" color="inherit" onClick={() => setIsManagePaymentsDialogOpen(true)}
-              sx={{ fontSize: "0.7rem", color: "text.secondary" }}>
-              {t("managePayments")}
-            </Button>
-          </Box>
+          {!readOnly && (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              <Button variant="outlined" size="small" onClick={() => setIsPaymentDialogOpen(true)}>
+                {t("addPayment")}
+              </Button>
+              <Button variant="text" size="small" color="inherit" onClick={() => setIsManagePaymentsDialogOpen(true)}
+                sx={{ fontSize: "0.7rem", color: "text.secondary" }}>
+                {t("managePayments")}
+              </Button>
+            </Box>
+          )}
         </Paper>
       </Grid>
 
       <Grid size={12}>
-        <TipSection bookingId={bookingId} defaultTherapistId={therapistId ?? undefined} />
+        <TipSection bookingId={bookingId} defaultTherapistId={therapistId ?? undefined} readOnly={readOnly} />
       </Grid>
 
       {(errors as any).form?.message && (

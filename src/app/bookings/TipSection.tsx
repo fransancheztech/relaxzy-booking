@@ -47,6 +47,7 @@ interface Tip {
 interface Props {
   bookingId: string;
   defaultTherapistId?: string;
+  readOnly?: boolean;
 }
 
 function isToday(iso: string): boolean {
@@ -59,7 +60,7 @@ function formatShortDate(iso: string): string {
   return new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
+const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
   const t = useTranslations("Tips");
   const tCommon = useTranslations("Common");
   const therapists = useTherapists();
@@ -174,16 +175,18 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
           {t("sectionHeader")}
         </Typography>
         <Divider sx={{ flex: 1 }} />
-        <Tooltip title={t("recordTip")}>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<AddIcon />}
-            onClick={() => setShowForm((v) => !v)}
-          >
-            {t("add")}
-          </Button>
-        </Tooltip>
+        {!readOnly && (
+          <Tooltip title={t("recordTip")}>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<AddIcon />}
+              onClick={() => setShowForm((v) => !v)}
+            >
+              {t("add")}
+            </Button>
+          </Tooltip>
+        )}
       </Box>
 
       {/* Existing tips */}
@@ -231,11 +234,13 @@ const TipSection = ({ bookingId, defaultTherapistId }: Props) => {
               {tip.notes}
             </Typography>
           )}
-          <Tooltip title={t("removeTip")}>
-            <IconButton size="small" color="error" onClick={() => handleDelete(tip.id)}>
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+          {!readOnly && (
+            <Tooltip title={t("removeTip")}>
+              <IconButton size="small" color="error" onClick={() => handleDelete(tip.id)}>
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       ))}
 

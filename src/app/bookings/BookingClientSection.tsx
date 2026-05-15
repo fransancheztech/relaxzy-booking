@@ -10,6 +10,7 @@ import { Controller, useFormContext, useWatch } from "react-hook-form";
 
 type Props = {
   autoFocus?: boolean;
+  readOnly?: boolean;
 };
 
 const AVATAR_COLORS = ["#4CAF50", "#2196F3", "#9C27B0", "#FF9800", "#00BCD4", "#E91E63"];
@@ -44,7 +45,7 @@ function HighlightedText({ text, query }: { text?: string | null; query?: string
   );
 }
 
-const BookingClientSection = ({ autoFocus }: Props) => {
+const BookingClientSection = ({ autoFocus, readOnly }: Props) => {
   const t = useTranslations("Common");
   const { control, setValue, formState: { errors } } = useFormContext<BookingSchemaType>();
 
@@ -107,6 +108,7 @@ const BookingClientSection = ({ autoFocus }: Props) => {
               size="small"
               type="text"
               variant="outlined"
+              disabled={readOnly}
               autoFocus={autoFocus}
               onFocus={() => handleFocus(nameRef.current)}
               onBlur={() => { field.onBlur(); handleBlur(); }}
@@ -185,6 +187,7 @@ const BookingClientSection = ({ autoFocus }: Props) => {
               size="small"
               type="text"
               variant="outlined"
+              disabled={readOnly}
               onFocus={() => handleFocus(surnameRef.current)}
               onBlur={() => { field.onBlur(); handleBlur(); }}
             />
@@ -207,6 +210,7 @@ const BookingClientSection = ({ autoFocus }: Props) => {
               size="small"
               type="text"
               variant="outlined"
+              disabled={readOnly}
               onFocus={() => handleFocus(phoneRef.current)}
               onBlur={() => { field.onBlur(); handleBlur(); }}
             />
@@ -229,6 +233,7 @@ const BookingClientSection = ({ autoFocus }: Props) => {
               size="small"
               type="text"
               variant="outlined"
+              disabled={readOnly}
               onFocus={() => handleFocus(emailRef.current)}
               onBlur={() => { field.onBlur(); handleBlur(); }}
             />
