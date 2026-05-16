@@ -44,7 +44,8 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslations } from "next-intl";
 
 const COLLAPSED_WIDTH = 64;
-const SIDEBAR_KEY = "sidebarCollapsed";
+const SIDEBAR_COOKIE = "sidebarCollapsed";
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 const TRANSITION_MS = 200;
 
 const supabase = createClient();
@@ -77,20 +78,28 @@ function HeaderButton() {
   );
 }
 
-export default function LayoutContent({ children }: { children: React.ReactNode }) {
+export default function LayoutContent({
+  children,
+  initialCollapsed = false,
+}: {
+  children: React.ReactNode;
+  initialCollapsed?: boolean;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [collapsed, setCollapsed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem(SIDEBAR_KEY) === "true";
-  });
+  const [userLoaded, setUserLoaded] = useState(false);
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
   const t = useTranslations("Nav");
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+      setUserLoaded(true);
+    });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      setUserLoaded(true);
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -98,7 +107,7 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
   const toggleSidebar = () => {
     setCollapsed((prev) => {
       const next = !prev;
-      localStorage.setItem(SIDEBAR_KEY, String(next));
+      document.cookie = `${SIDEBAR_COOKIE}=${next}; path=/; max-age=${COOKIE_MAX_AGE}; samesite=lax`;
       // Trigger resize after the CSS transition so FullCalendar reflows its columns
       setTimeout(() => window.dispatchEvent(new Event("resize")), TRANSITION_MS + 20);
       return next;
@@ -194,7 +203,7 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
               {/* Nav items */}
               <Box sx={{ flexGrow: 1, overflow: "hidden" }}>
                 <List dense sx={{ px: collapsed ? 0.5 : 1 }}>
-                  {visiblePages.map((page) => {
+                  {userLoaded && visiblePages.map((page) => {
                     const isActive = pathname === page.href;
                     const label = t(page.href.slice(1) as Parameters<typeof t>[0]);
                     return (
@@ -262,13 +271,13 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
               </Box>
 
               {/* Language switcher — hidden when collapsed */}
-              {!collapsed && <LanguageSwitcher />}
+              {!collapsed && userLoaded && <LanguageSwitcher />}
 
               {/* User + logout */}
               <Box>
-                <Divider sx={{ borderColor: "rgba(255,255,255,0.07)", mx: 1 }} />
+                {userLoaded && <Divider sx={{ borderColor: "rgba(255,255,255,0.07)", mx: 1 }} />}
                 <Box sx={{ p: collapsed ? 1 : 1.5, pb: 2, display: "flex", flexDirection: "column", alignItems: collapsed ? "center" : "stretch" }}>
-                  {user?.email && !collapsed && (
+                  {userLoaded && user?.email && !collapsed && (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1, px: 0.5 }}>
                       <Box
                         sx={{
@@ -299,7 +308,7 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
                     </Box>
                   )}
 
-                  {collapsed ? (
+                  {userLoaded && (collapsed ? (
                     <Tooltip title={t("logout")} placement="right">
                       <IconButton
                         onClick={handleLogout}
@@ -335,7 +344,7 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
                     >
                       {t("logout")}
                     </Button>
-                  )}
+                  ))}
                 </Box>
               </Box>
             </Drawer>

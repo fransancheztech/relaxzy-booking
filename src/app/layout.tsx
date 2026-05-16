@@ -8,6 +8,7 @@ import { Providers } from "@/components/Providers";
 import { LayoutProvider } from "./context/LayoutContext";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
+import { cookies } from "next/headers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +41,8 @@ export default async function RootLayout({
 }) {
   const locale = await getLocale();
   const messages = await getMessages();
+  const cookieStore = await cookies();
+  const initialCollapsed = cookieStore.get("sidebarCollapsed")?.value === "true";
 
   return (
     <html lang={locale}>
@@ -52,7 +55,7 @@ export default async function RootLayout({
             <Providers>
               <LayoutProvider>
                 <DatepickerLocaleProvider />
-                <LayoutContent>{children}</LayoutContent>
+                <LayoutContent initialCollapsed={initialCollapsed}>{children}</LayoutContent>
               </LayoutProvider>
             </Providers>
           </AppRouterCacheProvider>
