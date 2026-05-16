@@ -1,7 +1,8 @@
 TO-DO
+- Hacer navbar plegable
+- Habilitar página de tips pero con alcance limitado
 - Añadir propina de las reservas antiguas.
 - Añadir regalos de las reservas antiguas.
-- Crear un tipo de cuenta view-only que solo permita visualizar el calendario
 - Crear vouchers automaticamente cuando compren vouchers online
 - Consultar si UEBEA tiene endpoints para conectar tarjetas regalos y reservas online
 
@@ -46,3 +47,4 @@ DONE
 - Añadir fecha de recepción de la propina. 
 - Añadir resumen al final de las view By therapist y day o en el header (pagos en efectivo, en tarjeta, en voucher, tips en efectivo, tarjeta o voucher).
 - Añadir la posibilidad de crear vouchers con custom created_at o de cambiar el voucher.created_at
+- Crear un tipo de cuenta view-only que solo permita visualizar el calendario

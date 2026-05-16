@@ -41,7 +41,9 @@
     "vouchers": "Vouchers",
     "stats": "Stats",
     "tips": "Tips",
-    "logout": "Log out"
+    "logout": "Log out",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar"
   },
   "Language": {
     "label": "Language",

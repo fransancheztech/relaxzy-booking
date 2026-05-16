@@ -41,7 +41,9 @@
     "vouchers": "บัตรกำนัล",
     "stats": "สถิติ",
     "tips": "ทิปส์",
-    "logout": "ออกจากระบบ"
+    "logout": "ออกจากระบบ",
+    "collapseSidebar": "ย่อเมนู",
+    "expandSidebar": "ขยายเมนู"
   },
   "Language": {
     "label": "ภาษา",

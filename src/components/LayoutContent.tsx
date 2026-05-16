@@ -17,6 +17,8 @@ import {
   AppBar,
   Typography,
   Divider,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import { drawerWidth, menuPages } from "@/constants";
 import Image from "next/image";
@@ -35,9 +37,15 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import SavingsIcon from "@mui/icons-material/Savings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import HelpButton from "./HelpButton";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslations } from "next-intl";
+
+const COLLAPSED_WIDTH = 64;
+const SIDEBAR_KEY = "sidebarCollapsed";
+const TRANSITION_MS = 200;
 
 const supabase = createClient();
 
@@ -73,6 +81,10 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(SIDEBAR_KEY) === "true";
+  });
   const t = useTranslations("Nav");
 
   useEffect(() => {
@@ -82,6 +94,16 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  const toggleSidebar = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem(SIDEBAR_KEY, String(next));
+      // Trigger resize after the CSS transition so FullCalendar reflows its columns
+      setTimeout(() => window.dispatchEvent(new Event("resize")), TRANSITION_MS + 20);
+      return next;
+    });
+  };
 
   const isAdmin = user?.app_metadata?.role === "admin";
   const isTherapist = user?.app_metadata?.role === "therapist";
@@ -94,6 +116,7 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
   });
 
   const appBarHeight = 64;
+  const currentWidth = collapsed ? COLLAPSED_WIDTH : drawerWidth;
   const currentPageHref = menuPages.find((p) => p.href === pathname)?.href;
   const currentPage = currentPageHref ? t(currentPageHref.slice(1) as Parameters<typeof t>[0]) : "";
   const isLoggedIn = pathname !== "/login";
@@ -146,154 +169,209 @@ export default function LayoutContent({ children }: { children: React.ReactNode 
       {/* Sidebar + Main */}
       <Stack direction="row" sx={{ pt: `${appBarHeight}px` }}>
         {isLoggedIn && (
-          <Drawer
-            variant="permanent"
-            sx={{
-              width: drawerWidth,
-              flexShrink: 0,
-              [`& .MuiDrawer-paper`]: {
-                width: drawerWidth,
-                boxSizing: "border-box",
-                top: `${appBarHeight}px`,
-                height: `calc(100vh - ${appBarHeight}px)`,
-                display: "flex",
-                flexDirection: "column",
-                backgroundColor: "#011a02",
-                borderRight: "none",
-                pt: 1,
-              },
-            }}
-          >
-            {/* Nav items */}
-            <Box sx={{ flexGrow: 1, overflow: "auto" }}>
-              <List dense sx={{ px: 1 }}>
-                {visiblePages.map((page) => {
-                  const isActive = pathname === page.href;
-                  return (
-                    <ListItem key={page.href} disablePadding sx={{ mb: 0.5 }}>
-                      <ListItemButton
-                        onClick={() => router.push(page.href)}
+          <>
+            <Drawer
+              variant="permanent"
+              sx={{
+                width: currentWidth,
+                flexShrink: 0,
+                transition: `width ${TRANSITION_MS}ms ease`,
+                [`& .MuiDrawer-paper`]: {
+                  width: currentWidth,
+                  boxSizing: "border-box",
+                  top: `${appBarHeight}px`,
+                  height: `calc(100vh - ${appBarHeight}px)`,
+                  display: "flex",
+                  flexDirection: "column",
+                  backgroundColor: "#011a02",
+                  borderRight: "none",
+                  pt: 1,
+                  overflowX: "hidden",
+                  transition: `width ${TRANSITION_MS}ms ease`,
+                },
+              }}
+            >
+              {/* Nav items */}
+              <Box sx={{ flexGrow: 1, overflow: "hidden" }}>
+                <List dense sx={{ px: collapsed ? 0.5 : 1 }}>
+                  {visiblePages.map((page) => {
+                    const isActive = pathname === page.href;
+                    const label = t(page.href.slice(1) as Parameters<typeof t>[0]);
+                    return (
+                      <ListItem key={page.href} disablePadding sx={{ mb: 0.5 }}>
+                        <Tooltip title={collapsed ? label : ""} placement="right">
+                          <ListItemButton
+                            onClick={() => router.push(page.href)}
+                            sx={{
+                              borderRadius: 2,
+                              py: 1,
+                              px: 1.5,
+                              justifyContent: collapsed ? "center" : "flex-start",
+                              transition: "background-color 0.15s ease",
+                              bgcolor: isActive ? "rgba(255,255,255,0.1)" : "transparent",
+                              "&:hover": {
+                                bgcolor: isActive
+                                  ? "rgba(255,255,255,0.13)"
+                                  : "rgba(255,255,255,0.05)",
+                              },
+                            }}
+                          >
+                            <ListItemIcon
+                              sx={{
+                                minWidth: collapsed ? 0 : 32,
+                                color: isActive ? "#a8ffb5" : "rgba(255,255,255,0.4)",
+                                justifyContent: "center",
+                              }}
+                            >
+                              {PAGE_ICONS[page.href]}
+                            </ListItemIcon>
+                            {!collapsed && (
+                              <>
+                                <ListItemText
+                                  primary={label}
+                                  slotProps={{
+                                    primary: {
+                                      sx: {
+                                        fontSize: "0.875rem",
+                                        fontWeight: isActive ? 600 : 400,
+                                        color: isActive ? "#ffffff" : "rgba(255,255,255,0.6)",
+                                        letterSpacing: 0.2,
+                                      },
+                                    },
+                                  }}
+                                />
+                                {isActive && (
+                                  <Box
+                                    sx={{
+                                      width: 3,
+                                      height: 18,
+                                      borderRadius: 2,
+                                      bgcolor: "#60a561",
+                                      flexShrink: 0,
+                                    }}
+                                  />
+                                )}
+                              </>
+                            )}
+                          </ListItemButton>
+                        </Tooltip>
+                      </ListItem>
+                    );
+                  })}
+                </List>
+              </Box>
+
+              {/* Language switcher — hidden when collapsed */}
+              {!collapsed && <LanguageSwitcher />}
+
+              {/* User + logout */}
+              <Box>
+                <Divider sx={{ borderColor: "rgba(255,255,255,0.07)", mx: 1 }} />
+                <Box sx={{ p: collapsed ? 1 : 1.5, pb: 2, display: "flex", flexDirection: "column", alignItems: collapsed ? "center" : "stretch" }}>
+                  {user?.email && !collapsed && (
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1, px: 0.5 }}>
+                      <Box
                         sx={{
-                          borderRadius: 2,
-                          py: 1,
-                          px: 1.5,
-                          transition: "background-color 0.15s ease",
-                          bgcolor: isActive ? "rgba(255,255,255,0.1)" : "transparent",
-                          "&:hover": {
-                            bgcolor: isActive
-                              ? "rgba(255,255,255,0.13)"
-                              : "rgba(255,255,255,0.05)",
-                          },
+                          width: 26,
+                          height: 26,
+                          borderRadius: "50%",
+                          bgcolor: "rgba(255,255,255,0.1)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
                         }}
                       >
-                        <ListItemIcon
-                          sx={{
-                            minWidth: 32,
-                            color: isActive ? "#a8ffb5" : "rgba(255,255,255,0.4)",
-                          }}
-                        >
-                          {PAGE_ICONS[page.href]}
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={t(page.href.slice(1) as Parameters<typeof t>[0])}
-                          slotProps={{
-                            primary: {
-                              sx: {
-                                fontSize: "0.875rem",
-                                fontWeight: isActive ? 600 : 400,
-                                color: isActive ? "#ffffff" : "rgba(255,255,255,0.6)",
-                                letterSpacing: 0.2,
-                              },
-                            },
-                          }}
-                        />
-                        {isActive && (
-                          <Box
-                            sx={{
-                              width: 3,
-                              height: 18,
-                              borderRadius: 2,
-                              bgcolor: "#60a561",
-                              flexShrink: 0,
-                            }}
-                          />
-                        )}
-                      </ListItemButton>
-                    </ListItem>
-                  );
-                })}
-              </List>
-            </Box>
-
-            {/* Language switcher */}
-            <LanguageSwitcher />
-
-            {/* User + logout */}
-            <Box>
-              <Divider sx={{ borderColor: "rgba(255,255,255,0.07)", mx: 1 }} />
-              <Box sx={{ p: 1.5, pb: 2 }}>
-                {user?.email && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                      mb: 1,
-                      px: 0.5,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 26,
-                        height: 26,
-                        borderRadius: "50%",
-                        bgcolor: "rgba(255,255,255,0.1)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                      }}
-                    >
-                      <PersonIcon sx={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }} />
+                        <PersonIcon sx={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }} />
+                      </Box>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: "rgba(255,255,255,0.35)",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          fontSize: "0.7rem",
+                        }}
+                      >
+                        {user.email}
+                      </Typography>
                     </Box>
-                    <Typography
-                      variant="caption"
+                  )}
+
+                  {collapsed ? (
+                    <Tooltip title={t("logout")} placement="right">
+                      <IconButton
+                        onClick={handleLogout}
+                        size="small"
+                        sx={{
+                          color: "rgba(255,255,255,0.35)",
+                          borderRadius: 2,
+                          "&:hover": { bgcolor: "rgba(220,50,50,0.1)", color: "rgba(255,120,120,0.9)" },
+                        }}
+                      >
+                        <LogoutIcon sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </Tooltip>
+                  ) : (
+                    <Button
+                      variant="text"
+                      fullWidth
+                      onClick={handleLogout}
+                      startIcon={<LogoutIcon sx={{ fontSize: 15 }} />}
                       sx={{
+                        justifyContent: "flex-start",
+                        fontSize: "0.8rem",
+                        fontWeight: 400,
                         color: "rgba(255,255,255,0.35)",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        fontSize: "0.7rem",
+                        borderRadius: 2,
+                        py: 0.75,
+                        px: 1.5,
+                        "&:hover": {
+                          bgcolor: "rgba(220,50,50,0.1)",
+                          color: "rgba(255,120,120,0.9)",
+                        },
                       }}
                     >
-                      {user.email}
-                    </Typography>
-                  </Box>
-                )}
-                <Button
-                  variant="text"
-                  fullWidth
-                  onClick={handleLogout}
-                  startIcon={<LogoutIcon sx={{ fontSize: 15 }} />}
-                  sx={{
-                    justifyContent: "flex-start",
-                    fontSize: "0.8rem",
-                    fontWeight: 400,
-                    color: "rgba(255,255,255,0.35)",
-                    borderRadius: 2,
-                    py: 0.75,
-                    px: 1.5,
-                    "&:hover": {
-                      bgcolor: "rgba(220,50,50,0.1)",
-                      color: "rgba(255,120,120,0.9)",
-                    },
-                  }}
-                >
-                  {t("logout")}
-                </Button>
+                      {t("logout")}
+                    </Button>
+                  )}
+                </Box>
               </Box>
+            </Drawer>
+
+            {/* Collapse/expand tab fixed to the right edge of the sidebar */}
+            <Box
+              onClick={toggleSidebar}
+              sx={{
+                position: "fixed",
+                top: `calc(${appBarHeight}px + (100vh - ${appBarHeight}px) / 2)`,
+                left: currentWidth,
+                transform: "translateY(-50%)",
+                transition: `left ${TRANSITION_MS}ms ease`,
+                zIndex: 1300,
+                width: 16,
+                height: 48,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                bgcolor: "#1e4620",
+                borderRadius: "0 6px 6px 0",
+                cursor: "pointer",
+                boxShadow: "2px 0 8px rgba(0,0,0,0.4)",
+                color: "rgba(255,255,255,0.6)",
+                "&:hover": {
+                  bgcolor: "#2d6030",
+                  color: "#ffffff",
+                },
+              }}
+            >
+              {collapsed
+                ? <ChevronRightIcon sx={{ fontSize: 14 }} />
+                : <ChevronLeftIcon sx={{ fontSize: 14 }} />
+              }
             </Box>
-          </Drawer>
+          </>
         )}
 
         {/* Main content */}

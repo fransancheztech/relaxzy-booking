@@ -41,7 +41,9 @@
     "vouchers": "Bonos",
     "stats": "Estadísticas",
     "tips": "Propinas",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesión",
+    "collapseSidebar": "Contraer menú",
+    "expandSidebar": "Expandir menú"
   },
   "Language": {
     "label": "Idioma",
