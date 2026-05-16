@@ -28,6 +28,7 @@ import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
 import { useLayout } from "@/app/context/LayoutContext";
 import { useTherapists } from "@/hooks/useTherapists";
+import { useRole } from "@/hooks/useRole";
 import { formatMoney } from "@/utils/formatMoney";
 
 type StatusFilter = "all" | "pending" | "released";
@@ -124,6 +125,7 @@ const TipsPageContent = () => {
   const tCommon = useTranslations("Common");
   const { setButtonLabel, setOnButtonClick } = useLayout();
   const therapists = useTherapists();
+  const { isAdmin } = useRole();
 
   const [tips, setTips] = useState<TipRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -305,16 +307,18 @@ const TipsPageContent = () => {
     <Box sx={{ py: 3, px: 2, display: "flex", flexDirection: "column", gap: 1.5, height: "100%" }}>
       {/* Filter bar */}
       <Paper variant="outlined" sx={{ px: 2, py: 1.5, display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center" }}>
-        <ToggleButtonGroup
-          size="small"
-          exclusive
-          value={status}
-          onChange={(_, v) => { if (v) setStatus(v); }}
-        >
-          <ToggleButton value="all">{t("filterAll")}</ToggleButton>
-          <ToggleButton value="pending">{t("filterPending")}</ToggleButton>
-          <ToggleButton value="released">{t("filterReleased")}</ToggleButton>
-        </ToggleButtonGroup>
+        {isAdmin && (
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={status}
+            onChange={(_, v) => { if (v) setStatus(v); }}
+          >
+            <ToggleButton value="all">{t("filterAll")}</ToggleButton>
+            <ToggleButton value="pending">{t("filterPending")}</ToggleButton>
+            <ToggleButton value="released">{t("filterReleased")}</ToggleButton>
+          </ToggleButtonGroup>
+        )}
 
         <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel>{t("colTherapist")}</InputLabel>

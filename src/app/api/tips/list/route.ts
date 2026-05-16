@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
 
 const IVA_RATE = 0.21;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const status = searchParams.get("status") ?? "all";
   const therapist_id = searchParams.get("therapist_id");
   const start_date = searchParams.get("start_date");
   const end_date = searchParams.get("end_date");
+
+  const role = await getCurrentUserRole();
+  const isAdmin = role === "admin";
+
+  // Non-admins may never see released tips regardless of query params
+  const status = isAdmin ? (searchParams.get("status") ?? "all") : "pending";
 
   try {
     const tips = await prisma.tips.findMany({
