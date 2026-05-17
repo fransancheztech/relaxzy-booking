@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const therapists = await prisma.therapists.findMany({
       where: { active: true, deleted_at: null },
-      select: { id: true, full_name: true },
+      select: { id: true, full_name: true, off_days: true },
       orderBy: { full_name: "asc" },
     });
     return NextResponse.json({ therapists });

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export type TherapistOption = { id: string; full_name: string };
+export type TherapistOption = { id: string; full_name: string; off_days?: number[] };
 
 export function useTherapists(): TherapistOption[] {
   const [therapists, setTherapists] = useState<TherapistOption[]>([]);

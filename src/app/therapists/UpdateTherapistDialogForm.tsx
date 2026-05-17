@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Box,
   Button,
   CircularProgress,
   Dialog,
@@ -12,6 +13,9 @@ import {
   Grid,
   Switch,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
 } from "@mui/material";
 import { useForm, Controller, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -36,6 +40,18 @@ const defaultValues: UpdateTherapistSchemaType = {
   phone: "",
   notes: "",
   active: true,
+  off_days: [],
+};
+
+const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const;
+const DOW_KEYS: Record<number, string> = {
+  1: "dowMon",
+  2: "dowTue",
+  3: "dowWed",
+  4: "dowThu",
+  5: "dowFri",
+  6: "dowSat",
+  7: "dowSun",
 };
 
 export default function UpdateTherapistDialogForm({
@@ -72,6 +88,7 @@ export default function UpdateTherapistDialogForm({
           phone: data.phone ?? "",
           notes: data.notes ?? "",
           active: data.active ?? true,
+          off_days: Array.isArray(data.off_days) ? data.off_days : [],
         });
       } catch (err) {
         console.error(err);
@@ -213,6 +230,55 @@ export default function UpdateTherapistDialogForm({
                           />
                         }
                       />
+                    )}
+                  />
+                </Grid>
+
+                <Grid size={12}>
+                  <Controller
+                    name="off_days"
+                    control={methods.control}
+                    render={({ field }) => (
+                      <Box>
+                        <Box sx={{ display: "flex", alignItems: "baseline", gap: 1.5, mb: 0.5 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {t("daysOff")}
+                          </Typography>
+                          <Typography variant="caption" color="text.disabled">
+                            {t("daysOffHint")}
+                          </Typography>
+                        </Box>
+                        <ToggleButtonGroup
+                          size="small"
+                          value={field.value ?? []}
+                          onChange={(_, newValue: number[]) => field.onChange(newValue)}
+                          aria-label={t("daysOff")}
+                          sx={{
+                            "& .MuiToggleButton-root": {
+                              px: 1.5,
+                              minWidth: 52,
+                              fontWeight: 600,
+                              color: "success.main",
+                              borderColor: "rgba(46, 125, 50, 0.4)",
+                              bgcolor: "rgba(76, 175, 80, 0.08)",
+                              "&:hover": { bgcolor: "rgba(76, 175, 80, 0.18)" },
+                            },
+                            "& .MuiToggleButton-root.Mui-selected": {
+                              color: "error.main",
+                              borderColor: "rgba(211, 47, 47, 0.4)",
+                              bgcolor: "rgba(244, 67, 54, 0.12)",
+                              textDecoration: "line-through",
+                              "&:hover": { bgcolor: "rgba(244, 67, 54, 0.22)" },
+                            },
+                          }}
+                        >
+                          {WEEKDAYS.map((day) => (
+                            <ToggleButton key={day} value={day}>
+                              {t(DOW_KEYS[day] as Parameters<typeof t>[0])}
+                            </ToggleButton>
+                          ))}
+                        </ToggleButtonGroup>
+                      </Box>
                     )}
                   />
                 </Grid>

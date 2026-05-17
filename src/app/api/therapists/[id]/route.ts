@@ -30,10 +30,17 @@ export async function PUT(
   if (!parsed.success) {
     return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
   }
-  const { full_name, email, phone, notes, active } = parsed.data;
+  const { full_name, email, phone, notes, active, off_days } = parsed.data;
   const updated = await prisma.therapists.update({
     where: { id },
-    data: { full_name, email, phone, notes, ...(active !== undefined && { active }) },
+    data: {
+      full_name,
+      email,
+      phone,
+      notes,
+      ...(active !== undefined && { active }),
+      ...(off_days !== undefined && { off_days }),
+    },
   });
   return NextResponse.json(updated);
 }

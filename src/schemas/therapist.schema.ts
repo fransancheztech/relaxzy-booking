@@ -18,6 +18,7 @@ export const UpdateTherapistSchema = z.object({
     }),
   notes: z.string().max(500).optional(),
   active: z.boolean().optional(),
+  off_days: z.array(z.number().int().min(1).max(7)).optional(),
 });
 
 export type UpdateTherapistSchemaType = z.infer<typeof UpdateTherapistSchema>;

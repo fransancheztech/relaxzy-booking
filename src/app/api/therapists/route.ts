@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
       phone: t.phone,
       notes: t.notes,
       active: t.active,
+      off_days: t.off_days,
       created_at: t.created_at,
     }));
 

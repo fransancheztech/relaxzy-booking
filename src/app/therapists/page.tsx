@@ -2,11 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { Container } from "@mui/material";
+import { Box, Button, Container } from "@mui/material";
+import CalendarViewWeekIcon from "@mui/icons-material/CalendarViewWeek";
 import AddTherapistDialog from "./AddTherapistDialogForm";
 import UpdateTherapistDialog from "./UpdateTherapistDialogForm";
 import { useLayout } from "../context/LayoutContext";
 import TherapistsTable from "./TherapistsTable";
+import TherapistsWeeklySchedule from "./TherapistsWeeklySchedule";
 import { therapists } from "generated/prisma/client";
 
 export default function TherapistsPage() {
@@ -22,7 +24,9 @@ export default function TherapistsPage() {
 
   const [addOpen, setAddOpen] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string>("");
+  const [scheduleRefreshKey, setScheduleRefreshKey] = useState(0);
 
   useEffect(() => {
     setButtonLabel(t("newTherapist"));
@@ -75,6 +79,23 @@ export default function TherapistsPage() {
 
   return (
     <Container sx={{ py: 3 }} disableGutters>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1.5 }}>
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<CalendarViewWeekIcon />}
+          onClick={() => setScheduleOpen(true)}
+        >
+          {t("weeklyOverview")}
+        </Button>
+      </Box>
+
+      <TherapistsWeeklySchedule
+        key={scheduleRefreshKey}
+        open={scheduleOpen}
+        onClose={() => setScheduleOpen(false)}
+      />
+
       <TherapistsTable
         therapists={therapists}
         rowCount={rowCount}
@@ -91,6 +112,7 @@ export default function TherapistsPage() {
         onClose={() => {
           setAddOpen(false);
           loadTherapists(page);
+          setScheduleRefreshKey((k) => k + 1);
         }}
       />
 
@@ -100,6 +122,7 @@ export default function TherapistsPage() {
         onClose={() => {
           setUpdateOpen(false);
           loadTherapists(page);
+          setScheduleRefreshKey((k) => k + 1);
         }}
       />
     </Container>

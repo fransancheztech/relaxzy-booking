@@ -27,6 +27,16 @@ interface Props {
   onEdit: (id: string) => void;
 }
 
+const DOW_KEYS: Record<number, string> = {
+  1: "dowMon",
+  2: "dowTue",
+  3: "dowWed",
+  4: "dowThu",
+  5: "dowFri",
+  6: "dowSat",
+  7: "dowSun",
+};
+
 const TherapistsTable = ({
   therapists,
   rowCount,
@@ -40,11 +50,26 @@ const TherapistsTable = ({
   const t = useTranslations("Therapists");
   const tCommon = useTranslations("Common");
 
+  const formatOffDays = (days: number[] | null | undefined) => {
+    if (!days || days.length === 0) return "—";
+    return [...days]
+      .sort((a, b) => a - b)
+      .map((d) => t(DOW_KEYS[d] as Parameters<typeof t>[0]))
+      .join(", ");
+  };
+
   const columns: GridColDef<therapists>[] = [
     { field: "full_name", headerName: t("fullName"), flex: 1, valueFormatter: formatNullable },
     { field: "email", headerName: tCommon("email"), flex: 1, valueFormatter: formatNullable },
     { field: "phone", headerName: tCommon("phone"), flex: 1, valueFormatter: formatNullable },
     { field: "notes", headerName: tCommon("notes"), flex: 1, valueFormatter: formatNullable },
+    {
+      field: "off_days",
+      headerName: t("daysOff"),
+      width: 140,
+      sortable: false,
+      valueGetter: (_, row) => formatOffDays(row.off_days as unknown as number[]),
+    },
     {
       field: "active",
       headerName: t("active"),
