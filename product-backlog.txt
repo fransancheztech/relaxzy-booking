@@ -1,5 +1,4 @@
 TO-DO
-- Implementar días libres de terapeutas.
 - Implementar therapist requested.
 - Añadir separadores horas calendario
 - Añadir página guidelines para indicaciones para terapeuta, como por ejemplo que las terapeutas que vengan de libre, vacaciones, de baja, o sean de nuevo contrato (en resumen, todas las que vengan de no trabajar el día anterior) tengan preferencia en dar los primeros masajes del día.
@@ -53,3 +52,4 @@ DONE
 - Hacer navbar plegable
 - Habilitar página de tips pero con alcance limitado
 - Evitar pagos dobles por ghost clicks.
+- Implementar días libres de terapeutas.
