@@ -4,7 +4,7 @@ import TipsPageContent from "./TipsPageContent";
 
 const TipsPage = async () => {
   const role = await getCurrentUserRole();
-  if (role !== "admin") redirect("/");
+  if (role === "therapist") redirect("/");
 
   return <TipsPageContent />;
 };
