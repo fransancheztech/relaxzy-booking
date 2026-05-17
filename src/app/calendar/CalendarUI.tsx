@@ -26,6 +26,7 @@ import { STATUS_COLORS } from "@/constants";
 import { BookingModel } from "@/types/bookings";
 import DailyTotalsDialog from "@/components/DailyTotalsDialog";
 import { useRole } from "@/hooks/useRole";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 interface CalendarUIProps {
   setIsOpenBookingDialog: React.Dispatch<React.SetStateAction<boolean>>;
@@ -218,6 +219,7 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
   const [batchCompleteOpen, setBatchCompleteOpen] = useState(false);
   const [dailyTotalsOpen, setDailyTotalsOpen] = useState(false);
   const rangeRef = useRef<{ start: Date; end: Date } | null>(null);
+  const { submitting: batchSubmitting, guard: batchGuard } = useSubmitGuard();
 
   const confirmedCount = useMemo(
     () => bookings.filter((b) => b.status === "confirmed").length,
@@ -254,23 +256,24 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
     },
   }), [t]);
 
-  const handleBatchComplete = useCallback(async () => {
-    if (!range) return;
-    setBatchCompleteOpen(false);
-    try {
-      const res = await fetch("/api/bookings/batch-complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ start: range.start.toISOString(), end: range.end.toISOString() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? t("closeDayError"));
-      toast.success(t("closeDaySuccess", { count: data.updated }));
-      window.dispatchEvent(new CustomEvent("refreshCalendarData"));
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("closeDayError"));
-    }
-  }, [range, t]);
+  const handleBatchComplete = useCallback(() =>
+    batchGuard(async () => {
+      if (!range) return;
+      setBatchCompleteOpen(false);
+      try {
+        const res = await fetch("/api/bookings/batch-complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ start: range.start.toISOString(), end: range.end.toISOString() }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? t("closeDayError"));
+        toast.success(t("closeDaySuccess", { count: data.updated }));
+        window.dispatchEvent(new CustomEvent("refreshCalendarData"));
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : t("closeDayError"));
+      }
+    }), [range, t, batchGuard]);
 
   const eventContent = useCallback((arg: EventContentArg) => {
     const b = arg.event.extendedProps.booking as BookingModel;
@@ -496,8 +499,8 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setBatchCompleteOpen(false)}>{t("closeDayCancel")}</Button>
-          <Button onClick={handleBatchComplete} variant="contained" color="success">
+          <Button onClick={() => setBatchCompleteOpen(false)} disabled={batchSubmitting}>{t("closeDayCancel")}</Button>
+          <Button onClick={handleBatchComplete} variant="contained" color="success" disabled={batchSubmitting}>
             {t("closeDayConfirm")}
           </Button>
         </DialogActions>

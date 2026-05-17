@@ -29,6 +29,7 @@ import { useTranslations } from "next-intl";
 import { useLayout } from "@/app/context/LayoutContext";
 import { useTherapists } from "@/hooks/useTherapists";
 import { useRole } from "@/hooks/useRole";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 import { formatMoney } from "@/utils/formatMoney";
 
 type StatusFilter = "all" | "pending" | "released";
@@ -129,7 +130,7 @@ const TipsPageContent = () => {
 
   const [tips, setTips] = useState<TipRow[]>([]);
   const [loading, setLoading] = useState(false);
-  const [releasing, setReleasing] = useState(false);
+  const { submitting: releasing, guard: releaseGuard } = useSubmitGuard();
   const [selectedIds, setSelectedIds] = useState<Set<GridRowId>>(new Set());
 
   const [detailTip, setDetailTip] = useState<TipRow | null>(null);
@@ -189,30 +190,28 @@ const TipsPageContent = () => {
     };
   }, [selectedIds, tips]);
 
-  const handleRelease = async () => {
-    if (selectedIds.size === 0) return;
-    setReleasing(true);
-    try {
-      const res = await fetch("/api/tip-payouts/batch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tip_ids: Array.from(selectedIds) }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        toast.error(err.error ?? t("releaseError"));
-        return;
+  const handleRelease = () =>
+    releaseGuard(async () => {
+      if (selectedIds.size === 0) return;
+      try {
+        const res = await fetch("/api/tip-payouts/batch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tip_ids: Array.from(selectedIds) }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          toast.error(err.error ?? t("releaseError"));
+          return;
+        }
+        const data = await res.json();
+        toast.success(t("releaseSuccess", { count: data.tips_released }));
+        setSelectedIds(new Set());
+        loadTips();
+      } catch {
+        toast.error(t("releaseError"));
       }
-      const data = await res.json();
-      toast.success(t("releaseSuccess", { count: data.tips_released }));
-      setSelectedIds(new Set());
-      loadTips();
-    } catch {
-      toast.error(t("releaseError"));
-    } finally {
-      setReleasing(false);
-    }
-  };
+    });
 
   const methodLabel = (m: string) =>
     ({ cash: t("methodCash"), credit_card: t("methodCard"), voucher: t("methodVoucher") }[m] ?? m);

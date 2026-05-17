@@ -3,6 +3,7 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useTranslations } from "next-intl";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type Props = {
   open: boolean;
@@ -14,6 +15,12 @@ type Props = {
 export default function ConfirmDeleteClientDialog({ open, onClose, onConfirm, clientName }: Props) {
   const t = useTranslations("Clients");
   const tCommon = useTranslations("Common");
+  const { submitting, guard } = useSubmitGuard();
+
+  const handleConfirm = () => guard(async () => {
+    onConfirm();
+    onClose();
+  });
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
@@ -26,11 +33,8 @@ export default function ConfirmDeleteClientDialog({ open, onClose, onConfirm, cl
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{tCommon("cancel")}</Button>
-        <Button color="error" variant="contained" startIcon={<DeleteIcon />} onClick={() => {
-          onConfirm();
-          onClose();
-        }}>
+        <Button onClick={onClose} disabled={submitting}>{tCommon("cancel")}</Button>
+        <Button color="error" variant="contained" startIcon={<DeleteIcon />} onClick={handleConfirm} disabled={submitting}>
           {tCommon("delete")}
         </Button>
       </DialogActions>

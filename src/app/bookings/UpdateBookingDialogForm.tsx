@@ -28,6 +28,7 @@ import PayBookingDialog from "./PayBookingDialogForm";
 import ManagePaymentsDialog from "@/components/ManagePaymentsDialog";
 import { useTranslations } from "next-intl";
 import { useRole } from "@/hooks/useRole";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type Props = {
   open: boolean;
@@ -60,6 +61,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isManagePaymentsDialogOpen, setIsManagePaymentsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { submitting, guard } = useSubmitGuard();
   const [paymentSummary, setPaymentSummary] = useState({
     totalPrice: 0,
     paidCash: 0,
@@ -157,24 +159,23 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
     reloadPaymentsSummary();
   }, [isPaymentDialogOpen, bookingId]);
 
-  const onSubmit = async (data: BookingUpdateSchemaType) => {
-    if (!bookingId) return;
+  const onSubmit = (data: BookingUpdateSchemaType) =>
+    guard(async () => {
+      if (!bookingId) return;
 
-    const normalizedData = {
-      ...data,
-      client_email: data.client_email?.trim() || undefined,
-    };
+      const normalizedData = {
+        ...data,
+        client_email: data.client_email?.trim() || undefined,
+      };
 
-    setLoading(true);
-    await handleSubmitUpdateBooking({
-      ...normalizedData,
-      id: bookingId,
+      await handleSubmitUpdateBooking({
+        ...normalizedData,
+        id: bookingId,
+      });
+      methods.reset();
+      reloadPaymentsSummary();
+      onClose();
     });
-    methods.reset();
-    reloadPaymentsSummary();
-    setLoading(false);
-    onClose();
-  };
 
   const onCancel = () => {
     methods.reset();
@@ -227,16 +228,17 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
                   color="error"
                   variant="outlined"
                   onClick={() => setIsConfirmDeleteDialogOpen(true)}
+                  disabled={submitting}
                 >
                   {tCommon("delete")}
                 </Button>
               )}
               <Container sx={{ display: "flex", justifyContent: "flex-end" }}>
-                <Button startIcon={<CloseIcon />} onClick={onCancel}>
+                <Button startIcon={<CloseIcon />} onClick={onCancel} disabled={submitting}>
                   {tCommon("cancel")}
                 </Button>
                 {!isTherapist && (
-                  <Button startIcon={<SaveIcon />} color="success" type="submit">
+                  <Button startIcon={<SaveIcon />} color="success" type="submit" disabled={submitting}>
                     {tCommon("saveChanges")}
                   </Button>
                 )}

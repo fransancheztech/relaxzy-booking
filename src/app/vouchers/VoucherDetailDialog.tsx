@@ -36,6 +36,7 @@ import { formatMoney } from "@/utils/formatMoney";
 import { toast } from "react-toastify";
 import VoucherPaymentEventDialog from "./VoucherPaymentEventDialog";
 import { useTranslations } from "next-intl";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type Client = {
   id: string;
@@ -143,7 +144,7 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
 
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState<EditData | null>(null);
-  const [saving, setSaving] = useState(false);
+  const { submitting: saving, guard: saveGuard } = useSubmitGuard();
 
   const loadDetails = useCallback(async () => {
     setLoading(true);
@@ -213,29 +214,27 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
     }
   };
 
-  const handleSave = async () => {
-    if (!editData) return;
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/vouchers/${voucherId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...editData,
-          created_at: editData.created_at?.toISOString(),
-          expiration_date: editData.expiration_date?.toISOString(),
-        }),
-      });
-      if (!res.ok) throw new Error();
-      toast.success(t("detailsSaved"));
-      loadDetails();
-      window.dispatchEvent(new CustomEvent("refreshVouchersData"));
-    } catch {
-      toast.error(t("errorSavingDetails"));
-    } finally {
-      setSaving(false);
-    }
-  };
+  const handleSave = () =>
+    saveGuard(async () => {
+      if (!editData) return;
+      try {
+        const res = await fetch(`/api/vouchers/${voucherId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...editData,
+            created_at: editData.created_at?.toISOString(),
+            expiration_date: editData.expiration_date?.toISOString(),
+          }),
+        });
+        if (!res.ok) throw new Error();
+        toast.success(t("detailsSaved"));
+        loadDetails();
+        window.dispatchEvent(new CustomEvent("refreshVouchersData"));
+      } catch {
+        toast.error(t("errorSavingDetails"));
+      }
+    });
 
   const openRefund = (event: PaymentEvent) => {
     setSelectedEvent(event);

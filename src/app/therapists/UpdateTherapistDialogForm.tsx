@@ -22,6 +22,7 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { UpdateTherapistSchema, UpdateTherapistSchemaType } from "@/schemas/therapist.schema";
 import { useTranslations } from "next-intl";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type Props = {
   open: boolean;
@@ -53,6 +54,7 @@ export default function UpdateTherapistDialogForm({
   const [loading, setLoading] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [therapistName, setTherapistName] = useState("");
+  const { submitting, guard } = useSubmitGuard();
 
   useEffect(() => {
     if (!open || !therapistId) return;
@@ -81,40 +83,38 @@ export default function UpdateTherapistDialogForm({
     loadTherapist();
   }, [open, therapistId]);
 
-  const onSubmit = async (data: UpdateTherapistSchemaType) => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/therapists/${therapistId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error("Failed to save therapist");
-      toast.success(t("therapistSaved"));
-    } catch (err) {
-      console.error(err);
-      toast.error(t("updateTherapist"));
-    } finally {
-      setLoading(false);
-      onClose();
-    }
-  };
+  const onSubmit = (data: UpdateTherapistSchemaType) =>
+    guard(async () => {
+      try {
+        const res = await fetch(`/api/therapists/${therapistId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error("Failed to save therapist");
+        toast.success(t("therapistSaved"));
+      } catch (err) {
+        console.error(err);
+        toast.error(t("updateTherapist"));
+      } finally {
+        onClose();
+      }
+    });
 
-  const handleDelete = async () => {
-    setConfirmDeleteOpen(false);
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/therapists/${therapistId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete therapist");
-      toast.success(t("therapistDeleted"));
-    } catch (err) {
-      console.error(err);
-      toast.error(t("deleteTitle"));
-    } finally {
-      setLoading(false);
-      onClose();
-    }
-  };
+  const handleDelete = () =>
+    guard(async () => {
+      setConfirmDeleteOpen(false);
+      try {
+        const res = await fetch(`/api/therapists/${therapistId}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Failed to delete therapist");
+        toast.success(t("therapistDeleted"));
+      } catch (err) {
+        console.error(err);
+        toast.error(t("deleteTitle"));
+      } finally {
+        onClose();
+      }
+    });
 
   const onCancel = () => {
     methods.reset(defaultValues);
@@ -225,15 +225,16 @@ export default function UpdateTherapistDialogForm({
                 color="error"
                 variant="contained"
                 onClick={() => setConfirmDeleteOpen(true)}
+                disabled={submitting}
               >
                 {tCommon("delete")}
               </Button>
 
               <div>
-                <Button startIcon={<CloseIcon />} onClick={onCancel}>
+                <Button startIcon={<CloseIcon />} onClick={onCancel} disabled={submitting}>
                   {tCommon("cancel")}
                 </Button>
-                <Button type="submit" startIcon={<SaveIcon />} color="success">
+                <Button type="submit" startIcon={<SaveIcon />} color="success" disabled={submitting}>
                   {tCommon("saveChanges")}
                 </Button>
               </div>
@@ -261,8 +262,8 @@ export default function UpdateTherapistDialogForm({
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDeleteOpen(false)}>{tCommon("cancel")}</Button>
-          <Button color="error" variant="contained" startIcon={<DeleteIcon />} onClick={handleDelete}>
+          <Button onClick={() => setConfirmDeleteOpen(false)} disabled={submitting}>{tCommon("cancel")}</Button>
+          <Button color="error" variant="contained" startIcon={<DeleteIcon />} onClick={handleDelete} disabled={submitting}>
             {tCommon("delete")}
           </Button>
         </DialogActions>

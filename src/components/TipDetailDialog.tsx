@@ -24,6 +24,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import { useTherapists } from "@/hooks/useTherapists";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 interface TipRow {
   id: string;
@@ -55,7 +56,7 @@ const TipDetailDialog = ({ tip, onClose, onSaved }: Props) => {
   const tCommon = useTranslations("Common");
   const therapists = useTherapists();
   const [form, setForm] = useState<FormState | null>(null);
-  const [saving, setSaving] = useState(false);
+  const { submitting: saving, guard } = useSubmitGuard();
 
   const isReleased = tip?.payout_id !== null;
 
@@ -71,32 +72,30 @@ const TipDetailDialog = ({ tip, onClose, onSaved }: Props) => {
     }
   }, [tip]);
 
-  const handleSave = async () => {
-    if (!tip || !form) return;
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/tips/${tip.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          received_at: form.received_at?.toISOString(),
-        }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        toast.error(err.error ?? t("errorSavingTip"));
-        return;
+  const handleSave = () =>
+    guard(async () => {
+      if (!tip || !form) return;
+      try {
+        const res = await fetch(`/api/tips/${tip.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...form,
+            received_at: form.received_at?.toISOString(),
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          toast.error(err.error ?? t("errorSavingTip"));
+          return;
+        }
+        toast.success(t("tipSaved"));
+        onSaved();
+        onClose();
+      } catch {
+        toast.error(t("errorSavingTip"));
       }
-      toast.success(t("tipSaved"));
-      onSaved();
-      onClose();
-    } catch {
-      toast.error(t("errorSavingTip"));
-    } finally {
-      setSaving(false);
-    }
-  };
+    });
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => prev && ({ ...prev, [key]: value }));

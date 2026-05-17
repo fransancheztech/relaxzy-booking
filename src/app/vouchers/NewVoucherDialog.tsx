@@ -10,6 +10,7 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CloseIcon from "@mui/icons-material/Close";
 import NewVoucherFormFields from './NewVoucherFormFields';
 import { useTranslations } from "next-intl";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type Props = {
     open: boolean;
@@ -41,11 +42,14 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
         defaultValues,
     });
 
-    const onSubmit = async (data: VoucherSchemaType) => {    
+    const { submitting, guard } = useSubmitGuard();
+
+    const onSubmit = (data: VoucherSchemaType) =>
+      guard(async () => {
         await handleSubmitCreateVoucher(data);
         methods.reset();
         onClose();
-      };
+      });
 
     const onCancel = () => {
         methods.reset(defaultValues);
@@ -74,10 +78,10 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
                         <NewVoucherFormFields />
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={onCancel} startIcon={<CloseIcon />}>
+                        <Button onClick={onCancel} startIcon={<CloseIcon />} disabled={submitting}>
                             {tCommon("cancel")}
                         </Button>
-                        <Button type="submit" color="success" startIcon={<AddCircleIcon />}>
+                        <Button type="submit" color="success" startIcon={<AddCircleIcon />} disabled={submitting}>
                             {t("createVoucher")}
                         </Button>
                     </DialogActions>

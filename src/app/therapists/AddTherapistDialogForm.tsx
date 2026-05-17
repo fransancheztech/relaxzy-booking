@@ -14,10 +14,10 @@ import { useForm, Controller, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
-import { useState } from "react";
 import { toast } from "react-toastify";
 import { z } from "zod";
 import { useTranslations } from "next-intl";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type Props = {
   open: boolean;
@@ -49,28 +49,27 @@ export default function AddTherapistDialogForm({ open, onClose }: Props) {
     defaultValues,
   });
 
-  const [loading, setLoading] = useState(false);
+  const { submitting: loading, guard } = useSubmitGuard();
 
-  const onSubmit = async (data: AddTherapistSchemaType) => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/therapists/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+  const onSubmit = (data: AddTherapistSchemaType) =>
+    guard(async () => {
+      try {
+        const res = await fetch("/api/therapists/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
 
-      if (!res.ok) throw new Error("Failed to add therapist");
-      toast.success(t("therapistAdded"));
-    } catch (err) {
-      console.error(err);
-      toast.error(t("addTherapist"));
-    } finally {
-      methods.reset(defaultValues);
-      setLoading(false);
-      onClose();
-    }
-  };
+        if (!res.ok) throw new Error("Failed to add therapist");
+        toast.success(t("therapistAdded"));
+      } catch (err) {
+        console.error(err);
+        toast.error(t("addTherapist"));
+      } finally {
+        methods.reset(defaultValues);
+        onClose();
+      }
+    });
 
   const onCancel = () => {
     methods.reset(defaultValues);

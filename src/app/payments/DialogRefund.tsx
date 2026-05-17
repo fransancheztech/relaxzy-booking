@@ -16,7 +16,7 @@ import UndoIcon from "@mui/icons-material/Undo";
 import CloseIcon from "@mui/icons-material/Close";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { payment_methods } from "generated/prisma";
 import { useTranslations } from "next-intl";
 
@@ -27,6 +27,7 @@ import {
 } from "@/schemas/paymentRefund.schema";
 import handleSubmitRefund from "@/handlers/handleSubmitRefund";
 import { normalizeMoneyInput } from "@/utils/normalizeMoney";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 interface Props {
   open: boolean;
@@ -49,7 +50,7 @@ const DialogRefund = ({
   const t = useTranslations("Payments");
   const tCommon = useTranslations("Common");
 
-  const [loading, setLoading] = useState(false);
+  const { submitting: loading, guard } = useSubmitGuard();
 
   const methods = useForm<PaymentRefundFormInput, any, PaymentRefundFormOutput>(
     {
@@ -71,26 +72,24 @@ const DialogRefund = ({
     });
   }, [open]);
 
-  const onSubmit = async (data: PaymentRefundFormOutput) => {
-    if (!paymentId) return;
-    setLoading(true);
-    const { success, error } = await handleSubmitRefund({
-      paymentId,
-      ...data,
-    });
-
-    setLoading(false);
-
-    if (success) {
-      loadPaymentEvents(paymentId);
-      loadPayments(0);
-      onClose();
-    } else {
-      methods.setError("root", {
-        message: error,
+  const onSubmit = (data: PaymentRefundFormOutput) =>
+    guard(async () => {
+      if (!paymentId) return;
+      const { success, error } = await handleSubmitRefund({
+        paymentId,
+        ...data,
       });
-    }
-  };
+
+      if (success) {
+        loadPaymentEvents(paymentId);
+        loadPayments(0);
+        onClose();
+      } else {
+        methods.setError("root", {
+          message: error,
+        });
+      }
+    });
 
   const onCancel = () => {
     methods.reset();

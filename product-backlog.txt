@@ -1,5 +1,8 @@
 TO-DO
-- Habilitar página de tips pero con alcance limitado
+- Evitar pagos dobles por ghost clicks.
+- Implementar días libres de terapeutas.
+- Implementar therapist requested.
+- Preguntar a Chalida a qué se refereía.
 - Añadir propina de las reservas antiguas.
 - Añadir regalos de las reservas antiguas.
 - Crear vouchers automaticamente cuando compren vouchers online
@@ -48,3 +51,4 @@ DONE
 - Añadir la posibilidad de crear vouchers con custom created_at o de cambiar el voucher.created_at
 - Crear un tipo de cuenta view-only que solo permita visualizar el calendario
 - Hacer navbar plegable
+- Habilitar página de tips pero con alcance limitado

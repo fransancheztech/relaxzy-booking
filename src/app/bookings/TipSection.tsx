@@ -32,6 +32,7 @@ import { useTherapists } from "@/hooks/useTherapists";
 import { formatMoney } from "@/utils/formatMoney";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 interface Tip {
   id: string;
@@ -66,7 +67,7 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
   const therapists = useTherapists();
   const [tips, setTips] = useState<Tip[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const { submitting, guard } = useSubmitGuard();
 
   const methods = useForm<TipFormInput, any, TipFormOutput>({
     resolver: zodResolver(TipSchema),
@@ -111,46 +112,44 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
   const methodLabel = (method: string) =>
     ({ cash: t("cash"), credit_card: t("creditCard"), voucher: t("voucher") }[method] ?? method);
 
-  const onSubmit = async (data: TipFormOutput) => {
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/tips", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          booking_id: bookingId,
-          therapist_id: data.therapist_id,
-          amount: data.amount,
-          payment_method: data.payment_method,
-          iva_applies: data.iva_applies,
-          notes: data.notes,
-          received_at: data.received_at,
-        }),
-      });
+  const onSubmit = (data: TipFormOutput) =>
+    guard(async () => {
+      try {
+        const res = await fetch("/api/tips", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            booking_id: bookingId,
+            therapist_id: data.therapist_id,
+            amount: data.amount,
+            payment_method: data.payment_method,
+            iva_applies: data.iva_applies,
+            notes: data.notes,
+            received_at: data.received_at,
+          }),
+        });
 
-      if (!res.ok) {
-        const err = await res.json();
-        toast.error(err.error ?? t("failedAddTip"));
-        return;
+        if (!res.ok) {
+          const err = await res.json();
+          toast.error(err.error ?? t("failedAddTip"));
+          return;
+        }
+
+        toast.success(t("tipAdded"));
+        methods.reset({
+          therapist_id: defaultTherapistId ?? "",
+          amount: "",
+          payment_method: "credit_card",
+          iva_applies: true,
+          notes: "",
+          received_at: new Date(),
+        });
+        setShowForm(false);
+        fetchTips();
+      } catch {
+        toast.error(t("failedAddTip"));
       }
-
-      toast.success(t("tipAdded"));
-      methods.reset({
-        therapist_id: defaultTherapistId ?? "",
-        amount: "",
-        payment_method: "credit_card",
-        iva_applies: true,
-        notes: "",
-        received_at: new Date(),
-      });
-      setShowForm(false);
-      fetchTips();
-    } catch {
-      toast.error(t("failedAddTip"));
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    });
 
   const handleDelete = async (tipId: string) => {
     try {

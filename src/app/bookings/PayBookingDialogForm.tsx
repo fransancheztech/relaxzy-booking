@@ -31,6 +31,7 @@ import handleSubmitPayBooking from "@/handlers/handleSubmitPayBooking";
 import { normalizeMoneyInput } from "@/utils/normalizeMoney";
 import VoucherPickerField from "./VoucherPickerField";
 import { useTranslations } from "next-intl";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 interface DialogFormProps {
   open: boolean;
@@ -65,8 +66,8 @@ const PayBookingDialogForm = ({
     paidCash,
     paidCard,
   };
-  const [loading, setLoading] = useState(false);
   const [voucherOpen, setVoucherOpen] = useState(false);
+  const { submitting, guard } = useSubmitGuard();
   const methods = useForm<
     BookingPaymentFormInput,
     any,
@@ -82,22 +83,18 @@ const PayBookingDialogForm = ({
     setVoucherOpen(false);
   }, [price, open]);
 
-  const onSubmit = async (data: BookingPaymentFormOutput) => {
-    if (!bookingId) return;
-    setLoading(true);
-
-    const success = await handleSubmitPayBooking({
-      ...data,
-      id: bookingId,
+  const onSubmit = (data: BookingPaymentFormOutput) =>
+    guard(async () => {
+      if (!bookingId) return;
+      const success = await handleSubmitPayBooking({
+        ...data,
+        id: bookingId,
+      });
+      if (success) {
+        onPaymentSuccess();
+        onClose();
+      }
     });
-
-    if (success) {
-      onPaymentSuccess();
-      onClose();
-    }
-
-    setLoading(false);
-  };
 
   const onCancel = () => {
     methods.reset();
@@ -230,16 +227,16 @@ const PayBookingDialogForm = ({
             </Grid>
           </DialogContent>
           <DialogActions>
-            <Button onClick={onCancel} startIcon={<CloseIcon />}>
+            <Button onClick={onCancel} startIcon={<CloseIcon />} disabled={submitting}>
               {tCommon("cancel")}
             </Button>
-            <Button color="success" type="submit" startIcon={<AddCircleIcon />}>
+            <Button color="success" type="submit" startIcon={<AddCircleIcon />} disabled={submitting}>
               {t("addPayment")}
             </Button>
           </DialogActions>
         </form>
       </Dialog>
-      {loading && (
+      {submitting && (
         <div
           style={{
             position: "absolute",

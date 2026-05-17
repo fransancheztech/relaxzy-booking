@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type Props = {
   open: boolean;
@@ -42,7 +43,7 @@ const VoucherPaymentEventDialog = ({
   const [method, setMethod] = useState<string>("cash");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const { submitting, guard } = useSubmitGuard();
 
   useEffect(() => {
     if (open) {
@@ -57,42 +58,40 @@ const VoucherPaymentEventDialog = ({
     if (!submitting) onClose();
   };
 
-  const handleSubmit = async () => {
-    const numAmount = Number(amount);
-    if (!amount || !Number.isFinite(numAmount) || numAmount <= 0) {
-      setError(t("amountPositive"));
-      return;
-    }
-    setError(null);
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/payments/new", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          payment_type: mode === "charge" ? "CHARGE" : "REFUND",
-          amount: numAmount,
-          method,
-          notes: notes.trim() || undefined,
-          voucher_id: voucherId,
-        }),
-      });
-      const result = await res.json();
-      if (!res.ok) {
-        toast.error(result?.error || t("errorProcessingPayment"));
+  const handleSubmit = () =>
+    guard(async () => {
+      const numAmount = Number(amount);
+      if (!amount || !Number.isFinite(numAmount) || numAmount <= 0) {
+        setError(t("amountPositive"));
         return;
       }
-      toast.success(
-        mode === "charge" ? t("balanceAddedSuccess") : t("refundRegistered"),
-      );
-      onSuccess();
-      onClose();
-    } catch {
-      toast.error(t("networkError"));
-    } finally {
-      setSubmitting(false);
-    }
-  };
+      setError(null);
+      try {
+        const res = await fetch("/api/payments/new", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            payment_type: mode === "charge" ? "CHARGE" : "REFUND",
+            amount: numAmount,
+            method,
+            notes: notes.trim() || undefined,
+            voucher_id: voucherId,
+          }),
+        });
+        const result = await res.json();
+        if (!res.ok) {
+          toast.error(result?.error || t("errorProcessingPayment"));
+          return;
+        }
+        toast.success(
+          mode === "charge" ? t("balanceAddedSuccess") : t("refundRegistered"),
+        );
+        onSuccess();
+        onClose();
+      } catch {
+        toast.error(t("networkError"));
+      }
+    });
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>

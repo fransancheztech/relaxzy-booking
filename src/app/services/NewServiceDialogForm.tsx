@@ -31,6 +31,7 @@ import {
   BaseServiceSchemaTypeOutput,
 } from "@/schemas/service.schema";
 import handleSubmitCreateService from "@/handlers/handleSubmitCreateService";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type Props = {
   open: boolean;
@@ -58,6 +59,7 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
   });
 
   const { control, formState, reset, handleSubmit } = methods;
+  const { submitting, guard } = useSubmitGuard();
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -75,12 +77,13 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
     append({ duration: next, price: 0 });
   };
 
-  const onSubmit = async (data: BaseServiceSchemaType) => {
-    data.duration_prices.sort((a, b) => a.duration - b.duration);
-    await handleSubmitCreateService(data);
-    reset(defaultValues);
-    onClose();
-  };
+  const onSubmit = (data: BaseServiceSchemaType) =>
+    guard(async () => {
+      data.duration_prices.sort((a, b) => a.duration - b.duration);
+      await handleSubmitCreateService(data);
+      reset(defaultValues);
+      onClose();
+    });
 
   const onCancel = () => {
     reset(defaultValues);
@@ -234,10 +237,10 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
             </Grid>
           </DialogContent>
           <DialogActions>
-            <Button onClick={onCancel} startIcon={<CloseIcon />}>
+            <Button onClick={onCancel} startIcon={<CloseIcon />} disabled={submitting}>
               {tCommon("cancel")}
             </Button>
-            <Button type="submit" color="success" startIcon={<AddCircleIcon />}>
+            <Button type="submit" color="success" startIcon={<AddCircleIcon />} disabled={submitting}>
               {t("addService")}
             </Button>
           </DialogActions>

@@ -36,6 +36,7 @@ import {
   ServiceDurationPriceSchemaType,
 } from "@/schemas/service.schema";
 import handleSubmitUpdateService from "@/handlers/handleSubmitupdateService";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type Props = {
   open: boolean;
@@ -61,6 +62,7 @@ const UpdateServiceDialogForm = ({
   const tCommon = useTranslations("Common");
 
   const [loading, setLoading] = useState(false);
+  const { submitting, guard } = useSubmitGuard();
 
   const methods = useForm<
     BaseServiceSchemaTypeInput,
@@ -124,21 +126,19 @@ const UpdateServiceDialogForm = ({
     loadService();
   }, [open, serviceId]);
 
-  const onSubmit = async (data: BaseServiceSchemaType) => {
-    try {
-      setLoading(true);
-      await handleSubmitUpdateService({
-        id: serviceId,
-        ...data,
-      });
-      reset();
-      onClose();
-    } catch (error) {
-      console.error("Update failed:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const onSubmit = (data: BaseServiceSchemaType) =>
+    guard(async () => {
+      try {
+        await handleSubmitUpdateService({
+          id: serviceId,
+          ...data,
+        });
+        reset();
+        onClose();
+      } catch (error) {
+        console.error("Update failed:", error);
+      }
+    });
 
   const onCancel = () => {
     reset();
@@ -306,6 +306,7 @@ const UpdateServiceDialogForm = ({
               color="error"
               variant="contained"
               onClick={() => setIsOpenConfirmDelete(true)}
+              disabled={submitting}
             >
               {tCommon("delete")}
             </Button>
@@ -314,10 +315,11 @@ const UpdateServiceDialogForm = ({
                 startIcon={<CloseIcon />}
                 color="error"
                 onClick={onCancel}
+                disabled={submitting}
               >
                 {tCommon("cancel")}
               </Button>
-              <Button startIcon={<SaveIcon />} color="success" type="submit">
+              <Button startIcon={<SaveIcon />} color="success" type="submit" disabled={submitting}>
                 {tCommon("saveChanges")}
               </Button>
             </Box>

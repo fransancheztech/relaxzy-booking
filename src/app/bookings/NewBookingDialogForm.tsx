@@ -20,6 +20,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { roundToNearestMinutes } from "date-fns";
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type Props = {
   open: boolean;
@@ -48,16 +49,18 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
     defaultValues,
   });
 
-  const onSubmit = async (data: BookingSchemaType) => {
-    const normalizedData = {
-      ...data,
-      client_email: data.client_email?.trim() || undefined,
-    };
+  const { submitting, guard } = useSubmitGuard();
 
-    await handleSubmitCreateBooking(normalizedData);
-    methods.reset();
-    onClose();
-  };
+  const onSubmit = (data: BookingSchemaType) =>
+    guard(async () => {
+      const normalizedData = {
+        ...data,
+        client_email: data.client_email?.trim() || undefined,
+      };
+      await handleSubmitCreateBooking(normalizedData);
+      methods.reset();
+      onClose();
+    });
 
   const onCancel = () => {
     methods.reset(defaultValues);
@@ -97,10 +100,10 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
             <NewBookingFormFields key={String(open)} />
           </DialogContent>
           <DialogActions>
-            <Button onClick={onCancel} startIcon={<CloseIcon />}>
+            <Button onClick={onCancel} startIcon={<CloseIcon />} disabled={submitting}>
               {tCommon("cancel")}
             </Button>
-            <Button type="submit" color="success" startIcon={<AddCircleIcon />}>
+            <Button type="submit" color="success" startIcon={<AddCircleIcon />} disabled={submitting}>
               {t("addBooking")}
             </Button>
           </DialogActions>

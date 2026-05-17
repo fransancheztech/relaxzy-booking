@@ -24,6 +24,7 @@ import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
 import { formatMoney } from "@/utils/formatMoney";
 import { normalizeMoneyInput } from "@/utils/normalizeMoney";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 interface PaymentRow {
   id: string;
@@ -58,7 +59,7 @@ export default function ManagePaymentsDialog({
   const tCommon = useTranslations("Common");
 
   const [loading, setLoading] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
+  const { submitting: actionLoading, guard } = useSubmitGuard();
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [voucherUses, setVoucherUses] = useState<VoucherUseRow[]>([]);
 
@@ -99,54 +100,50 @@ export default function ManagePaymentsDialog({
     setActiveRemoveId(null);
   };
 
-  const handleRefund = async (paymentId: string) => {
-    const amount = parseFloat(refundAmount.replace(",", "."));
-    if (!amount || amount <= 0) {
-      toast.error(t("refundAmountInvalid"));
-      return;
-    }
-    setActionLoading(true);
-    try {
-      const res = await fetch(`/api/payments/${paymentId}/refund`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount, method: refundMethod, notes: refundNotes || null }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "");
+  const handleRefund = (paymentId: string) =>
+    guard(async () => {
+      const amount = parseFloat(refundAmount.replace(",", "."));
+      if (!amount || amount <= 0) {
+        toast.error(t("refundAmountInvalid"));
+        return;
       }
-      toast.success(t("refundSuccess"));
-      setActiveRefundId(null);
-      onPaymentChanged();
-      await loadDetail();
-    } catch (err: any) {
-      toast.error(err.message || t("refundError"));
-    } finally {
-      setActionLoading(false);
-    }
-  };
+      try {
+        const res = await fetch(`/api/payments/${paymentId}/refund`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount, method: refundMethod, notes: refundNotes || null }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error ?? "");
+        }
+        toast.success(t("refundSuccess"));
+        setActiveRefundId(null);
+        onPaymentChanged();
+        await loadDetail();
+      } catch (err: any) {
+        toast.error(err.message || t("refundError"));
+      }
+    });
 
-  const handleRemoveVoucherUse = async (id: string) => {
-    setActionLoading(true);
-    try {
-      const res = await fetch(`/api/voucher-uses/${id}/delete`, {
-        method: "POST",
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "");
+  const handleRemoveVoucherUse = (id: string) =>
+    guard(async () => {
+      try {
+        const res = await fetch(`/api/voucher-uses/${id}/delete`, {
+          method: "POST",
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error ?? "");
+        }
+        toast.success(t("removeSuccess"));
+        setActiveRemoveId(null);
+        onPaymentChanged();
+        await loadDetail();
+      } catch (err: any) {
+        toast.error(err.message || t("removeError"));
       }
-      toast.success(t("removeSuccess"));
-      setActiveRemoveId(null);
-      onPaymentChanged();
-      await loadDetail();
-    } catch (err: any) {
-      toast.error(err.message || t("removeError"));
-    } finally {
-      setActionLoading(false);
-    }
-  };
+    });
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" });

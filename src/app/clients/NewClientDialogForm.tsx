@@ -15,12 +15,12 @@ import {
   ClientUpdateSchema,
   ClientUpdateSchemaType,
 } from "@/schemas/client.schema";
-import { useState } from "react";
 import UpdateClientFormFields from "./NewClientFormFields";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
 import handleSubmitCreateClient from "@/handlers/handleSubmitCreateClient";
 import { useTranslations } from "next-intl";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type Props = {
   open: boolean;
@@ -39,20 +39,18 @@ export const defaultValuesClientForm: Partial<ClientUpdateSchemaType> = {
 const NewClientDialogForm = ({ open, onClose }: Props) => {
   const t = useTranslations("Clients");
   const tCommon = useTranslations("Common");
-  const [loading, setLoading] = useState(false);
+  const { submitting: loading, guard } = useSubmitGuard();
 
   const methods = useForm<ClientUpdateSchemaType>({
     resolver: zodResolver(ClientUpdateSchema),
     defaultValues: defaultValuesClientForm,
   });
 
-  const onSubmit = async (data: ClientUpdateSchemaType) => {
-    setLoading(true);
-
-    await handleSubmitCreateClient(data);
-    setLoading(false);
-    onClose();
-  };
+  const onSubmit = (data: ClientUpdateSchemaType) =>
+    guard(async () => {
+      await handleSubmitCreateClient(data);
+      onClose();
+    });
 
   const onCancel = () => {
     methods.reset();
@@ -81,10 +79,11 @@ const NewClientDialogForm = ({ open, onClose }: Props) => {
                   startIcon={<CloseIcon />}
                   color="error"
                   onClick={onCancel}
+                  disabled={loading}
                 >
                   {tCommon("cancel")}
                 </Button>
-                <Button startIcon={<SaveIcon />} color="success" type="submit">
+                <Button startIcon={<SaveIcon />} color="success" type="submit" disabled={loading}>
                   {tCommon("save")}
                 </Button>
               </Container>

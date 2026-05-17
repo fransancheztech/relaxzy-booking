@@ -24,6 +24,7 @@ import handleSubmitUpdateClient from "@/handlers/handleSubmitUpdateClient";
 import DialogConfirmDeleteClient from "./ConfirmDeleteClientDialog";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useTranslations } from "next-intl";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type Props = {
   open: boolean;
@@ -55,6 +56,7 @@ const UpdateClientDialogForm = ({
   const t = useTranslations("Clients");
   const tCommon = useTranslations("Common");
   const [loading, setLoading] = useState(false);
+  const { submitting, guard } = useSubmitGuard();
 
   const methods = useForm<ClientUpdateSchemaType>({
     resolver: zodResolver(ClientUpdateSchema),
@@ -90,19 +92,17 @@ const UpdateClientDialogForm = ({
     loadClient();
   }, [open, clientId]);
 
-  const onSubmit = async (data: ClientUpdateSchemaType) => {
-    setLoading(true);
-    if (!clientId) {
-      throw new Error("Client ID is required for updating a client");
-    } else {
+  const onSubmit = (data: ClientUpdateSchemaType) =>
+    guard(async () => {
+      if (!clientId) {
+        throw new Error("Client ID is required for updating a client");
+      }
       await handleSubmitUpdateClient({
         id: clientId,
         ...data,
       });
-    }
-    setLoading(false);
-    onClose();
-  };
+      onClose();
+    });
 
   const onCancel = () => {
     methods.reset();
@@ -132,6 +132,7 @@ const UpdateClientDialogForm = ({
                 color="error"
                 variant="contained"
                 onClick={() => setConfirmDeleteOpen(true)}
+                disabled={submitting}
               >
                 {tCommon("delete")}
               </Button>
@@ -139,10 +140,11 @@ const UpdateClientDialogForm = ({
                 <Button
                   startIcon={<CloseIcon />}
                   onClick={onCancel}
+                  disabled={submitting}
                 >
                   {tCommon("cancel")}
                 </Button>
-                <Button startIcon={<SaveIcon />} color="success" type="submit">
+                <Button startIcon={<SaveIcon />} color="success" type="submit" disabled={submitting}>
                   {tCommon("save")}
                 </Button>
               </Container>
