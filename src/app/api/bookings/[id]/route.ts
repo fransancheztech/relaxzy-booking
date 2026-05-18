@@ -13,6 +13,7 @@ type Body = {
   duration?: string | number; // minutes
   service_name: string;
   therapist_id?: string;
+  therapist_requested?: boolean;
   notes?: string;
   price?: string | number;
   totalPaid?: string | number;
@@ -115,6 +116,7 @@ export async function GET(
       notes: booking.notes,
       status: booking.status,
       price: booking.price,
+      therapist_requested: booking.therapist_requested,
       client,
       services_names,
       therapist,
@@ -184,6 +186,7 @@ export async function PUT(
       "notes",
       "status",
       "therapist_id",
+      "therapist_requested",
     ]);
 
     const bookingData: Record<string, any> = {};

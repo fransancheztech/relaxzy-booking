@@ -20,6 +20,7 @@ type Body = {
   duration?: string | number; // minutes
   service_name: string;
   therapist_id?: string;
+  therapist_requested?: boolean;
   notes?: string;
   price?: string | number;
   companions?: CompanionInput[];
@@ -199,6 +200,7 @@ export async function POST(request: Request) {
           client_id: clientId,
           service_id: serviceId,
           therapist_id: body.therapist_id?.trim() || null,
+          therapist_requested: !!body.therapist_requested,
           start_time: start,
           end_time: end,
           notes: groupNote(body.notes),

@@ -86,7 +86,8 @@
     "closeDayConfirm": "Marcar como completadas",
     "closeDaySuccess": "{count} reserva(s) marcada(s) como completadas.",
     "closeDayError": "Error al cerrar el día. Por favor, inténtalo de nuevo.",
-    "dailyTotalsButton": "Totales del día"
+    "dailyTotalsButton": "Totales del día",
+    "therapistRequestedTooltip": "Terapeuta solicitado por el cliente"
   },
   "DailyTotals": {
     "title": "Totales del día",
@@ -145,7 +146,9 @@
     "unpaid": "Sin pagar",
     "due": "Pendiente",
     "addPayment": "Añadir pago",
-    "managePayments": "Gestionar pagos"
+    "managePayments": "Gestionar pagos",
+    "therapistRequested": "Terapeuta solicitado",
+    "therapistRequestedHelper": "Indica en las notas con qué firmeza la clienta quiere a esta terapeuta."
   },
   "ManagePayments": {
     "title": "Gestionar pagos",

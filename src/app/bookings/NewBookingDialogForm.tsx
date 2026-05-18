@@ -39,6 +39,8 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
     start_time: roundToNearestMinutes(new Date(), { nearestTo: 5 }),
     duration: undefined,
     service_name: "",
+    therapist_id: "",
+    therapist_requested: false,
     notes: "",
     price: undefined,
     companions: [],

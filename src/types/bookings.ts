@@ -18,6 +18,7 @@ export interface BookingDTO {
     paidCash?: string;
     paidCard?: string;
     therapist_id?: string | null;
+    therapist_requested?: boolean;
     paid_total?: number;
 }
 

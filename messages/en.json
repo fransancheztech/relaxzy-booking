@@ -86,7 +86,8 @@
     "closeDayConfirm": "Mark as completed",
     "closeDaySuccess": "{count} booking(s) marked as completed.",
     "closeDayError": "Failed to close day. Please try again.",
-    "dailyTotalsButton": "Daily totals"
+    "dailyTotalsButton": "Daily totals",
+    "therapistRequestedTooltip": "Therapist requested by client"
   },
   "DailyTotals": {
     "title": "Daily totals",
@@ -145,7 +146,9 @@
     "unpaid": "Unpaid",
     "due": "Due",
     "addPayment": "Add Payment",
-    "managePayments": "Manage payments"
+    "managePayments": "Manage payments",
+    "therapistRequested": "Therapist requested",
+    "therapistRequestedHelper": "Record in notes how strictly the client wants this therapist."
   },
   "ManagePayments": {
     "title": "Manage Payments",

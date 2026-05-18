@@ -54,6 +54,7 @@ export const BookingSchema = z
       })
       .optional(),
     notes: z.string().optional(),
+    therapist_requested: z.boolean().optional(),
     cashPayment: z.number().nonnegative().optional(),
     cardPayment: z.number().nonnegative().optional(),
     voucherPayment: z.number().nonnegative().optional(),

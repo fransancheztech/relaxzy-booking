@@ -80,6 +80,7 @@ export async function GET(req: NextRequest) {
 
       price: b.price,
       therapist_id: b.therapist_id ?? null,
+      therapist_requested: b.therapist_requested,
       paid_total: paidMap.get(b.id) ?? 0,
     }));
 

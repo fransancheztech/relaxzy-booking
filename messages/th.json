@@ -86,7 +86,8 @@
     "closeDayConfirm": "ทำเครื่องหมายว่าเสร็จสิ้น",
     "closeDaySuccess": "{count} การจองถูกทำเครื่องหมายว่าเสร็จสิ้น",
     "closeDayError": "ไม่สามารถปิดวันได้ กรุณาลองอีกครั้ง",
-    "dailyTotalsButton": "ยอดรวมประจำวัน"
+    "dailyTotalsButton": "ยอดรวมประจำวัน",
+    "therapistRequestedTooltip": "ลูกค้าขอนักบำบัดท่านนี้"
   },
   "DailyTotals": {
     "title": "ยอดรวมประจำวัน",
@@ -145,7 +146,9 @@
     "unpaid": "ยังไม่ชำระ",
     "due": "ยอดค้างชำระ",
     "addPayment": "เพิ่มการชำระเงิน",
-    "managePayments": "จัดการการชำระเงิน"
+    "managePayments": "จัดการการชำระเงิน",
+    "therapistRequested": "ลูกค้าขอนักบำบัด",
+    "therapistRequestedHelper": "ระบุในบันทึกว่าลูกค้าต้องการนักบำบัดท่านนี้อย่างเข้มงวดแค่ไหน"
   },
   "ManagePayments": {
     "title": "จัดการการชำระเงิน",

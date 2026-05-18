@@ -16,12 +16,14 @@ import {
   Container,
   Divider,
   FormControl,
+  FormControlLabel,
   FormHelperText,
   Grid,
   IconButton,
   InputLabel,
   MenuItem,
   Select,
+  Switch,
   TextField,
   Tooltip,
   Typography,
@@ -423,9 +425,9 @@ const NewBookingFormFields = () => {
     name: "companions",
   });
 
-  const [primaryService, primaryDuration, primaryPrice, primaryTherapistId] = useWatch({
+  const [primaryService, primaryDuration, primaryPrice, primaryTherapistId, therapistRequested] = useWatch({
     control,
-    name: ["service_name", "duration", "price", "therapist_id"],
+    name: ["service_name", "duration", "price", "therapist_id", "therapist_requested"],
   });
 
   const therapists = useTherapists();
@@ -513,21 +515,43 @@ const NewBookingFormFields = () => {
         />
       </Grid>
       <Grid size={6}>
-        <Controller
-          name="therapist_id"
-          control={control}
-          render={({ field }) => (
-            <FormControl fullWidth size="small">
-              <InputLabel>{tCommon("therapist")}</InputLabel>
-              <Select {...field} value={field.value ?? ""} label={tCommon("therapist")}>
-                <MenuItem value=""><em>{tCommon("none")}</em></MenuItem>
-                {therapists.map((t) => (
-                  <MenuItem key={t.id} value={t.id}>{t.full_name}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          )}
-        />
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
+          <Controller
+            name="therapist_id"
+            control={control}
+            render={({ field }) => (
+              <FormControl fullWidth size="small">
+                <InputLabel>{tCommon("therapist")}</InputLabel>
+                <Select {...field} value={field.value ?? ""} label={tCommon("therapist")}>
+                  <MenuItem value=""><em>{tCommon("none")}</em></MenuItem>
+                  {therapists.map((t) => (
+                    <MenuItem key={t.id} value={t.id}>{t.full_name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+          />
+          <Controller
+            name="therapist_requested"
+            control={control}
+            render={({ field }) => (
+              <FormControlLabel
+                control={
+                  <Switch
+                    size="small"
+                    checked={!!field.value}
+                    onChange={(e) => field.onChange(e.target.checked)}
+                  />
+                }
+                label={
+                  <Typography variant="caption" color="text.secondary">
+                    {t("therapistRequested")}
+                  </Typography>
+                }
+              />
+            )}
+          />
+        </Box>
       </Grid>
       <Grid size={6}>
         <Controller
@@ -602,7 +626,15 @@ const NewBookingFormFields = () => {
               {...field}
               label={tCommon("notes")}
               error={!!errors.notes}
-              helperText={errors.notes?.message}
+              helperText={
+                errors.notes?.message
+                ?? (therapistRequested ? t("therapistRequestedHelper") : undefined)
+              }
+              slotProps={{
+                formHelperText: therapistRequested && !errors.notes
+                  ? { sx: { color: "warning.main", fontWeight: 500 } }
+                  : undefined,
+              }}
               fullWidth
               sx={{ borderRadius: "5px" }}
               size="small"

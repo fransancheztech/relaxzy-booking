@@ -1,5 +1,4 @@
 TO-DO
-- En bookings manage payments, mostrar payment_events en lugar de payments.
 - Implementar therapist requested.
 - Añadir página guidelines para indicaciones para terapeuta, como por ejemplo que las terapeutas que vengan de libre, vacaciones, de baja, o sean de nuevo contrato (en resumen, todas las que vengan de no trabajar el día anterior) tengan preferencia en dar los primeros masajes del día.
 - Añadir propina de las reservas antiguas.
@@ -53,3 +52,4 @@ DONE
 - Habilitar página de tips pero con alcance limitado
 - Evitar pagos dobles por ghost clicks.
 - Implementar días libres de terapeutas.
+- En bookings manage payments, mostrar payment_events en lugar de payments.

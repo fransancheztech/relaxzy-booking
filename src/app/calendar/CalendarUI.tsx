@@ -312,13 +312,21 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
           }}>
             {fmt(paid)}€/{priceStr}
           </span>
+          {b.therapist_requested && (
+            <span
+              title={t("therapistRequestedTooltip")}
+              style={{ fontSize: 11, lineHeight: 1, color: "#ffd54f", textShadow: "0 0 2px rgba(0,0,0,0.6)" }}
+            >
+              ★
+            </span>
+          )}
         </div>
         <div style={{ fontSize: 11, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {arg.event.title}
         </div>
       </div>
     );
-  }, []);
+  }, [t]);
 
   const handleEventClick = useCallback((info: EventClickArg) => {
     setSelectedBookingId(info.event.extendedProps.booking.id);
