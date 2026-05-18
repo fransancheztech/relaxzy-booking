@@ -41,6 +41,7 @@
     "vouchers": "บัตรกำนัล",
     "stats": "สถิติ",
     "tips": "ทิปส์",
+    "guidelines": "แนวทาง",
     "logout": "ออกจากระบบ",
     "collapseSidebar": "ย่อเมนู",
     "expandSidebar": "ขยายเมนู"
@@ -611,5 +612,25 @@
   "Errors": {
     "oops": "อุ๊ย... มีบางอย่างผิดพลาด:",
     "unknownError": "ข้อผิดพลาดที่ไม่รู้จัก"
+  },
+  "Guidelines": {
+    "newGuideline": "แนวทางใหม่",
+    "editGuideline": "แก้ไขแนวทาง",
+    "titleOptional": "หัวข้อ (ไม่บังคับ)",
+    "content": "เนื้อหา",
+    "audience": "ผู้รับ",
+    "audienceHint": "ใครจะเห็นแนวทางนี้",
+    "roleAdmin": "แอดมิน",
+    "roleReceptionist": "พนักงานต้อนรับ",
+    "roleTherapist": "นักบำบัด",
+    "emptyAdmin": "ยังไม่มีแนวทาง สร้างขึ้นเพื่อแบ่งปันคำแนะนำกับทีมของคุณ",
+    "emptyReader": "ยังไม่มีการเผยแพร่แนวทาง",
+    "loadError": "ไม่สามารถโหลดแนวทาง",
+    "saveError": "ไม่สามารถบันทึกแนวทาง",
+    "createdSuccess": "สร้างแนวทางแล้ว",
+    "updatedSuccess": "อัปเดตแนวทางแล้ว",
+    "deletedSuccess": "ลบแนวทางแล้ว",
+    "deleteError": "ไม่สามารถลบแนวทาง",
+    "confirmDelete": "ลบแนวทาง \"{label}\" ใช่หรือไม่? ไม่สามารถยกเลิกได้"
   }
 }

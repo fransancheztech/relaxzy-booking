@@ -41,6 +41,7 @@
     "vouchers": "Bonos",
     "stats": "Estadísticas",
     "tips": "Propinas",
+    "guidelines": "Pautas",
     "logout": "Cerrar sesión",
     "collapseSidebar": "Contraer menú",
     "expandSidebar": "Expandir menú"
@@ -611,5 +612,25 @@
   "Errors": {
     "oops": "Vaya... algo salió mal:",
     "unknownError": "Error desconocido"
+  },
+  "Guidelines": {
+    "newGuideline": "Nueva pauta",
+    "editGuideline": "Editar pauta",
+    "titleOptional": "Título (opcional)",
+    "content": "Contenido",
+    "audience": "Destinatarios",
+    "audienceHint": "quién verá esta pauta",
+    "roleAdmin": "Admin",
+    "roleReceptionist": "Recepción",
+    "roleTherapist": "Terapeuta",
+    "emptyAdmin": "Aún no hay pautas. Crea una para compartir indicaciones con tu equipo.",
+    "emptyReader": "No se han publicado pautas.",
+    "loadError": "Error al cargar las pautas",
+    "saveError": "Error al guardar la pauta",
+    "createdSuccess": "Pauta creada",
+    "updatedSuccess": "Pauta actualizada",
+    "deletedSuccess": "Pauta eliminada",
+    "deleteError": "Error al eliminar la pauta",
+    "confirmDelete": "¿Eliminar la pauta \"{label}\"? Esta acción no se puede deshacer."
   }
 }

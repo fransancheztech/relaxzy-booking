@@ -41,6 +41,7 @@
     "vouchers": "Vouchers",
     "stats": "Stats",
     "tips": "Tips",
+    "guidelines": "Guidelines",
     "logout": "Log out",
     "collapseSidebar": "Collapse sidebar",
     "expandSidebar": "Expand sidebar"
@@ -611,5 +612,25 @@
   "Errors": {
     "oops": "Oops... something went wrong:",
     "unknownError": "Unknown error"
+  },
+  "Guidelines": {
+    "newGuideline": "New guideline",
+    "editGuideline": "Edit guideline",
+    "titleOptional": "Title (optional)",
+    "content": "Content",
+    "audience": "Audience",
+    "audienceHint": "who will see this guideline",
+    "roleAdmin": "Admin",
+    "roleReceptionist": "Receptionist",
+    "roleTherapist": "Therapist",
+    "emptyAdmin": "No guidelines yet. Create one to share guidance with your team.",
+    "emptyReader": "No guidelines have been published.",
+    "loadError": "Failed to load guidelines",
+    "saveError": "Failed to save guideline",
+    "createdSuccess": "Guideline created",
+    "updatedSuccess": "Guideline updated",
+    "deletedSuccess": "Guideline deleted",
+    "deleteError": "Failed to delete guideline",
+    "confirmDelete": "Delete guideline \"{label}\"? This cannot be undone."
   }
 }

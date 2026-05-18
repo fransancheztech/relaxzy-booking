@@ -35,6 +35,7 @@ import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import SavingsIcon from "@mui/icons-material/Savings";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -60,6 +61,7 @@ const PAGE_ICONS: Record<string, React.ReactNode> = {
   "/vouchers":   <CardGiftcardIcon sx={{ fontSize: 18 }} />,
   "/stats":      <BarChartIcon sx={{ fontSize: 18 }} />,
   "/tips":       <SavingsIcon sx={{ fontSize: 18 }} />,
+  "/guidelines": <MenuBookIcon sx={{ fontSize: 18 }} />,
 };
 
 function HeaderButton() {
@@ -117,7 +119,7 @@ export default function LayoutContent({
   const isAdmin = user?.app_metadata?.role === "admin";
   const isTherapist = user?.app_metadata?.role === "therapist";
   const adminOnlyPaths = new Set(["/stats"]);
-  const therapistOnlyPaths = new Set(["/calendar"]);
+  const therapistOnlyPaths = new Set(["/calendar", "/guidelines"]);
   const visiblePages = menuPages.filter((page) => {
     if (adminOnlyPaths.has(page.href) && !isAdmin) return false;
     if (isTherapist && !therapistOnlyPaths.has(page.href)) return false;

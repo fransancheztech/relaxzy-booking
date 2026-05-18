@@ -346,6 +346,20 @@ model tips {
   @@index([therapist_id])
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model guidelines {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  author_id    String    @db.Uuid
+  target_roles String[]  @default([])
+  title        String?
+  content      String
+  created_at   DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  updated_at   DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  deleted_at   DateTime? @db.Timestamptz(6)
+
+  @@index([created_at(sort: Desc)], map: "guidelines_active_idx", where: raw("(deleted_at IS NULL)"))
+}
+
 view bookings_with_details {
   booking_id                  String?          @db.Uuid
   booking_start_time          DateTime?        @db.Timestamptz(6)
