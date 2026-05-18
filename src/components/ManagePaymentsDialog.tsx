@@ -3,6 +3,7 @@
 import {
   Box,
   Button,
+  Chip,
   CircularProgress,
   Dialog,
   DialogContent,
@@ -26,6 +27,15 @@ import { formatMoney } from "@/utils/formatMoney";
 import { normalizeMoneyInput } from "@/utils/normalizeMoney";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
+interface PaymentEventRow {
+  id: string;
+  type: "CHARGE" | "REFUND";
+  amount: number;
+  method: string;
+  notes: string | null;
+  created_at: string;
+}
+
 interface PaymentRow {
   id: string;
   charged: number;
@@ -33,6 +43,7 @@ interface PaymentRow {
   net: number;
   method: string;
   created_at: string;
+  events: PaymentEventRow[];
 }
 
 interface VoucherUseRow {
@@ -148,6 +159,15 @@ export default function ManagePaymentsDialog({
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" });
 
+  const formatDateTime = (iso: string) =>
+    new Date(iso).toLocaleString("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
   const methodLabel = (method: string) =>
     method === "credit_card" ? t("card") : t("cash");
 
@@ -203,6 +223,56 @@ export default function ManagePaymentsDialog({
                       </Button>
                     )}
                   </Box>
+
+                  {p.events.length > 0 && (
+                    <Box sx={{ mt: 0.75, ml: 1.5, pl: 1.5, borderLeft: "2px solid", borderColor: "divider" }}>
+                      {p.events.map((e) => {
+                        const isCharge = e.type === "CHARGE";
+                        return (
+                          <Box
+                            key={e.id}
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                              py: 0.25,
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <Chip
+                              size="small"
+                              variant="outlined"
+                              label={isCharge ? t("eventCharge") : t("eventRefund")}
+                              color={isCharge ? "success" : "warning"}
+                              sx={{ height: 18, fontSize: "0.65rem", fontWeight: 600 }}
+                            />
+                            <Typography variant="caption" fontWeight={600}>
+                              {isCharge ? "+" : "−"}{formatMoney(e.amount)}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {methodLabel(e.method)} · {formatDateTime(e.created_at)}
+                            </Typography>
+                            {e.notes && (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{
+                                  fontStyle: "italic",
+                                  maxWidth: 240,
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                }}
+                                title={e.notes}
+                              >
+                                · {e.notes}
+                              </Typography>
+                            )}
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  )}
 
                   {activeRefundId === p.id && (
                     <Box sx={{ mt: 1, p: 1.5, bgcolor: "action.hover", borderRadius: 1, display: "flex", flexDirection: "column", gap: 1 }}>

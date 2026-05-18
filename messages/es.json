@@ -171,7 +171,9 @@
     "refundSuccess": "Devolución registrada",
     "refundError": "Error al registrar la devolución",
     "removeSuccess": "Uso de bono eliminado",
-    "removeError": "Error al eliminar el uso de bono"
+    "removeError": "Error al eliminar el uso de bono",
+    "eventCharge": "Cargo",
+    "eventRefund": "Devolución"
   },
   "BookingPayment": {
     "payBooking": "Pagar reserva",

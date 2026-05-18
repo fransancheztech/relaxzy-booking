@@ -171,7 +171,9 @@
     "refundSuccess": "บันทึกการคืนเงินแล้ว",
     "refundError": "ไม่สามารถบันทึกการคืนเงิน",
     "removeSuccess": "ลบการใช้บัตรกำนัลแล้ว",
-    "removeError": "ไม่สามารถลบการใช้บัตรกำนัล"
+    "removeError": "ไม่สามารถลบการใช้บัตรกำนัล",
+    "eventCharge": "ชำระเงิน",
+    "eventRefund": "คืนเงิน"
   },
   "BookingPayment": {
     "payBooking": "ชำระเงินสำหรับการจอง",

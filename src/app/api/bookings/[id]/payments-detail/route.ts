@@ -8,7 +8,7 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const [paymentRows, voucherRows] = await Promise.all([
+    const [paymentRows, voucherRows, eventRows] = await Promise.all([
       prisma.$queryRaw<{
         id: string;
         charged: number;
@@ -45,7 +45,52 @@ export async function GET(
         WHERE vu.booking_id = ${id}::uuid AND vu.deleted_at IS NULL
         ORDER BY vu.created_at ASC
       `,
+      prisma.$queryRaw<{
+        id: string;
+        payment_id: string;
+        type: "CHARGE" | "REFUND";
+        amount: number;
+        method: string;
+        notes: string | null;
+        created_at: Date;
+      }[]>`
+        SELECT
+          pe.id::text,
+          pe.payment_id::text,
+          pe.type::text AS type,
+          pe.amount::float,
+          pe.method::text AS method,
+          pe.notes,
+          pe.created_at
+        FROM payment_events pe
+        JOIN payments p ON p.id = pe.payment_id
+        WHERE p.booking_id = ${id}::uuid
+          AND p.deleted_at IS NULL
+          AND pe.deleted_at IS NULL
+        ORDER BY pe.created_at ASC
+      `,
     ]);
+
+    const eventsByPayment = new Map<string, Array<{
+      id: string;
+      type: "CHARGE" | "REFUND";
+      amount: number;
+      method: string;
+      notes: string | null;
+      created_at: Date;
+    }>>();
+    for (const e of eventRows) {
+      const list = eventsByPayment.get(e.payment_id) ?? [];
+      list.push({
+        id: e.id,
+        type: e.type,
+        amount: Number(e.amount),
+        method: e.method,
+        notes: e.notes,
+        created_at: e.created_at,
+      });
+      eventsByPayment.set(e.payment_id, list);
+    }
 
     return NextResponse.json({
       payments: paymentRows.map((p) => ({
@@ -55,6 +100,7 @@ export async function GET(
         net: Number(p.charged) - Number(p.refunded),
         method: p.method ?? "cash",
         created_at: p.created_at,
+        events: eventsByPayment.get(p.id) ?? [],
       })),
       voucher_uses: voucherRows.map((vu) => ({
         id: vu.id,

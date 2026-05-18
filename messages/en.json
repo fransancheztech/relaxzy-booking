@@ -171,7 +171,9 @@
     "refundSuccess": "Refund registered",
     "refundError": "Failed to register refund",
     "removeSuccess": "Voucher redemption removed",
-    "removeError": "Failed to remove voucher redemption"
+    "removeError": "Failed to remove voucher redemption",
+    "eventCharge": "Charge",
+    "eventRefund": "Refund"
   },
   "BookingPayment": {
     "payBooking": "Pay Booking",
