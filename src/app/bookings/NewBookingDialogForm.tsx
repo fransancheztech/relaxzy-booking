@@ -83,7 +83,7 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
         "& .MuiDialog-container": {
           alignItems: "flex-start",
         },
-        "& .MuiPaper-root": {
+        "& .MuiDialog-paper": {
           marginTop: "2rem",
         },
       }}
