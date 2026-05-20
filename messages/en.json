@@ -427,7 +427,14 @@
     "detailByTherapist": "Detail by therapist",
     "tipCount": "{count, plural, =1 {1 tip} other {# tips}}",
     "gross": "Gross",
-    "net": "Net"
+    "net": "Net",
+    "therapistHoursTitle": "Therapist Hours",
+    "therapistHoursSubtitle": "Completed bookings per therapist",
+    "allTherapists": "All therapists",
+    "therapistCol": "Therapist",
+    "bookingsCol": "Bookings",
+    "hoursCol": "Hours",
+    "noHoursData": "No completed bookings for this month."
   },
   "TipsPage": {
     "filterAll": "All",

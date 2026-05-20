@@ -4,9 +4,9 @@ import StatsPageContent from "./StatsPageContent";
 
 const StatsPage = async () => {
   const role = await getCurrentUserRole();
-  if (role !== "admin") redirect("/");
+  if (!role) redirect("/");
 
-  return <StatsPageContent />;
+  return <StatsPageContent role={role} />;
 };
 
 export default StatsPage;

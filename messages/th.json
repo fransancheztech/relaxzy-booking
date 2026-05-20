@@ -427,7 +427,14 @@
     "detailByTherapist": "รายละเอียดตามนักบำบัด",
     "tipCount": "{count} ทิป",
     "gross": "ก่อนหัก",
-    "net": "หลังหัก"
+    "net": "หลังหัก",
+    "therapistHoursTitle": "ชั่วโมงของนักบำบัด",
+    "therapistHoursSubtitle": "การจองที่เสร็จสิ้นต่อนักบำบัด",
+    "allTherapists": "นักบำบัดทั้งหมด",
+    "therapistCol": "นักบำบัด",
+    "bookingsCol": "การจอง",
+    "hoursCol": "ชั่วโมง",
+    "noHoursData": "ไม่มีการจองที่เสร็จสิ้นในเดือนนี้"
   },
   "TipsPage": {
     "filterAll": "ทั้งหมด",

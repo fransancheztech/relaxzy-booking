@@ -18,10 +18,16 @@ import RevenueSection from "./components/RevenueSection";
 import BookingsSection from "./components/BookingsSection";
 import ClientSection from "./components/ClientSection";
 import TipsSection from "./components/TipsSection";
+import TherapistHoursSection from "./components/TherapistHoursSection";
 
-const StatsPageContent = () => {
+interface Props {
+  role: string;
+}
+
+const StatsPageContent = ({ role }: Props) => {
   const t = useTranslations("Stats");
   const { setButtonLabel, setOnButtonClick } = useLayout();
+  const isAdmin = role === "admin";
 
   const [preset, setPreset] = useState<Preset>("month");
   const [customFrom, setCustomFrom] = useState<Date | null>(null);
@@ -75,18 +81,20 @@ const StatsPageContent = () => {
 
   return (
     <Box sx={{ px: 3, py: 3, position: "relative" }}>
-      {/* Date range filter */}
-      <Box sx={{ mb: 3 }}>
-        <DateRangeFilter
-          preset={preset}
-          customFrom={customFrom}
-          customTo={customTo}
-          onChange={handleRangeChange}
-        />
-      </Box>
+      {/* Date range filter — admin only */}
+      {isAdmin && (
+        <Box sx={{ mb: 3 }}>
+          <DateRangeFilter
+            preset={preset}
+            customFrom={customFrom}
+            customTo={customTo}
+            onChange={handleRangeChange}
+          />
+        </Box>
+      )}
 
-      {/* Loading overlay */}
-      {loading && (
+      {/* Loading overlay — admin only */}
+      {isAdmin && loading && (
         <Box
           sx={{
             position: "absolute", inset: 0, zIndex: 10,
@@ -98,11 +106,11 @@ const StatsPageContent = () => {
         </Box>
       )}
 
-      {error && (
+      {isAdmin && error && (
         <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>
       )}
 
-      {data && (
+      {isAdmin && data && (
         <Box sx={{ opacity: loading ? 0.4 : 1, transition: "opacity 0.2s" }}>
           {/* KPI Cards */}
           <Grid container spacing={2} sx={{ mb: 4 }}>
@@ -188,8 +196,15 @@ const StatsPageContent = () => {
               </Box>
             </>
           )}
+
+          <Divider sx={{ mb: 4 }} />
         </Box>
       )}
+
+      {/* Therapist hours — visible to all roles */}
+      <Box sx={{ opacity: 1 }}>
+        <TherapistHoursSection />
+      </Box>
     </Box>
   );
 };

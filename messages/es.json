@@ -427,7 +427,14 @@
     "detailByTherapist": "Detalle por terapeuta",
     "tipCount": "{count, plural, =1 {1 propina} other {# propinas}}",
     "gross": "Bruto",
-    "net": "Neto"
+    "net": "Neto",
+    "therapistHoursTitle": "Horas por terapeuta",
+    "therapistHoursSubtitle": "Reservas completadas por terapeuta",
+    "allTherapists": "Todos los terapeutas",
+    "therapistCol": "Terapeuta",
+    "bookingsCol": "Reservas",
+    "hoursCol": "Horas",
+    "noHoursData": "No hay reservas completadas este mes."
   },
   "TipsPage": {
     "filterAll": "Todas",
