@@ -3,7 +3,7 @@
 import {
   Box,
   Chip,
-  Container,
+  Divider,
   IconButton,
   Paper,
   Stack,
@@ -47,6 +47,7 @@ export default function GuidelinesPage() {
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Guideline | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -83,6 +84,43 @@ export default function GuidelinesPage() {
     };
   }, [isAdmin, setButtonLabel, setOnButtonClick, t]);
 
+  // Track which guideline is currently in view for the nav highlight
+  useEffect(() => {
+    if (guidelines.length < 2) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible.length > 0) {
+          setActiveId(visible[0].target.getAttribute("data-guideline-id"));
+        }
+      },
+      { rootMargin: "-5% 0px -75% 0px", threshold: 0 },
+    );
+
+    guidelines.forEach((g) => {
+      const el = document.getElementById(`guideline-${g.id}`);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [guidelines]);
+
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(`guideline-${id}`);
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - 88;
+    window.scrollTo({ top, behavior: "smooth" });
+  };
+
+  const navLabel = (g: Guideline) => {
+    if (g.title?.trim()) return g.title.trim();
+    const flat = g.content.replace(/\n/g, " ");
+    return flat.length > 50 ? flat.slice(0, 50) + "…" : flat;
+  };
+
   const handleEdit = (g: Guideline) => {
     setEditing(g);
     setDialogOpen(true);
@@ -109,65 +147,171 @@ export default function GuidelinesPage() {
     });
 
   return (
-    <Container sx={{ py: 3 }} maxWidth="md">
-      {!loading && guidelines.length === 0 && (
-        <Paper variant="outlined" sx={{ p: 4, textAlign: "center" }}>
-          <Typography color="text.secondary">
-            {isAdmin ? t("emptyAdmin") : t("emptyReader")}
+    <Box
+      sx={{
+        display: "flex",
+        gap: 2,
+        px: { xs: 2, md: 3 },
+        py: 3,
+        maxWidth: 1060,
+        mx: "auto",
+        alignItems: "flex-start",
+      }}
+    >
+      {/* Left outline nav — shown only when ≥2 guidelines exist */}
+      {guidelines.length >= 2 && (
+        <Box
+          component="nav"
+          sx={{
+            display: { xs: "none", md: "flex" },
+            flexDirection: "column",
+            width: 200,
+            flexShrink: 0,
+            position: "sticky",
+            top: 72,
+            maxHeight: "calc(100vh - 100px)",
+            overflowY: "auto",
+          }}
+        >
+          <Typography
+            variant="overline"
+            sx={{
+              px: 1,
+              fontSize: "0.6rem",
+              letterSpacing: 1.2,
+              color: "text.disabled",
+              lineHeight: 2,
+            }}
+          >
+            {t("navContents")}
           </Typography>
-        </Paper>
+          <Divider sx={{ mb: 0.5 }} />
+          <Stack spacing={0}>
+            {guidelines.map((g) => {
+              const isActive = activeId === g.id;
+              return (
+                <Box
+                  key={g.id}
+                  onClick={() => scrollTo(g.id)}
+                  sx={{
+                    px: 1,
+                    py: 0.6,
+                    cursor: "pointer",
+                    borderRadius: 0.75,
+                    borderLeft: "2px solid",
+                    borderColor: isActive ? "primary.main" : "transparent",
+                    bgcolor: isActive ? "action.selected" : "transparent",
+                    transition: "background-color 0.15s, border-color 0.15s",
+                    "&:hover": { bgcolor: "action.hover" },
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      lineHeight: 1.45,
+                      fontWeight: isActive ? 600 : 400,
+                      color: isActive ? "text.primary" : "text.secondary",
+                    }}
+                  >
+                    {navLabel(g)}
+                  </Typography>
+                </Box>
+              );
+            })}
+          </Stack>
+        </Box>
       )}
 
-      <Stack spacing={2}>
-        {guidelines.map((g) => (
-          <Paper key={g.id} variant="outlined" sx={{ p: 2 }}>
-            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                {g.title && (
-                  <Typography variant="h6" sx={{ mb: 0.5, lineHeight: 1.3 }}>
-                    {g.title}
-                  </Typography>
-                )}
-                <Typography
-                  variant="body2"
-                  sx={{ whiteSpace: "pre-wrap", mb: 1.5, color: "text.primary" }}
-                >
-                  {g.content}
-                </Typography>
-                <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", alignItems: "center" }}>
-                  {g.target_roles.map((r) => (
-                    <Chip
-                      key={r}
-                      size="small"
-                      label={ROLE_LABEL_KEYS[r] ? t(ROLE_LABEL_KEYS[r] as Parameters<typeof t>[0]) : r}
-                      color={ROLE_CHIP_COLORS[r] ?? "default"}
-                      variant="outlined"
-                      sx={{ fontSize: "0.7rem", height: 22 }}
-                    />
-                  ))}
-                  <Typography variant="caption" color="text.disabled" sx={{ ml: 1 }}>
-                    {formatDate(g.created_at)}
-                  </Typography>
-                </Box>
-              </Box>
-              {isAdmin && (
-                <Box sx={{ display: "flex", flexShrink: 0 }}>
-                  <Tooltip title={tCommon("edit")}>
-                    <IconButton size="small" onClick={() => handleEdit(g)}>
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title={tCommon("delete")}>
-                    <IconButton size="small" color="error" onClick={() => handleDelete(g)}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              )}
-            </Box>
+      {/* Main content */}
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        {!loading && guidelines.length === 0 && (
+          <Paper variant="outlined" sx={{ p: 4, textAlign: "center" }}>
+            <Typography color="text.secondary">
+              {isAdmin ? t("emptyAdmin") : t("emptyReader")}
+            </Typography>
           </Paper>
-        ))}
-      </Stack>
+        )}
+
+        <Stack spacing={2}>
+          {guidelines.map((g) => (
+            <Paper
+              key={g.id}
+              id={`guideline-${g.id}`}
+              data-guideline-id={g.id}
+              variant="outlined"
+              sx={{ p: 2 }}
+            >
+              <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  {g.title && (
+                    <Typography variant="h6" sx={{ mb: 0.5, lineHeight: 1.3 }}>
+                      {g.title}
+                    </Typography>
+                  )}
+                  <Typography
+                    variant="body2"
+                    sx={{ whiteSpace: "pre-wrap", mb: 1.5, color: "text.primary" }}
+                  >
+                    {g.content}
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      gap: 0.5,
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                    }}
+                  >
+                    {g.target_roles.map((r) => (
+                      <Chip
+                        key={r}
+                        size="small"
+                        label={
+                          ROLE_LABEL_KEYS[r]
+                            ? t(ROLE_LABEL_KEYS[r] as Parameters<typeof t>[0])
+                            : r
+                        }
+                        color={ROLE_CHIP_COLORS[r] ?? "default"}
+                        variant="outlined"
+                        sx={{ fontSize: "0.7rem", height: 22 }}
+                      />
+                    ))}
+                    <Typography
+                      variant="caption"
+                      color="text.disabled"
+                      sx={{ ml: 1 }}
+                    >
+                      {formatDate(g.created_at)}
+                    </Typography>
+                  </Box>
+                </Box>
+                {isAdmin && (
+                  <Box sx={{ display: "flex", flexShrink: 0 }}>
+                    <Tooltip title={tCommon("edit")}>
+                      <IconButton size="small" onClick={() => handleEdit(g)}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title={tCommon("delete")}>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDelete(g)}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                )}
+              </Box>
+            </Paper>
+          ))}
+        </Stack>
+      </Box>
 
       <GuidelineDialog
         open={dialogOpen}
@@ -178,6 +322,6 @@ export default function GuidelinesPage() {
           load();
         }}
       />
-    </Container>
+    </Box>
   );
 }

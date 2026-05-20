@@ -638,6 +638,7 @@
     "updatedSuccess": "อัปเดตแนวทางแล้ว",
     "deletedSuccess": "ลบแนวทางแล้ว",
     "deleteError": "ไม่สามารถลบแนวทาง",
-    "confirmDelete": "ลบแนวทาง \"{label}\" ใช่หรือไม่? ไม่สามารถยกเลิกได้"
+    "confirmDelete": "ลบแนวทาง \"{label}\" ใช่หรือไม่? ไม่สามารถยกเลิกได้",
+    "navContents": "สารบัญ"
   }
 }

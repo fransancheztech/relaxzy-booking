@@ -638,6 +638,7 @@
     "updatedSuccess": "Pauta actualizada",
     "deletedSuccess": "Pauta eliminada",
     "deleteError": "Error al eliminar la pauta",
-    "confirmDelete": "¿Eliminar la pauta \"{label}\"? Esta acción no se puede deshacer."
+    "confirmDelete": "¿Eliminar la pauta \"{label}\"? Esta acción no se puede deshacer.",
+    "navContents": "Índice"
   }
 }

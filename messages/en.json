@@ -638,6 +638,7 @@
     "updatedSuccess": "Guideline updated",
     "deletedSuccess": "Guideline deleted",
     "deleteError": "Failed to delete guideline",
-    "confirmDelete": "Delete guideline \"{label}\"? This cannot be undone."
+    "confirmDelete": "Delete guideline \"{label}\"? This cannot be undone.",
+    "navContents": "Contents"
   }
 }
