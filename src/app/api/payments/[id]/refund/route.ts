@@ -76,12 +76,12 @@ export async function POST(
     // -------------------------------
     await prisma.$queryRaw`
       SELECT register_payment_event(
-        ${payment.booking_id}::uuid,
         'REFUND'::payment_types,
         ${amount}::numeric,
         ${method}::payment_methods,
         ${performed_by}::uuid,
-        ${notes ?? null}::text
+        ${notes ?? null}::text,
+        ${payment.booking_id}::uuid
       )
     `;
 

@@ -177,7 +177,14 @@
     "removeSuccess": "Uso de bono eliminado",
     "removeError": "Error al eliminar el uso de bono",
     "eventCharge": "Cargo",
-    "eventRefund": "Devolución"
+    "eventRefund": "Devolución",
+    "removeEventAction": "Eliminar cargo",
+    "removeEventReasonLabel": "Motivo de la eliminación (obligatorio)",
+    "removeEventReasonRequired": "El motivo es obligatorio",
+    "confirmRemoveEventText": "¿Eliminar este cargo? El total de la reserva se actualizará.",
+    "confirmRemoveEvent": "Confirmar eliminación",
+    "removeEventSuccess": "Cargo eliminado",
+    "removeEventError": "Error al eliminar el cargo"
   },
   "BookingPayment": {
     "payBooking": "Pagar reserva",

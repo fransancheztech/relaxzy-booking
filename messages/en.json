@@ -177,7 +177,14 @@
     "removeSuccess": "Voucher redemption removed",
     "removeError": "Failed to remove voucher redemption",
     "eventCharge": "Charge",
-    "eventRefund": "Refund"
+    "eventRefund": "Refund",
+    "removeEventAction": "Remove charge",
+    "removeEventReasonLabel": "Reason for removal (required)",
+    "removeEventReasonRequired": "A reason is required",
+    "confirmRemoveEventText": "Remove this charge? The booking total will be updated.",
+    "confirmRemoveEvent": "Confirm removal",
+    "removeEventSuccess": "Charge removed",
+    "removeEventError": "Failed to remove charge"
   },
   "BookingPayment": {
     "payBooking": "Pay Booking",

@@ -81,6 +81,10 @@ export default function ManagePaymentsDialog({
 
   const [activeRemoveId, setActiveRemoveId] = useState<string | null>(null);
 
+  const [activeRemoveEventId, setActiveRemoveEventId] = useState<string | null>(null);
+  const [removeEventNote, setRemoveEventNote] = useState("");
+  const [removeEventNoteError, setRemoveEventNoteError] = useState(false);
+
   const loadDetail = async () => {
     setLoading(true);
     try {
@@ -100,6 +104,9 @@ export default function ManagePaymentsDialog({
     if (!open || !bookingId) return;
     setActiveRefundId(null);
     setActiveRemoveId(null);
+    setActiveRemoveEventId(null);
+    setRemoveEventNote("");
+    setRemoveEventNoteError(false);
     loadDetail();
   }, [open, bookingId]);
 
@@ -153,6 +160,33 @@ export default function ManagePaymentsDialog({
         await loadDetail();
       } catch (err: any) {
         toast.error(err.message || t("removeError"));
+      }
+    });
+
+  const handleRemoveEvent = (eventId: string) =>
+    guard(async () => {
+      if (!removeEventNote.trim()) {
+        setRemoveEventNoteError(true);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/payment-events/${eventId}/remove`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ notes: removeEventNote.trim() }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error ?? "");
+        }
+        toast.success(t("removeEventSuccess"));
+        setActiveRemoveEventId(null);
+        setRemoveEventNote("");
+        setRemoveEventNoteError(false);
+        onPaymentChanged();
+        await loadDetail();
+      } catch (err: any) {
+        toast.error(err.message || t("removeEventError"));
       }
     });
 
@@ -228,45 +262,110 @@ export default function ManagePaymentsDialog({
                     <Box sx={{ mt: 0.75, ml: 1.5, pl: 1.5, borderLeft: "2px solid", borderColor: "divider" }}>
                       {p.events.map((e) => {
                         const isCharge = e.type === "CHARGE";
+                        const isRemovingThis = activeRemoveEventId === e.id;
                         return (
-                          <Box
-                            key={e.id}
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                              py: 0.25,
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <Chip
-                              size="small"
-                              variant="outlined"
-                              label={isCharge ? t("eventCharge") : t("eventRefund")}
-                              color={isCharge ? "success" : "warning"}
-                              sx={{ height: 18, fontSize: "0.65rem", fontWeight: 600 }}
-                            />
-                            <Typography variant="caption" fontWeight={600}>
-                              {isCharge ? "+" : "−"}{formatMoney(e.amount)}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {methodLabel(e.method)} · {formatDateTime(e.created_at)}
-                            </Typography>
-                            {e.notes && (
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                sx={{
-                                  fontStyle: "italic",
-                                  maxWidth: 240,
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                }}
-                                title={e.notes}
-                              >
-                                · {e.notes}
+                          <Box key={e.id}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                                py: 0.25,
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              <Chip
+                                size="small"
+                                variant="outlined"
+                                label={isCharge ? t("eventCharge") : t("eventRefund")}
+                                color={isCharge ? "success" : "warning"}
+                                sx={{ height: 18, fontSize: "0.65rem", fontWeight: 600 }}
+                              />
+                              <Typography variant="caption" fontWeight={600}>
+                                {isCharge ? "+" : "−"}{formatMoney(Math.abs(e.amount))}
                               </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {methodLabel(e.method)} · {formatDateTime(e.created_at)}
+                              </Typography>
+                              {e.notes && (
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  sx={{
+                                    fontStyle: "italic",
+                                    maxWidth: 240,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                  title={e.notes}
+                                >
+                                  · {e.notes}
+                                </Typography>
+                              )}
+                              {isCharge && (
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  disabled={actionLoading}
+                                  onClick={() => {
+                                    if (isRemovingThis) {
+                                      setActiveRemoveEventId(null);
+                                      setRemoveEventNote("");
+                                      setRemoveEventNoteError(false);
+                                    } else {
+                                      setActiveRemoveEventId(e.id);
+                                      setRemoveEventNote("");
+                                      setRemoveEventNoteError(false);
+                                      setActiveRefundId(null);
+                                    }
+                                  }}
+                                  sx={{ ml: "auto", p: 0.25 }}
+                                  title={t("removeEventAction")}
+                                >
+                                  <DeleteOutlineIcon sx={{ fontSize: "0.9rem" }} />
+                                </IconButton>
+                              )}
+                            </Box>
+                            {isRemovingThis && (
+                              <Box sx={{ mt: 0.5, mb: 0.5, p: 1.5, bgcolor: "action.hover", borderRadius: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+                                <Typography variant="body2">{t("confirmRemoveEventText")}</Typography>
+                                <TextField
+                                  size="small"
+                                  required
+                                  label={t("removeEventReasonLabel")}
+                                  value={removeEventNote}
+                                  onChange={(e) => {
+                                    setRemoveEventNote(e.target.value);
+                                    if (e.target.value.trim()) setRemoveEventNoteError(false);
+                                  }}
+                                  error={removeEventNoteError}
+                                  helperText={removeEventNoteError ? t("removeEventReasonRequired") : undefined}
+                                  fullWidth
+                                />
+                                <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
+                                  <Button
+                                    size="small"
+                                    onClick={() => {
+                                      setActiveRemoveEventId(null);
+                                      setRemoveEventNote("");
+                                      setRemoveEventNoteError(false);
+                                    }}
+                                    disabled={actionLoading}
+                                  >
+                                    {tCommon("cancel")}
+                                  </Button>
+                                  <Button
+                                    size="small"
+                                    variant="contained"
+                                    color="error"
+                                    onClick={() => handleRemoveEvent(e.id)}
+                                    disabled={actionLoading}
+                                  >
+                                    {t("confirmRemoveEvent")}
+                                  </Button>
+                                </Box>
+                              </Box>
                             )}
                           </Box>
                         );

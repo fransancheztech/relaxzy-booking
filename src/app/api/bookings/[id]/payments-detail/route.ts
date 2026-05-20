@@ -19,7 +19,7 @@ export async function GET(
         SELECT
           p.id::text,
           COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE'), 0)::float AS charged,
-          COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0)::float  AS refunded,
+          COALESCE(-SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0)::float AS refunded,
           MAX(pe.method::text)   FILTER (WHERE pe.type = 'CHARGE')              AS method,
           p.created_at
         FROM payments p

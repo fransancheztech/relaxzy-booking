@@ -177,7 +177,14 @@
     "removeSuccess": "ลบการใช้บัตรกำนัลแล้ว",
     "removeError": "ไม่สามารถลบการใช้บัตรกำนัล",
     "eventCharge": "ชำระเงิน",
-    "eventRefund": "คืนเงิน"
+    "eventRefund": "คืนเงิน",
+    "removeEventAction": "ลบรายการชำระเงิน",
+    "removeEventReasonLabel": "เหตุผลในการลบ (จำเป็น)",
+    "removeEventReasonRequired": "จำเป็นต้องระบุเหตุผล",
+    "confirmRemoveEventText": "ลบรายการชำระเงินนี้? ยอดรวมของการจองจะถูกอัปเดต",
+    "confirmRemoveEvent": "ยืนยันการลบ",
+    "removeEventSuccess": "ลบรายการชำระเงินแล้ว",
+    "removeEventError": "ไม่สามารถลบรายการชำระเงิน"
   },
   "BookingPayment": {
     "payBooking": "ชำระเงินสำหรับการจอง",
