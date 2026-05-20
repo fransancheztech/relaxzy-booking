@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { BookingModel } from "@/types/bookings";
 
 export function useCalendarData(
@@ -10,9 +10,9 @@ export function useCalendarData(
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState("");
 
-  const fetchBookings = useCallback(async () => {
+  const fetchBookings = useCallback(async (silent = false) => {
     if (!start || !end) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const res = await fetch(
         `/api/bookings/range?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`
@@ -29,7 +29,7 @@ export function useCalendarData(
     } catch (err: any) {
       setFetchError(err.message ?? "Unknown error");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [start, end, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -37,22 +37,29 @@ export function useCalendarData(
     fetchBookings();
   }, [fetchBookings]);
 
-  // Realtime updates via SSE
+  // Keep a ref to the latest fetchBookings so the SSE handler always uses the current range
+  const fetchBookingsRef = useRef(fetchBookings);
+  useEffect(() => {
+    fetchBookingsRef.current = fetchBookings;
+  }, [fetchBookings]);
+
+  // Realtime updates via SSE — refetch the range so joined display fields stay correct.
+  // The raw stream payload lacks client/service joins, so merging it directly would
+  // render incomplete event blocks; a debounced refetch keeps the data shape consistent.
   useEffect(() => {
     const evtSource = new EventSource("/api/bookings/stream");
-    evtSource.onmessage = (event) => {
-      const payload = JSON.parse(event.data);
-      setBookings((prev) => {
-        switch (payload.type) {
-          case "INSERT": return [...prev, payload.data];
-          case "UPDATE": return prev.map((b) => b.id === payload.data.id ? payload.data : b);
-          case "DELETE": return prev.filter((b) => b.id !== payload.data.id);
-          default: return prev;
-        }
-      });
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    evtSource.onmessage = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => fetchBookingsRef.current(true), 250);
     };
     evtSource.onerror = () => console.warn("SSE connection lost, retrying...");
-    return () => evtSource.close();
+
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      evtSource.close();
+    };
   }, []);
 
   return { bookings, loading, fetchError };
