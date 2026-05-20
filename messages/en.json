@@ -500,7 +500,7 @@
       "section4tip0": "Pending (transitional): the client is interested but hasn't confirmed yet. Use it to hold their details and desired time so you don't lose them.",
       "section4tip1": "Confirmed (transitional): the client has confirmed they are coming. Use this once the appointment is set and you are expecting them.",
       "section4tip2": "Completed (final): the session is done and the client has left. Switch to this once the appointment has finished.",
-      "section4tip3": "Cancelled (final): the client didn't show up or cancelled. Use this for no-shows and cancellations. No payments can be added to a cancelled booking."
+      "section4tip3": "Cancelled (final): the client didn't show up or cancelled. Use this for no-shows and cancellations. No payments can be added to a cancelled booking. Always leave a note in cancelled bookings explaining the reason for the cancellation."
     },
     "bookings": {
       "title": "Bookings",

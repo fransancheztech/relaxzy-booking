@@ -500,7 +500,7 @@
       "section4tip0": "Pendiente (transitorio): el cliente está interesado pero aún no ha confirmado. Úsalo para guardar sus datos y la hora deseada sin perderlos.",
       "section4tip1": "Confirmada (transitorio): el cliente ha confirmado que va a venir. Úsalo una vez que la cita está fijada y lo estás esperando.",
       "section4tip2": "Completada (final): la sesión ha terminado y el cliente se ha ido. Cámbialo a este estado una vez que la cita haya finalizado.",
-      "section4tip3": "Cancelada (final): el cliente no se presentó o canceló. Úsalo para ausencias y cancelaciones. No se pueden añadir pagos a una reserva cancelada."
+      "section4tip3": "Cancelada (final): el cliente no se presentó o canceló. Úsalo para ausencias y cancelaciones. No se pueden añadir pagos a una reserva cancelada. Deja siempre una nota en las reservas canceladas explicando el motivo de la cancelación."
     },
     "bookings": {
       "title": "Reservas",
