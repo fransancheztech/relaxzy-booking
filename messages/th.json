@@ -434,7 +434,8 @@
     "therapistCol": "นักบำบัด",
     "bookingsCol": "การจอง",
     "hoursCol": "ชั่วโมง",
-    "noHoursData": "ไม่มีการจองที่เสร็จสิ้นในเดือนนี้"
+    "noHoursData": "ไม่มีการจองที่เสร็จสิ้นในเดือนนี้",
+    "totalRow": "รวม"
   },
   "TipsPage": {
     "filterAll": "ทั้งหมด",

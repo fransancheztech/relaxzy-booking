@@ -434,7 +434,8 @@
     "therapistCol": "Therapist",
     "bookingsCol": "Bookings",
     "hoursCol": "Hours",
-    "noHoursData": "No completed bookings for this month."
+    "noHoursData": "No completed bookings for this month.",
+    "totalRow": "Total"
   },
   "TipsPage": {
     "filterAll": "All",

@@ -434,7 +434,8 @@
     "therapistCol": "Terapeuta",
     "bookingsCol": "Reservas",
     "hoursCol": "Horas",
-    "noHoursData": "No hay reservas completadas este mes."
+    "noHoursData": "No hay reservas completadas este mes.",
+    "totalRow": "Total"
   },
   "TipsPage": {
     "filterAll": "Todas",

@@ -21,7 +21,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { toast } from "react-toastify";
 
 interface HoursRow {
@@ -43,16 +43,22 @@ function toMonthKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function formatMonthLabel(key: string) {
+function formatMonthLabel(key: string, locale: string) {
   const [year, month] = key.split("-").map(Number);
-  return new Date(year, month - 1, 1).toLocaleDateString("default", {
+  // Force the Gregorian calendar so the Thai locale doesn't switch to the Buddhist era.
+  return new Date(year, month - 1, 1).toLocaleDateString(`${locale}-u-ca-gregory`, {
     month: "long",
     year: "numeric",
   });
 }
 
-export default function TherapistHoursSection() {
+export default function TherapistHoursSection({
+  isTherapist = false,
+}: {
+  isTherapist?: boolean;
+}) {
   const t = useTranslations("Stats");
+  const locale = useLocale();
 
   const currentMonthKey = toMonthKey(new Date());
   const [monthKey, setMonthKey] = useState(currentMonthKey);
@@ -91,10 +97,19 @@ export default function TherapistHoursSection() {
     name: r.full_name,
   }));
 
+  // Therapist accounts have no "All" option — fall back to a concrete therapist
+  // (also handles the selected therapist having no hours in a newly picked month).
+  const effectiveFilter =
+    isTherapist &&
+    (filterTherapist === "all" ||
+      !rows.some((r) => r.therapist_id === filterTherapist))
+      ? rows[0]?.therapist_id ?? "all"
+      : filterTherapist;
+
   const visibleRows =
-    filterTherapist === "all"
+    effectiveFilter === "all"
       ? rows
-      : rows.filter((r) => r.therapist_id === filterTherapist);
+      : rows.filter((r) => r.therapist_id === effectiveFilter);
 
   const totalHours = visibleRows.reduce((s, r) => s + r.total_hours, 0);
   const totalBookings = visibleRows.reduce((s, r) => s + r.booking_count, 0);
@@ -119,7 +134,7 @@ export default function TherapistHoursSection() {
             <ChevronLeftIcon fontSize="small" />
           </IconButton>
           <Typography variant="body2" sx={{ minWidth: 140, textAlign: "center", fontWeight: 500 }}>
-            {formatMonthLabel(monthKey)}
+            {formatMonthLabel(monthKey, locale)}
           </Typography>
           <IconButton size="small" onClick={() => shiftMonth(1)} disabled={!canGoNext}>
             <ChevronRightIcon fontSize="small" />
@@ -128,13 +143,13 @@ export default function TherapistHoursSection() {
 
         {therapistOptions.length > 1 && (
           <FormControl size="small" sx={{ minWidth: 180 }}>
-            <InputLabel>{t("allTherapists")}</InputLabel>
+            <InputLabel>{isTherapist ? t("therapistCol") : t("allTherapists")}</InputLabel>
             <Select
-              value={filterTherapist}
-              label={t("allTherapists")}
+              value={effectiveFilter}
+              label={isTherapist ? t("therapistCol") : t("allTherapists")}
               onChange={(e) => setFilterTherapist(e.target.value)}
             >
-              <MenuItem value="all">{t("allTherapists")}</MenuItem>
+              {!isTherapist && <MenuItem value="all">{t("allTherapists")}</MenuItem>}
               {therapistOptions.map((o) => (
                 <MenuItem key={o.id} value={o.id}>{o.name}</MenuItem>
               ))}
@@ -169,7 +184,7 @@ export default function TherapistHoursSection() {
                   <TableCell align="right">{formatHours(r.total_hours)}</TableCell>
                 </TableRow>
               ))}
-              {visibleRows.length > 1 && (
+              {!isTherapist && visibleRows.length > 1 && (
                 <>
                   <TableRow>
                     <TableCell colSpan={3}>
@@ -177,7 +192,7 @@ export default function TherapistHoursSection() {
                     </TableCell>
                   </TableRow>
                   <TableRow sx={{ bgcolor: "action.hover" }}>
-                    <TableCell sx={{ fontWeight: 600 }}>Total</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>{t("totalRow")}</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 600 }}>{totalBookings}</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 600 }}>{formatHours(totalHours)}</TableCell>
                   </TableRow>

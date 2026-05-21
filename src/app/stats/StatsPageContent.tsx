@@ -203,7 +203,7 @@ const StatsPageContent = ({ role }: Props) => {
 
       {/* Therapist hours — visible to all roles */}
       <Box sx={{ opacity: 1 }}>
-        <TherapistHoursSection />
+        <TherapistHoursSection isTherapist={role === "therapist"} />
       </Box>
     </Box>
   );
