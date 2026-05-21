@@ -4,13 +4,14 @@ import { useTranslations } from "next-intl";
 import { useClientSearch } from "@/hooks/useClientSearch";
 import { ClientRow } from "@/hooks/useSimilarClients";
 import { BookingSchemaType } from "@/schemas/booking.schema";
-import { Avatar, Box, Chip, Grid, Paper, TextField, Typography } from "@mui/material";
+import { Alert, Avatar, Box, Chip, FormControlLabel, Grid, Paper, Switch, TextField, Typography } from "@mui/material";
 import { useRef, useState } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 
 type Props = {
   autoFocus?: boolean;
   readOnly?: boolean;
+  enableWalkIn?: boolean;
 };
 
 type FocusedField = "name" | "surname" | "phone" | "email" | null;
@@ -116,8 +117,9 @@ function ClientDropdown({
   );
 }
 
-const BookingClientSection = ({ autoFocus, readOnly }: Props) => {
+const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn }: Props) => {
   const t = useTranslations("Common");
+  const tForm = useTranslations("BookingForm");
   const { control, setValue, formState: { errors } } = useFormContext<BookingSchemaType>();
 
   const [nameVal, surnameVal, phoneVal, emailVal] = useWatch({
@@ -133,6 +135,7 @@ const BookingClientSection = ({ autoFocus, readOnly }: Props) => {
   });
 
   const [focusedField, setFocusedField] = useState<FocusedField>(null);
+  const [walkIn, setWalkIn] = useState(false);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleFocus = (field: FocusedField) => {
@@ -154,10 +157,54 @@ const BookingClientSection = ({ autoFocus, readOnly }: Props) => {
     setFocusedField(null);
   };
 
+  const handleWalkInToggle = (checked: boolean) => {
+    setWalkIn(checked);
+    if (checked) {
+      // a walk-in has no client details — clear anything already typed
+      setValue("client_name", "");
+      setValue("client_surname", "");
+      setValue("client_phone", "");
+      setValue("client_email", "");
+      setFocusedField(null);
+    }
+  };
+
   const show = (field: FocusedField) => focusedField === field && clients.length > 0;
 
   return (
     <>
+      {enableWalkIn && (
+        <Grid size={12}>
+          <Box
+            sx={{
+              borderRadius: 1,
+              p: walkIn ? 1.5 : 0,
+              border: "1px solid",
+              borderColor: walkIn ? "warning.main" : "transparent",
+              transition: "padding 0.15s, border-color 0.15s",
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={walkIn}
+                  color="warning"
+                  onChange={(e) => handleWalkInToggle(e.target.checked)}
+                />
+              }
+              label={tForm("walkInToggle")}
+            />
+            {walkIn && (
+              <Alert severity="warning" sx={{ mt: 0.5 }}>
+                {tForm("walkInWarning")}
+              </Alert>
+            )}
+          </Box>
+        </Grid>
+      )}
+
+      {!walkIn && (
+        <>
       <Grid size={6}>
         <Box sx={{ position: "relative" }}>
           <Controller
@@ -270,6 +317,8 @@ const BookingClientSection = ({ autoFocus, readOnly }: Props) => {
           )}
         </Box>
       </Grid>
+        </>
+      )}
     </>
   );
 };

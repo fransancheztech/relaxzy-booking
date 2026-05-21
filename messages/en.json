@@ -149,7 +149,9 @@
     "addPayment": "Add Payment",
     "managePayments": "Manage payments",
     "therapistRequested": "Therapist requested",
-    "therapistRequestedHelper": "Record in notes how strictly the client wants this therapist."
+    "therapistRequestedHelper": "Record in notes how strictly the client wants this therapist.",
+    "walkInToggle": "Walk-in client (no details)",
+    "walkInWarning": "Walk-in bookings keep no client details. You won't be able to contact this client afterwards — to confirm, reschedule, or follow up. Use this only when the client's details are genuinely unavailable."
   },
   "ManagePayments": {
     "title": "Manage Payments",

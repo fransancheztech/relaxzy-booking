@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
     const formatted = bookings.map((b) => ({
       id: b.id,
 
-      client_name: b.clients?.client_name ?? "Unknown",
+      client_name: b.clients?.client_name ?? (b.client_id ? "Unknown" : "Walk-in"),
       client_surname: b.clients?.client_surname ?? null,
       client_phone: b.clients?.client_phone ?? null,
       client_email: b.clients?.client_email ?? null,

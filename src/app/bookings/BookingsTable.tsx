@@ -50,7 +50,7 @@ export const BookingsTable = ({
       valueGetter: (_, row) =>
         row.client
           ? `${row.client.name ?? ""} ${row.client.surname ?? ""}`.trim()
-          : "",
+          : "Walk-in",
     },
     {
       field: "customer_phone",

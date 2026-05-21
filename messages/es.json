@@ -149,7 +149,9 @@
     "addPayment": "Añadir pago",
     "managePayments": "Gestionar pagos",
     "therapistRequested": "Terapeuta solicitado",
-    "therapistRequestedHelper": "Indica en las notas con qué firmeza la clienta quiere a esta terapeuta."
+    "therapistRequestedHelper": "Indica en las notas con qué firmeza la clienta quiere a esta terapeuta.",
+    "walkInToggle": "Cliente de paso (sin datos)",
+    "walkInWarning": "Las reservas de clientes de paso no guardan ningún dato del cliente. No podrás contactar con este cliente después — para confirmar, reprogramar o hacer seguimiento. Úsalo solo cuando los datos del cliente no estén disponibles."
   },
   "ManagePayments": {
     "title": "Gestionar pagos",
