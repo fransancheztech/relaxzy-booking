@@ -75,6 +75,7 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
   } | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const calendarRef = useRef<FullCalendar>(null);
 
   useEffect(() => {
     const handler = () => setRefreshKey((k) => k + 1);
@@ -338,6 +339,11 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
     setCurrentView(info.view.type);
   }, []);
 
+  // Clicking a day header/number in week or month view jumps to that day's "By therapist" view
+  const handleNavLinkDayClick = useCallback((date: Date) => {
+    calendarRef.current?.getApi().changeView("resourceTimeGridDay", date);
+  }, []);
+
   // Measure the time-gutter column so we can overlay color stripes precisely on top of it
   useEffect(() => {
     if (currentView !== "resourceTimeGridDay") {
@@ -377,6 +383,7 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
     <div ref={containerRef} style={{ position: "relative" }}>
       <div style={{ opacity: loading ? 0.55 : 1, transition: "opacity 0.25s" }}>
         <FullCalendar
+          ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, resourceTimeGridPlugin]}
           schedulerLicenseKey="CC-Attribution-NonCommercial-NoDerivatives"
           locales={FC_LOCALES}
@@ -444,6 +451,8 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
           }
           eventClick={handleEventClick}
           datesSet={handleDatesSet}
+          navLinks
+          navLinkDayClick={handleNavLinkDayClick}
           firstDay={1}
           nowIndicator
           scrollTime="10:00:00"

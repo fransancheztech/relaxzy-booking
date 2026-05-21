@@ -64,15 +64,19 @@ export async function GET(
        Aggregate payments safely
        ----------------------------- */
 
+    // payment_events.amount is a positive magnitude; REFUND events subtract
+    const signedAmount = (e: { type: string | null; amount: unknown }) =>
+      (e.type === "REFUND" ? -1 : 1) * Number(e.amount ?? 0);
+
     const paidCash = booking.payments
       .flatMap((p) => p.payment_events)
       .filter((e) => e.method === "cash")
-      .reduce((sum, e) => sum + Number(e.amount ?? 0), 0);
+      .reduce((sum, e) => sum + signedAmount(e), 0);
 
     const paidCard = booking.payments
       .flatMap((p) => p.payment_events)
       .filter((e) => e.method === "credit_card")
-      .reduce((sum, e) => sum + Number(e.amount ?? 0), 0);
+      .reduce((sum, e) => sum + signedAmount(e), 0);
 
     const voucherUses = await prisma.voucher_uses.findMany({
       where: { booking_id: id, deleted_at: null },

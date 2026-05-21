@@ -143,9 +143,9 @@ const DialogPayment = ({
   };
 
   const totalPaid = paymentEvents.reduce((sum, e) => {
-    // if e.amount is null, treat as 0
+    // amounts are stored as positive magnitudes; REFUND events subtract
     const amount = e.amount ? new Decimal(e.amount) : new Decimal(0);
-    return sum.plus(amount);
+    return e.type === "REFUND" ? sum.minus(amount) : sum.plus(amount);
   }, new Decimal(0));
 
   return (

@@ -33,17 +33,19 @@ export async function GET(request: Request) {
           AND pe.deleted_at IS NULL
         GROUP BY pe.method
       `,
-      // Voucher sales — date-scoped by when the voucher was sold (pe.created_at)
+      // Voucher sales — date-scoped by the voucher's created_at (respects backdated
+      // vouchers; the payment_events row itself always carries the real "now").
       prisma.$queryRaw<PaymentRow[]>`
         SELECT
           pe.method AS payment_method,
           SUM(CASE WHEN pe.type = 'CHARGE' THEN pe.amount ELSE -pe.amount END) AS net
         FROM payment_events pe
         JOIN payments p ON p.id = pe.payment_id
+        JOIN vouchers v ON v.id = p.voucher_id
         WHERE
-          pe.created_at >= ${startDate}
-          AND pe.created_at < ${endDate}
-          AND p.voucher_id IS NOT NULL
+          v.created_at >= ${startDate}
+          AND v.created_at < ${endDate}
+          AND v.deleted_at IS NULL
           AND pe.deleted_at IS NULL
         GROUP BY pe.method
       `,

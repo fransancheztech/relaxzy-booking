@@ -7,7 +7,7 @@ export async function recalculateVoucherBalance(
   const rows = await tx.$queryRaw<[{ balance: string }]>`
     SELECT (
       COALESCE((
-        SELECT SUM(pe.amount)
+        SELECT SUM(CASE WHEN pe.type = 'CHARGE' THEN pe.amount ELSE -pe.amount END)
         FROM payment_events pe
         JOIN payments p ON pe.payment_id = p.id
         WHERE p.voucher_id = ${voucherId}::uuid
