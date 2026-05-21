@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, DialogActions, DialogContent, Dialog, DialogTitle } from '@mui/material'
+import { Button, DialogActions, DialogContent, DialogContentText, Dialog, DialogTitle } from '@mui/material'
 import { FormProvider, useForm } from 'react-hook-form'
 import { VoucherSchemaType } from '@/schemas/voucher.schema'
 import { VoucherSchema } from '@/schemas/voucher.schema'
@@ -11,6 +11,21 @@ import CloseIcon from "@mui/icons-material/Close";
 import NewVoucherFormFields from './NewVoucherFormFields';
 import { useTranslations } from "next-intl";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
+import { useRef, useState } from "react";
+
+/** A voucher is missing contact info if the buyer — or a filled-in recipient — has no phone or email. */
+function isContactMissing(data: VoucherSchemaType): boolean {
+    const buyerMissing = !data.buyer_phone?.trim() && !data.buyer_email?.trim();
+    const hasRecipient = !!(
+        data.recipient_name?.trim() ||
+        data.recipient_surname?.trim() ||
+        data.recipient_email?.trim() ||
+        data.recipient_phone?.trim()
+    );
+    const recipientMissing =
+        hasRecipient && !data.recipient_phone?.trim() && !data.recipient_email?.trim();
+    return buyerMissing || recipientMissing;
+}
 
 type Props = {
     open: boolean;
@@ -44,12 +59,37 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
 
     const { submitting, guard } = useSubmitGuard();
 
-    const onSubmit = (data: VoucherSchemaType) =>
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const pendingDataRef = useRef<VoucherSchemaType | null>(null);
+
+    const createVoucher = (data: VoucherSchemaType) =>
       guard(async () => {
         await handleSubmitCreateVoucher(data);
         methods.reset();
         onClose();
       });
+
+    const onSubmit = (data: VoucherSchemaType) => {
+        // Contact info isn't enforced, but warn before creating a voucher without it.
+        if (isContactMissing(data)) {
+            pendingDataRef.current = data;
+            setConfirmOpen(true);
+            return;
+        }
+        return createVoucher(data);
+    };
+
+    const handleConfirmProceed = () => {
+        setConfirmOpen(false);
+        const data = pendingDataRef.current;
+        pendingDataRef.current = null;
+        if (data) createVoucher(data);
+    };
+
+    const handleConfirmCancel = () => {
+        setConfirmOpen(false);
+        pendingDataRef.current = null;
+    };
 
     const onCancel = () => {
         methods.reset(defaultValues);
@@ -87,6 +127,26 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
                     </DialogActions>
                 </form>
             </FormProvider>
+
+            <Dialog open={confirmOpen} onClose={handleConfirmCancel} maxWidth="xs" fullWidth>
+                <DialogTitle>{t("noContactConfirmTitle")}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>{t("noContactConfirmMessage")}</DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleConfirmCancel} disabled={submitting}>
+                        {tCommon("cancel")}
+                    </Button>
+                    <Button
+                        onClick={handleConfirmProceed}
+                        color="warning"
+                        variant="contained"
+                        disabled={submitting}
+                    >
+                        {t("noContactConfirmProceed")}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Dialog>
     )
 }

@@ -25,14 +25,8 @@ export const VoucherSchema = z.object({
     expiration_date: z.date({ error: "Expiration date is required" }),
     created_at: z.date().optional(),
 }).superRefine((data, ctx) => {
-    if (!data.buyer_email && !data.buyer_phone) {
-        ctx.addIssue({
-            code: "custom",
-            message: "Provide at least a phone or email for the buyer",
-            path: ["buyer_phone"],
-        });
-    }
-
+    // Contact info (phone/email) is encouraged but not enforced here — the New Voucher
+    // dialog warns the receptionist on submit instead of blocking. Names stay required.
     const hasRecipient = !!(data.recipient_name || data.recipient_surname || data.recipient_email || data.recipient_phone);
 
     if (hasRecipient && !data.recipient_name) {
@@ -40,14 +34,6 @@ export const VoucherSchema = z.object({
             code: "custom",
             message: "Recipient name is required",
             path: ["recipient_name"],
-        });
-    }
-
-    if (hasRecipient && !data.recipient_email && !data.recipient_phone) {
-        ctx.addIssue({
-            code: "custom",
-            message: "Provide at least a phone or email for the recipient",
-            path: ["recipient_phone"],
         });
     }
 });

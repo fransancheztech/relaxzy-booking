@@ -73,10 +73,8 @@ async function findOrCreateClientFromVoucher(
     (body as Record<string, unknown>)[`${prefix}_phone`] as string | undefined,
   );
 
-  if (!name || (!email && !phone)) {
-    throw new Error(
-      `${prefix} must have a name and at least an email or phone`,
-    );
+  if (!name) {
+    throw new Error(`${prefix} must have a name`);
   }
 
   let clientId: string | null = null;
