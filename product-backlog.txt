@@ -1,6 +1,7 @@
 TO-DO
 - Revisar texto de ayuda contextual para diferentes páginas y usuarios
 - Completar reservas Mayo
+- Revisar error de 15 máximas conexiones superadas, en hilo de Claude de Revenue per hour calcu
 - Añadir propina de las reservas antiguas.
 - Añadir regalos de las reservas antiguas.
 - Crear vouchers automaticamente cuando compren vouchers online

@@ -13,18 +13,19 @@ import { useTranslations } from "next-intl";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 import { useRef, useState } from "react";
 
-/** A voucher is missing contact info if the buyer — or a filled-in recipient — has no phone or email. */
+/**
+ * A voucher is missing contact info only when there is no phone or email saved
+ * anywhere on it — neither on the buyer nor on the recipient. A single contact on
+ * either party is enough to reach the voucher, so that case does not warn.
+ */
 function isContactMissing(data: VoucherSchemaType): boolean {
-    const buyerMissing = !data.buyer_phone?.trim() && !data.buyer_email?.trim();
-    const hasRecipient = !!(
-        data.recipient_name?.trim() ||
-        data.recipient_surname?.trim() ||
-        data.recipient_email?.trim() ||
-        data.recipient_phone?.trim()
+    const hasAnyContact = !!(
+        data.buyer_phone?.trim() ||
+        data.buyer_email?.trim() ||
+        data.recipient_phone?.trim() ||
+        data.recipient_email?.trim()
     );
-    const recipientMissing =
-        hasRecipient && !data.recipient_phone?.trim() && !data.recipient_email?.trim();
-    return buyerMissing || recipientMissing;
+    return !hasAnyContact;
 }
 
 type Props = {
