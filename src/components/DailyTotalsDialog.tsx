@@ -16,9 +16,27 @@ import {
 } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
+import type { SxProps, Theme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { formatMoney } from "@/utils/formatMoney";
+
+/** Summary row — tinted, bold, separated from the itemized rows by a top border. */
+const TOTAL_ROW_SX: SxProps<Theme> = {
+  bgcolor: "action.selected",
+  "& td": {
+    fontWeight: 700,
+    borderTop: "2px solid",
+    borderTopColor: "divider",
+    borderBottom: 0,
+  },
+};
+
+/** Column-header row — tinted and bold so it reads as labels, not data. */
+const HEADER_ROW_SX: SxProps<Theme> = {
+  bgcolor: "action.hover",
+  "& th": { fontWeight: 700 },
+};
 
 interface TherapistTips {
   therapist_id: string;
@@ -116,7 +134,7 @@ const DailyTotalsDialog = ({ open, onClose, start, end }: Props) => {
                     <TableCell sx={{ color: "text.secondary" }}>{t("card")}</TableCell>
                     <TableCell align="right"><strong>{formatMoney(data.payments.card)}</strong></TableCell>
                   </TableRow>
-                  <TableRow sx={{ "& td": { borderBottom: 0, fontWeight: 700 } }}>
+                  <TableRow sx={TOTAL_ROW_SX}>
                     <TableCell>{t("total")}</TableCell>
                     <TableCell align="right">{formatMoney(data.payments.total)}</TableCell>
                   </TableRow>
@@ -141,7 +159,7 @@ const DailyTotalsDialog = ({ open, onClose, start, end }: Props) => {
                     <TableCell sx={{ color: "text.secondary" }}>{t("card")}</TableCell>
                     <TableCell align="right"><strong>{formatMoney(data.voucher_sales.card)}</strong></TableCell>
                   </TableRow>
-                  <TableRow sx={{ "& td": { borderBottom: 0, fontWeight: 700 } }}>
+                  <TableRow sx={TOTAL_ROW_SX}>
                     <TableCell>{t("total")}</TableCell>
                     <TableCell align="right">{formatMoney(data.voucher_sales.total)}</TableCell>
                   </TableRow>
@@ -161,7 +179,7 @@ const DailyTotalsDialog = ({ open, onClose, start, end }: Props) => {
               ) : (
                 <Table size="small">
                   <TableHead>
-                    <TableRow>
+                    <TableRow sx={HEADER_ROW_SX}>
                       <TableCell>{t("therapist")}</TableCell>
                       <TableCell align="right">{t("cash")}</TableCell>
                       <TableCell align="right">{t("card")}</TableCell>
@@ -177,7 +195,7 @@ const DailyTotalsDialog = ({ open, onClose, start, end }: Props) => {
                         <TableCell align="right"><strong>{formatMoney(th.total)}</strong></TableCell>
                       </TableRow>
                     ))}
-                    <TableRow sx={{ "& td": { borderBottom: 0, fontWeight: 700 } }}>
+                    <TableRow sx={TOTAL_ROW_SX}>
                       <TableCell>{t("total")}</TableCell>
                       <TableCell align="right">{formatMoney(data.tips.cash)}</TableCell>
                       <TableCell align="right">{formatMoney(data.tips.card)}</TableCell>
