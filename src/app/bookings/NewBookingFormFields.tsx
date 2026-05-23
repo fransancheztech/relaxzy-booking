@@ -46,6 +46,7 @@ const toPaymentNumber = (raw: string): number | undefined => {
   return isNaN(n) || n <= 0 ? undefined : n;
 };
 import BookingClientSection from "./BookingClientSection";
+import MethodAmountField from "@/components/payments/MethodAmountField";
 import { useTherapists } from "@/hooks/useTherapists";
 import { useServiceLookups } from "@/hooks/useServiceLookups";
 import VoucherPickerField from "./VoucherPickerField";
@@ -118,7 +119,8 @@ const InlinePaymentSection = ({
               name={cashName as any}
               control={control}
               render={({ field }) => (
-                <TextField
+                <MethodAmountField
+                  kind="cash"
                   value={field.value != null ? String(field.value) : ""}
                   onChange={(e) => field.onChange(toPaymentNumber(e.target.value))}
                   label={tPayment("cash")}
@@ -134,7 +136,8 @@ const InlinePaymentSection = ({
               name={cardName as any}
               control={control}
               render={({ field }) => (
-                <TextField
+                <MethodAmountField
+                  kind="card"
                   value={field.value != null ? String(field.value) : ""}
                   onChange={(e) => field.onChange(toPaymentNumber(e.target.value))}
                   label={tPayment("card")}
@@ -194,7 +197,8 @@ const InlinePaymentSection = ({
                     name={voucherAmountName as any}
                     control={control}
                     render={({ field }) => (
-                      <TextField
+                      <MethodAmountField
+                        kind="voucher"
                         value={field.value != null ? String(field.value) : ""}
                         onChange={(e) => field.onChange(toPaymentNumber(e.target.value))}
                         label={tPayment("voucherAmount")}

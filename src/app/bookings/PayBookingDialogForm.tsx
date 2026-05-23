@@ -2,6 +2,7 @@
 
 import {
   Alert,
+  Box,
   Button,
   CircularProgress,
   Collapse,
@@ -12,14 +13,13 @@ import {
   DialogTitle,
   Divider,
   Grid,
-  TextField,
   Typography,
 } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -29,7 +29,9 @@ import {
 } from "@/schemas/bookingPayment.schema";
 import handleSubmitPayBooking from "@/handlers/handleSubmitPayBooking";
 import { normalizeMoneyInput } from "@/utils/normalizeMoney";
+import { formatMoney } from "@/utils/formatMoney";
 import VoucherPickerField from "./VoucherPickerField";
+import MethodAmountField, { METHOD_COLORS } from "@/components/payments/MethodAmountField";
 import { useTranslations } from "next-intl";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
@@ -83,6 +85,28 @@ const PayBookingDialogForm = ({
     setVoucherOpen(false);
   }, [price, open]);
 
+  // Live preview of what the receptionist is about to record — drives the dynamic
+  // Save button label so the method(s) are the last thing they read before commit.
+  const [watchedCash, watchedCard, watchedVoucher] = useWatch({
+    control: methods.control,
+    name: ["cashPayment", "cardPayment", "voucherPayment"],
+  });
+
+  const parseAmount = (v: unknown): number => {
+    if (v == null || v === "") return 0;
+    const n = Number(String(v).replace(",", "."));
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const cashN    = parseAmount(watchedCash);
+  const cardN    = parseAmount(watchedCard);
+  const voucherN = parseAmount(watchedVoucher);
+
+  const methodSegments: { color: string; text: string; key: string }[] = [];
+  if (cashN > 0)    methodSegments.push({ color: METHOD_COLORS.cash,    text: `${formatMoney(cashN)} ${t("cash")}`,       key: "cash" });
+  if (cardN > 0)    methodSegments.push({ color: METHOD_COLORS.card,    text: `${formatMoney(cardN)} ${t("card")}`,       key: "card" });
+  if (voucherN > 0) methodSegments.push({ color: METHOD_COLORS.voucher, text: `${formatMoney(voucherN)} ${t("voucher")}`, key: "voucher" });
+
   const onSubmit = (data: BookingPaymentFormOutput) =>
     guard(async () => {
       if (!bookingId) return;
@@ -117,13 +141,13 @@ const PayBookingDialogForm = ({
                   name="cashPayment"
                   control={methods.control}
                   render={({ field }) => (
-                    <TextField
+                    <MethodAmountField
                       {...field}
+                      kind="cash"
                       value={field.value === "0" ? "" : field.value}
                       label={t("cash")}
                       fullWidth
                       size="small"
-                      variant="outlined"
                       error={!!methods.formState.errors.cashPayment}
                       helperText={methods.formState.errors.cashPayment?.message}
                       slotProps={{ htmlInput: { inputMode: "decimal" } }}
@@ -139,8 +163,9 @@ const PayBookingDialogForm = ({
                   name="cardPayment"
                   control={methods.control}
                   render={({ field }) => (
-                    <TextField
+                    <MethodAmountField
                       {...field}
+                      kind="card"
                       value={field.value === "0" ? "" : field.value}
                       label={t("card")}
                       fullWidth
@@ -193,13 +218,13 @@ const PayBookingDialogForm = ({
                         name="voucherPayment"
                         control={methods.control}
                         render={({ field }) => (
-                          <TextField
+                          <MethodAmountField
                             {...field}
+                            kind="voucher"
                             value={field.value === "0" ? "" : field.value}
                             label={t("voucherAmount")}
                             fullWidth
                             size="small"
-                            variant="outlined"
                             error={!!methods.formState.errors.voucherPayment}
                             helperText={methods.formState.errors.voucherPayment?.message}
                             slotProps={{ htmlInput: { inputMode: "decimal" } }}
@@ -232,6 +257,17 @@ const PayBookingDialogForm = ({
             </Button>
             <Button color="success" type="submit" startIcon={<AddCircleIcon />} disabled={submitting}>
               {t("addPayment")}
+              {methodSegments.length > 0 && (
+                <>
+                  <Box component="span" sx={{ mx: 0.75 }}>·</Box>
+                  {methodSegments.map((seg, i) => (
+                    <Box key={seg.key} component="span" sx={{ display: "inline-flex", alignItems: "center" }}>
+                      {i > 0 && <Box component="span" sx={{ mx: 0.5 }}>+</Box>}
+                      <Box component="span" sx={{ color: seg.color, fontWeight: 700 }}>{seg.text}</Box>
+                    </Box>
+                  ))}
+                </>
+              )}
             </Button>
           </DialogActions>
         </form>
