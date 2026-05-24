@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useClientSearch } from "@/hooks/useClientSearch";
+import { useClientSearch, FocusedClientField } from "@/hooks/useClientSearch";
 import { ClientRow } from "@/hooks/useSimilarClients";
 import { BookingSchemaType } from "@/schemas/booking.schema";
 import { Alert, Avatar, Box, Chip, FormControlLabel, Grid, Paper, Switch, TextField, Typography } from "@mui/material";
@@ -15,6 +15,13 @@ type Props = {
 };
 
 type FocusedField = "name" | "surname" | "phone" | "email" | null;
+
+const API_FIELD: Record<Exclude<FocusedField, null>, Exclude<FocusedClientField, null>> = {
+  name: "client_name",
+  surname: "client_surname",
+  phone: "client_phone",
+  email: "client_email",
+};
 
 const AVATAR_COLORS = ["#4CAF50", "#2196F3", "#9C27B0", "#FF9800", "#00BCD4", "#E91E63"];
 
@@ -136,14 +143,16 @@ const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn }: Props) => {
     name: ["client_name", "client_surname", "client_phone", "client_email"],
   });
 
+  const [focusedField, setFocusedField] = useState<FocusedField>(null);
+
   const { clients, clear } = useClientSearch({
+    focusedField: focusedField ? API_FIELD[focusedField] : null,
     name: nameVal,
     surname: surnameVal,
     email: emailVal,
     phone: phoneVal,
   });
 
-  const [focusedField, setFocusedField] = useState<FocusedField>(null);
   const [walkIn, setWalkIn] = useState(false);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

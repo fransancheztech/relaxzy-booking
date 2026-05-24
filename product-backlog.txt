@@ -1,4 +1,7 @@
 TO-DO
+- Visualizar notas de clientes
+- Implementar fuzzy search para clients y vouchers
+- Walk-in client (no details) no es un mensaje claro
 - Revisar texto de ayuda contextual para diferentes páginas y usuarios
 - Completar reservas Mayo
 - Revisar error de 15 máximas conexiones superadas, en hilo de Claude de Revenue per hour calcu

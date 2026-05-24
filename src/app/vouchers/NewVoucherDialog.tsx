@@ -107,7 +107,7 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
                 "& .MuiDialog-container": {
                     alignItems: "flex-start", // 👈 aligns dialog to top instead of center
                 },
-                "& .MuiPaper-root": {
+                "& .MuiDialog-paper": {
                     marginTop: "2rem", // 👈 add some spacing from top
                 },
             }}

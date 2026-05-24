@@ -2,14 +2,22 @@ import { useEffect, useMemo, useState } from "react";
 import debounce from "lodash.debounce";
 import { ClientRow } from "./useSimilarClients";
 
+export type FocusedClientField =
+  | "client_name"
+  | "client_surname"
+  | "client_email"
+  | "client_phone"
+  | null;
+
 type Params = {
+  focusedField: FocusedClientField;
   name?: string;
   surname?: string;
   email?: string;
   phone?: string;
 };
 
-export function useClientSearch({ name, surname, email, phone }: Params) {
+export function useClientSearch({ focusedField, name, surname, email, phone }: Params) {
   const [clients, setClients] = useState<ClientRow[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -17,10 +25,14 @@ export function useClientSearch({ name, surname, email, phone }: Params) {
     () =>
       debounce(
         async (payload: {
-          client_name?: string;
-          client_surname?: string;
-          client_email?: string;
-          client_phone?: string;
+          field: Exclude<FocusedClientField, null>;
+          value: string;
+          others: {
+            client_name?: string;
+            client_surname?: string;
+            client_email?: string;
+            client_phone?: string;
+          };
         }) => {
           try {
             setLoading(true);
@@ -42,19 +54,38 @@ export function useClientSearch({ name, surname, email, phone }: Params) {
   );
 
   useEffect(() => {
-    if (!name && !surname && !email && !phone) {
+    if (!focusedField) {
       setClients([]);
       setLoading(false);
+      debouncedFetch.cancel();
       return;
     }
-    debouncedFetch({
+
+    const valueByField: Record<Exclude<FocusedClientField, null>, string | undefined> = {
       client_name: name,
       client_surname: surname,
       client_email: email,
       client_phone: phone,
+    };
+    const value = (valueByField[focusedField] ?? "").trim();
+    if (!value) {
+      setClients([]);
+      setLoading(false);
+      debouncedFetch.cancel();
+      return;
+    }
+
+    const others: Record<string, string | undefined> = { ...valueByField };
+    delete others[focusedField];
+
+    debouncedFetch({
+      field: focusedField,
+      value,
+      others,
     });
+
     return () => debouncedFetch.cancel();
-  }, [name, surname, email, phone, debouncedFetch]);
+  }, [focusedField, name, surname, email, phone, debouncedFetch]);
 
   return { clients, loading, clear: () => setClients([]) };
 }

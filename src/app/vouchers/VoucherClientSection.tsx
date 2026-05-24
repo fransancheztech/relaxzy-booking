@@ -1,9 +1,9 @@
 "use client";
 
-import { useClientSearch } from "@/hooks/useClientSearch";
+import { useClientSearch, FocusedClientField } from "@/hooks/useClientSearch";
 import { ClientRow } from "@/hooks/useSimilarClients";
 import { VoucherSchemaType } from "@/schemas/voucher.schema";
-import { Avatar, Box, Chip, Divider, Grid, Paper, Popper, TextField, Typography } from "@mui/material";
+import { Avatar, Box, Chip, Divider, Grid, Paper, TextField, Typography } from "@mui/material";
 import { useRef, useState } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { useTranslations } from "next-intl";
@@ -14,6 +14,15 @@ type NameField    = "buyer_name"    | "recipient_name";
 type SurnameField = "buyer_surname" | "recipient_surname";
 type PhoneField   = "buyer_phone"   | "recipient_phone";
 type EmailField   = "buyer_email"   | "recipient_email";
+
+type FocusedKind = "name" | "surname" | "phone" | "email" | null;
+
+const API_FIELD: Record<Exclude<FocusedKind, null>, Exclude<FocusedClientField, null>> = {
+  name: "client_name",
+  surname: "client_surname",
+  phone: "client_phone",
+  email: "client_email",
+};
 
 type Props = {
   prefix: Prefix;
@@ -53,6 +62,78 @@ function HighlightedText({ text, query }: { text?: string | null; query?: string
   );
 }
 
+function ClientDropdown({
+  clients,
+  onSelect,
+  query,
+}: {
+  clients: ClientRow[];
+  onSelect: (c: ClientRow) => void;
+  query?: string;
+}) {
+  const tCommon = useTranslations("Common");
+  return (
+    <Paper
+      elevation={4}
+      sx={{
+        position: "absolute",
+        top: "100%",
+        left: 0,
+        right: 0,
+        zIndex: 1400,
+        borderRadius: 1,
+        overflowY: "auto",
+        overflowX: "hidden",
+        maxHeight: 240,
+        mt: 0.5,
+      }}
+      onMouseDown={(e) => e.preventDefault()}
+    >
+      {clients.map((c, i) => {
+        const ini = initials(c.client_name, c.client_surname);
+        const fullName = [c.client_name, c.client_surname].filter(Boolean).join(" ");
+        return (
+          <Box
+            key={c.id}
+            onClick={() => onSelect(c)}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              px: 1.5,
+              py: 1,
+              cursor: "pointer",
+              borderTop: i > 0 ? "1px solid" : "none",
+              borderColor: "divider",
+              "&:hover": { bgcolor: "action.hover" },
+            }}
+          >
+            <Avatar sx={{ width: 32, height: 32, fontSize: 12, bgcolor: avatarColor(ini), flexShrink: 0 }}>
+              {ini}
+            </Avatar>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography variant="body2" fontWeight={600} noWrap>
+                <HighlightedText text={fullName} query={query} />
+              </Typography>
+              <Typography variant="caption" color="text.secondary" noWrap>
+                {[c.client_email, c.client_phone]
+                  .filter(Boolean)
+                  .map((text, idx, arr) => (
+                    <Box component="span" key={idx}>
+                      <HighlightedText text={text} query={query} />
+                      {idx < arr.length - 1 && " · "}
+                    </Box>
+                  ))}
+              </Typography>
+            </Box>
+            <Chip label={tCommon("existing")} size="small" sx={{ fontSize: 10, height: 20, flexShrink: 0 }} />
+          </Box>
+        );
+      })}
+    </Paper>
+  );
+}
+
 const VoucherClientSection = ({ prefix, label, autoFocus }: Props) => {
   const tCommon = useTranslations("Common");
   const { control, setValue, formState: { errors } } = useFormContext<VoucherSchemaType>();
@@ -67,29 +148,25 @@ const VoucherClientSection = ({ prefix, label, autoFocus }: Props) => {
     name: [nameField, surnameField, phoneField, emailField],
   });
 
+  const [focusedKind, setFocusedKind] = useState<FocusedKind>(null);
+
   const { clients, clear } = useClientSearch({
+    focusedField: focusedKind ? API_FIELD[focusedKind] : null,
     name: nameVal,
     surname: surnameVal,
     email: emailVal,
     phone: phoneVal,
   });
 
-  const [focused, setFocused] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<HTMLDivElement | null>(null);
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const nameRef    = useRef<HTMLDivElement | null>(null);
-  const surnameRef = useRef<HTMLDivElement | null>(null);
-  const phoneRef   = useRef<HTMLDivElement | null>(null);
-  const emailRef   = useRef<HTMLDivElement | null>(null);
 
-  const handleFocus = (el: HTMLDivElement | null) => {
+  const handleFocus = (kind: Exclude<FocusedKind, null>) => {
     if (blurTimerRef.current) clearTimeout(blurTimerRef.current);
-    setFocused(true);
-    if (el) setAnchorEl(el);
+    setFocusedKind(kind);
   };
 
   const handleBlur = () => {
-    blurTimerRef.current = setTimeout(() => setFocused(false), 150);
+    blurTimerRef.current = setTimeout(() => setFocusedKind(null), 150);
   };
 
   const handleSelect = (c: ClientRow) => {
@@ -99,10 +176,10 @@ const VoucherClientSection = ({ prefix, label, autoFocus }: Props) => {
     setValue(emailField,   c.client_email   ?? "");
     clear();
     if (blurTimerRef.current) clearTimeout(blurTimerRef.current);
-    setFocused(false);
+    setFocusedKind(null);
   };
 
-  const showDropdown = focused && clients.length > 0;
+  const show = (kind: Exclude<FocusedKind, null>) => focusedKind === kind && clients.length > 0;
 
   return (
     <>
@@ -111,142 +188,113 @@ const VoucherClientSection = ({ prefix, label, autoFocus }: Props) => {
         <Divider />
       </Grid>
 
-      {/* Name (with dropdown) + Surname */}
-      <Grid size={6} ref={nameRef}>
-        <Controller
-          name={nameField}
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label={prefix === "buyer" ? tCommon("name") + " *" : tCommon("name")}
-              error={!!errors[nameField]}
-              helperText={errors[nameField]?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-              autoFocus={autoFocus}
-              onFocus={() => handleFocus(nameRef.current)}
-              onBlur={() => { field.onBlur(); handleBlur(); }}
-            />
+      <Grid size={6}>
+        <Box sx={{ position: "relative" }}>
+          <Controller
+            name={nameField}
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label={prefix === "buyer" ? tCommon("name") + " *" : tCommon("name")}
+                error={!!errors[nameField]}
+                helperText={errors[nameField]?.message}
+                fullWidth
+                sx={{ borderRadius: "5px" }}
+                size="small"
+                type="text"
+                variant="outlined"
+                autoFocus={autoFocus}
+                onFocus={() => handleFocus("name")}
+                onBlur={() => { field.onBlur(); handleBlur(); }}
+              />
+            )}
+          />
+          {show("name") && (
+            <ClientDropdown clients={clients} onSelect={handleSelect} query={nameVal} />
           )}
-        />
-      </Grid>
-      <Popper
-        open={showDropdown}
-        anchorEl={anchorEl}
-        placement="bottom-start"
-        sx={{ zIndex: 1400, width: anchorEl?.offsetWidth }}
-      >
-        <Paper
-          elevation={4}
-          sx={{ borderRadius: 1, overflow: "hidden" }}
-          onMouseDown={(e) => e.preventDefault()}
-        >
-          {clients.map((c, i) => {
-            const ini = initials(c.client_name, c.client_surname);
-            const fullName = [c.client_name, c.client_surname].filter(Boolean).join(" ");
-            return (
-              <Box
-                key={c.id}
-                onClick={() => handleSelect(c)}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1.5,
-                  px: 1.5,
-                  py: 1,
-                  cursor: "pointer",
-                  borderTop: i > 0 ? "1px solid" : "none",
-                  borderColor: "divider",
-                  "&:hover": { bgcolor: "action.hover" },
-                }}
-              >
-                <Avatar sx={{ width: 32, height: 32, fontSize: 12, bgcolor: avatarColor(ini), flexShrink: 0 }}>
-                  {ini}
-                </Avatar>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="body2" fontWeight={600} noWrap>
-                    <HighlightedText text={fullName} query={nameVal} />
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" noWrap>
-                    {[c.client_email, c.client_phone].filter(Boolean).join(" · ")}
-                  </Typography>
-                </Box>
-                <Chip label={tCommon("existing")} size="small" sx={{ fontSize: 10, height: 20, flexShrink: 0 }} />
-              </Box>
-            );
-          })}
-        </Paper>
-      </Popper>
-
-      <Grid size={6} ref={surnameRef}>
-        <Controller
-          name={surnameField}
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label={tCommon("surname")}
-              error={!!errors[surnameField]}
-              helperText={errors[surnameField]?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-              onFocus={() => handleFocus(surnameRef.current)}
-              onBlur={() => { field.onBlur(); handleBlur(); }}
-            />
-          )}
-        />
+        </Box>
       </Grid>
 
-      {/* Phone + Email */}
-      <Grid size={6} ref={phoneRef}>
-        <Controller
-          name={phoneField}
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label={tCommon("phone")}
-              error={!!errors[phoneField]}
-              helperText={errors[phoneField]?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-              onFocus={() => handleFocus(phoneRef.current)}
-              onBlur={() => { field.onBlur(); handleBlur(); }}
-            />
+      <Grid size={6}>
+        <Box sx={{ position: "relative" }}>
+          <Controller
+            name={surnameField}
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label={tCommon("surname")}
+                error={!!errors[surnameField]}
+                helperText={errors[surnameField]?.message}
+                fullWidth
+                sx={{ borderRadius: "5px" }}
+                size="small"
+                type="text"
+                variant="outlined"
+                onFocus={() => handleFocus("surname")}
+                onBlur={() => { field.onBlur(); handleBlur(); }}
+              />
+            )}
+          />
+          {show("surname") && (
+            <ClientDropdown clients={clients} onSelect={handleSelect} query={surnameVal} />
           )}
-        />
+        </Box>
       </Grid>
 
-      <Grid size={6} ref={emailRef}>
-        <Controller
-          name={emailField}
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              label={tCommon("email")}
-              error={!!errors[emailField]}
-              helperText={errors[emailField]?.message}
-              fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-              onFocus={() => handleFocus(emailRef.current)}
-              onBlur={() => { field.onBlur(); handleBlur(); }}
-            />
+      <Grid size={6}>
+        <Box sx={{ position: "relative" }}>
+          <Controller
+            name={phoneField}
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label={tCommon("phone")}
+                error={!!errors[phoneField]}
+                helperText={errors[phoneField]?.message}
+                fullWidth
+                sx={{ borderRadius: "5px" }}
+                size="small"
+                type="text"
+                variant="outlined"
+                onFocus={() => handleFocus("phone")}
+                onBlur={() => { field.onBlur(); handleBlur(); }}
+              />
+            )}
+          />
+          {show("phone") && (
+            <ClientDropdown clients={clients} onSelect={handleSelect} query={phoneVal} />
           )}
-        />
+        </Box>
+      </Grid>
+
+      <Grid size={6}>
+        <Box sx={{ position: "relative" }}>
+          <Controller
+            name={emailField}
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label={tCommon("email")}
+                error={!!errors[emailField]}
+                helperText={errors[emailField]?.message}
+                fullWidth
+                sx={{ borderRadius: "5px" }}
+                size="small"
+                type="text"
+                variant="outlined"
+                onFocus={() => handleFocus("email")}
+                onBlur={() => { field.onBlur(); handleBlur(); }}
+              />
+            )}
+          />
+          {show("email") && (
+            <ClientDropdown clients={clients} onSelect={handleSelect} query={emailVal} />
+          )}
+        </Box>
       </Grid>
     </>
   );

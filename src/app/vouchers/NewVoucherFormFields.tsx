@@ -18,7 +18,7 @@ const NewVoucherFormFields = () => {
   } = useFormContext<VoucherSchemaType>();
 
   return (
-    <Grid container sx={{ paddingTop: "1rem" }} spacing={{ xs: 1, xl: 2 }}>
+    <Grid container spacing={{ xs: 1, xl: 2 }}>
 
       <VoucherClientSection prefix="buyer" label={t("buyerLabel")} autoFocus />
       <VoucherClientSection prefix="recipient" label={t("recipientLabel")} />
