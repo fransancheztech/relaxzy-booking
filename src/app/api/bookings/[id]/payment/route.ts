@@ -122,7 +122,13 @@ export async function POST(
       Number(voucherUsesAgg._sum.amount ?? 0);
     const incomingTotal = cashPayment + cardPayment + voucherPayment;
 
-    if (booking.price !== null && alreadyPaid + incomingTotal > Number(booking.price)) {
+    // Compare in integer cents to avoid JS float drift (0.1 + 0.2 = 0.30000000000000004).
+    // Round half-away-from-zero, matching how the DB stores numeric(10, 2).
+    const toCents = (n: number) => Math.round(n * 100);
+    if (
+      booking.price !== null &&
+      toCents(alreadyPaid + incomingTotal) > toCents(Number(booking.price))
+    ) {
       return NextResponse.json(
         { error: "Total payment exceeds booking price" },
         { status: 400 }

@@ -1,5 +1,6 @@
 TO-DO
 - Visualizar notas de clientes
+- Algoritmo para recepcionistas saber como asignar terapeutas
 - Keep adding safewards to avoid .99 economic errors
 - Implementar fuzzy search para clients y vouchers
 - Walk-in client (no details) no es un mensaje claro

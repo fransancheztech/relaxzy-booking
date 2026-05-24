@@ -31,7 +31,7 @@ SELECT
   sdet.created_at AS service_details_created_at,
   sdet.deleted_at AS service_details_deleted_at,
   p.payment_id,
-  (p.amount) :: numeric(10, 2) AS payment_amount,
+  p.amount AS payment_amount,
   p.method AS payment_method,
   p.refunded_amount AS payment_refunded,
   p.refunded_at AS payment_refunded_at,
