@@ -91,10 +91,10 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
 
       const booking = await res.json();
 
-      const totalPrice = booking.price ?? 0;
-      const paidCash = booking.paidCash ?? 0;
-      const paidCard = booking.paidCard ?? 0;
-      const paidVoucher = booking.paidVoucher ?? 0;
+      const totalPrice = Number(booking.price ?? 0);
+      const paidCash = Number(booking.paidCash ?? 0);
+      const paidCard = Number(booking.paidCard ?? 0);
+      const paidVoucher = Number(booking.paidVoucher ?? 0);
       const totalPaid = paidCash + paidCard + paidVoucher;
       const remainingBalance = totalPrice - totalPaid;
 
