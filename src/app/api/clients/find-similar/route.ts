@@ -35,7 +35,7 @@ export async function POST(req: Request) {
         created_at: true,
         updated_at: true,
       },
-      take: 5,
+      take: 15,
     });
 
     return NextResponse.json(clients);

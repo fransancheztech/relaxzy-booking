@@ -68,7 +68,9 @@ function ClientDropdown({
         right: 0,
         zIndex: 1400,
         borderRadius: 1,
-        overflow: "hidden",
+        overflowY: "auto",
+        overflowX: "hidden",
+        maxHeight: 240,
         mt: 0.5,
       }}
       onMouseDown={(e) => e.preventDefault()}
