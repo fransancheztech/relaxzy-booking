@@ -57,6 +57,13 @@ export async function PUT(
         ? null
         : body.client_phone?.trim() ?? null;
 
+    const normalizedNotes =
+      body.client_notes === undefined
+        ? undefined
+        : body.client_notes.trim() === ""
+          ? null
+          : body.client_notes.trim();
+
     const updatedClient = await prisma.clients.update({
       where: { id: clientId },
       data: {
@@ -64,6 +71,7 @@ export async function PUT(
         client_surname: body.client_surname,
         client_email: normalizedEmail,
         client_phone: normalizedPhone,
+        client_notes: normalizedNotes,
         updated_at: new Date(),
       },
     });

@@ -38,6 +38,12 @@ function avatarColor(str: string): string {
   return AVATAR_COLORS[h % AVATAR_COLORS.length];
 }
 
+function truncate(text: string | null | undefined, max: number): string {
+  if (!text) return "";
+  const trimmed = text.trim();
+  return trimmed.length <= max ? trimmed : trimmed.slice(0, max) + "…";
+}
+
 function initials(name?: string | null, surname?: string | null): string {
   return [name, surname]
     .filter(Boolean)
@@ -125,6 +131,17 @@ function ClientDropdown({
                     </Box>
                   ))}
               </Typography>
+              {c.client_notes?.trim() && (
+                <Typography
+                  component="div"
+                  variant="caption"
+                  color="text.secondary"
+                  noWrap
+                  sx={{ fontStyle: "italic", mt: 0.5 }}
+                >
+                  <strong>{tCommon("clientNotes")}:</strong> {truncate(c.client_notes, 20)}
+                </Typography>
+              )}
             </Box>
             <Chip label={tCommon("existing")} size="small" sx={{ fontSize: 10, height: 20, flexShrink: 0 }} />
           </Box>

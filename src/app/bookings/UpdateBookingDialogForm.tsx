@@ -71,6 +71,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
     totalPaid: 0,
     remainingBalance: 0,
   });
+  const [clientNotes, setClientNotes] = useState<string | null>(null);
 
   const methods = useForm<BookingUpdateSchemaType>({
     resolver: zodResolver(BookingUpdateSchema),
@@ -146,6 +147,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
           price: data.price ?? undefined,
           status: data.status,
         });
+        setClientNotes(data.client?.notes ?? null);
       } catch (err) {
         console.error(err);
       } finally {
@@ -219,6 +221,8 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
                 setIsManagePaymentsDialogOpen={setIsManagePaymentsDialogOpen}
                 paymentSummary={paymentSummary}
                 readOnly={isTherapist}
+                clientNotes={clientNotes}
+                onClientPicked={(notes) => setClientNotes(notes)}
               />
             </DialogContent>
             <DialogActions

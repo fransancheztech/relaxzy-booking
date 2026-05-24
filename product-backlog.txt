@@ -1,12 +1,9 @@
 TO-DO
-- Visualizar notas de clientes
 - Algoritmo para recepcionistas saber como asignar terapeutas
-- Keep adding safewards to avoid .99 economic errors
-- Implementar fuzzy search para clients y vouchers
 - Walk-in client (no details) no es un mensaje claro
 - Revisar texto de ayuda contextual para diferentes páginas y usuarios
-- Completar reservas Mayo
 - Revisar error de 15 máximas conexiones superadas, en hilo de Claude de Revenue per hour calcu
+- Completar reservas Mayo
 - Añadir propina de las reservas antiguas.
 - Añadir regalos de las reservas antiguas.
 - Crear vouchers automaticamente cuando compren vouchers online
@@ -14,6 +11,7 @@ TO-DO
 
 STILL DELIBERATING
 - 5 Creación de facturas, descarga y almacenamiento en Drive automático de las mismas
+- Implementar fuzzy search para clients y vouchers
 - Sidebar menu izquierda plegable
 
 

@@ -15,6 +15,7 @@
     "none": "Ninguno",
     "min": "min",
     "notes": "Notas",
+    "clientNotes": "Notas del cliente",
     "name": "Nombre",
     "surname": "Apellido(s)",
     "phone": "Teléfono",

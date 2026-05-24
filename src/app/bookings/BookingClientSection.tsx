@@ -12,6 +12,8 @@ type Props = {
   autoFocus?: boolean;
   readOnly?: boolean;
   enableWalkIn?: boolean;
+  clientNotes?: string | null;
+  onClientPicked?: (c: ClientRow) => void;
 };
 
 type FocusedField = "name" | "surname" | "phone" | "email" | null;
@@ -29,6 +31,12 @@ function avatarColor(str: string): string {
   let h = 0;
   for (const c of str) h = (h * 31 + c.charCodeAt(0)) & 0x7fffffff;
   return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+
+function truncate(text: string | null | undefined, max: number): string {
+  if (!text) return "";
+  const trimmed = text.trim();
+  return trimmed.length <= max ? trimmed : trimmed.slice(0, max) + "…";
 }
 
 function initials(name?: string | null, surname?: string | null): string {
@@ -120,6 +128,17 @@ function ClientDropdown({
                     </Box>
                   ))}
               </Typography>
+              {c.client_notes?.trim() && (
+                <Typography
+                  component="div"
+                  variant="caption"
+                  color="text.secondary"
+                  noWrap
+                  sx={{ fontStyle: "italic", mt: 0.5 }}
+                >
+                  <strong>{t("clientNotes")}:</strong> {truncate(c.client_notes, 20)}
+                </Typography>
+              )}
             </Box>
             <Chip
               label={t("existing")}
@@ -133,7 +152,7 @@ function ClientDropdown({
   );
 }
 
-const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn }: Props) => {
+const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn, clientNotes, onClientPicked }: Props) => {
   const t = useTranslations("Common");
   const tForm = useTranslations("BookingForm");
   const { control, setValue, formState: { errors } } = useFormContext<BookingSchemaType>();
@@ -170,6 +189,7 @@ const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn }: Props) => {
     setValue("client_surname", c.client_surname ?? "");
     setValue("client_phone",   c.client_phone   ?? "");
     setValue("client_email",   c.client_email   ?? "");
+    onClientPicked?.(c);
     clear();
     if (blurTimerRef.current) clearTimeout(blurTimerRef.current);
     setFocusedField(null);
@@ -335,6 +355,13 @@ const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn }: Props) => {
           )}
         </Box>
       </Grid>
+      {clientNotes?.trim() && (
+        <Grid size={12}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
+            <strong>{t("clientNotes")}:</strong> {truncate(clientNotes, 20)}
+          </Typography>
+        </Grid>
+      )}
         </>
       )}
     </>
