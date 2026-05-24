@@ -102,7 +102,14 @@ function ClientDropdown({
                 <HighlightedText text={fullName} query={query} />
               </Typography>
               <Typography variant="caption" color="text.secondary" noWrap>
-                {[c.client_email, c.client_phone].filter(Boolean).join(" · ")}
+                {[c.client_email, c.client_phone]
+                  .filter(Boolean)
+                  .map((text, idx, arr) => (
+                    <Box component="span" key={idx}>
+                      <HighlightedText text={text} query={query} />
+                      {idx < arr.length - 1 && " · "}
+                    </Box>
+                  ))}
               </Typography>
             </Box>
             <Chip
