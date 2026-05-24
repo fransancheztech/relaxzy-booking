@@ -225,13 +225,24 @@ const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn, clientNotes, 
             <FormControlLabel
               control={
                 <Switch
+                  size="small"
                   checked={walkIn}
                   color="warning"
                   onChange={(e) => handleWalkInToggle(e.target.checked)}
                 />
               }
               label={tForm("walkInToggle")}
+              sx={{ "& .MuiFormControlLabel-label": { fontSize: "0.75rem", color: "text.secondary" } }}
             />
+            {!walkIn && (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: "block", ml: 4.5, mt: -0.5, fontStyle: "italic", fontSize: "0.7rem" }}
+              >
+                {tForm("walkInHint")}
+              </Typography>
+            )}
             {walkIn && (
               <Alert severity="warning" sx={{ mt: 0.5 }}>
                 {tForm("walkInWarning")}
