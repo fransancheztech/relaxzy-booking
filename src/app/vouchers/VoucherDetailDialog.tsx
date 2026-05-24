@@ -141,6 +141,8 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDeleteUse, setPendingDeleteUse] = useState<VoucherUse | null>(null);
+  const [confirmDeleteVoucherOpen, setConfirmDeleteVoucherOpen] = useState(false);
+  const { submitting: deletingVoucher, guard: deleteGuard } = useSubmitGuard();
 
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState<EditData | null>(null);
@@ -247,6 +249,27 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
     setPaymentDialogMode("charge");
     setPaymentDialogOpen(true);
   };
+
+  const confirmDeleteVoucher = () =>
+    deleteGuard(async () => {
+      try {
+        const res = await fetch(`/api/vouchers/${voucherId}`, { method: "DELETE" });
+        const result = await res.json();
+        if (!res.ok) {
+          toast.error(result?.error || t("errorDeletingVoucher"));
+          return;
+        }
+        toast.success(t("voucherDeleted"));
+        setConfirmDeleteVoucherOpen(false);
+        window.dispatchEvent(new CustomEvent("refreshVouchersData"));
+        onClose();
+      } catch {
+        toast.error(t("networkError"));
+      }
+    });
+
+  const currentBalance = details?.voucher.balance != null ? Number(details.voucher.balance) : 0;
+  const canDeleteVoucher = Math.abs(currentBalance) < 0.005;
 
   const hasSeparateRecipient =
     details?.voucher.recipient_id != null &&
@@ -527,9 +550,56 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
           )}
         </DialogContent>
 
-        <DialogActions>
+        <DialogActions sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Tooltip
+            title={canDeleteVoucher ? "" : t("cannotDeleteWithBalance")}
+            placement="right"
+          >
+            <span>
+              <Button
+                startIcon={<DeleteIcon />}
+                color="error"
+                variant="contained"
+                onClick={() => setConfirmDeleteVoucherOpen(true)}
+                disabled={!details || !canDeleteVoucher || deletingVoucher}
+              >
+                {tCommon("delete")}
+              </Button>
+            </span>
+          </Tooltip>
           <Button onClick={onClose} color="inherit">
             {tCommon("close")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={confirmDeleteVoucherOpen}
+        onClose={() => setConfirmDeleteVoucherOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>{t("deleteVoucherTitle")}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {t("deleteVoucherMessage", { code: details?.voucher.code ?? "" })}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setConfirmDeleteVoucherOpen(false)}
+            disabled={deletingVoucher}
+          >
+            {tCommon("cancel")}
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            startIcon={<DeleteIcon />}
+            onClick={confirmDeleteVoucher}
+            disabled={deletingVoucher}
+          >
+            {tCommon("delete")}
           </Button>
         </DialogActions>
       </Dialog>

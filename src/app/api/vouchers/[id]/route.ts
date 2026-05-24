@@ -3,6 +3,10 @@ import { prisma } from "@/lib/prisma";
 
 const norm = (v?: string | null) => (v && v.trim() !== "" ? v.trim() : null);
 
+// Vouchers with any remaining balance must be refunded to 0 before deletion.
+// Tolerance covers any residual float-precision drift in the stored Decimal.
+const BALANCE_ZERO_EPSILON = 0.005;
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -65,5 +69,40 @@ export async function PATCH(
   } catch (err) {
     console.error("Error updating voucher", err);
     return NextResponse.json({ error: "Error updating voucher" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+
+    const voucher = await prisma.vouchers.findFirst({
+      where: { id, deleted_at: null },
+      select: { id: true, balance: true },
+    });
+    if (!voucher) {
+      return NextResponse.json({ error: "Voucher not found" }, { status: 404 });
+    }
+
+    const balance = Number(voucher.balance ?? 0);
+    if (Math.abs(balance) >= BALANCE_ZERO_EPSILON) {
+      return NextResponse.json(
+        { error: "Voucher has a remaining balance. Refund it to 0 before deleting." },
+        { status: 409 },
+      );
+    }
+
+    await prisma.vouchers.update({
+      where: { id },
+      data: { deleted_at: new Date() },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Error deleting voucher", err);
+    return NextResponse.json({ error: "Error deleting voucher" }, { status: 500 });
   }
 }
