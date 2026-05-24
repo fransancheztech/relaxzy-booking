@@ -1,8 +1,5 @@
 TO-DO
-- Algoritmo para recepcionistas saber como asignar terapeutas
-- Walk-in client (no details) no es un mensaje claro
 - Revisar texto de ayuda contextual para diferentes páginas y usuarios
-- Revisar error de 15 máximas conexiones superadas, en hilo de Claude de Revenue per hour calcu
 - Completar reservas Mayo
 - Añadir propina de las reservas antiguas.
 - Añadir regalos de las reservas antiguas.
@@ -12,7 +9,6 @@ TO-DO
 STILL DELIBERATING
 - 5 Creación de facturas, descarga y almacenamiento en Drive automático de las mismas
 - Implementar fuzzy search para clients y vouchers
-- Sidebar menu izquierda plegable
 
 
 DONE
@@ -59,3 +55,7 @@ DONE
 - En bookings manage payments, mostrar payment_events en lugar de payments.
 - Implementar therapist requested.
 - Añadir página guidelines para indicaciones para terapeuta, como por ejemplo que las terapeutas que vengan de libre, vacaciones, de baja, o sean de nuevo contrato (en resumen, todas las que vengan de no trabajar el día anterior) tengan preferencia en dar los primeros masajes del día.
+- Walk-in client (no details) no es un mensaje claro
+- Sidebar menu izquierda plegable
+- Algoritmo para recepcionistas saber como asignar terapeutas
+- Revisar error de 15 máximas conexiones superadas, en hilo de Claude de Revenue per hour calcu
