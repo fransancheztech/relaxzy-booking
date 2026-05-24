@@ -1,6 +1,6 @@
 "use client";
 
-import { VoucherSchemaType } from "@/schemas/voucher.schema";
+import { VoucherSchemaInput } from "@/schemas/voucher.schema";
 import { Divider, FormControl, FormHelperText, Grid, InputLabel, MenuItem, Select, TextField, Typography } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -8,6 +8,7 @@ import { es } from "date-fns/locale";
 import { Controller, useFormContext } from "react-hook-form";
 import VoucherClientSection from "./VoucherClientSection";
 import { useTranslations } from "next-intl";
+import { normalizeMoneyInput } from "@/utils/normalizeMoney";
 
 const NewVoucherFormFields = () => {
   const t = useTranslations("Vouchers");
@@ -15,7 +16,7 @@ const NewVoucherFormFields = () => {
   const {
     control,
     formState: { errors },
-  } = useFormContext<VoucherSchemaType>();
+  } = useFormContext<VoucherSchemaInput>();
 
   return (
     <Grid container spacing={{ xs: 1, xl: 2 }}>
@@ -40,16 +41,14 @@ const NewVoucherFormFields = () => {
               fullWidth
               sx={{ borderRadius: "5px" }}
               size="small"
-              type="number"
+              type="text"
               variant="outlined"
               value={field.value ?? ""}
-              onChange={(e) =>
-                field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
-              }
+              onChange={(e) => field.onChange(normalizeMoneyInput(e.target.value))}
               onBlur={field.onBlur}
               name={field.name}
               inputRef={field.ref}
-              slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
+              slotProps={{ htmlInput: { inputMode: "decimal" } }}
             />
           )}
         />

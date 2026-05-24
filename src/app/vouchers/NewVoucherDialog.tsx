@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, DialogActions, DialogContent, DialogContentText, Dialog, DialogTitle } from '@mui/material'
 import { FormProvider, useForm } from 'react-hook-form'
-import { VoucherSchemaType } from '@/schemas/voucher.schema'
+import { VoucherSchemaInput, VoucherSchemaType } from '@/schemas/voucher.schema'
 import { VoucherSchema } from '@/schemas/voucher.schema'
 import handleSubmitCreateVoucher from '@/handlers/handleSubmitCreateVoucher';
 import AddCircleIcon from "@mui/icons-material/AddCircle";
@@ -36,7 +36,7 @@ type Props = {
 const NewVoucherDialog = ({ open, onClose }: Props) => {
     const t = useTranslations("Vouchers");
     const tCommon = useTranslations("Common");
-    const defaultValues = {
+    const defaultValues: VoucherSchemaInput = {
         recipient_name: "",
         recipient_surname: "",
         recipient_phone: "",
@@ -45,15 +45,15 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
         buyer_surname: "",
         buyer_phone: "",
         buyer_email: "",
-        initial_balance: undefined as unknown as number,
-        payment_method: "credit_card" as const,
+        initial_balance: "",
+        payment_method: "credit_card",
         initial_payment_code: "",
         notes: "",
         expiration_date: new Date(Date.now() + 183 * 24 * 60 * 60 * 1000),
         created_at: new Date(),
     };
 
-    const methods = useForm<VoucherSchemaType>({
+    const methods = useForm<VoucherSchemaInput, any, VoucherSchemaType>({
         resolver: zodResolver(VoucherSchema),
         defaultValues,
     });

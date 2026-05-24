@@ -18,7 +18,17 @@ export const VoucherSchema = z.object({
     recipient_email: z.string().optional().refine((val) => !val || z.email().safeParse(val).success, {
         message: "Invalid email address",
     }),
-    initial_balance: z.number({ error: "Balance must be a number" }).positive("Balance must be greater than 0"),
+    initial_balance: z.preprocess(
+        (v) => {
+            if (v === "" || v === null || v === undefined) return undefined;
+            if (typeof v === "string") {
+                const num = Number(v.replace(",", "."));
+                return Number.isNaN(num) ? v : num;
+            }
+            return v;
+        },
+        z.number({ error: "Balance must be a number" }).positive("Balance must be greater than 0"),
+    ),
     payment_method: z.enum(["cash", "credit_card"], { error: "Payment method is required" }),
     initial_payment_code: z.string().optional(),
     notes: z.string().optional(),
@@ -38,4 +48,5 @@ export const VoucherSchema = z.object({
     }
 });
 
-export type VoucherSchemaType = z.infer<typeof VoucherSchema>;
+export type VoucherSchemaInput = z.input<typeof VoucherSchema>;
+export type VoucherSchemaType = z.output<typeof VoucherSchema>;

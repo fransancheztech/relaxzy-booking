@@ -2,7 +2,7 @@
 
 import { useClientSearch, FocusedClientField } from "@/hooks/useClientSearch";
 import { ClientRow } from "@/hooks/useSimilarClients";
-import { VoucherSchemaType } from "@/schemas/voucher.schema";
+import { VoucherSchemaInput } from "@/schemas/voucher.schema";
 import { Avatar, Box, Chip, Divider, Grid, Paper, TextField, Typography } from "@mui/material";
 import { useRef, useState } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
@@ -136,7 +136,7 @@ function ClientDropdown({
 
 const VoucherClientSection = ({ prefix, label, autoFocus }: Props) => {
   const tCommon = useTranslations("Common");
-  const { control, setValue, formState: { errors } } = useFormContext<VoucherSchemaType>();
+  const { control, setValue, formState: { errors } } = useFormContext<VoucherSchemaInput>();
 
   const nameField    = `${prefix}_name`    as NameField;
   const surnameField = `${prefix}_surname` as SurnameField;

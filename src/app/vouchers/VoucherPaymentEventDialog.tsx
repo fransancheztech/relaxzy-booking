@@ -17,6 +17,7 @@ import {
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
+import { normalizeMoneyInput } from "@/utils/normalizeMoney";
 
 type Props = {
   open: boolean;
@@ -103,12 +104,12 @@ const VoucherPaymentEventDialog = ({
       >
         <TextField
           label={t("amountEur")}
-          type="number"
+          type="text"
           size="small"
           fullWidth
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
+          onChange={(e) => setAmount(normalizeMoneyInput(e.target.value))}
+          slotProps={{ htmlInput: { inputMode: "decimal" } }}
         />
         <FormControl fullWidth size="small">
           <InputLabel>{t("paymentMethod")}</InputLabel>
