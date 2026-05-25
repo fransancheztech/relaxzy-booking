@@ -209,7 +209,6 @@ export async function POST(request: Request) {
 
           const sameDay = await tx.vouchers.findMany({
             where: {
-              deleted_at: null,
               created_at: { gte: dayStart, lt: dayEnd },
               code: { startsWith: codePrefix },
             },
