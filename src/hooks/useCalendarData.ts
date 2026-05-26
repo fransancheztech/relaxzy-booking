@@ -39,7 +39,7 @@ export function useCalendarData(
       if (err.name === "AbortError") return; // superseded by a newer navigation, discard
       setFetchError(err.message ?? "Unknown error");
     } finally {
-      if (!silent && !controller.signal.aborted) setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [start, end, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
