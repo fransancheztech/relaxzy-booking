@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Chip, Grid, Paper, Typography } from "@mui/material";
+import { Box, Chip, Grid, Paper, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -9,14 +9,17 @@ import { useTranslations } from "next-intl";
 import { StatsResponse } from "@/types/stats";
 import { formatMoney } from "@/utils/formatMoney";
 
+type Bucket = StatsResponse["meta"]["date_bucket"];
+
 interface Props {
   revenue: StatsResponse["revenue"];
-  bucket: StatsResponse["meta"]["date_bucket"];
+  bucket: Bucket;
+  onBucketChange: (bucket: Bucket) => void;
 }
 
 const PIE_COLORS = ["#002d04", "#60a561", "#a8d5a9"];
 
-const RevenueSection = ({ revenue, bucket }: Props) => {
+const RevenueSection = ({ revenue, bucket, onBucketChange }: Props) => {
   const t = useTranslations("Stats");
   const hasData = revenue.over_time.length > 0;
   const bucketLabel = bucket === "day" ? t("revenuePerDay") : bucket === "week" ? t("revenuePerWeek") : t("revenuePerMonth");
@@ -50,9 +53,22 @@ const RevenueSection = ({ revenue, bucket }: Props) => {
         <Grid size={{ xs: 12, md: 8 }}>
           <Paper elevation={1} sx={{ p: 2, borderRadius: 2 }}>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-              <Typography variant="subtitle2" color="text.secondary">
-                {bucketLabel}
-              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  {bucketLabel}
+                </Typography>
+                <ToggleButtonGroup
+                  value={bucket}
+                  exclusive
+                  size="small"
+                  onChange={(_, v) => { if (v) onBucketChange(v); }}
+                  sx={{ "& .MuiToggleButton-root": { py: 0.25, px: 1, fontSize: "0.7rem" } }}
+                >
+                  <ToggleButton value="day">{t("bucketDay")}</ToggleButton>
+                  <ToggleButton value="week">{t("bucketWeek")}</ToggleButton>
+                  <ToggleButton value="month">{t("bucketMonth")}</ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
               {revenue.refunds_total > 0 && (
                 <Chip
                   label={t("refundsChip", { amount: formatMoney(revenue.refunds_total) })}

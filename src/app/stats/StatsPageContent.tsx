@@ -35,6 +35,7 @@ const StatsPageContent = ({ role }: Props) => {
   const [from, setFrom] = useState<Date>(() => resolvePreset("month").from);
   const [to, setTo] = useState<Date>(() => resolvePreset("month").to);
 
+
   const [data, setData] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,11 +49,12 @@ const StatsPageContent = ({ role }: Props) => {
     };
   }, [setButtonLabel, setOnButtonClick]);
 
-  const fetchStats = useCallback(async (f: Date, t: Date) => {
+  const fetchStats = useCallback(async (f: Date, t: Date, bucket?: "day" | "week" | "month") => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/stats?from=${f.toISOString()}&to=${t.toISOString()}`);
+      const url = `/api/stats?from=${f.toISOString()}&to=${t.toISOString()}${bucket ? `&bucket=${bucket}` : ""}`;
+      const res = await fetch(url);
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error ?? "Unknown error");
@@ -77,6 +79,10 @@ const StatsPageContent = ({ role }: Props) => {
     }
     setFrom(newFrom);
     setTo(newTo);
+  };
+
+  const handleBucketChange = (newBucket: "day" | "week" | "month") => {
+    fetchStats(from, to, newBucket);
   };
 
   return (
@@ -170,7 +176,7 @@ const StatsPageContent = ({ role }: Props) => {
 
           {/* Revenue section */}
           <Box sx={{ mb: 4 }}>
-            <RevenueSection revenue={data.revenue} bucket={data.meta.date_bucket} />
+            <RevenueSection revenue={data.revenue} bucket={data.meta.date_bucket} onBucketChange={handleBucketChange} />
           </Box>
 
           <Divider sx={{ mb: 4 }} />

@@ -42,7 +42,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Invalid date range" }, { status: 400 });
   }
 
-  const bucket = getBucket(from, to);
+  const bucketParam = searchParams.get("bucket");
+  const bucket: DateBucket =
+    bucketParam === "day" || bucketParam === "week" || bucketParam === "month"
+      ? bucketParam
+      : getBucket(from, to);
   const bSql = bucketSql(bucket);
 
   try {
