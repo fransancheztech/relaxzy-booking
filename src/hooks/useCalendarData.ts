@@ -10,12 +10,21 @@ export function useCalendarData(
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState("");
 
+  const abortRef = useRef<AbortController | null>(null);
+
   const fetchBookings = useCallback(async (silent = false) => {
     if (!start || !end) return;
+
+    // Cancel any in-flight request — last navigation wins
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     if (!silent) setLoading(true);
     try {
       const res = await fetch(
-        `/api/bookings/range?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`
+        `/api/bookings/range?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`,
+        { signal: controller.signal },
       );
       if (!res.ok) throw new Error(await res.text());
       const data: BookingModel[] = await res.json();
@@ -27,9 +36,10 @@ export function useCalendarData(
       setBookings(data);
       setFetchError("");
     } catch (err: any) {
+      if (err.name === "AbortError") return; // superseded by a newer navigation, discard
       setFetchError(err.message ?? "Unknown error");
     } finally {
-      if (!silent) setLoading(false);
+      if (!silent && !controller.signal.aborted) setLoading(false);
     }
   }, [start, end, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
 

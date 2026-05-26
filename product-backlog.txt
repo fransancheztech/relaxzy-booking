@@ -1,6 +1,4 @@
 TO-DO
-- Revisar papel físico de vouchers físicos. Tiene código? Tiene teléfono?
-- Arreglar error creación de voucers Angy
 - Revisar texto de ayuda contextual para diferentes páginas y usuarios
 - Completar reservas Mayo
 - Añadir propina de las reservas antiguas.
