@@ -270,7 +270,6 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? t("closeDayError"));
         toast.success(t("closeDaySuccess", { count: data.updated }));
-        window.dispatchEvent(new CustomEvent("refreshCalendarData"));
       } catch (err) {
         toast.error(err instanceof Error ? err.message : t("closeDayError"));
       }
