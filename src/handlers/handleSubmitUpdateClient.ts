@@ -19,10 +19,6 @@ const handleSubmitUpdateClient = async (
     }
 
     toast.success("Client updated successfully");
-    // Still not sure if we will need this
-    // setTimeout(() => {
-    //   window.dispatchEvent(new CustomEvent("refreshClientsData"));
-    // }, 500);
     return result;
   } catch (err) {
     toast.error("Unexpected error while updating client");

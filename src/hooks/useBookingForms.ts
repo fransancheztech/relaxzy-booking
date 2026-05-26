@@ -83,11 +83,6 @@ export const useBookingForm = ({ mode = 'new', initialData }: UseBookingFormOpti
             // Reset + close dialog
             setIsEditable(mode === 'new');
 
-            // Refresh calendar
-            setTimeout(() => {
-                window.dispatchEvent(new CustomEvent('refreshCalendarData'));
-            }, 500);
-
         } catch (err) {
             console.error(`Network or server error ${mode} booking`, err);
             toast.error('Network or server error');
@@ -119,10 +114,6 @@ export const useBookingForm = ({ mode = 'new', initialData }: UseBookingFormOpti
             toast.success('The booking has been deleted successfully.');
 
             setIsEditable(mode === 'new');
-
-            setTimeout(() => {
-                window.dispatchEvent(new CustomEvent('refreshCalendarData'));
-            }, 500);
 
         } catch (err) {
             console.error('Network or server error deleting booking', err);

@@ -16,9 +16,6 @@ const handleDeleteBooking = async (id: string) => {
             return;
         }
         toast.success('The booking has been deleted successfully.');
-        setTimeout(() => {
-            window.dispatchEvent(new CustomEvent('refreshCalendarData'));
-        }, 500);
 
     } catch (err) {
         console.error('Network or server error deleting booking', err);

@@ -19,10 +19,6 @@ const handleSubmitUpdateService = async (
     }
 
     toast.success("Service updated successfully");
-    // Still not sure if we will need this
-    // setTimeout(() => {
-    //   window.dispatchEvent(new CustomEvent("refreshServicesData"));
-    // }, 500);
     return result;
   } catch (err) {
     toast.error("Unexpected error while updating service");

@@ -26,9 +26,7 @@ export default async function handleSubmitRefund({
         error: data?.error ?? "Unknown error in refund",
       };
     }
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent("refreshCalendarData"));
-    }, 500);
+    window.dispatchEvent(new CustomEvent("refreshCalendarData"));
     toast.success("The refund has been successfully processed.");
     return { success: true };
   } catch (err) {

@@ -19,7 +19,6 @@ const handleSubmitCreateVoucher = async (data: VoucherSchemaType) => {
     toast.success("The voucher has been created successfully.");
 
     setTimeout(() => {
-      window.dispatchEvent(new CustomEvent("refreshCalendarData"));
       window.dispatchEvent(new CustomEvent("refreshVouchersData"));
     }, 500);
   } catch (err) {

@@ -88,9 +88,9 @@ const handleSubmitCreateBooking = async (data: BookingSchemaType) => {
 
     await Promise.all(paymentTasks);
 
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent("refreshCalendarData"));
-    }, 500);
+    // Explicit refresh needed here: payment writes don't touch the bookings table
+    // so the SSE stream won't fire for them — calendar would show 0€ paid without this.
+    window.dispatchEvent(new CustomEvent("refreshCalendarData"));
   } catch (err) {
     console.error(`Network or server error creating booking`, err);
     toast.error("Network or server error creating booking");

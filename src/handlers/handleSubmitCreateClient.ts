@@ -18,10 +18,6 @@ const handleSubmitCreateClient = async (data: ClientUpdateSchemaType) => {
 
     toast.success("Client created successfully");
 
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent("refreshClientsData"));
-    }, 500);
-
     return result.client; // return the newly created client if needed
   } catch (err) {
     toast.error("Unexpected error while creating client");
