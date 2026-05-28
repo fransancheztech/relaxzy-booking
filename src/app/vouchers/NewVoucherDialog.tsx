@@ -47,8 +47,9 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
         buyer_email: "",
         initial_balance: "",
         payment_method: "credit_card",
-        initial_payment_code: "",
         notes: "",
+        source: "physical",
+        external_reference: "",
         expiration_date: new Date(Date.now() + 183 * 24 * 60 * 60 * 1000),
         created_at: new Date(),
     };

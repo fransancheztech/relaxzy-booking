@@ -32,6 +32,15 @@ export async function PATCH(
         if (!Number.isNaN(d.getTime())) voucherData.expiration_date = d;
       }
       if ("notes" in body) voucherData.notes = norm(body.notes);
+      if ("source" in body && (body.source === "physical" || body.source === "online")) {
+        voucherData.source = body.source;
+      }
+      if ("external_reference" in body) {
+        const ref = norm(body.external_reference);
+        const effectiveSource = (voucherData.source as "physical" | "online" | undefined) ?? voucher.source;
+        voucherData.external_reference =
+          ref && effectiveSource === "online" && !ref.startsWith("#") ? `#${ref}` : ref;
+      }
 
       if (Object.keys(voucherData).length > 0) {
         await tx.vouchers.update({ where: { id }, data: voucherData });

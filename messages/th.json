@@ -329,7 +329,6 @@
     "balanceEur": "ยอด (€) *",
     "paymentMethod": "วิธีชำระเงิน *",
     "expirationDate": "วันหมดอายุ *",
-    "paymentReference": "อ้างอิงภายใน",
     "buyerLabel": "ผู้ซื้อ",
     "recipientLabel": "ผู้รับ (ถ้ามี — ค่าเริ่มต้นคือผู้ซื้อ)",
     "addBalance": "เพิ่มยอด",
@@ -364,7 +363,11 @@
     "errorProcessingPayment": "เกิดข้อผิดพลาดในการประมวลผลการชำระเงิน",
     "createdAt": "วันที่สร้าง",
     "detailsSaved": "บันทึกรายละเอียดแล้ว",
-    "errorSavingDetails": "เกิดข้อผิดพลาดในการบันทึกรายละเอียด"
+    "errorSavingDetails": "เกิดข้อผิดพลาดในการบันทึกรายละเอียด",
+    "source": "ประเภท",
+    "sourcePhysical": "บัตรจริง",
+    "sourceOnline": "ออนไลน์",
+    "externalReference": "รหัสอ้างอิงภายนอก"
   },
   "Stats": {
     "totalRevenue": "รายได้รวม",

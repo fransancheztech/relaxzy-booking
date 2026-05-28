@@ -1,4 +1,6 @@
 TO-DO
+- Añadir funcionalidad real de grupos de reservas (ids de grupos, uuids autocreadas en New Bookings, modificables en Update Bookings, campos de cliente y toogle Anonymous en Add Companion, etc).
+- Arreglar dias 24 y 24 mayo ingresos exagerados.
 - Revisar texto de ayuda contextual para diferentes páginas y usuarios, importante para no liar a usuarios
 - Completar reservas Mayo
 - Añadir propina de las reservas antiguas.
@@ -59,3 +61,4 @@ DONE
 - Sidebar menu izquierda plegable
 - Algoritmo para recepcionistas saber como asignar terapeutas
 - Revisar error de 15 máximas conexiones superadas, en hilo de Claude de Revenue per hour calcu
+- Los vouchers deberían tener referencia interna, y tipo de voucher (fisico, digital)

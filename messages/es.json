@@ -329,7 +329,6 @@
     "balanceEur": "Saldo (€) *",
     "paymentMethod": "Método de pago *",
     "expirationDate": "Fecha de vencimiento *",
-    "paymentReference": "Referencia interna",
     "buyerLabel": "Comprador",
     "recipientLabel": "Destinatario (opcional — por defecto el comprador)",
     "addBalance": "Añadir saldo",
@@ -364,7 +363,11 @@
     "errorProcessingPayment": "Error al procesar el pago",
     "createdAt": "Fecha de creación",
     "detailsSaved": "Detalles guardados",
-    "errorSavingDetails": "Error al guardar los detalles"
+    "errorSavingDetails": "Error al guardar los detalles",
+    "source": "Origen",
+    "sourcePhysical": "Físico",
+    "sourceOnline": "Online",
+    "externalReference": "Referencia externa"
   },
   "Stats": {
     "totalRevenue": "Ingresos totales",

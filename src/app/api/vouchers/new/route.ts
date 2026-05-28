@@ -16,14 +16,26 @@ type Body = {
   recipient_email?: string;
   initial_balance?: number | string;
   payment_method?: string;
-  initial_payment_code?: string | null;
   notes?: string;
   expiration_date?: string | Date;
   created_at?: string | Date;
+  source?: "physical" | "online";
+  external_reference?: string;
 };
 
 const normalizeString = (v?: string | null) =>
   v && v.trim() !== "" ? v.trim() : null;
+
+/** When the voucher comes from the online channel, prefix the stored reference with `#`
+ * so the channel marker is embedded in the value itself (not only shown as an input adornment). */
+const normalizeExternalRef = (
+  value: string | null | undefined,
+  source: "physical" | "online",
+) => {
+  if (!value) return undefined;
+  if (source === "online" && !value.startsWith("#")) return `#${value}`;
+  return value;
+};
 
 /** DDMMYY in UTC, matching e.g. V-150326-1 */
 function formatDdMmYyUtc(d: Date): string {
@@ -157,6 +169,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!["physical", "online"].includes(body.source ?? "")) {
+      return NextResponse.json(
+        { error: "Invalid voucher source" },
+        { status: 400 },
+      );
+    }
+
     if (!body.expiration_date) {
       return NextResponse.json(
         { error: "Expiration date is required" },
@@ -181,11 +200,8 @@ export async function POST(request: Request) {
       body.recipient_phone;
 
     const voucherNotes = normalizeString(body.notes) ?? undefined;
-    const paymentRef =
-      body.initial_payment_code != null &&
-      String(body.initial_payment_code).trim() !== ""
-        ? String(body.initial_payment_code).trim()
-        : null;
+    const source = body.source as "physical" | "online";
+    const externalReference = normalizeExternalRef(normalizeString(body.external_reference), source);
 
     const createdAt = body.created_at ? new Date(body.created_at as string | Date) : new Date();
     if (Number.isNaN(createdAt.getTime())) {
@@ -225,6 +241,8 @@ export async function POST(request: Request) {
               recipient_id: recipientId,
               expiration_date: expiration,
               notes: voucherNotes,
+              source,
+              external_reference: externalReference,
               created_at: createdAt,
             },
           });
@@ -235,7 +253,7 @@ export async function POST(request: Request) {
               ${amount}::numeric,
               ${body.payment_method}::payment_methods,
               ${performedBy}::uuid,
-              ${paymentRef ? `Internal reference: ${paymentRef}` : null}::text,
+              NULL::text,
               NULL::uuid,
               ${v.id}::uuid
             )

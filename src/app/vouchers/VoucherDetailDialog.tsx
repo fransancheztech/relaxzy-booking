@@ -13,9 +13,15 @@ import {
   DialogContentText,
   DialogTitle,
   Divider,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
   Grid,
   IconButton,
+  InputAdornment,
   Paper,
+  Radio,
+  RadioGroup,
   Table,
   TableBody,
   TableCell,
@@ -63,6 +69,8 @@ type VoucherUse = {
   created_at: string | null;
 };
 
+type VoucherSource = "physical" | "online";
+
 type Details = {
   voucher: {
     id: string;
@@ -71,6 +79,8 @@ type Details = {
     expiration_date: string;
     created_at: string | null;
     notes: string | null;
+    source: VoucherSource;
+    external_reference: string | null;
     buyer_id: string;
     recipient_id: string | null;
   };
@@ -92,6 +102,8 @@ interface EditData {
   created_at: Date | null;
   expiration_date: Date | null;
   notes: string;
+  source: VoucherSource;
+  external_reference: string;
 }
 
 type Props = {
@@ -184,6 +196,13 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
         created_at: details.voucher.created_at ? new Date(details.voucher.created_at) : null,
         expiration_date: details.voucher.expiration_date ? new Date(details.voucher.expiration_date) : null,
         notes: details.voucher.notes ?? "",
+        source: details.voucher.source,
+        // Online refs are stored with a leading "#" but the input shows it as an adornment,
+        // so strip it for the editable value to avoid "##44" on screen. The backend re-adds it on save.
+        external_reference:
+          details.voucher.source === "online" && details.voucher.external_reference?.startsWith("#")
+            ? details.voucher.external_reference.slice(1)
+            : details.voucher.external_reference ?? "",
       });
       setEditMode(false);
     }
@@ -283,6 +302,18 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
             <span>Voucher {details?.voucher.code ?? ""}</span>
+            {details?.voucher.source && (
+              <Chip
+                label={
+                  details.voucher.source === "online"
+                    ? t("sourceOnline")
+                    : t("sourcePhysical")
+                }
+                color={details.voucher.source === "online" ? "info" : "default"}
+                size="small"
+                variant="outlined"
+              />
+            )}
             {details?.voucher.balance != null && (
               <Chip
                 label={`${t("balanceLabel")} ${formatMoney(Number(details.voucher.balance))}`}
@@ -329,6 +360,9 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                         <strong>{t("createdAt")}:</strong> {formatDate(details.voucher.created_at)}
                         {"  ·  "}
                         <strong>{t("expirationDate")}:</strong> {formatDate(details.voucher.expiration_date)}
+                        {details.voucher.external_reference && (
+                          <>{" · "}<strong>{t("externalReference")}:</strong> {details.voucher.external_reference}</>
+                        )}
                         {details.voucher.notes && (
                           <>{" · "}<strong>{tCommon("notes")}:</strong> {details.voucher.notes}</>
                         )}
@@ -418,7 +452,76 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                           slotProps={{ textField: { size: "small", fullWidth: true } }}
                         />
                       </Grid>
-                      <Grid size={6}>
+                      <Grid size={3}>
+                        <FormControl
+                          fullWidth
+                          sx={{
+                            height: 40,
+                            border: 1,
+                            borderColor: "rgba(0, 0, 0, 0.23)",
+                            borderRadius: 1,
+                            px: 1.5,
+                            position: "relative",
+                            justifyContent: "center",
+                            "&:hover": { borderColor: "text.primary" },
+                          }}
+                        >
+                          <FormLabel
+                            sx={{
+                              position: "absolute",
+                              top: -8,
+                              left: 8,
+                              bgcolor: "background.paper",
+                              px: 0.5,
+                              fontSize: 12,
+                              lineHeight: 1,
+                            }}
+                          >
+                            {t("source")}
+                          </FormLabel>
+                          <RadioGroup
+                            row
+                            value={editData?.source ?? "physical"}
+                            onChange={(e) =>
+                              setEditData((p) =>
+                                p && ({ ...p, source: e.target.value as VoucherSource })
+                              )
+                            }
+                            sx={{ flexWrap: "nowrap" }}
+                          >
+                            <FormControlLabel
+                              value="physical"
+                              control={<Radio size="small" sx={{ p: 0.5 }} />}
+                              label={<Typography variant="body2">{t("sourcePhysical")}</Typography>}
+                              sx={{ mr: 1.5, ml: -0.5 }}
+                            />
+                            <FormControlLabel
+                              value="online"
+                              control={<Radio size="small" sx={{ p: 0.5 }} />}
+                              label={<Typography variant="body2">{t("sourceOnline")}</Typography>}
+                              sx={{ mr: 0 }}
+                            />
+                          </RadioGroup>
+                        </FormControl>
+                      </Grid>
+                      <Grid size={3}>
+                        <TextField size="small" fullWidth label={t("externalReference")}
+                          value={editData?.external_reference ?? ""}
+                          onChange={(e) => setEditData((p) => p && ({ ...p, external_reference: e.target.value }))}
+                          slotProps={
+                            editData?.source === "online"
+                              ? {
+                                  input: {
+                                    startAdornment: (
+                                      <InputAdornment position="start">#</InputAdornment>
+                                    ),
+                                  },
+                                }
+                              : undefined
+                          }
+                        />
+                      </Grid>
+                      <Grid size={12}>
                         <TextField size="small" fullWidth label={tCommon("notes")}
                           value={editData?.notes ?? ""}
                           onChange={(e) => setEditData((p) => p && ({ ...p, notes: e.target.value }))} />

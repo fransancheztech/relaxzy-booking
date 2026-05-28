@@ -2,7 +2,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "generated/prisma";
 
-const SORTABLE_FIELDS = new Set(["created_at", "expiration_date", "code", "balance", "notes"]);
+const SORTABLE_FIELDS = new Set([
+  "created_at",
+  "expiration_date",
+  "code",
+  "balance",
+  "notes",
+  "source",
+  "external_reference",
+]);
 
 function getMadridDateRange(isoStr: string): { gte: Date; lt: Date } | null {
   const parsed = new Date(isoStr);
@@ -86,6 +94,14 @@ export async function POST(request: Request) {
         case "notes":
           if (typeof item.value === "string")
             cond = { notes: { contains: item.value, mode: "insensitive" } };
+          break;
+        case "external_reference":
+          if (typeof item.value === "string")
+            cond = { external_reference: { contains: item.value, mode: "insensitive" } };
+          break;
+        case "source":
+          if (item.value === "physical" || item.value === "online")
+            cond = { source: item.value };
           break;
         case "balance": {
           const num = typeof item.value === "number" ? item.value : parseFloat(String(item.value));
@@ -179,6 +195,8 @@ export async function POST(request: Request) {
         expiration_date: v.expiration_date,
         created_at: v.created_at,
         notes: v.notes,
+        source: v.source,
+        external_reference: v.external_reference,
         buyer_id: v.buyer_id,
         recipient_id: v.recipient_id,
         buyer_name: buyer?.client_name ?? null,

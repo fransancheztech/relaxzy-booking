@@ -1,11 +1,11 @@
 "use client";
 
 import { VoucherSchemaInput } from "@/schemas/voucher.schema";
-import { Divider, FormControl, FormHelperText, Grid, InputLabel, MenuItem, Select, TextField, Typography } from "@mui/material";
+import { Divider, FormControl, FormControlLabel, FormHelperText, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField, Typography } from "@mui/material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
-import { Controller, useFormContext } from "react-hook-form";
+import { Controller, useFormContext, useWatch } from "react-hook-form";
 import VoucherClientSection from "./VoucherClientSection";
 import { useTranslations } from "next-intl";
 import { normalizeMoneyInput } from "@/utils/normalizeMoney";
@@ -17,6 +17,7 @@ const NewVoucherFormFields = () => {
     control,
     formState: { errors },
   } = useFormContext<VoucherSchemaInput>();
+  const source = useWatch({ control, name: "source" });
 
   return (
     <Grid container spacing={{ xs: 1, xl: 2 }}>
@@ -136,25 +137,98 @@ const NewVoucherFormFields = () => {
 
       <Grid size={4}>
         <Controller
-          name="initial_payment_code"
+          name="source"
           control={control}
           render={({ field }) => (
-            <TextField
-              {...field}
-              label={t("paymentReference")}
-              error={!!errors.initial_payment_code}
-              helperText={errors.initial_payment_code?.message}
+            <FormControl
               fullWidth
-              sx={{ borderRadius: "5px" }}
-              size="small"
-              type="text"
-              variant="outlined"
-            />
+              error={!!errors.source}
+              sx={{
+                height: 40,
+                border: 1,
+                borderColor: errors.source ? "error.main" : "rgba(0, 0, 0, 0.23)",
+                borderRadius: 1,
+                px: 1.5,
+                position: "relative",
+                justifyContent: "center",
+                "&:hover": {
+                  borderColor: errors.source ? "error.main" : "text.primary",
+                },
+              }}
+            >
+              <FormLabel
+                sx={{
+                  position: "absolute",
+                  top: -8,
+                  left: 8,
+                  bgcolor: "background.paper",
+                  px: 0.5,
+                  fontSize: 12,
+                  lineHeight: 1,
+                }}
+              >
+                {t("source")}
+              </FormLabel>
+              <RadioGroup {...field} row sx={{ flexWrap: "nowrap" }}>
+                <FormControlLabel
+                  value="physical"
+                  control={<Radio size="small" sx={{ p: 0.5 }} />}
+                  label={
+                    <Typography variant="body2">{t("sourcePhysical")}</Typography>
+                  }
+                  sx={{ mr: 1.5, ml: -0.5 }}
+                />
+                <FormControlLabel
+                  value="online"
+                  control={<Radio size="small" sx={{ p: 0.5 }} />}
+                  label={
+                    <Typography variant="body2">{t("sourceOnline")}</Typography>
+                  }
+                  sx={{ mr: 0 }}
+                />
+              </RadioGroup>
+              {errors.source && (
+                <FormHelperText sx={{ position: "absolute", bottom: -22, left: 0 }}>
+                  {errors.source.message}
+                </FormHelperText>
+              )}
+            </FormControl>
           )}
         />
       </Grid>
 
       <Grid size={4}>
+        <Controller
+          name="external_reference"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label={t("externalReference")}
+              error={!!errors.external_reference}
+              helperText={errors.external_reference?.message}
+              fullWidth
+              sx={{ borderRadius: "5px" }}
+              size="small"
+              type="text"
+              variant="outlined"
+              slotProps={
+                source === "online"
+                  ? {
+                      input: {
+                        startAdornment: (
+                          <InputAdornment position="start">#</InputAdornment>
+                        ),
+                      },
+                    }
+                  : undefined
+              }
+            />
+          )}
+        />
+      </Grid>
+
+      <Grid size={12}>
         <Controller
           name="notes"
           control={control}

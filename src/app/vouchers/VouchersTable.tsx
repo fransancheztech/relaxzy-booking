@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Container, IconButton, Paper, Tooltip } from "@mui/material";
+import { Chip, Container, IconButton, Paper, Tooltip } from "@mui/material";
 import { DataGrid, GridColDef, GridFilterItem, GridFilterModel } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VoucherDetailDialog from "./VoucherDetailDialog";
@@ -20,6 +20,8 @@ type VoucherRow = {
   expiration_date: string;
   created_at: string | null;
   notes: string | null;
+  source: "physical" | "online";
+  external_reference: string | null;
   buyer_name: string | null;
   buyer_surname: string | null;
   buyer_email: string | null;
@@ -52,6 +54,32 @@ const VouchersTable = () => {
         headerName: t("code"),
         flex: 1,
         minWidth: 130,
+      },
+      {
+        field: "source",
+        headerName: t("source"),
+        flex: 0.7,
+        minWidth: 100,
+        type: "singleSelect",
+        valueOptions: [
+          { value: "physical", label: t("sourcePhysical") },
+          { value: "online", label: t("sourceOnline") },
+        ],
+        renderCell: (params) => (
+          <Chip
+            label={params.row.source === "online" ? t("sourceOnline") : t("sourcePhysical")}
+            color={params.row.source === "online" ? "info" : "default"}
+            size="small"
+            variant="outlined"
+          />
+        ),
+      },
+      {
+        field: "external_reference",
+        headerName: t("externalReference"),
+        flex: 1,
+        minWidth: 120,
+        valueFormatter: formatNullable,
       },
       {
         field: "buyer_name",

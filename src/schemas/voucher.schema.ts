@@ -30,8 +30,9 @@ export const VoucherSchema = z.object({
         z.number({ error: "Balance must be a number" }).positive("Balance must be greater than 0"),
     ),
     payment_method: z.enum(["cash", "credit_card"], { error: "Payment method is required" }),
-    initial_payment_code: z.string().optional(),
     notes: z.string().optional(),
+    source: z.enum(["physical", "online"], { error: "Source is required" }),
+    external_reference: z.string().optional(),
     expiration_date: z.date({ error: "Expiration date is required" }),
     created_at: z.date().optional(),
 }).superRefine((data, ctx) => {
