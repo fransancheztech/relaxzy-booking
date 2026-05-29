@@ -89,7 +89,8 @@
     "closeDaySuccess": "{count} booking(s) marked as completed.",
     "closeDayError": "Failed to close day. Please try again.",
     "dailyTotalsButton": "Daily totals",
-    "therapistRequestedTooltip": "Therapist requested by client"
+    "therapistRequestedTooltip": "Therapist requested by client",
+    "groupTooltip": "Part of a group booking"
   },
   "DailyTotals": {
     "title": "Daily totals",
@@ -153,7 +154,15 @@
     "therapistRequestedHelper": "Record in notes how strictly the client wants this therapist.",
     "walkInToggle": "Anonymous booking (no contact info)",
     "walkInHint": "Use only when you genuinely can't capture the client's name and contact.",
-    "walkInWarning": "This booking will be saved with no client details. You won't be able to contact this client afterwards — to confirm, reschedule, or follow up. Use this only when the client's details are genuinely unavailable."
+    "walkInWarning": "This booking will be saved with no client details. You won't be able to contact this client afterwards — to confirm, reschedule, or follow up. Use this only when the client's details are genuinely unavailable.",
+    "groupSection": "Group",
+    "groupMembers": "Group members",
+    "groupOf": "Group of {count}",
+    "removeFromGroup": "Remove from group",
+    "confirmRemoveFromGroup": "Remove this booking from the group? Other group members will keep their grouping, unless it is the last one left in the group.",
+    "removeFromGroupSuccess": "Booking removed from group",
+    "removeFromGroupError": "Failed to remove booking from group",
+    "groupTooltip": "Part of a group booking"
   },
   "ManagePayments": {
     "title": "Manage Payments",

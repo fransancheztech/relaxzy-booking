@@ -89,7 +89,8 @@
     "closeDaySuccess": "{count} reserva(s) marcada(s) como completadas.",
     "closeDayError": "Error al cerrar el día. Por favor, inténtalo de nuevo.",
     "dailyTotalsButton": "Totales del día",
-    "therapistRequestedTooltip": "Terapeuta solicitado por el cliente"
+    "therapistRequestedTooltip": "Terapeuta solicitado por el cliente",
+    "groupTooltip": "Forma parte de una reserva de grupo"
   },
   "DailyTotals": {
     "title": "Totales del día",
@@ -153,7 +154,15 @@
     "therapistRequestedHelper": "Indica en las notas con qué firmeza la clienta quiere a esta terapeuta.",
     "walkInToggle": "Reserva anónima (sin datos de contacto)",
     "walkInHint": "Úsalo solo cuando realmente no puedas obtener el nombre y el contacto del cliente.",
-    "walkInWarning": "Esta reserva se guardará sin datos del cliente. No podrás contactar con este cliente después — para confirmar, reprogramar o hacer seguimiento. Úsalo solo cuando los datos del cliente no estén disponibles."
+    "walkInWarning": "Esta reserva se guardará sin datos del cliente. No podrás contactar con este cliente después — para confirmar, reprogramar o hacer seguimiento. Úsalo solo cuando los datos del cliente no estén disponibles.",
+    "groupSection": "Grupo",
+    "groupMembers": "Miembros del grupo",
+    "groupOf": "Grupo de {count}",
+    "removeFromGroup": "Quitar del grupo",
+    "confirmRemoveFromGroup": "¿Quitar esta reserva del grupo? Los demás miembros del grupo mantendrán su agrupación, salvo que sea el último que queda en el grupo.",
+    "removeFromGroupSuccess": "Reserva quitada del grupo",
+    "removeFromGroupError": "No se pudo quitar la reserva del grupo",
+    "groupTooltip": "Forma parte de una reserva de grupo"
   },
   "ManagePayments": {
     "title": "Gestionar pagos",

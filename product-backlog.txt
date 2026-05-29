@@ -1,5 +1,5 @@
 TO-DO
-- Añadir funcionalidad real de grupos de reservas (ids de grupos, uuids autocreadas en New Bookings, modificables en Update Bookings, campos de cliente y toogle Anonymous en Add Companion, etc).
+- Añadir campos de cliente y toogle Anonymous en Add Companion.
 - Arreglar dias 24 y 24 mayo ingresos exagerados.
 - Revisar texto de ayuda contextual para diferentes páginas y usuarios, importante para no liar a usuarios
 - Completar reservas Mayo

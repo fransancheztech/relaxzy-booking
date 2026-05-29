@@ -320,6 +320,20 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
               ★
             </span>
           )}
+          {b.booking_group_id && (
+            <span
+              title={t("groupTooltip")}
+              style={{
+                fontSize: 11,
+                lineHeight: 1,
+                fontWeight: 700,
+                color: "#80deea",
+                textShadow: "0 0 2px rgba(0,0,0,0.7)",
+              }}
+            >
+              ⛓
+            </span>
+          )}
         </div>
         <div style={{ fontSize: 11, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {arg.event.title}

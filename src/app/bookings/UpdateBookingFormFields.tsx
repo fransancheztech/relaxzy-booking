@@ -36,6 +36,7 @@ import { es } from "date-fns/locale";
 import { Controller, useFormContext } from "react-hook-form";
 import { Dispatch, SetStateAction } from "react";
 import BookingClientSection from "./BookingClientSection";
+import BookingGroupSection from "./BookingGroupSection";
 import { normalizeMoney } from "@/utils/normalizeMoney";
 import { formatMoney, formatMoneyInput } from "@/utils/formatMoney";
 import { useTherapists } from "@/hooks/useTherapists";
@@ -55,9 +56,11 @@ interface Props {
   readOnly?: boolean;
   clientNotes?: string | null;
   onClientPicked?: (notes: string | null) => void;
+  bookingGroupId?: string | null;
+  onGroupChanged?: () => void;
 }
 
-const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManagePaymentsDialogOpen, paymentSummary, readOnly, clientNotes, onClientPicked }: Props) => {
+const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManagePaymentsDialogOpen, paymentSummary, readOnly, clientNotes, onClientPicked, bookingGroupId, onGroupChanged }: Props) => {
   const t = useTranslations("BookingForm");
   const tCommon = useTranslations("Common");
   const tBookings = useTranslations("Bookings");
@@ -87,6 +90,12 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
         readOnly={readOnly}
         clientNotes={clientNotes}
         onClientPicked={(c) => onClientPicked?.(c.client_notes ?? null)}
+      />
+      <BookingGroupSection
+        bookingId={bookingId}
+        bookingGroupId={bookingGroupId ?? null}
+        readOnly={readOnly}
+        onGroupChanged={onGroupChanged}
       />
       <Grid size={12}>
         <Typography variant="subtitle2" color="text.secondary">{t("bookingDetails")}</Typography>

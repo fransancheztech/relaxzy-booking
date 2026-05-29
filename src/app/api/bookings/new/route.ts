@@ -191,8 +191,7 @@ export async function POST(request: Request) {
     // 10) CREATE PRIMARY + COMPANION BOOKINGS IN ONE TRANSACTION
     // ------------------------------------------------------
     const isGroup = companions.length > 0;
-    const groupNote = (notes?: string | null) =>
-      isGroup ? (notes?.trim() ? `Group. ${notes.trim()}` : "Group.") : (notes ?? null);
+    const groupId = isGroup ? crypto.randomUUID() : null;
 
     const { booking, companionBookings } = await prisma.$transaction(async (tx) => {
       const primary = await tx.bookings.create({
@@ -203,9 +202,10 @@ export async function POST(request: Request) {
           therapist_requested: !!body.therapist_requested,
           start_time: start,
           end_time: end,
-          notes: groupNote(body.notes),
+          notes: normalize(body.notes),
           price,
           status: "confirmed",
+          booking_group_id: groupId,
         },
       });
 
@@ -225,9 +225,10 @@ export async function POST(request: Request) {
               therapist_id: c.therapist_id?.trim() || null,
               start_time: start,
               end_time: companionEnd,
-              notes: groupNote(c.notes),
+              notes: normalize(c.notes),
               price: companionPrice,
               status: "confirmed",
+              booking_group_id: groupId,
             },
           });
         }),

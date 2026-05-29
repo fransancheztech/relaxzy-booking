@@ -82,6 +82,7 @@ export async function GET(req: NextRequest) {
       therapist_id: b.therapist_id ?? null,
       therapist_requested: b.therapist_requested,
       paid_total: paidMap.get(b.id) ?? 0,
+      booking_group_id: b.booking_group_id,
     }));
 
     return NextResponse.json(formatted);

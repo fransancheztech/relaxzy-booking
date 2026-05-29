@@ -121,6 +121,7 @@ export async function GET(
       status: booking.status,
       price: booking.price,
       therapist_requested: booking.therapist_requested,
+      booking_group_id: booking.booking_group_id,
       client,
       services_names,
       therapist,
@@ -407,6 +408,13 @@ export async function DELETE(
     const now = new Date();
 
     const result = await prisma.$transaction(async (tx) => {
+      // Read group membership before soft-deleting so we can dissolve a
+      // group-of-1 left behind by this deletion.
+      const before = await tx.bookings.findUnique({
+        where: { id, deleted_at: null },
+        select: { booking_group_id: true },
+      });
+
       // 1️⃣ Soft delete booking
       const booking = await tx.bookings.update({
         where: {
@@ -441,6 +449,21 @@ export async function DELETE(
           deleted_at: now,
         },
       });
+
+      // 4️⃣ If the deleted booking was in a group, dissolve any group-of-1
+      // left behind (a single-member group is meaningless).
+      if (before?.booking_group_id) {
+        const remaining = await tx.bookings.findMany({
+          where: { booking_group_id: before.booking_group_id, deleted_at: null },
+          select: { id: true },
+        });
+        if (remaining.length === 1) {
+          await tx.bookings.update({
+            where: { id: remaining[0].id },
+            data: { booking_group_id: null, updated_at: now },
+          });
+        }
+      }
 
       return booking;
     });

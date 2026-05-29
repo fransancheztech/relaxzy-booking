@@ -1,9 +1,10 @@
 "use client";
 
-import { Chip, Container, Paper, Tooltip } from "@mui/material";
+import { Box, Chip, Container, Paper, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef, GridFilterModel, GridRenderCellParams } from "@mui/x-data-grid";
 import { booking_status } from "generated/prisma";
 import EditIcon from "@mui/icons-material/Edit";
+import GroupsIcon from "@mui/icons-material/Groups";
 import { FETCH_LIMIT } from "@/constants";
 import { BookingListItem } from "@/types/bookings";
 import LoadingOverlay from "@/components/LoadingOverlay";
@@ -41,6 +42,7 @@ export const BookingsTable = ({
 }: Props) => {
   const t = useTranslations("Bookings");
   const tCommon = useTranslations("Common");
+  const tBookingForm = useTranslations("BookingForm");
 
   const columns: GridColDef<BookingListItem>[] = [
     {
@@ -51,6 +53,16 @@ export const BookingsTable = ({
         row.client
           ? `${row.client.name ?? ""} ${row.client.surname ?? ""}`.trim()
           : "Walk-in",
+      renderCell: (params: GridRenderCellParams<BookingListItem, string>) => (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, width: "100%" }}>
+          {params.row.booking_group_id && (
+            <Tooltip title={tBookingForm("groupTooltip")}>
+              <GroupsIcon fontSize="small" color="action" />
+            </Tooltip>
+          )}
+          <span>{params.value}</span>
+        </Box>
+      ),
     },
     {
       field: "customer_phone",

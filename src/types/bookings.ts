@@ -20,6 +20,7 @@ export interface BookingDTO {
     therapist_id?: string | null;
     therapist_requested?: boolean;
     paid_total?: number;
+    booking_group_id?: string | null;
 }
 
 export interface BookingModel extends BookingDTO {
@@ -87,6 +88,7 @@ export type BookingListItem = {
   price: string | null;
 
   notes?: string | null;
+  booking_group_id?: string | null;
 
   created_at: Date | null;
   updated_at: Date | null;

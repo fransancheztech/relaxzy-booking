@@ -23,11 +23,14 @@ model bookings {
   price               Decimal?        @db.Decimal(10, 2)
   therapist_id        String?         @db.Uuid
   therapist_requested Boolean         @default(false)
+  booking_group_id    String?         @db.Uuid
   clients             clients?        @relation(fields: [client_id], references: [id], onUpdate: NoAction)
   services_names      services_names? @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "bookings_service_name_fkey")
   therapists          therapists?     @relation(fields: [therapist_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   payments            payments[]
   tips                tips[]
+
+  @@index([booking_group_id], map: "bookings_booking_group_id_active_idx", where: raw("((booking_group_id IS NOT NULL) AND (deleted_at IS NULL))"))
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -47,6 +50,7 @@ model bookings_history {
   deleted_at          DateTime?      @db.Timestamptz(6)
   therapist_id        String?        @db.Uuid
   therapist_requested Boolean        @default(false)
+  booking_group_id    String?        @db.Uuid
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.

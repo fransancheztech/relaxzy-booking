@@ -178,6 +178,7 @@ export async function POST(req: NextRequest) {
       status: b.status,
       price: b.price?.toString() ?? null,
       notes: b.notes,
+      booking_group_id: b.booking_group_id,
       created_at: b.created_at,
       updated_at: b.updated_at,
       client: b.clients
