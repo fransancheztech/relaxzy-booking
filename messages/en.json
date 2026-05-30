@@ -162,7 +162,9 @@
     "confirmRemoveFromGroup": "Remove this booking from the group? Other group members will keep their grouping, unless it is the last one left in the group.",
     "removeFromGroupSuccess": "Booking removed from group",
     "removeFromGroupError": "Failed to remove booking from group",
-    "groupTooltip": "Part of a group booking"
+    "groupTooltip": "Part of a group booking",
+    "sameClientAsPrimary": "Same client as primary",
+    "sameClientAsPrimaryHelper": "Companion will share the primary client's record"
   },
   "ManagePayments": {
     "title": "Manage Payments",

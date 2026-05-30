@@ -46,6 +46,7 @@ const toPaymentNumber = (raw: string): number | undefined => {
   return isNaN(n) || n <= 0 ? undefined : n;
 };
 import BookingClientSection from "./BookingClientSection";
+import CompanionClientFields from "./CompanionClientFields";
 import MethodAmountField from "@/components/payments/MethodAmountField";
 import { useTherapists } from "@/hooks/useTherapists";
 import { useServiceLookups } from "@/hooks/useServiceLookups";
@@ -250,12 +251,13 @@ const CompanionRow = ({
     getValues,
   } = useFormContext<BookingSchemaType>();
 
-  const [companionService, companionDuration, companionPrice] = useWatch({
+  const [companionService, companionDuration, companionPrice, sameAsPrimary] = useWatch({
     control,
     name: [
       `companions.${index}.service_name`,
       `companions.${index}.duration`,
       `companions.${index}.price`,
+      `companions.${index}.same_as_primary`,
     ],
   });
 
@@ -399,6 +401,39 @@ const CompanionRow = ({
             <CloseIcon fontSize="small" />
           </IconButton>
         </Tooltip>
+      </Box>
+
+      <Box sx={{ mt: 0.5 }}>
+        <Controller
+          name={`companions.${index}.same_as_primary`}
+          control={control}
+          render={({ field }) => (
+            <Box>
+              <FormControlLabel
+                control={
+                  <Switch
+                    size="small"
+                    checked={!!field.value}
+                    onChange={(e) => field.onChange(e.target.checked)}
+                  />
+                }
+                label={
+                  <Typography variant="caption" color="text.secondary">
+                    {t("sameClientAsPrimary")}
+                  </Typography>
+                }
+              />
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: "block", ml: 4.5, mt: -0.5, fontStyle: "italic", fontSize: "0.7rem" }}
+              >
+                {t("sameClientAsPrimaryHelper")}
+              </Typography>
+            </Box>
+          )}
+        />
+        {!sameAsPrimary && <CompanionClientFields index={index} />}
       </Box>
 
       <InlinePaymentSection
@@ -689,6 +724,11 @@ const NewBookingFormFields = () => {
                   duration: primaryDuration ?? 60,
                   price: primaryPrice ?? undefined,
                   notes: "",
+                  same_as_primary: false,
+                  client_name: "",
+                  client_surname: "",
+                  client_phone: "",
+                  client_email: "",
                 })
               }
             >

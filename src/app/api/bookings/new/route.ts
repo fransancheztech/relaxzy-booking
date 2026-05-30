@@ -9,6 +9,11 @@ type CompanionInput = {
   duration?: string | number;
   price?: string | number;
   notes?: string;
+  same_as_primary?: boolean;
+  client_name?: string;
+  client_surname?: string;
+  client_phone?: string;
+  client_email?: string;
 };
 
 type Body = {
@@ -209,6 +214,40 @@ export async function POST(request: Request) {
         },
       });
 
+      // Resolve each companion's client_id: either share primary's or
+      // find/create a separate client (companions only need a name).
+      const resolveCompanionClientId = async (c: CompanionInput): Promise<string | null> => {
+        if (c.same_as_primary) return clientId;
+        const name = c.client_name?.trim();
+        if (!name) return clientId;
+
+        const email = normalize(c.client_email);
+        const phone = normalize(c.client_phone);
+
+        if (email) {
+          const existing = await tx.clients.findFirst({
+            where: { client_email: email, deleted_at: null },
+          });
+          if (existing) return existing.id;
+        }
+        if (phone) {
+          const existing = await tx.clients.findFirst({
+            where: { client_phone: phone, deleted_at: null },
+          });
+          if (existing) return existing.id;
+        }
+
+        const created = await tx.clients.create({
+          data: {
+            client_name: name,
+            client_surname: normalize(c.client_surname),
+            client_email: email,
+            client_phone: phone,
+          },
+        });
+        return created.id;
+      };
+
       const created = await Promise.all(
         companions.map(async (c, i) => {
           const dur = Number(c.duration);
@@ -218,9 +257,11 @@ export async function POST(request: Request) {
               ? Number(c.price)
               : null;
 
+          const companionClientId = await resolveCompanionClientId(c);
+
           return tx.bookings.create({
             data: {
-              client_id: clientId,
+              client_id: companionClientId,
               service_id: companionServiceIds[i],
               therapist_id: c.therapist_id?.trim() || null,
               start_time: start,

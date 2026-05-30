@@ -2,23 +2,50 @@ import * as z from "zod";
 import { phoneValidator } from "@/utils/phoneValidator";
 import { booking_status } from "generated/prisma";
 
-export const CompanionSchema = z.object({
-  service_name: z.string().optional(),
-  therapist_id: z.string().optional(),
-  duration: z
-    .number({ message: "Duration must be a number" })
-    .min(15, { message: "Duration must be at least 15 minutes" })
-    .max(240, { message: "Duration cannot exceed 240 minutes" }),
-  price: z
-    .number({ message: "The price must be a number" })
-    .nonnegative({ message: "Price must be a positive number" })
-    .optional(),
-  notes: z.string().optional(),
-  cashPayment: z.number().nonnegative().optional(),
-  cardPayment: z.number().nonnegative().optional(),
-  voucherPayment: z.number().nonnegative().optional(),
-  voucherCode: z.string().optional(),
-});
+export const CompanionSchema = z
+  .object({
+    service_name: z.string().optional(),
+    therapist_id: z.string().optional(),
+    duration: z
+      .number({ message: "Duration must be a number" })
+      .min(15, { message: "Duration must be at least 15 minutes" })
+      .max(240, { message: "Duration cannot exceed 240 minutes" }),
+    price: z
+      .number({ message: "The price must be a number" })
+      .nonnegative({ message: "Price must be a positive number" })
+      .optional(),
+    notes: z.string().optional(),
+    cashPayment: z.number().nonnegative().optional(),
+    cardPayment: z.number().nonnegative().optional(),
+    voucherPayment: z.number().nonnegative().optional(),
+    voucherCode: z.string().optional(),
+    same_as_primary: z.boolean().optional(),
+    client_name: z.string().optional(),
+    client_surname: z.string().optional(),
+    client_phone: z
+      .string()
+      .optional()
+      .refine((val) => !val || phoneValidator(val), {
+        message: "Invalid phone number",
+      }),
+    client_email: z
+      .string()
+      .optional()
+      .refine(
+        (val) => !val || val.trim() === "" || z.email().safeParse(val).success,
+        { message: "Invalid email address" },
+      ),
+  })
+  .superRefine((data, ctx) => {
+    if (data.same_as_primary) return;
+    if (!data.client_name || data.client_name.trim() === "") {
+      ctx.addIssue({
+        code: "custom",
+        message: "Companion name is required (or enable 'Same client as primary')",
+        path: ["client_name"],
+      });
+    }
+  });
 
 export type CompanionSchemaType = z.infer<typeof CompanionSchema>;
 

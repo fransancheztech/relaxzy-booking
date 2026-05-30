@@ -162,7 +162,9 @@
     "confirmRemoveFromGroup": "¿Quitar esta reserva del grupo? Los demás miembros del grupo mantendrán su agrupación, salvo que sea el último que queda en el grupo.",
     "removeFromGroupSuccess": "Reserva quitada del grupo",
     "removeFromGroupError": "No se pudo quitar la reserva del grupo",
-    "groupTooltip": "Forma parte de una reserva de grupo"
+    "groupTooltip": "Forma parte de una reserva de grupo",
+    "sameClientAsPrimary": "Mismo cliente que el principal",
+    "sameClientAsPrimaryHelper": "El acompañante compartirá el registro del cliente principal"
   },
   "ManagePayments": {
     "title": "Gestionar pagos",
