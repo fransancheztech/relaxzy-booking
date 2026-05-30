@@ -1,5 +1,10 @@
 TO-DO
-- Arreglar dias 24 y 24 mayo ingresos exagerados.
+- Botón close day no funciona
+- Revisar que desactivar terapeuta no tiene efectos secundarios
+- Añadir horas por terapeuta e ingresos por terapeuta
+- Pensar si añadimos propinas a revenue en stats
+- Revisar que días tengo que poner para ver las propinas de 30/05/2026, tengo que poner from 29 to 30, from 30 to 30 o que?
+- Añadir a la página propinas periodo un día
 - Revisar texto de ayuda contextual para diferentes páginas y usuarios, importante para no liar a usuarios
 - Completar reservas Mayo
 - Añadir propina de las reservas antiguas.

@@ -90,6 +90,8 @@
     "closeDayConfirm": "Mark as completed",
     "closeDaySuccess": "{count} booking(s) marked as completed.",
     "closeDayError": "Failed to close day. Please try again.",
+    "closeDayNoConfirmed": "No confirmed bookings to close on this day.",
+    "closeDayFuture": "You can't close a day that hasn't happened yet.",
     "dailyTotalsButton": "Daily totals",
     "therapistRequestedTooltip": "Therapist requested by client",
     "groupTooltip": "Part of a group booking"

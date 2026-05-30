@@ -90,6 +90,8 @@
     "closeDayConfirm": "Marcar como completadas",
     "closeDaySuccess": "{count} reserva(s) marcada(s) como completadas.",
     "closeDayError": "Error al cerrar el día. Por favor, inténtalo de nuevo.",
+    "closeDayNoConfirmed": "No hay reservas confirmadas para cerrar en este día.",
+    "closeDayFuture": "No puedes cerrar un día que aún no ha ocurrido.",
     "dailyTotalsButton": "Totales del día",
     "therapistRequestedTooltip": "Terapeuta solicitado por el cliente",
     "groupTooltip": "Forma parte de una reserva de grupo"

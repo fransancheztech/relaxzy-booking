@@ -244,7 +244,16 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
     batchComplete: {
       text: t("closeDayButton"),
       click: () => {
-        if (confirmedCountRef.current === 0 || isFutureDayRef.current) return;
+        // Explain why nothing happens instead of silently no-op'ing, so reception
+        // knows the day is either in the future or has no confirmed bookings left.
+        if (isFutureDayRef.current) {
+          toast.info(t("closeDayFuture"));
+          return;
+        }
+        if (confirmedCountRef.current === 0) {
+          toast.info(t("closeDayNoConfirmed"));
+          return;
+        }
         setBatchCompleteOpen(true);
       },
     },
