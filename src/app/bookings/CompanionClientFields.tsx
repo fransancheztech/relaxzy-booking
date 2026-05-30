@@ -82,6 +82,7 @@ const CompanionClientFields = ({ index }: Props) => {
                 {...field}
                 value={field.value ?? ""}
                 label={t("name")}
+                required
                 error={!!companionErrors?.client_name}
                 helperText={companionErrors?.client_name?.message}
                 fullWidth

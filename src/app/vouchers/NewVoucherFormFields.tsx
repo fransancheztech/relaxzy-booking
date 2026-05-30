@@ -37,6 +37,7 @@ const NewVoucherFormFields = () => {
           render={({ field }) => (
             <TextField
               label={t("balanceEur")}
+              required
               error={!!errors.initial_balance}
               helperText={errors.initial_balance?.message}
               fullWidth
@@ -60,7 +61,7 @@ const NewVoucherFormFields = () => {
           name="payment_method"
           control={control}
           render={({ field }) => (
-            <FormControl fullWidth size="small" error={!!errors.payment_method}>
+            <FormControl fullWidth size="small" required error={!!errors.payment_method}>
               <InputLabel id="payment-method-label">{t("paymentMethod")}</InputLabel>
               <Select
                 {...field}
@@ -120,6 +121,7 @@ const NewVoucherFormFields = () => {
                 format="dd/MM/yyyy"
                 slotProps={{
                   textField: {
+                    required: true,
                     error: !!errors.expiration_date,
                     helperText: errors.expiration_date?.message,
                     size: "small",
@@ -142,6 +144,7 @@ const NewVoucherFormFields = () => {
           render={({ field }) => (
             <FormControl
               fullWidth
+              required
               error={!!errors.source}
               sx={{
                 height: 40,
@@ -157,6 +160,7 @@ const NewVoucherFormFields = () => {
               }}
             >
               <FormLabel
+                required
                 sx={{
                   position: "absolute",
                   top: -8,

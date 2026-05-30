@@ -143,6 +143,7 @@ const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn, clientNotes, 
               <TextField
                 {...field}
                 label={t("name")}
+                required
                 error={!!errors.client_name}
                 helperText={errors.client_name?.message}
                 fullWidth
@@ -189,6 +190,12 @@ const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn, clientNotes, 
             <ClientDropdown clients={clients} onSelect={handleSelect} query={surnameVal} />
           )}
         </Box>
+      </Grid>
+
+      <Grid size={12} sx={{ pb: 0, mb: -1 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
+          {t("phoneOrEmailRequired")}
+        </Typography>
       </Grid>
 
       <Grid size={6}>

@@ -1,12 +1,13 @@
 "use client";
 
-import { TextField, Grid } from "@mui/material";
+import { TextField, Grid, Typography } from "@mui/material";
 import { Controller, useFormContext } from "react-hook-form";
 import { ClientUpdateSchemaType } from "@/schemas/client.schema";
 import { useTranslations } from "next-intl";
 
 const ClientsFormFields = () => {
   const t = useTranslations("Clients");
+  const tCommon = useTranslations("Common");
   const {
     control,
     formState: { errors },
@@ -22,6 +23,7 @@ const ClientsFormFields = () => {
             <TextField
               {...field}
               label={t("name")}
+              required
               fullWidth
               size="small"
               error={!!errors.client_name}
@@ -45,6 +47,11 @@ const ClientsFormFields = () => {
             />
           )}
         />
+      </Grid>
+      <Grid size={12} sx={{ pb: 0, mb: -1 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
+          {tCommon("phoneOrEmailRequired")}
+        </Typography>
       </Grid>
       <Grid size={6}>
         <Controller

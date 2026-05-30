@@ -213,7 +213,8 @@ const VoucherClientSection = ({ prefix, label, autoFocus }: Props) => {
             render={({ field }) => (
               <TextField
                 {...field}
-                label={prefix === "buyer" ? tCommon("name") + " *" : tCommon("name")}
+                label={tCommon("name")}
+                required={prefix === "buyer"}
                 error={!!errors[nameField]}
                 helperText={errors[nameField]?.message}
                 fullWidth

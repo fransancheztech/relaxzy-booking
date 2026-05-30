@@ -30,7 +30,9 @@
     "amount": "Importe",
     "method": "Método",
     "refund": "Reembolso",
-    "created": "Creado"
+    "created": "Creado",
+    "phoneOrEmailRequired": "Indica al menos un teléfono o email",
+    "atLeastOnePaymentRequired": "Registra al menos un método de pago"
   },
   "Nav": {
     "calendar": "Calendario",
@@ -163,8 +165,8 @@
     "removeFromGroupSuccess": "Reserva quitada del grupo",
     "removeFromGroupError": "No se pudo quitar la reserva del grupo",
     "groupTooltip": "Forma parte de una reserva de grupo",
-    "sameClientAsPrimary": "Mismo cliente que el principal",
-    "sameClientAsPrimaryHelper": "El acompañante compartirá el registro del cliente principal"
+    "sameClientAsPrimary": "Re-utilizar los datos del cliente principal",
+    "sameClientAsPrimaryHelper": "No se creará un registro de cliente separado para este acompañante"
   },
   "ManagePayments": {
     "title": "Gestionar pagos",

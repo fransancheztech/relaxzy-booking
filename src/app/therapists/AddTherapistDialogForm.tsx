@@ -91,6 +91,7 @@ export default function AddTherapistDialogForm({ open, onClose }: Props) {
                     <TextField
                       {...field}
                       label={t("fullName")}
+                      required
                       fullWidth
                       size="small"
                       error={!!methods.formState.errors.full_name}

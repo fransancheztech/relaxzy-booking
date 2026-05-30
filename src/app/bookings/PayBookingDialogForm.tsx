@@ -136,6 +136,11 @@ const PayBookingDialogForm = ({
               sx={{ paddingTop: "1rem" }}
               spacing={{ xs: 1, xl: 2 }}
             >
+              <Grid size={12}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
+                  {tCommon("atLeastOnePaymentRequired")}
+                </Typography>
+              </Grid>
               <Grid size={6}>
                 <Controller
                   name="cashPayment"

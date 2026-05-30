@@ -253,7 +253,7 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
                 name="therapist_id"
                 control={methods.control}
                 render={({ field }) => (
-                  <FormControl fullWidth size="small" error={!!methods.formState.errors.therapist_id}>
+                  <FormControl fullWidth size="small" required error={!!methods.formState.errors.therapist_id}>
                     <InputLabel>{tCommon("therapist")}</InputLabel>
                     <Select {...field} value={field.value ?? ""} label={tCommon("therapist")}>
                       <MenuItem value=""><em>{tCommon("none")}</em></MenuItem>
@@ -275,6 +275,7 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
                   <TextField
                     {...field}
                     label={tCommon("amount")}
+                    required
                     size="small"
                     fullWidth
                     error={!!methods.formState.errors.amount}

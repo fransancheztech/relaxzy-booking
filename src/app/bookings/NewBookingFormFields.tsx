@@ -351,6 +351,7 @@ const CompanionRow = ({
               renderInput={(params) => (
                 <TextField
                   {...params}
+                  required
                   label={tCommon("duration")}
                   size="small"
                   error={!!errors.companions?.[index]?.duration}
@@ -523,6 +524,7 @@ const NewBookingFormFields = () => {
                 ampm={false}
                 slotProps={{
                   textField: {
+                    required: true,
                     error: !!errors.start_time,
                     helperText: errors.start_time?.message,
                     size: "small",
@@ -613,6 +615,7 @@ const NewBookingFormFields = () => {
               renderInput={(params) => (
                 <TextField
                   {...params}
+                  required
                   error={!!errors.duration}
                   helperText={errors.duration?.message}
                   value={Number(field.value)}

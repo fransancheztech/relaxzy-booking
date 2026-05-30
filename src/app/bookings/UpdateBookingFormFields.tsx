@@ -120,6 +120,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
                 disabled={readOnly}
                 slotProps={{
                   textField: {
+                    required: true,
                     error: !!errors.start_time,
                     helperText: errors.start_time?.message,
                     size: "small",
@@ -212,6 +213,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
               renderInput={(params) => (
                 <TextField
                   {...params}
+                  required
                   error={!!errors.duration}
                   helperText={errors.duration?.message}
                   value={Number(field.value)}
@@ -261,7 +263,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
           name="status"
           control={control}
           render={({ field }) => (
-            <FormControl fullWidth size="small" error={!!errors.status} disabled={readOnly}>
+            <FormControl fullWidth size="small" required error={!!errors.status} disabled={readOnly}>
               <InputLabel id="status">{t("status")}</InputLabel>
               <Select
                 labelId="status"

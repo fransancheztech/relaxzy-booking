@@ -68,7 +68,10 @@ export const BookingSchema = z
       ),
     service_name: z.string().optional(),
     therapist_id: z.string().optional(),
-    start_time: z.date().nullable(),
+    start_time: z
+      .date()
+      .nullable()
+      .refine((v) => v !== null, { message: "Date & time is required" }),
     duration: z
       .number({ message: "Duration must be a number" })
       .min(15, { message: "Duration must be at least 15 minutes" })

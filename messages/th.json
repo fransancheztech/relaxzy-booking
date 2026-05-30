@@ -30,7 +30,9 @@
     "amount": "จำนวน",
     "method": "วิธี",
     "refund": "คืนเงิน",
-    "created": "สร้างเมื่อ"
+    "created": "สร้างเมื่อ",
+    "phoneOrEmailRequired": "ระบุเบอร์โทรหรืออีเมลอย่างน้อยหนึ่งอย่าง",
+    "atLeastOnePaymentRequired": "บันทึกวิธีการชำระเงินอย่างน้อยหนึ่งวิธี"
   },
   "Nav": {
     "calendar": "ปฏิทิน",
@@ -163,8 +165,8 @@
     "removeFromGroupSuccess": "นำการจองออกจากกลุ่มแล้ว",
     "removeFromGroupError": "ไม่สามารถนำการจองออกจากกลุ่มได้",
     "groupTooltip": "เป็นส่วนหนึ่งของการจองแบบกลุ่ม",
-    "sameClientAsPrimary": "ลูกค้าคนเดียวกับการจองหลัก",
-    "sameClientAsPrimaryHelper": "ผู้ร่วมเดินทางจะใช้ข้อมูลลูกค้าของการจองหลักร่วมกัน"
+    "sameClientAsPrimary": "ใช้ข้อมูลของลูกค้าหลักซ้ำ",
+    "sameClientAsPrimaryHelper": "จะไม่สร้างข้อมูลลูกค้าแยกสำหรับผู้ร่วมเดินทางคนนี้"
   },
   "ManagePayments": {
     "title": "จัดการการชำระเงิน",

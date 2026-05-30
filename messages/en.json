@@ -30,7 +30,9 @@
     "amount": "Amount",
     "method": "Method",
     "refund": "Refund",
-    "created": "Created"
+    "created": "Created",
+    "phoneOrEmailRequired": "Provide at least a phone or email",
+    "atLeastOnePaymentRequired": "Register at least one payment method"
   },
   "Nav": {
     "calendar": "Calendar",
@@ -163,8 +165,8 @@
     "removeFromGroupSuccess": "Booking removed from group",
     "removeFromGroupError": "Failed to remove booking from group",
     "groupTooltip": "Part of a group booking",
-    "sameClientAsPrimary": "Same client as primary",
-    "sameClientAsPrimaryHelper": "Companion will share the primary client's record"
+    "sameClientAsPrimary": "Re-use the primary client's info",
+    "sameClientAsPrimaryHelper": "No separate client record will be created for this companion"
   },
   "ManagePayments": {
     "title": "Manage Payments",

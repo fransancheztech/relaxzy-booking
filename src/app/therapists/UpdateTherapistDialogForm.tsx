@@ -154,6 +154,7 @@ export default function UpdateTherapistDialogForm({
                       <TextField
                         {...field}
                         label={t("fullName")}
+                        required
                         fullWidth
                         size="small"
                         error={!!methods.formState.errors.full_name}

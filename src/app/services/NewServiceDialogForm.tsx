@@ -113,6 +113,7 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
                     <TextField
                       {...field}
                       label={t("serviceNameLabel")}
+                      required
                       fullWidth
                       size="small"
                       error={!!formState.errors.name}
@@ -130,6 +131,7 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
                     <TextField
                       {...field}
                       label={t("shortNameLabel")}
+                      required
                       fullWidth
                       size="small"
                       error={!!formState.errors.short_name}
@@ -173,6 +175,7 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
                           {...field}
                           value={field.value === 0 ? "" : field.value}
                           label={tCommon("minutes")}
+                          required
                           type="number"
                           size="small"
                           fullWidth
@@ -198,6 +201,7 @@ const NewServiceDialogForm = ({ open, onClose }: Props) => {
                           {...field}
                           value={field.value === 0 ? "" : field.value}
                           label={t("priceEur")}
+                          required
                           type="number"
                           size="small"
                           fullWidth

@@ -1,5 +1,4 @@
 TO-DO
-- Añadir campos de cliente y toogle Anonymous en Add Companion.
 - Arreglar dias 24 y 24 mayo ingresos exagerados.
 - Revisar texto de ayuda contextual para diferentes páginas y usuarios, importante para no liar a usuarios
 - Completar reservas Mayo

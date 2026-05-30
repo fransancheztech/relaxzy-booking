@@ -112,6 +112,7 @@ const DialogRefund = ({
                     {...field}
                     value={field.value === "0" ? "" : field.value}
                     label={t("refundAmount")}
+                    required
                     fullWidth
                     size="small"
                     variant="outlined"
@@ -135,6 +136,7 @@ const DialogRefund = ({
                     {...field}
                     select
                     label={tCommon("method")}
+                    required
                     fullWidth
                     size="small"
                     error={!!methods.formState.errors.method}
