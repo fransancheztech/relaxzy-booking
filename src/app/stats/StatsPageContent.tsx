@@ -17,6 +17,7 @@ import KpiCard from "./components/KpiCard";
 import RevenueSection from "./components/RevenueSection";
 import BookingsSection from "./components/BookingsSection";
 import ClientSection from "./components/ClientSection";
+import VoucherSection from "./components/VoucherSection";
 import TipsSection from "./components/TipsSection";
 import TherapistHoursSection from "./components/TherapistHoursSection";
 
@@ -197,6 +198,13 @@ const StatsPageContent = ({ role }: Props) => {
           {/* Client section */}
           <Box sx={{ mb: 4 }}>
             <ClientSection clients={data.clients} bucket={data.meta.date_bucket} />
+          </Box>
+
+          <Divider sx={{ mb: 4 }} />
+
+          {/* Voucher section */}
+          <Box sx={{ mb: 4 }}>
+            <VoucherSection vouchers={data.vouchers} bucket={data.meta.date_bucket} />
           </Box>
 
           {/* Tips section (hidden when no tips in period) */}

@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Chip, Container, IconButton, Paper, Tooltip } from "@mui/material";
+import { Box, Chip, Container, IconButton, Paper, Tooltip } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { DataGrid, GridColDef, GridFilterItem, GridFilterModel } from "@mui/x-data-grid";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import VoucherDetailDialog from "./VoucherDetailDialog";
 import { FETCH_LIMIT } from "@/constants/index";
 import { formatMoney } from "@/utils/formatMoney";
@@ -31,6 +33,14 @@ type VoucherRow = {
   recipient_name: string | null;
   recipient_surname: string | null;
 };
+
+// "Breakage": the voucher has expired but the client still has unused balance.
+// Flag these so reception can spot them and raise the alert with the client.
+const isExpiredWithBalance = (row: VoucherRow): boolean =>
+  !!row.expiration_date &&
+  new Date(row.expiration_date) < new Date() &&
+  row.balance != null &&
+  Number(row.balance) > 0;
 
 const VouchersTable = () => {
   const t = useTranslations("Vouchers");
@@ -113,10 +123,21 @@ const VouchersTable = () => {
         flex: 1,
         type: "date",
         valueGetter: (_, row) => (row.expiration_date ? new Date(row.expiration_date) : null),
-        valueFormatter: (value: Date | null) =>
-          value
+        renderCell: (params) => {
+          const value = params.value as Date | null;
+          const label = value
             ? value.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" })
-            : "",
+            : "";
+          if (!isExpiredWithBalance(params.row)) return label;
+          return (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "warning.main", fontWeight: 600 }}>
+              <Tooltip title={t("expiredWithBalance")}>
+                <WarningAmberIcon fontSize="small" />
+              </Tooltip>
+              {label}
+            </Box>
+          );
+        },
       },
       {
         field: "notes",
@@ -229,6 +250,9 @@ const VouchersTable = () => {
             rows={rows}
             columns={allColumns}
             getRowId={(row) => row.id}
+            getRowClassName={(params) =>
+              isExpiredWithBalance(params.row) ? "voucher-row--expired-balance" : ""
+            }
             rowCount={rowCount}
             pageSizeOptions={[FETCH_LIMIT]}
             paginationMode="server"
@@ -253,7 +277,16 @@ const VouchersTable = () => {
               loadingOverlay: LoadingOverlay,
               noRowsOverlay: () => <NoRowsOverlay error={fetchError} />,
             }}
-            sx={{ opacity: loading ? 0.5 : 1, backgroundColor: loading ? "#ddd" : "" }}
+            sx={{
+              opacity: loading ? 0.5 : 1,
+              backgroundColor: loading ? "#ddd" : "",
+              "& .voucher-row--expired-balance": {
+                backgroundColor: (theme) => alpha(theme.palette.warning.main, 0.12),
+                "&:hover": {
+                  backgroundColor: (theme) => alpha(theme.palette.warning.main, 0.2),
+                },
+              },
+            }}
           />
         </Paper>
       </Container>

@@ -242,6 +242,57 @@ export async function GET(request: Request) {
       GROUP BY t.therapist_id, th.full_name ORDER BY gross_amount DESC
     `;
 
+    // --- Vouchers ---
+    // Sales: vouchers created in period, valued by their net payment events
+    // (CHARGE − REFUND). Redemptions: voucher_uses logged in period (money
+    // already counted at sale time — shown for activity, not as revenue).
+    const voucherBySourceRows = await prisma.$queryRaw<{ source: string; count: number; value: number }[]>`
+      SELECT v.source,
+        COUNT(DISTINCT v.id)::int AS count,
+        (COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE'), 0)
+          - COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0))::float AS value
+      FROM vouchers v
+      LEFT JOIN payments p ON p.voucher_id = v.id AND p.deleted_at IS NULL
+      LEFT JOIN payment_events pe ON pe.payment_id = p.id AND pe.deleted_at IS NULL
+      WHERE v.deleted_at IS NULL AND v.created_at >= ${from} AND v.created_at < ${to}
+      GROUP BY v.source ORDER BY value DESC
+    `;
+    const voucherRedeemedRows = await prisma.$queryRaw<{ redeemed_count: number; redeemed_value: number }[]>`
+      SELECT COUNT(*)::int AS redeemed_count,
+        COALESCE(SUM(amount), 0)::float AS redeemed_value
+      FROM voucher_uses
+      WHERE deleted_at IS NULL AND created_at >= ${from} AND created_at < ${to}
+    `;
+    // Outstanding balance is a snapshot of all active vouchers, independent of the period.
+    const voucherOutstandingRows = await prisma.$queryRaw<{
+      outstanding_balance: number; active_count: number;
+      expired_balance: number; expired_count: number;
+    }[]>`
+      SELECT
+        COALESCE(SUM(balance) FILTER (WHERE balance > 0 AND expiration_date >= now()), 0)::float AS outstanding_balance,
+        COUNT(*) FILTER (WHERE balance > 0 AND expiration_date >= now())::int AS active_count,
+        COALESCE(SUM(balance) FILTER (WHERE balance > 0 AND expiration_date < now()), 0)::float AS expired_balance,
+        COUNT(*) FILTER (WHERE balance > 0 AND expiration_date < now())::int AS expired_count
+      FROM vouchers WHERE deleted_at IS NULL
+    `;
+    const voucherSoldOverTimeRows = await prisma.$queryRaw<{ period: Date; value: number }[]>`
+      SELECT date_trunc(${bSql}, v.created_at) AS period,
+        (COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE'), 0)
+          - COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0))::float AS value
+      FROM vouchers v
+      LEFT JOIN payments p ON p.voucher_id = v.id AND p.deleted_at IS NULL
+      LEFT JOIN payment_events pe ON pe.payment_id = p.id AND pe.deleted_at IS NULL
+      WHERE v.deleted_at IS NULL AND v.created_at >= ${from} AND v.created_at < ${to}
+      GROUP BY period ORDER BY period
+    `;
+    const voucherRedeemedOverTimeRows = await prisma.$queryRaw<{ period: Date; value: number }[]>`
+      SELECT date_trunc(${bSql}, created_at) AS period,
+        COALESCE(SUM(amount), 0)::float AS value
+      FROM voucher_uses
+      WHERE deleted_at IS NULL AND created_at >= ${from} AND created_at < ${to}
+      GROUP BY period ORDER BY period
+    `;
+
     // --- Assemble revenue ---
     // Booking stream (by service date) + voucher-sale stream (by sale date),
     // both classified by payment method. Totals are the sum of the two streams.
@@ -322,6 +373,35 @@ export async function GET(request: Request) {
     const totalGross = tipsRows.reduce((s, t) => s + toNum(t.gross_amount), 0);
     const totalNet = tipsRows.reduce((s, t) => s + toNum(t.net_amount), 0);
 
+    // --- Vouchers ---
+    const voucherBySource = voucherBySourceRows.map((r) => ({
+      source: r.source,
+      count: toNum(r.count),
+      value: toNum(r.value),
+    }));
+    const voucherSoldCount = voucherBySource.reduce((s, r) => s + r.count, 0);
+    const voucherSoldValue = voucherBySource.reduce((s, r) => s + r.value, 0);
+    const vred = voucherRedeemedRows[0] ?? { redeemed_count: 0, redeemed_value: 0 };
+    const vout = voucherOutstandingRows[0] ?? {
+      outstanding_balance: 0, active_count: 0, expired_balance: 0, expired_count: 0,
+    };
+
+    // Merge sold + redeemed over time into one keyed series
+    const voucherOtMap = new Map<string, { period: string; sold: number; redeemed: number }>();
+    for (const row of voucherSoldOverTimeRows) {
+      const key = new Date(row.period).toISOString();
+      voucherOtMap.set(key, { period: key, sold: toNum(row.value), redeemed: 0 });
+    }
+    for (const row of voucherRedeemedOverTimeRows) {
+      const key = new Date(row.period).toISOString();
+      const existing = voucherOtMap.get(key);
+      if (existing) existing.redeemed = toNum(row.value);
+      else voucherOtMap.set(key, { period: key, sold: 0, redeemed: toNum(row.value) });
+    }
+    const voucherOverTime = Array.from(voucherOtMap.values()).sort((a, b) =>
+      a.period.localeCompare(b.period)
+    );
+
     const response: StatsResponse = {
       meta: { from: from.toISOString(), to: to.toISOString(), date_bucket: bucket },
 
@@ -389,6 +469,19 @@ export async function GET(request: Request) {
           gross_amount: toNum(t.gross_amount),
           net_amount: toNum(t.net_amount),
         })),
+      },
+
+      vouchers: {
+        sold_count: voucherSoldCount,
+        sold_value: voucherSoldValue,
+        redeemed_count: toNum(vred.redeemed_count),
+        redeemed_value: toNum(vred.redeemed_value),
+        outstanding_balance: toNum(vout.outstanding_balance),
+        active_count: toNum(vout.active_count),
+        expired_count: toNum(vout.expired_count),
+        expired_balance: toNum(vout.expired_balance),
+        by_source: voucherBySource,
+        over_time: voucherOverTime,
       },
     };
 

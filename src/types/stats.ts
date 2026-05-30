@@ -40,6 +40,18 @@ export interface StatsTicketDistribution {
   count: number;
 }
 
+export interface StatsVoucherBySource {
+  source: string;
+  count: number;
+  value: number;
+}
+
+export interface StatsVoucherPeriodPoint {
+  period: string;
+  sold: number;
+  redeemed: number;
+}
+
 export interface StatsResponse {
   meta: {
     from: string;
@@ -95,5 +107,18 @@ export interface StatsResponse {
     total_net: number;
     tip_count: number;
     by_therapist: StatsTipsByTherapist[];
+  };
+
+  vouchers: {
+    sold_count: number;
+    sold_value: number;
+    redeemed_count: number;
+    redeemed_value: number;
+    outstanding_balance: number;
+    active_count: number;
+    expired_count: number;
+    expired_balance: number;
+    by_source: StatsVoucherBySource[];
+    over_time: StatsVoucherPeriodPoint[];
   };
 }
