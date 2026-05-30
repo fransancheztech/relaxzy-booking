@@ -1,15 +1,17 @@
 "use client";
 
-import { Box, Card, CardContent, Typography } from "@mui/material";
+import { Box, Card, CardContent, Tooltip, Typography } from "@mui/material";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 interface Props {
   label: string;
   value: string;
   secondary?: string;
   icon?: React.ReactNode;
+  tooltip?: string;
 }
 
-const KpiCard = ({ label, value, secondary, icon }: Props) => {
+const KpiCard = ({ label, value, secondary, icon, tooltip }: Props) => {
   const isEmpty = value === "0" || value === "0 €" || value === "€ 0,00" || value === "0%";
 
   return (
@@ -32,13 +34,20 @@ const KpiCard = ({ label, value, secondary, icon }: Props) => {
             </Box>
           )}
         </Box>
-        <Typography
-          variant="h5"
-          fontWeight={700}
-          sx={{ mt: 0.5, color: isEmpty ? "text.disabled" : "text.primary" }}
-        >
-          {value}
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
+          <Typography
+            variant="h5"
+            fontWeight={700}
+            sx={{ color: isEmpty ? "text.disabled" : "text.primary" }}
+          >
+            {value}
+          </Typography>
+          {tooltip && (
+            <Tooltip title={tooltip} arrow enterTouchDelay={0}>
+              <InfoOutlinedIcon sx={{ fontSize: 15, color: "text.disabled", cursor: "help" }} />
+            </Tooltip>
+          )}
+        </Box>
         {secondary && (
           <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25, display: "block" }}>
             {secondary}

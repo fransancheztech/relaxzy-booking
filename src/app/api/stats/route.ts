@@ -51,6 +51,15 @@ export async function GET(request: Request) {
 
   try {
     // Sequential queries — one connection at a time to avoid exhausting the pool
+    //
+    // Revenue model: a sale is counted when it happens, not when redeemed.
+    //  - Booking-linked payment events are attributed to the booking's service date
+    //    (b.start_time), aligning revenue with the rest of this card.
+    //  - Voucher-linked payment events (the voucher purchase / top-up) are attributed
+    //    to the voucher's sale date (v.created_at). Voucher *redemptions* (voucher_uses)
+    //    are NOT revenue — that money was already counted at the time of sale.
+    // Both streams are classified purely by payment method (cash / credit_card); there
+    // is no separate "voucher" method — a voucher top-up is itself cash or card.
     const revenueRows = await prisma.$queryRaw<{ cash: number; credit_card: number; refunds: number }[]>`
       SELECT
         COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'cash'), 0)::float AS cash,
@@ -60,18 +69,22 @@ export async function GET(request: Request) {
       JOIN payments p ON p.id = pe.payment_id
       JOIN bookings b ON b.id = p.booking_id
       WHERE b.deleted_at IS NULL AND p.deleted_at IS NULL AND pe.deleted_at IS NULL
-        AND pe.created_at >= ${from} AND pe.created_at < ${to}
+        AND b.start_time >= ${from} AND b.start_time < ${to}
     `;
-    const voucherRevenueRows = await prisma.$queryRaw<{ voucher: number }[]>`
-      SELECT COALESCE(SUM(vu.amount), 0)::float AS voucher
-      FROM voucher_uses vu
-      JOIN bookings b ON b.id = vu.booking_id
-      WHERE b.deleted_at IS NULL AND vu.deleted_at IS NULL
-        AND vu.created_at >= ${from} AND vu.created_at < ${to}
+    const voucherRevenueRows = await prisma.$queryRaw<{ cash: number; credit_card: number; refunds: number }[]>`
+      SELECT
+        COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'cash'), 0)::float AS cash,
+        COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'credit_card'), 0)::float AS credit_card,
+        COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0)::float AS refunds
+      FROM payment_events pe
+      JOIN payments p ON p.id = pe.payment_id
+      JOIN vouchers v ON v.id = p.voucher_id
+      WHERE v.deleted_at IS NULL AND p.deleted_at IS NULL AND pe.deleted_at IS NULL
+        AND v.created_at >= ${from} AND v.created_at < ${to}
     `;
     const revenueOverTimeRows = await prisma.$queryRaw<{ period: Date; cash: number; credit_card: number; refunds: number }[]>`
       SELECT
-        date_trunc(${bSql}, pe.created_at) AS period,
+        date_trunc(${bSql}, b.start_time) AS period,
         COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'cash'), 0)::float AS cash,
         COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'credit_card'), 0)::float AS credit_card,
         COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0)::float AS refunds
@@ -79,17 +92,20 @@ export async function GET(request: Request) {
       JOIN payments p ON p.id = pe.payment_id
       JOIN bookings b ON b.id = p.booking_id
       WHERE b.deleted_at IS NULL AND p.deleted_at IS NULL AND pe.deleted_at IS NULL
-        AND pe.created_at >= ${from} AND pe.created_at < ${to}
+        AND b.start_time >= ${from} AND b.start_time < ${to}
       GROUP BY period ORDER BY period
     `;
-    const voucherOverTimeRows = await prisma.$queryRaw<{ period: Date; voucher: number }[]>`
+    const voucherOverTimeRows = await prisma.$queryRaw<{ period: Date; cash: number; credit_card: number; refunds: number }[]>`
       SELECT
-        date_trunc(${bSql}, vu.created_at) AS period,
-        COALESCE(SUM(vu.amount), 0)::float AS voucher
-      FROM voucher_uses vu
-      JOIN bookings b ON b.id = vu.booking_id
-      WHERE b.deleted_at IS NULL AND vu.deleted_at IS NULL
-        AND vu.created_at >= ${from} AND vu.created_at < ${to}
+        date_trunc(${bSql}, v.created_at) AS period,
+        COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'cash'), 0)::float AS cash,
+        COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'credit_card'), 0)::float AS credit_card,
+        COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0)::float AS refunds
+      FROM payment_events pe
+      JOIN payments p ON p.id = pe.payment_id
+      JOIN vouchers v ON v.id = p.voucher_id
+      WHERE v.deleted_at IS NULL AND p.deleted_at IS NULL AND pe.deleted_at IS NULL
+        AND v.created_at >= ${from} AND v.created_at < ${to}
       GROUP BY period ORDER BY period
     `;
     const bookingSummaryRows = await prisma.$queryRaw<{
@@ -98,7 +114,7 @@ export async function GET(request: Request) {
       total_booked_hours: number; avg_session_minutes: number;
     }[]>`
       SELECT
-        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE status <> 'cancelled')::int AS total,
         COUNT(*) FILTER (WHERE status = 'completed')::int AS completed,
         COUNT(*) FILTER (WHERE status = 'cancelled')::int AS cancelled,
         COUNT(*) FILTER (WHERE status = 'pending')::int AS pending,
@@ -227,36 +243,29 @@ export async function GET(request: Request) {
     `;
 
     // --- Assemble revenue ---
+    // Booking stream (by service date) + voucher-sale stream (by sale date),
+    // both classified by payment method. Totals are the sum of the two streams.
     const rev = revenueRows[0] ?? { cash: 0, credit_card: 0, refunds: 0 };
-    const voucherRev = toNum(voucherRevenueRows[0]?.voucher);
-    const totalRevenue = toNum(rev.cash) + toNum(rev.credit_card) + voucherRev - toNum(rev.refunds);
+    const vrev = voucherRevenueRows[0] ?? { cash: 0, credit_card: 0, refunds: 0 };
+    const cashTotal = toNum(rev.cash) + toNum(vrev.cash);
+    const cardTotal = toNum(rev.credit_card) + toNum(vrev.credit_card);
+    const refundsTotal = toNum(rev.refunds) + toNum(vrev.refunds);
+    const totalRevenue = cashTotal + cardTotal - refundsTotal;
 
-    // Merge revenue over time
+    // Merge revenue over time — both streams keyed by their truncated period
     const overtimeMap = new Map<string, StatsRevenuePeriodPoint>();
-    for (const row of revenueOverTimeRows) {
+    for (const row of [...revenueOverTimeRows, ...voucherOverTimeRows]) {
       const key = new Date(row.period).toISOString();
-      overtimeMap.set(key, {
-        period: key,
-        total: toNum(row.cash) + toNum(row.credit_card) - toNum(row.refunds),
-        cash: toNum(row.cash),
-        credit_card: toNum(row.credit_card),
-        voucher: 0,
-      });
-    }
-    for (const row of voucherOverTimeRows) {
-      const key = new Date(row.period).toISOString();
+      const cash = toNum(row.cash);
+      const credit_card = toNum(row.credit_card);
+      const net = cash + credit_card - toNum(row.refunds);
       const existing = overtimeMap.get(key);
       if (existing) {
-        existing.voucher = toNum(row.voucher);
-        existing.total += toNum(row.voucher);
+        existing.cash += cash;
+        existing.credit_card += credit_card;
+        existing.total += net;
       } else {
-        overtimeMap.set(key, {
-          period: key,
-          total: toNum(row.voucher),
-          cash: 0,
-          credit_card: 0,
-          voucher: toNum(row.voucher),
-        });
+        overtimeMap.set(key, { period: key, total: net, cash, credit_card });
       }
     }
     const revenueOverTime = Array.from(overtimeMap.values()).sort((a, b) =>
@@ -318,10 +327,9 @@ export async function GET(request: Request) {
 
       revenue: {
         total: totalRevenue,
-        cash: toNum(rev.cash),
-        credit_card: toNum(rev.credit_card),
-        voucher: voucherRev,
-        refunds_total: toNum(rev.refunds),
+        cash: cashTotal,
+        credit_card: cardTotal,
+        refunds_total: refundsTotal,
         over_time: revenueOverTime,
       },
 

@@ -126,6 +126,7 @@ const StatsPageContent = ({ role }: Props) => {
                 value={formatMoney(data.revenue.total)}
                 secondary={`${t("refunds")} −${formatMoney(data.revenue.refunds_total)}`}
                 icon={<TrendingUpIcon fontSize="small" />}
+                tooltip={t("tooltipRevenue")}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
@@ -134,6 +135,7 @@ const StatsPageContent = ({ role }: Props) => {
                 value={String(data.bookings.total)}
                 secondary={`${t("completed")} ${data.bookings.completed} · ${t("cancelled")} ${data.bookings.cancelled}`}
                 icon={<CalendarMonthIcon fontSize="small" />}
+                tooltip={t("tooltipBookings")}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
@@ -142,6 +144,7 @@ const StatsPageContent = ({ role }: Props) => {
                 value={formatMoney(data.financial.avg_ticket)}
                 secondary={`P25: ${formatMoney(data.financial.p25_ticket)} · P75: ${formatMoney(data.financial.p75_ticket)}`}
                 icon={<EuroIcon fontSize="small" />}
+                tooltip={t("tooltipAvgPrice")}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
@@ -150,6 +153,7 @@ const StatsPageContent = ({ role }: Props) => {
                 value={formatMoney(data.financial.revenue_per_hour)}
                 secondary={`${data.bookings.total_booked_hours.toFixed(1)} ${t("hoursBooked")}`}
                 icon={<TimerIcon fontSize="small" />}
+                tooltip={t("tooltipRevenuePerHour")}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
@@ -158,6 +162,7 @@ const StatsPageContent = ({ role }: Props) => {
                 value={String(data.clients.total_unique)}
                 secondary={`${t("new")} ${data.clients.new_in_period} · ${t("returning")} ${data.clients.returning_in_period}`}
                 icon={<PeopleIcon fontSize="small" />}
+                tooltip={t("tooltipUniqueClients")}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
@@ -168,6 +173,7 @@ const StatsPageContent = ({ role }: Props) => {
                   ? t("returnEvery", { days: Math.round(data.clients.repeat_frequency_days) })
                   : undefined}
                 icon={<LoopIcon fontSize="small" />}
+                tooltip={t("tooltipRetention")}
               />
             </Grid>
           </Grid>

@@ -3,7 +3,6 @@ export interface StatsRevenuePeriodPoint {
   total: number;
   cash: number;
   credit_card: number;
-  voucher: number;
 }
 
 export interface StatsBookingsByService {
@@ -52,7 +51,6 @@ export interface StatsResponse {
     total: number;
     cash: number;
     credit_card: number;
-    voucher: number;
     refunds_total: number;
     over_time: StatsRevenuePeriodPoint[];
   };
