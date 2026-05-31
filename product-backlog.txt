@@ -1,6 +1,6 @@
 TO-DO
-- Botón close day no funciona
-- Revisar que desactivar terapeuta no tiene efectos secundarios
+- Hacer upsert de cliente si se añade una reserva con un nombre y apellido de un cliente que ya existe en la base de datos con el mismo teléfono o email pero con distinto nombre y apellidos
+- Revisar que desactivar terapeuta no tiene efectos secundarios y que el día de desactivación no importa
 - Añadir horas por terapeuta e ingresos por terapeuta
 - Pensar si añadimos propinas a revenue en stats
 - Revisar que días tengo que poner para ver las propinas de 30/05/2026, tengo que poner from 29 to 30, from 30 to 30 o que?
@@ -66,3 +66,6 @@ DONE
 - Algoritmo para recepcionistas saber como asignar terapeutas
 - Revisar error de 15 máximas conexiones superadas, en hilo de Claude de Revenue per hour calcu
 - Los vouchers deberían tener referencia interna, y tipo de voucher (fisico, digital)
+- Botón close day no funciona
+- No therapist debería ser Unassigned
+

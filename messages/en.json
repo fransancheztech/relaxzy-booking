@@ -75,7 +75,7 @@
     "booked4": "4 booked",
     "booked5plus": "5+ booked",
     "errorLoadingBookings": "Error loading bookings:",
-    "noTherapist": "No therapist",
+    "noTherapist": "Unassigned",
     "statusLegend": "Status:",
     "status_confirmed": "Confirmed",
     "status_completed": "Completed",

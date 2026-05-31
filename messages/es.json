@@ -75,7 +75,7 @@
     "booked4": "4 reservas",
     "booked5plus": "5+ reservas",
     "errorLoadingBookings": "Error al cargar reservas:",
-    "noTherapist": "Sin terapeuta",
+    "noTherapist": "Sin asignar",
     "statusLegend": "Estado:",
     "status_confirmed": "Confirmada",
     "status_completed": "Completada",
