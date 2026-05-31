@@ -20,9 +20,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { DataGrid, GridColDef, GridRowId } from "@mui/x-data-grid";
 import TipDetailDialog from "@/components/TipDetailDialog";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { es } from "date-fns/locale";
+import { startOfDay, endOfDay } from "date-fns";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
@@ -31,16 +29,9 @@ import { useTherapists } from "@/hooks/useTherapists";
 import { useRole } from "@/hooks/useRole";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 import { formatMoney } from "@/utils/formatMoney";
+import DateRangeFilter, { Preset, resolvePreset } from "@/app/stats/components/DateRangeFilter";
 
 type StatusFilter = "all" | "pending" | "released";
-type PeriodFilter =
-  | "all"
-  | "this_month"
-  | "last_month"
-  | "this_quarter"
-  | "last_quarter"
-  | "this_year"
-  | "custom";
 
 interface TipRow {
   id: string;
@@ -54,71 +45,6 @@ interface TipRow {
   gross: number;
   iva: number;
   net: number;
-}
-
-function getPeriodDates(
-  period: PeriodFilter,
-  customStart: Date | null,
-  customEnd: Date | null,
-): { start_date: string; end_date: string } | null {
-  if (period === "all") return null;
-  if (period === "custom") {
-    if (!customStart && !customEnd) return null;
-    const eod = (d: Date) =>
-      new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
-    return {
-      start_date: customStart
-        ? new Date(customStart.getFullYear(), customStart.getMonth(), customStart.getDate()).toISOString()
-        : "",
-      end_date: customEnd ? eod(customEnd).toISOString() : "",
-    };
-  }
-
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth();
-  const iso = (d: Date) => d.toISOString();
-  const eod = (d: Date) =>
-    new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
-
-  switch (period) {
-    case "this_month":
-      return {
-        start_date: iso(new Date(y, m, 1)),
-        end_date: iso(eod(new Date(y, m + 1, 0))),
-      };
-    case "last_month": {
-      const lm = m === 0 ? 11 : m - 1;
-      const ly = m === 0 ? y - 1 : y;
-      return {
-        start_date: iso(new Date(ly, lm, 1)),
-        end_date: iso(eod(new Date(ly, lm + 1, 0))),
-      };
-    }
-    case "this_quarter": {
-      const q = Math.floor(m / 3);
-      return {
-        start_date: iso(new Date(y, q * 3, 1)),
-        end_date: iso(eod(new Date(y, q * 3 + 3, 0))),
-      };
-    }
-    case "last_quarter": {
-      let q = Math.floor(m / 3) - 1;
-      let qy = y;
-      if (q < 0) { q = 3; qy = y - 1; }
-      return {
-        start_date: iso(new Date(qy, q * 3, 1)),
-        end_date: iso(eod(new Date(qy, q * 3 + 3, 0))),
-      };
-    }
-    case "this_year":
-      return {
-        start_date: iso(new Date(y, 0, 1)),
-        end_date: iso(eod(new Date(y, 11, 31))),
-      };
-    default:
-      return null;
-  }
 }
 
 const TipsPageContent = () => {
@@ -137,9 +63,19 @@ const TipsPageContent = () => {
 
   const [status, setStatus] = useState<StatusFilter>("pending");
   const [therapistId, setTherapistId] = useState("");
-  const [period, setPeriod] = useState<PeriodFilter>("this_month");
-  const [customStart, setCustomStart] = useState<Date | null>(null);
-  const [customEnd, setCustomEnd] = useState<Date | null>(null);
+  // Same date model as the Stats page: a preset plus an inclusive, date-only range.
+  const [preset, setPreset] = useState<Preset>("month");
+  const [pickFrom, setPickFrom] = useState<Date>(() => resolvePreset("month").from);
+  const [pickTo, setPickTo] = useState<Date>(() => resolvePreset("month").to);
+
+  const handlePresetChange = (newPreset: Preset) => {
+    const { from, to } = resolvePreset(newPreset);
+    setPreset(newPreset);
+    setPickFrom(from);
+    setPickTo(to);
+  };
+  const handleFromChange = (d: Date) => { setPreset("custom"); setPickFrom(d); };
+  const handleToChange = (d: Date) => { setPreset("custom"); setPickTo(d); };
 
   useEffect(() => {
     setButtonLabel("");
@@ -155,9 +91,9 @@ const TipsPageContent = () => {
       if (status !== "all") params.set("status", status);
       if (therapistId) params.set("therapist_id", therapistId);
 
-      const dates = getPeriodDates(period, customStart, customEnd);
-      if (dates?.start_date) params.set("start_date", dates.start_date);
-      if (dates?.end_date) params.set("end_date", dates.end_date);
+      // Whole-day inclusive range (the tips API filters received_at between these).
+      params.set("start_date", startOfDay(pickFrom).toISOString());
+      params.set("end_date", endOfDay(pickTo).toISOString());
 
       const res = await fetch(`/api/tips/list?${params.toString()}`);
       if (!res.ok) throw new Error();
@@ -168,7 +104,7 @@ const TipsPageContent = () => {
     } finally {
       setLoading(false);
     }
-  }, [status, therapistId, period, customStart, customEnd]);
+  }, [status, therapistId, pickFrom, pickTo]);
 
   useEffect(() => {
     loadTips();
@@ -333,42 +269,14 @@ const TipsPageContent = () => {
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel>{t("filterPeriod")}</InputLabel>
-          <Select
-            value={period}
-            label={t("filterPeriod")}
-            onChange={(e) => setPeriod(e.target.value as PeriodFilter)}
-          >
-            <MenuItem value="all">{t("periodAll")}</MenuItem>
-            <MenuItem value="this_month">{t("periodThisMonth")}</MenuItem>
-            <MenuItem value="last_month">{t("periodLastMonth")}</MenuItem>
-            <MenuItem value="this_quarter">{t("periodThisQuarter")}</MenuItem>
-            <MenuItem value="last_quarter">{t("periodLastQuarter")}</MenuItem>
-            <MenuItem value="this_year">{t("periodThisYear")}</MenuItem>
-            <MenuItem value="custom">{t("periodCustom")}</MenuItem>
-          </Select>
-        </FormControl>
-
-        {period === "custom" && (
-          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-            <DatePicker
-              label={t("periodFrom")}
-              value={customStart}
-              onChange={setCustomStart}
-              format="dd/MM/yyyy"
-              slotProps={{ textField: { size: "small", sx: { width: 150 } } }}
-            />
-            <DatePicker
-              label={t("periodTo")}
-              value={customEnd}
-              onChange={setCustomEnd}
-              format="dd/MM/yyyy"
-              minDate={customStart ?? undefined}
-              slotProps={{ textField: { size: "small", sx: { width: 150 } } }}
-            />
-          </LocalizationProvider>
-        )}
+        <DateRangeFilter
+          preset={preset}
+          from={pickFrom}
+          to={pickTo}
+          onPresetChange={handlePresetChange}
+          onFromChange={handleFromChange}
+          onToChange={handleToChange}
+        />
       </Paper>
 
       {/* Selection summary + release action — content always rendered to prevent layout shifts */}

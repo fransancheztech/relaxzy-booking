@@ -1,8 +1,4 @@
 TO-DO
-- Añadir horas por terapeuta e ingresos por terapeuta
-- Pensar si añadimos propinas a revenue en stats
-- Revisar que días tengo que poner para ver las propinas de 30/05/2026, tengo que poner from 29 to 30, from 30 to 30 o que?
-- Añadir a la página propinas periodo un día
 - Revisar texto de ayuda contextual para diferentes páginas y usuarios, importante para no liar a usuarios
 - Completar reservas Mayo
 - Añadir propina de las reservas antiguas.
@@ -68,4 +64,6 @@ DONE
 - No therapist debería ser Unassigned
 - Hacer upsert de cliente si se añade una reserva con un nombre y apellido de un cliente que ya existe en la base de datos con el mismo teléfono o email pero con distinto nombre y apellidos
 - Revisar que desactivar terapeuta no tiene efectos secundarios y que el día de desactivación no importa
+- Añadir horas por terapeuta e ingresos por terapeuta
+- Añadir a la página propinas periodo un día
 
