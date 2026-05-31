@@ -8,6 +8,7 @@ import LoopIcon from "@mui/icons-material/Loop";
 import TimerIcon from "@mui/icons-material/Timer";
 import EuroIcon from "@mui/icons-material/Euro";
 import { useCallback, useEffect, useState } from "react";
+import { startOfDay, addDays } from "date-fns";
 import { useTranslations } from "next-intl";
 import { useLayout } from "@/app/context/LayoutContext";
 import { StatsResponse } from "@/types/stats";
@@ -75,11 +76,18 @@ const StatsPageContent = ({ role }: Props) => {
   const handleRangeChange = (newPreset: Preset, newFrom: Date, newTo: Date) => {
     setPreset(newPreset);
     if (newPreset === "custom") {
+      // The pickers are date-only; treat the range as whole days, inclusive of both
+      // ends. `to` becomes the start of the next day so the half-open API query
+      // (`start_time < to`) still covers the entire selected end day — e.g. picking
+      // 31/05 → 31/05 yields exactly that day, matching the calendar's Daily totals.
       setCustomFrom(newFrom);
       setCustomTo(newTo);
+      setFrom(startOfDay(newFrom));
+      setTo(addDays(startOfDay(newTo), 1));
+    } else {
+      setFrom(newFrom);
+      setTo(newTo);
     }
-    setFrom(newFrom);
-    setTo(newTo);
   };
 
   const handleBucketChange = (newBucket: "day" | "week" | "month") => {
