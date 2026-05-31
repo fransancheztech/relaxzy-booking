@@ -7,7 +7,7 @@ import PeopleIcon from "@mui/icons-material/People";
 import LoopIcon from "@mui/icons-material/Loop";
 import TimerIcon from "@mui/icons-material/Timer";
 import EuroIcon from "@mui/icons-material/Euro";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { startOfDay, addDays } from "date-fns";
 import { useTranslations } from "next-intl";
 import { useLayout } from "@/app/context/LayoutContext";
@@ -32,10 +32,14 @@ const StatsPageContent = ({ role }: Props) => {
   const isAdmin = role === "admin";
 
   const [preset, setPreset] = useState<Preset>("month");
-  const [customFrom, setCustomFrom] = useState<Date | null>(null);
-  const [customTo, setCustomTo] = useState<Date | null>(null);
-  const [from, setFrom] = useState<Date>(() => resolvePreset("month").from);
-  const [to, setTo] = useState<Date>(() => resolvePreset("month").to);
+  // pickFrom/pickTo are the inclusive, date-only values shown in the pickers.
+  const [pickFrom, setPickFrom] = useState<Date>(() => resolvePreset("month").from);
+  const [pickTo, setPickTo] = useState<Date>(() => resolvePreset("month").to);
+
+  // Effective half-open query window; `to` is the start of the day after pickTo so the
+  // selected end day is fully included. Single source of truth for both data sources.
+  const from = useMemo(() => startOfDay(pickFrom), [pickFrom]);
+  const to = useMemo(() => addDays(startOfDay(pickTo), 1), [pickTo]);
 
 
   const [data, setData] = useState<StatsResponse | null>(null);
@@ -69,26 +73,23 @@ const StatsPageContent = ({ role }: Props) => {
     }
   }, []);
 
+  // Only admins hit /api/stats (it 403s for other roles). Therapists get just the
+  // Therapist Hours section, which fetches separately.
   useEffect(() => {
+    if (!isAdmin) return;
     fetchStats(from, to);
-  }, [from, to, fetchStats]);
+  }, [from, to, fetchStats, isAdmin]);
 
-  const handleRangeChange = (newPreset: Preset, newFrom: Date, newTo: Date) => {
+  const handlePresetChange = (newPreset: Preset) => {
+    const { from: f, to: t2 } = resolvePreset(newPreset);
     setPreset(newPreset);
-    if (newPreset === "custom") {
-      // The pickers are date-only; treat the range as whole days, inclusive of both
-      // ends. `to` becomes the start of the next day so the half-open API query
-      // (`start_time < to`) still covers the entire selected end day — e.g. picking
-      // 31/05 → 31/05 yields exactly that day, matching the calendar's Daily totals.
-      setCustomFrom(newFrom);
-      setCustomTo(newTo);
-      setFrom(startOfDay(newFrom));
-      setTo(addDays(startOfDay(newTo), 1));
-    } else {
-      setFrom(newFrom);
-      setTo(newTo);
-    }
+    setPickFrom(f);
+    setPickTo(t2);
   };
+
+  // Editing a date is a manual range — no preset stays highlighted.
+  const handleFromChange = (d: Date) => { setPreset("custom"); setPickFrom(d); };
+  const handleToChange = (d: Date) => { setPreset("custom"); setPickTo(d); };
 
   const handleBucketChange = (newBucket: "day" | "week" | "month") => {
     fetchStats(from, to, newBucket);
@@ -96,17 +97,17 @@ const StatsPageContent = ({ role }: Props) => {
 
   return (
     <Box sx={{ px: 3, py: 3, position: "relative" }}>
-      {/* Date range filter — admin only */}
-      {isAdmin && (
-        <Box sx={{ mb: 3 }}>
-          <DateRangeFilter
-            preset={preset}
-            customFrom={customFrom}
-            customTo={customTo}
-            onChange={handleRangeChange}
-          />
-        </Box>
-      )}
+      {/* Date range filter — visible to all roles; drives every section below */}
+      <Box sx={{ mb: 3 }}>
+        <DateRangeFilter
+          preset={preset}
+          from={pickFrom}
+          to={pickTo}
+          onPresetChange={handlePresetChange}
+          onFromChange={handleFromChange}
+          onToChange={handleToChange}
+        />
+      </Box>
 
       {/* Loading overlay — admin only */}
       {isAdmin && loading && (
@@ -229,9 +230,9 @@ const StatsPageContent = ({ role }: Props) => {
         </Box>
       )}
 
-      {/* Therapist hours — visible to all roles */}
+      {/* Therapist hours — visible to all roles, driven by the shared date range */}
       <Box sx={{ opacity: 1 }}>
-        <TherapistHoursSection isTherapist={role === "therapist"} />
+        <TherapistHoursSection isTherapist={role === "therapist"} from={from} to={to} />
       </Box>
     </Box>
   );

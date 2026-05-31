@@ -5,7 +5,6 @@ import {
   CircularProgress,
   Divider,
   FormControl,
-  IconButton,
   InputLabel,
   MenuItem,
   Paper,
@@ -17,11 +16,9 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { useEffect, useState } from "react";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 
 interface HoursRow {
@@ -39,46 +36,28 @@ function formatHours(h: number) {
   return `${hours}h ${minutes}min`;
 }
 
-function toMonthKey(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function formatMonthLabel(key: string, locale: string) {
-  const [year, month] = key.split("-").map(Number);
-  // Force the Gregorian calendar so the Thai locale doesn't switch to the Buddhist era.
-  return new Date(year, month - 1, 1).toLocaleDateString(`${locale}-u-ca-gregory`, {
-    month: "long",
-    year: "numeric",
-  });
-}
-
 export default function TherapistHoursSection({
   isTherapist = false,
+  from,
+  to,
 }: {
   isTherapist?: boolean;
+  from: Date;
+  to: Date;
 }) {
   const t = useTranslations("Stats");
-  const locale = useLocale();
 
-  const currentMonthKey = toMonthKey(new Date());
-  const [monthKey, setMonthKey] = useState(currentMonthKey);
   const [filterTherapist, setFilterTherapist] = useState<string>("all");
   const [rows, setRows] = useState<HoursRow[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const canGoNext = monthKey < currentMonthKey;
-
-  const shiftMonth = (delta: number) => {
-    const [year, month] = monthKey.split("-").map(Number);
-    const d = new Date(year, month - 1 + delta, 1);
-    const next = toMonthKey(d);
-    if (next <= currentMonthKey) setMonthKey(next);
-  };
+  const fromIso = from.toISOString();
+  const toIso = to.toISOString();
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/stats/therapist-hours?month=${monthKey}`)
+    fetch(`/api/stats/therapist-hours?from=${fromIso}&to=${toIso}`)
       .then((r) => r.json())
       .then((data) => {
         if (!cancelled) setRows(data.rows ?? []);
@@ -90,7 +69,7 @@ export default function TherapistHoursSection({
         if (!cancelled) setLoading(false);
       });
     return () => { cancelled = true; };
-  }, [monthKey]);
+  }, [fromIso, toIso]);
 
   const therapistOptions = rows.map((r) => ({
     id: r.therapist_id,
@@ -98,7 +77,7 @@ export default function TherapistHoursSection({
   }));
 
   // Therapist accounts have no "All" option — fall back to a concrete therapist
-  // (also handles the selected therapist having no hours in a newly picked month).
+  // (also handles the selected therapist having no hours in a newly picked range).
   const effectiveFilter =
     isTherapist &&
     (filterTherapist === "all" ||
@@ -127,21 +106,9 @@ export default function TherapistHoursSection({
         </Typography>
       </Box>
 
-      {/* Controls: month nav + therapist filter */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2, flexWrap: "wrap" }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          <IconButton size="small" onClick={() => shiftMonth(-1)}>
-            <ChevronLeftIcon fontSize="small" />
-          </IconButton>
-          <Typography variant="body2" sx={{ minWidth: 140, textAlign: "center", fontWeight: 500 }}>
-            {formatMonthLabel(monthKey, locale)}
-          </Typography>
-          <IconButton size="small" onClick={() => shiftMonth(1)} disabled={!canGoNext}>
-            <ChevronRightIcon fontSize="small" />
-          </IconButton>
-        </Box>
-
-        {therapistOptions.length > 1 && (
+      {/* Therapist filter */}
+      {therapistOptions.length > 1 && (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2, flexWrap: "wrap" }}>
           <FormControl size="small" sx={{ minWidth: 180 }}>
             <InputLabel>{isTherapist ? t("therapistCol") : t("allTherapists")}</InputLabel>
             <Select
@@ -155,8 +122,8 @@ export default function TherapistHoursSection({
               ))}
             </Select>
           </FormControl>
-        )}
-      </Box>
+        </Box>
+      )}
 
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>

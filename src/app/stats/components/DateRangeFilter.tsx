@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Box,
   Stack,
   ToggleButton,
   ToggleButtonGroup,
@@ -13,18 +12,25 @@ import { es } from "date-fns/locale";
 import { startOfWeek, startOfMonth, startOfYear, subDays } from "date-fns";
 import { useTranslations } from "next-intl";
 
-export type Preset = "week" | "month" | "year" | "12months" | "all" | "custom";
+export type Preset = "today" | "week" | "month" | "year" | "12months" | "all" | "custom";
 
 interface Props {
   preset: Preset;
-  customFrom: Date | null;
-  customTo: Date | null;
-  onChange: (preset: Preset, from: Date, to: Date) => void;
+  from: Date;
+  to: Date;
+  onPresetChange: (preset: Preset) => void;
+  onFromChange: (d: Date) => void;
+  onToChange: (d: Date) => void;
 }
 
+// Inclusive, date-only display range for each preset. The page derives the actual
+// (half-open) query window from these. "all" keeps `from` before 1990 so the API's
+// all-time branch still triggers.
 export function resolvePreset(preset: Preset): { from: Date; to: Date } {
   const now = new Date();
   switch (preset) {
+    case "today":
+      return { from: now, to: now };
     case "week":
       return { from: startOfWeek(now, { weekStartsOn: 1 }), to: now };
     case "month":
@@ -34,33 +40,23 @@ export function resolvePreset(preset: Preset): { from: Date; to: Date } {
     case "12months":
       return { from: subDays(now, 365), to: now };
     case "all":
-      return { from: new Date("1970-01-01T00:00:00Z"), to: new Date("2099-12-31T23:59:59Z") };
+      return { from: new Date(1970, 0, 1), to: new Date(2099, 11, 31) };
     default:
       return { from: startOfMonth(now), to: now };
   }
 }
 
-const DateRangeFilter = ({ preset, customFrom, customTo, onChange }: Props) => {
+const DateRangeFilter = ({ preset, from, to, onPresetChange, onFromChange, onToChange }: Props) => {
   const t = useTranslations("Stats");
 
   const PRESETS: { value: Preset; label: string }[] = [
+    { value: "today", label: t("today") },
     { value: "week", label: t("thisWeek") },
     { value: "month", label: t("thisMonth") },
     { value: "year", label: t("thisYear") },
     { value: "12months", label: t("last12Months") },
     { value: "all", label: t("all") },
-    { value: "custom", label: t("custom") },
   ];
-
-  const handlePreset = (_: React.MouseEvent, value: Preset | null) => {
-    if (!value) return;
-    if (value === "custom") {
-      onChange("custom", customFrom ?? new Date(), customTo ?? new Date());
-      return;
-    }
-    const { from, to } = resolvePreset(value);
-    onChange(value, from, to);
-  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
@@ -68,7 +64,7 @@ const DateRangeFilter = ({ preset, customFrom, customTo, onChange }: Props) => {
         <ToggleButtonGroup
           value={preset}
           exclusive
-          onChange={handlePreset}
+          onChange={(_, value: Preset | null) => { if (value) onPresetChange(value); }}
           size="small"
           sx={{ flexWrap: "wrap" }}
         >
@@ -79,29 +75,23 @@ const DateRangeFilter = ({ preset, customFrom, customTo, onChange }: Props) => {
           ))}
         </ToggleButtonGroup>
 
-        {preset === "custom" && (
-          <Stack direction="row" spacing={1} alignItems="center">
-            <DatePicker
-              label={t("from")}
-              value={customFrom}
-              onChange={(d) => {
-                if (d) onChange("custom", d, customTo ?? new Date());
-              }}
-              format="dd/MM/yyyy"
-              slotProps={{ textField: { size: "small", sx: { width: 150 } } }}
-            />
-            <Typography variant="body2" color="text.secondary">—</Typography>
-            <DatePicker
-              label={t("to")}
-              value={customTo}
-              onChange={(d) => {
-                if (d) onChange("custom", customFrom ?? new Date(), d);
-              }}
-              format="dd/MM/yyyy"
-              slotProps={{ textField: { size: "small", sx: { width: 150 } } }}
-            />
-          </Stack>
-        )}
+        <Stack direction="row" spacing={1} alignItems="center">
+          <DatePicker
+            label={t("from")}
+            value={from}
+            onChange={(d) => { if (d) onFromChange(d); }}
+            format="dd/MM/yyyy"
+            slotProps={{ textField: { size: "small", sx: { width: 150 } } }}
+          />
+          <Typography variant="body2" color="text.secondary">—</Typography>
+          <DatePicker
+            label={t("to")}
+            value={to}
+            onChange={(d) => { if (d) onToChange(d); }}
+            format="dd/MM/yyyy"
+            slotProps={{ textField: { size: "small", sx: { width: 150 } } }}
+          />
+        </Stack>
       </Stack>
     </LocalizationProvider>
   );
