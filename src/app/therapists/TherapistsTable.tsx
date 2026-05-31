@@ -1,8 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
-import { Paper, Tooltip } from "@mui/material";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Paper,
+  Tooltip,
+} from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
+import RestoreFromTrashIcon from "@mui/icons-material/RestoreFromTrash";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
@@ -25,6 +36,8 @@ interface Props {
     limit?: number
   ) => void;
   onEdit: (id: string) => void;
+  archived: boolean;
+  onRestore: (id: string) => void;
 }
 
 const DOW_KEYS: Record<number, string> = {
@@ -46,9 +59,15 @@ const TherapistsTable = ({
   fetchError,
   loadTherapists,
   onEdit,
+  archived,
+  onRestore,
 }: Props) => {
   const t = useTranslations("Therapists");
   const tCommon = useTranslations("Common");
+
+  // Restore is intentionally gated behind a confirm, so it isn't as casual as
+  // toggling a therapist active.
+  const [restoreTarget, setRestoreTarget] = useState<therapists | null>(null);
 
   const formatOffDays = (days: number[] | null | undefined) => {
     if (!days || days.length === 0) return "—";
@@ -94,24 +113,39 @@ const TherapistsTable = ({
       field: "actions",
       type: "actions",
       headerName: tCommon("actions"),
-      getActions: (params) => [
-        <GridActionsCellItem
-          key="edit"
-          icon={
-            <Tooltip title={tCommon("edit")}>
-              <EditIcon color="primary" />
-            </Tooltip>
-          }
-          label={tCommon("edit")}
-          onClick={() => onEdit(params.row.id)}
-        />,
-      ],
+      getActions: (params) =>
+        archived
+          ? [
+              <GridActionsCellItem
+                key="restore"
+                icon={
+                  <Tooltip title={t("restore")}>
+                    <RestoreFromTrashIcon color="success" />
+                  </Tooltip>
+                }
+                label={t("restore")}
+                onClick={() => setRestoreTarget(params.row)}
+              />,
+            ]
+          : [
+              <GridActionsCellItem
+                key="edit"
+                icon={
+                  <Tooltip title={tCommon("edit")}>
+                    <EditIcon color="primary" />
+                  </Tooltip>
+                }
+                label={tCommon("edit")}
+                onClick={() => onEdit(params.row.id)}
+              />,
+            ],
       sortable: false,
       filterable: false,
     },
   ];
 
   return (
+    <>
     <Paper
       elevation={2}
       sx={{
@@ -145,6 +179,30 @@ const TherapistsTable = ({
         sx={{ opacity: loading ? 0.5 : 1, backgroundColor: loading ? "#ddd" : "" }}
       />
     </Paper>
+
+    <Dialog open={!!restoreTarget} onClose={() => setRestoreTarget(null)} maxWidth="xs" fullWidth>
+      <DialogTitle>{t("restoreTitle")}</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          {t("restoreMessage", { name: restoreTarget?.full_name ?? "" })}
+        </DialogContentText>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={() => setRestoreTarget(null)}>{tCommon("cancel")}</Button>
+        <Button
+          color="success"
+          variant="contained"
+          startIcon={<RestoreFromTrashIcon />}
+          onClick={() => {
+            if (restoreTarget) onRestore(restoreTarget.id);
+            setRestoreTarget(null);
+          }}
+        >
+          {t("restore")}
+        </Button>
+      </DialogActions>
+    </Dialog>
+    </>
   );
 };
 

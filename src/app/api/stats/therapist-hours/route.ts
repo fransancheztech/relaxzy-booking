@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
         AND b.status       = 'completed'
         AND b.deleted_at   IS NULL
         AND DATE_TRUNC('month', b.start_time) = DATE_TRUNC('month', ${month + "-01"}::date)
-      WHERE t.deleted_at IS NULL
+      WHERE t.deleted_at IS NULL AND t.active = true
       GROUP BY t.id, t.full_name
       ORDER BY t.full_name ASC
     `;

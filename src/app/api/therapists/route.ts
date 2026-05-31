@@ -3,11 +3,11 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
-    const { page = 0, limit = 5, searchTerm, sort } = await req.json();
+    const { page = 0, limit = 5, searchTerm, sort, archived = false } = await req.json();
 
-    // Build search/filter
+    // Build search/filter. Archived view lists soft-deleted therapists (for restore).
     const where = {
-      deleted_at: null,
+      deleted_at: archived ? { not: null } : null,
       ...(searchTerm && {
         OR: [
           { full_name: { contains: searchTerm, mode: "insensitive" } },
@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
       active: t.active,
       off_days: t.off_days,
       created_at: t.created_at,
+      deleted_at: t.deleted_at,
     }));
 
     return NextResponse.json({ rows, total });

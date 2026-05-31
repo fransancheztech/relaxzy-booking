@@ -45,6 +45,21 @@ export async function PUT(
   return NextResponse.json(updated);
 }
 
+// Restore a soft-deleted therapist, reinstating them as active.
+export async function PATCH(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+
+  const restored = await prisma.therapists.update({
+    where: { id },
+    data: { deleted_at: null, active: true },
+  });
+
+  return NextResponse.json(restored, { status: 200 });
+}
+
 export async function DELETE(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }

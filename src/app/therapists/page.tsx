@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { Box, Button, Container } from "@mui/material";
+import { Box, Button, Container, FormControlLabel, Switch } from "@mui/material";
+import { toast } from "react-toastify";
 import CalendarViewWeekIcon from "@mui/icons-material/CalendarViewWeek";
 import AddTherapistDialog from "./AddTherapistDialogForm";
 import UpdateTherapistDialog from "./UpdateTherapistDialogForm";
@@ -21,6 +22,7 @@ export default function TherapistsPage() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [rowCount, setRowCount] = useState(0);
+  const [archived, setArchived] = useState(false);
 
   const [addOpen, setAddOpen] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
@@ -38,7 +40,12 @@ export default function TherapistsPage() {
   }, [setButtonLabel, setOnButtonClick, t]);
 
   const loadTherapists = useCallback(
-    async (pageToLoad: number, sort?: { field: string; sort: "asc" | "desc" }, limit?: number) => {
+    async (
+      pageToLoad: number,
+      sort?: { field: string; sort: "asc" | "desc" },
+      limit?: number,
+      archivedOverride?: boolean,
+    ) => {
       setLoading(true);
       setFetchError(null);
       try {
@@ -51,6 +58,7 @@ export default function TherapistsPage() {
             page: pageToLoad,
             limit: actualLimit,
             sort,
+            archived: archivedOverride ?? archived,
           }),
         });
         const data = await res.json();
@@ -65,21 +73,50 @@ export default function TherapistsPage() {
         setLoading(false);
       }
     },
-    [pageSize]
+    [pageSize, archived]
   );
 
   useEffect(() => {
     loadTherapists(0);
   }, [loadTherapists]);
 
+  const handleToggleArchived = (next: boolean) => {
+    setArchived(next);
+    loadTherapists(0, undefined, undefined, next);
+  };
+
   const handleEdit = (id: string) => {
     setSelectedId(id);
     setUpdateOpen(true);
   };
 
+  const handleRestore = async (id: string) => {
+    try {
+      const res = await fetch(`/api/therapists/${id}`, { method: "PATCH" });
+      if (!res.ok) throw new Error("Failed to restore therapist");
+      toast.success(t("therapistRestored"));
+      loadTherapists(page);
+      setScheduleRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error(err);
+      toast.error(t("restoreTitle"));
+    }
+  };
+
   return (
     <Container sx={{ py: 3 }} disableGutters>
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1.5 }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
+        <FormControlLabel
+          control={
+            <Switch
+              size="small"
+              checked={archived}
+              onChange={(e) => handleToggleArchived(e.target.checked)}
+            />
+          }
+          label={t("showArchived")}
+          sx={{ "& .MuiFormControlLabel-label": { fontSize: "0.85rem", color: "text.secondary" } }}
+        />
         <Button
           variant="outlined"
           size="small"
@@ -105,6 +142,8 @@ export default function TherapistsPage() {
         fetchError={fetchError}
         loadTherapists={loadTherapists}
         onEdit={handleEdit}
+        archived={archived}
+        onRestore={handleRestore}
       />
 
       <AddTherapistDialog

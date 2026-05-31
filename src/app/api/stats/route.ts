@@ -237,7 +237,7 @@ export async function GET(request: Request) {
         SUM(CASE WHEN t.iva_applies THEN t.amount * 0.79 ELSE t.amount END)::float AS net_amount
       FROM tips t
       JOIN therapists th ON th.id = t.therapist_id
-      WHERE t.deleted_at IS NULL AND th.deleted_at IS NULL
+      WHERE t.deleted_at IS NULL AND th.deleted_at IS NULL AND th.active = true
         AND t.created_at >= ${from} AND t.created_at < ${to}
       GROUP BY t.therapist_id, th.full_name ORDER BY gross_amount DESC
     `;

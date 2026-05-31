@@ -20,6 +20,8 @@ export async function GET(request: Request) {
     const tips = await prisma.tips.findMany({
       where: {
         deleted_at: null,
+        // Only tips of current-roster therapists (exclude inactive and soft-deleted).
+        therapists: { active: true, deleted_at: null },
         ...(status === "pending" ? { payout_id: null } : {}),
         ...(status === "released" ? { payout_id: { not: null } } : {}),
         ...(therapist_id ? { therapist_id } : {}),
