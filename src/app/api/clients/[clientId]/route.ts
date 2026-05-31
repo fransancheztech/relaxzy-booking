@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ClientUpdateSchema } from "@/schemas/client.schema";
 import { formatZodError } from "@/utils/zodApiError";
+import { CLIENT_CONTACT_TAKEN } from "@/types/clientConflict";
+
+const fullName = (c: { client_name: string | null; client_surname: string | null }) =>
+  [c.client_name, c.client_surname].filter(Boolean).join(" ").trim() || null;
 
 type Params = {
   params: { clientId: string };
@@ -64,6 +68,33 @@ export async function PUT(
           ? null
           : body.client_notes.trim();
 
+    // Contact collision: the new email/phone already belongs to a *different*
+    // active client. Surface whose it is instead of a bare unique-constraint error.
+    if (normalizedEmail) {
+      const other = await prisma.clients.findFirst({
+        where: { client_email: normalizedEmail, deleted_at: null, NOT: { id: clientId } },
+        select: { client_name: true, client_surname: true },
+      });
+      if (other) {
+        return NextResponse.json(
+          { error: CLIENT_CONTACT_TAKEN, conflict: { field: "email", name: fullName(other) } },
+          { status: 409 },
+        );
+      }
+    }
+    if (normalizedPhone) {
+      const other = await prisma.clients.findFirst({
+        where: { client_phone: normalizedPhone, deleted_at: null, NOT: { id: clientId } },
+        select: { client_name: true, client_surname: true },
+      });
+      if (other) {
+        return NextResponse.json(
+          { error: CLIENT_CONTACT_TAKEN, conflict: { field: "phone", name: fullName(other) } },
+          { status: 409 },
+        );
+      }
+    }
+
     const updatedClient = await prisma.clients.update({
       where: { id: clientId },
       data: {
@@ -79,10 +110,7 @@ export async function PUT(
     return NextResponse.json(updatedClient);
   } catch (err: any) {
     if (err.code === "P2002") {
-      return NextResponse.json(
-        { error: "Email or phone already exists." },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: CLIENT_CONTACT_TAKEN }, { status: 409 });
     }
 
     console.error("Update client error:", err);

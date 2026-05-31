@@ -23,6 +23,7 @@ import handleSubmitUpdateClient from "@/handlers/handleSubmitUpdateClient";
 import DialogConfirmDeleteClient from "./ConfirmDeleteClientDialog";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useTranslations } from "next-intl";
+import { toast } from "react-toastify";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type Props = {
@@ -96,10 +97,23 @@ const UpdateClientDialogForm = ({
       if (!clientId) {
         throw new Error("Client ID is required for updating a client");
       }
-      await handleSubmitUpdateClient({
+      const result = await handleSubmitUpdateClient({
         id: clientId,
         ...data,
       });
+
+      if (result.status === "contact_taken") {
+        // The contact the receptionist entered already belongs to another client.
+        const msg = result.name
+          ? result.field === "email"
+            ? t("contactTakenEmail", { name: result.name })
+            : t("contactTakenPhone", { name: result.name })
+          : t("contactTaken");
+        toast.error(msg);
+        return; // keep the dialog open so the contact can be corrected
+      }
+      if (result.status === "error") return; // already surfaced by the handler
+
       onClose();
     });
 

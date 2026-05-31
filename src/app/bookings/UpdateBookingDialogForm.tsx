@@ -22,13 +22,16 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import { useEffect, useState } from "react";
 import DialogDeletion from "@/app/bookings/ConfirmDeleteBookingDialog";
+import ClientConflictDialog from "./ClientConflictDialog";
 import handleDeleteBooking from "@/handlers/handleDeleteBooking";
 import { DateTime } from "luxon";
 import PayBookingDialog from "./PayBookingDialogForm";
 import ManagePaymentsDialog from "@/components/ManagePaymentsDialog";
 import { useTranslations } from "next-intl";
+import { toast } from "react-toastify";
 import { useRole } from "@/hooks/useRole";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
+import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
 
 type Props = {
   open: boolean;
@@ -165,25 +168,52 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
     reloadPaymentsSummary();
   }, [isPaymentDialogOpen, bookingId]);
 
-  const onSubmit = (data: BookingUpdateSchemaType) =>
-    guard(async () => {
-      if (!bookingId) return;
+  // Pending submission held while the receptionist resolves a name conflict.
+  const [conflicts, setConflicts] = useState<ClientConflict[]>([]);
+  const [pendingData, setPendingData] = useState<BookingUpdateSchemaType | null>(null);
 
-      const normalizedData = {
-        ...data,
-        client_email: data.client_email?.trim() || undefined,
-      };
+  const submit = async (data: BookingUpdateSchemaType, clientResolution?: ClientResolution) => {
+    if (!bookingId) return;
 
-      await handleSubmitUpdateBooking({
-        ...normalizedData,
-        id: bookingId,
-      });
+    const normalizedData = {
+      ...data,
+      client_email: data.client_email?.trim() || undefined,
+    };
+
+    const result = await handleSubmitUpdateBooking(
+      { ...normalizedData, id: bookingId },
+      clientResolution,
+    );
+
+    if (result.status === "ok") {
+      setConflicts([]);
+      setPendingData(null);
       methods.reset();
       reloadPaymentsSummary();
       onClose();
-    });
+      return;
+    }
+    if (result.status === "conflict") {
+      setPendingData(data);
+      setConflicts(result.conflicts);
+      return;
+    }
+    if (result.status === "contact_taken") {
+      toast.error(t("conflictContactTaken"));
+      return;
+    }
+    // "error" — already surfaced by the handler; keep the form open.
+  };
+
+  const onSubmit = (data: BookingUpdateSchemaType) => guard(() => submit(data));
+
+  // Edit only ever resolves the primary client.
+  const onResolveConflict = (resolutions: Record<string, ClientResolution>) =>
+    guard(() => (pendingData ? submit(pendingData, resolutions["primary"]) : Promise.resolve()));
 
   const onCancel = () => {
+    setConflicts([]);
+    setPendingData(null);
     methods.reset();
     onClose();
   };
@@ -292,6 +322,14 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
         setConfirmDeleteOpen={setIsConfirmDeleteDialogOpen}
         handleDelete={handleDelete}
         clientName={[methods.watch("client_name"), methods.watch("client_surname")].filter(Boolean).join(" ")}
+      />
+
+      <ClientConflictDialog
+        open={conflicts.length > 0}
+        conflicts={conflicts}
+        submitting={submitting}
+        onCancel={() => setConflicts([])}
+        onResolve={onResolveConflict}
       />
     </>
   );

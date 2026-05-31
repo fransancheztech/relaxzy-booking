@@ -3,6 +3,13 @@ import { NextResponse } from "next/server";
 import { PROTECTED_FIELDS } from "@/constants";
 import { ClientContactSchema } from "@/schemas/clientContact.schema";
 import { formatZodError } from "@/utils/zodApiError";
+import {
+  applyClientSlot,
+  ClientConflictError,
+  detectClientConflict,
+} from "@/lib/clients/resolveBookingClients";
+import { CLIENT_CONTACT_TAKEN, CLIENT_NAME_CONFLICT } from "@/types/clientConflict";
+import type { ClientResolution } from "@/types/clientConflict";
 
 type Body = {
   client_name?: string;
@@ -17,9 +24,8 @@ type Body = {
   notes?: string;
   price?: string | number;
   totalPaid?: string | number;
+  clientResolution?: ClientResolution;
 };
-
-const normalize = (v?: string) => (v && v.trim() !== "" ? v.trim() : null);
 
 /* ======================================================
    GET /api/bookings/[id]
@@ -169,17 +175,14 @@ export async function PUT(
     }
 
     // ------------------------------------------------------
-    // 5) FIND OR CREATE CLIENT (allows anonymous walk-ins)
+    // 5) CLIENT RESOLUTION HAPPENS INSIDE THE TRANSACTION below,
+    //    using the same shared logic as the create route.
     // ------------------------------------------------------
-    let clientId: string | null = null;
-
     const hasClientInfo =
       body.client_name ||
       body.client_email ||
       body.client_phone ||
       body.client_surname;
-
-    let clientWasCreated = false;
 
     /* -----------------------------
        Whitelisted update fields
@@ -239,58 +242,14 @@ export async function PUT(
 
         resolvedServiceId = service.id;
       }
-      // CLIENT UPDATE (if needed)
+      // CLIENT RESOLUTION (same conflict-aware logic as the create route)
+      let clientId: string | null = null;
       if (wantsToRemoveClient) {
         bookingData.client_id = null;
       } else if (hasClientInfo) {
-        if (!body.client_name) throw new Error("Client name is required");
-
-        if (!body.client_email && !body.client_phone)
-          throw new Error("Provide at least a phone or email for the client");
-
-        // find by email
-        if (body.client_email) {
-          const client = await tx.clients.findFirst({
-            where: { client_email: body.client_email, deleted_at: null },
-          });
-          clientId = client?.id ?? null;
-        }
-
-        // find by phone
-        if (!clientId && body.client_phone) {
-          const client = await tx.clients.findFirst({
-            where: { client_phone: body.client_phone, deleted_at: null },
-          });
-          clientId = client?.id ?? null;
-        }
-
-        // create if needed
-        if (!clientId) {
-          const client = await tx.clients.create({
-            data: {
-              client_name: body.client_name,
-              client_surname: normalize(body.client_surname),
-              client_email: normalize(body.client_email),
-              client_phone: normalize(body.client_phone),
-            },
-          });
-
-          clientId = client.id;
-          clientWasCreated = true;
-        }
-
-        // update only if existing
-        if (clientId && hasClientInfo && !clientWasCreated) {
-          await tx.clients.update({
-            where: { id: clientId },
-            data: {
-              client_name: body.client_name,
-              client_surname: normalize(body.client_surname),
-              client_email: normalize(body.client_email),
-              client_phone: normalize(body.client_phone),
-            },
-          });
-        }
+        const conflict = await detectClientConflict(tx, "primary", body, body.clientResolution);
+        if (conflict) throw new ClientConflictError([conflict]);
+        clientId = await applyClientSlot(tx, body, body.clientResolution);
       }
 
       // Reject therapist assignment on cancelled bookings
@@ -326,6 +285,17 @@ export async function PUT(
 
     return NextResponse.json(updated, { status: 200 });
   } catch (error: any) {
+    if (error instanceof ClientConflictError) {
+      return NextResponse.json(
+        { error: CLIENT_NAME_CONFLICT, conflicts: error.conflicts },
+        { status: 409 },
+      );
+    }
+
+    if (error.code === "P2002") {
+      return NextResponse.json({ error: CLIENT_CONTACT_TAKEN }, { status: 409 });
+    }
+
     console.error("PUT /bookings/[id] error:", error);
 
     if (error.code === "P2025") {

@@ -15,12 +15,15 @@ import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import handleSubmitCreateBooking from "@/handlers/handleSubmitCreateBooking";
 import NewBookingFormFields from "./NewBookingFormFields";
+import ClientConflictDialog from "./ClientConflictDialog";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CloseIcon from "@mui/icons-material/Close";
 import { roundToNearestMinutes } from "date-fns";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "react-toastify";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
+import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
 
 type Props = {
   open: boolean;
@@ -53,18 +56,47 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
 
   const { submitting, guard } = useSubmitGuard();
 
-  const onSubmit = (data: BookingSchemaType) =>
-    guard(async () => {
-      const normalizedData = {
-        ...data,
-        client_email: data.client_email?.trim() || undefined,
-      };
-      await handleSubmitCreateBooking(normalizedData);
+  // Pending submission held while the receptionist resolves a name conflict.
+  const [conflicts, setConflicts] = useState<ClientConflict[]>([]);
+  const [pendingData, setPendingData] = useState<BookingSchemaType | null>(null);
+
+  const submit = async (
+    data: BookingSchemaType,
+    clientResolutions?: Record<string, ClientResolution>,
+  ) => {
+    const normalizedData = {
+      ...data,
+      client_email: data.client_email?.trim() || undefined,
+    };
+    const result = await handleSubmitCreateBooking(normalizedData, clientResolutions);
+
+    if (result.status === "ok") {
+      setConflicts([]);
+      setPendingData(null);
       methods.reset();
       onClose();
-    });
+      return;
+    }
+    if (result.status === "conflict") {
+      setPendingData(data);
+      setConflicts(result.conflicts);
+      return;
+    }
+    if (result.status === "contact_taken") {
+      toast.error(t("conflictContactTaken"));
+      return;
+    }
+    // "error" — already surfaced by the handler; keep the form open.
+  };
+
+  const onSubmit = (data: BookingSchemaType) => guard(() => submit(data));
+
+  const onResolveConflict = (resolutions: Record<string, ClientResolution>) =>
+    guard(() => pendingData ? submit(pendingData, resolutions) : Promise.resolve());
 
   const onCancel = () => {
+    setConflicts([]);
+    setPendingData(null);
     methods.reset(defaultValues);
     onClose();
   };
@@ -111,6 +143,14 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
           </DialogActions>
         </form>
       </FormProvider>
+
+      <ClientConflictDialog
+        open={conflicts.length > 0}
+        conflicts={conflicts}
+        submitting={submitting}
+        onCancel={() => setConflicts([])}
+        onResolve={onResolveConflict}
+      />
     </Dialog>
   );
 };
