@@ -57,6 +57,11 @@ const RevenueSection = ({ revenue, bucket, onBucketChange }: Props) => {
     { name: t("card"), value: revenue.credit_card },
   ].filter((d) => d.value > 0);
 
+  const therapistData = revenue.by_therapist.map((th) => ({
+    label: th.therapist_name,
+    revenue: th.revenue,
+  }));
+
   const RevenueTooltip = ({ active, payload, label }: RevenueTooltipProps) => {
     if (!active || !payload || payload.length === 0) return null;
     // Net total (already refund-adjusted) and the period's refunds ride along on the data point.
@@ -171,6 +176,26 @@ const RevenueSection = ({ revenue, bucket, onBucketChange }: Props) => {
                 </Box>
               ))}
             </Box>
+          </Paper>
+        </Grid>
+
+        {/* Revenue per therapist */}
+        <Grid size={12}>
+          <Paper elevation={1} sx={{ p: 2, borderRadius: 2 }}>
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+              {t("revenueByTherapist")}
+            </Typography>
+            {therapistData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={Math.max(160, therapistData.length * 44 + 40)}>
+                <BarChart data={therapistData} layout="vertical" margin={{ top: 5, right: 20, left: 100, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                  <XAxis type="number" tickFormatter={(v) => `${v} €`} tick={{ fontSize: 11 }} />
+                  <YAxis type="category" dataKey="label" tick={{ fontSize: 11 }} width={100} />
+                  <Tooltip formatter={(v) => formatMoney(Number(v ?? 0))} />
+                  <Bar dataKey="revenue" name={t("revenueBarName")} fill="#60a561" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : empty}
           </Paper>
         </Grid>
       </Grid>

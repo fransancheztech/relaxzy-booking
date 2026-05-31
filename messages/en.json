@@ -460,6 +460,7 @@
     "byDayOfWeek": "By day of week",
     "byDuration": "By duration",
     "revenueByService": "Revenue by service",
+    "revenueByTherapist": "Revenue per therapist",
     "priceDistribution": "Price distribution",
     "dowSun": "Sun",
     "dowMon": "Mon",

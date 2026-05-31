@@ -460,6 +460,7 @@
     "byDayOfWeek": "ตามวันในสัปดาห์",
     "byDuration": "ตามระยะเวลา",
     "revenueByService": "รายได้ตามบริการ",
+    "revenueByTherapist": "รายได้ต่อนักบำบัด",
     "priceDistribution": "การกระจายราคา",
     "dowSun": "อา",
     "dowMon": "จ",

@@ -108,6 +108,26 @@ export async function GET(request: Request) {
         AND v.created_at >= ${from} AND v.created_at < ${to}
       GROUP BY period ORDER BY period
     `;
+    // Revenue per therapist — booking payments only (cash + card − refunds), attributed
+    // to the booking's therapist by service date. Vouchers and unassigned bookings aren't
+    // therapist-keyed, so they're excluded. Active, non-deleted therapists only (matching
+    // the Tips-by-therapist and Therapist Hours scoping).
+    const revenueByTherapistRows = await prisma.$queryRaw<{
+      therapist_id: string; therapist_name: string; revenue: number;
+    }[]>`
+      SELECT th.id AS therapist_id, th.full_name AS therapist_name,
+        (COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE'), 0)
+          - COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0))::float AS revenue
+      FROM payment_events pe
+      JOIN payments p ON p.id = pe.payment_id
+      JOIN bookings b ON b.id = p.booking_id
+      JOIN therapists th ON th.id = b.therapist_id
+      WHERE b.deleted_at IS NULL AND p.deleted_at IS NULL AND pe.deleted_at IS NULL
+        AND th.deleted_at IS NULL AND th.active = true
+        AND b.start_time >= ${from} AND b.start_time < ${to}
+      GROUP BY th.id, th.full_name
+      ORDER BY revenue DESC
+    `;
     const bookingSummaryRows = await prisma.$queryRaw<{
       total: number; completed: number; cancelled: number;
       pending: number; confirmed: number;
@@ -411,6 +431,11 @@ export async function GET(request: Request) {
         credit_card: cardTotal,
         refunds_total: refundsTotal,
         over_time: revenueOverTime,
+        by_therapist: revenueByTherapistRows.map((r) => ({
+          therapist_id: r.therapist_id,
+          therapist_name: r.therapist_name,
+          revenue: toNum(r.revenue),
+        })),
       },
 
       bookings: {

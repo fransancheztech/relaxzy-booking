@@ -5,6 +5,12 @@ export interface StatsRevenuePeriodPoint {
   credit_card: number;
 }
 
+export interface StatsRevenueByTherapist {
+  therapist_id: string;
+  therapist_name: string;
+  revenue: number;
+}
+
 export interface StatsBookingsByService {
   service_name: string;
   count: number;
@@ -65,6 +71,7 @@ export interface StatsResponse {
     credit_card: number;
     refunds_total: number;
     over_time: StatsRevenuePeriodPoint[];
+    by_therapist: StatsRevenueByTherapist[];
   };
 
   bookings: {
