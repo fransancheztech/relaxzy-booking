@@ -29,6 +29,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useState } from "react";
 import { TipSchema, TipFormInput, TipFormOutput } from "@/schemas/tip.schema";
 import { useTherapists } from "@/hooks/useTherapists";
+import { therapistDisplayName } from "@/utils/therapistName";
 import { formatMoney } from "@/utils/formatMoney";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
@@ -42,7 +43,7 @@ interface Tip {
   iva_applies: boolean;
   notes: string | null;
   received_at: string;
-  therapists: { id: string; full_name: string };
+  therapists: { id: string; nickname: string | null; name: string | null; surname: string | null };
 }
 
 interface Props {
@@ -209,7 +210,7 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
           }}
         >
           <Typography variant="body2" sx={{ flex: 1 }}>
-            {tip.therapists.full_name}
+            {therapistDisplayName(tip.therapists)}
           </Typography>
           <Typography variant="body2" fontWeight={600}>
             {formatMoney(Number(tip.amount))}

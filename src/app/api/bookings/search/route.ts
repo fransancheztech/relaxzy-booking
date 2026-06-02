@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { BookingListItem } from "@/types/bookings";
 import { Prisma, booking_status } from "generated/prisma";
+import { therapistDisplayName } from "@/utils/therapistName";
 
 const VALID_STATUSES: booking_status[] = ["pending", "confirmed", "completed", "cancelled"];
 
@@ -25,7 +26,7 @@ function buildOrderBy(field: string, direction: "asc" | "desc"): Prisma.bookings
     case "customer_name":  return { clients: { client_name: direction } };
     case "customer_phone": return { clients: { client_phone: direction } };
     case "service":        return { services_names: { name: direction } };
-    case "therapist":      return { therapists: { full_name: direction } };
+    case "therapist":      return { therapists: { nickname: direction } };
     case "status":         return { status: direction };
     case "notes":          return { notes: direction };
     case "price":          return { price: direction };
@@ -66,7 +67,15 @@ function buildFilterCondition(
       return { services_names: { short_name: { contains: value, mode: "insensitive" } } };
     case "therapist":
       if (typeof value !== "string") return null;
-      return { therapists: { full_name: { contains: value, mode: "insensitive" } } };
+      return {
+        therapists: {
+          OR: [
+            { nickname: { contains: value, mode: "insensitive" } },
+            { name: { contains: value, mode: "insensitive" } },
+            { surname: { contains: value, mode: "insensitive" } },
+          ],
+        },
+      };
     case "status":
       if (typeof value !== "string") return null;
       return VALID_STATUSES.includes(value as booking_status)
@@ -198,7 +207,7 @@ export async function POST(req: NextRequest) {
           }
         : null,
       therapist: b.therapists
-        ? { id: b.therapists.id, full_name: b.therapists.full_name }
+        ? { id: b.therapists.id, full_name: therapistDisplayName(b.therapists) }
         : null,
       payments: b.payments.map((p) => {
         const refunded = Math.abs(

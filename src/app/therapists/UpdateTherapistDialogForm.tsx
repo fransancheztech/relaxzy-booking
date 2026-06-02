@@ -27,6 +27,7 @@ import { toast } from "react-toastify";
 import { UpdateTherapistSchema, UpdateTherapistSchemaType } from "@/schemas/therapist.schema";
 import { useTranslations } from "next-intl";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
+import { therapistDisplayName } from "@/utils/therapistName";
 
 type Props = {
   open: boolean;
@@ -35,7 +36,9 @@ type Props = {
 };
 
 const defaultValues: UpdateTherapistSchemaType = {
-  full_name: "",
+  nickname: "",
+  name: "",
+  surname: "",
   email: "",
   phone: "",
   notes: "",
@@ -81,9 +84,11 @@ export default function UpdateTherapistDialogForm({
         const res = await fetch(`/api/therapists/${therapistId}`);
         if (!res.ok) throw new Error("Failed to load therapist");
         const data = await res.json();
-        setTherapistName(data.full_name ?? "");
+        setTherapistName(therapistDisplayName(data));
         methods.reset({
-          full_name: data.full_name ?? "",
+          nickname: data.nickname ?? "",
+          name: data.name ?? "",
+          surname: data.surname ?? "",
           email: data.email ?? "",
           phone: data.phone ?? "",
           notes: data.notes ?? "",
@@ -146,19 +151,57 @@ export default function UpdateTherapistDialogForm({
           <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
             <DialogContent sx={{ opacity: loading ? 0.5 : 1, pointerEvents: loading ? "none" : "auto" }}>
               <Grid container spacing={2} sx={{ pt: 1 }}>
+                <Grid size={12} sx={{ pb: 0, mb: -1 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
+                    {t("nameOrNicknameRequired")}
+                  </Typography>
+                </Grid>
                 <Grid size={12}>
                   <Controller
-                    name="full_name"
+                    name="nickname"
                     control={methods.control}
                     render={({ field }) => (
                       <TextField
                         {...field}
-                        label={t("fullName")}
-                        required
+                        label={t("nickname")}
                         fullWidth
                         size="small"
-                        error={!!methods.formState.errors.full_name}
-                        helperText={methods.formState.errors.full_name?.message}
+                        error={!!methods.formState.errors.nickname}
+                        helperText={methods.formState.errors.nickname?.message}
+                      />
+                    )}
+                  />
+                </Grid>
+
+                <Grid size={6}>
+                  <Controller
+                    name="name"
+                    control={methods.control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label={t("name")}
+                        fullWidth
+                        size="small"
+                        error={!!methods.formState.errors.name}
+                        helperText={methods.formState.errors.name?.message}
+                      />
+                    )}
+                  />
+                </Grid>
+
+                <Grid size={6}>
+                  <Controller
+                    name="surname"
+                    control={methods.control}
+                    render={({ field }) => (
+                      <TextField
+                        {...field}
+                        label={t("surname")}
+                        fullWidth
+                        size="small"
+                        error={!!methods.formState.errors.surname}
+                        helperText={methods.formState.errors.surname?.message}
                       />
                     )}
                   />

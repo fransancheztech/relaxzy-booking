@@ -53,7 +53,7 @@ export async function GET(request: Request) {
       prisma.$queryRaw<TipRow[]>`
         SELECT
           t.therapist_id,
-          th.full_name,
+          COALESCE(NULLIF(BTRIM(th.nickname), ''), NULLIF(BTRIM(th.name), ''), NULLIF(BTRIM(th.surname), ''), '—') AS full_name,
           t.payment_method,
           SUM(t.amount) AS total
         FROM tips t
@@ -62,8 +62,8 @@ export async function GET(request: Request) {
           t.received_at >= ${startDate}
           AND t.received_at < ${endDate}
           AND t.deleted_at IS NULL
-        GROUP BY t.therapist_id, th.full_name, t.payment_method
-        ORDER BY th.full_name, t.payment_method
+        GROUP BY t.therapist_id, th.id, t.payment_method
+        ORDER BY full_name, t.payment_method
       `,
     ]);
 

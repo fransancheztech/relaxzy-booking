@@ -309,6 +309,10 @@
   "Therapists": {
     "newTherapist": "นักบำบัดใหม่",
     "fullName": "ชื่อ-นามสกุล",
+    "nickname": "ชื่อเล่น",
+    "name": "ชื่อ",
+    "surname": "นามสกุล",
+    "nameOrNicknameRequired": "กรอกอย่างน้อยชื่อเล่นหรือชื่อ",
     "email": "อีเมล",
     "phone": "โทรศัพท์",
     "notes": "หมายเหตุ",

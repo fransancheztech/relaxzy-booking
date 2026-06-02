@@ -1,63 +1,42 @@
 import { NextResponse } from "next/server";
-import { createCustomServerClient } from "@/utils/supabase/server"; // para el usuario actual
-import { createAdminClient } from "@/utils/supabase/admin"; // para funciones admin
+import { prisma } from "@/lib/prisma";
+import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
 import { UpdateTherapistSchema } from "@/schemas/therapist.schema";
 import { formatZodError } from "@/utils/zodApiError";
 
+const normalize = (v?: string) => (v && v.trim() !== "" ? v.trim() : null);
+
 export async function POST(req: Request) {
-  const supabase = await createCustomServerClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user || user.user_metadata?.role !== "supabase_admin") {
-    console.log("Unauthorized user:", user?.email ?? "No user");
+  const role = await getCurrentUserRole();
+  if (role !== "admin" && role !== "receptionist") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await req.json();
-  const { user_id } = body;
-
-  if (!user_id) {
-    return NextResponse.json({ error: "Faltan datos obligatorios" }, { status: 400 });
-  }
-
   const parsed = UpdateTherapistSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
   }
-  const { full_name, phone } = parsed.data;
+  const { nickname, name, surname, email, phone, notes, off_days } = parsed.data;
 
-  const adminClient = createAdminClient();
-  const { data: userData, error: userError } = await adminClient.auth.admin.getUserById(user_id);
-
-  if (userError || !userData?.user?.email) {
-    return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+  try {
+    // Therapists are plain records (no per-therapist login under the shared-account
+    // model), so the id is generated and the therapist is created active/bookable.
+    const therapist = await prisma.therapists.create({
+      data: {
+        nickname: normalize(nickname),
+        name: normalize(name),
+        surname: normalize(surname),
+        email: normalize(email),
+        phone: normalize(phone),
+        notes: normalize(notes),
+        active: true,
+        ...(off_days !== undefined && { off_days }),
+      },
+    });
+    return NextResponse.json({ success: true, therapist });
+  } catch (err) {
+    console.error("POST /api/therapists/add error", err);
+    return NextResponse.json({ error: "Failed to add therapist" }, { status: 500 });
   }
-
-  const email = userData.user.email;
-
-  // Soft-delete awareness: check if therapist already exists but is deleted
-  const { data: existing } = await supabase
-    .from("therapists")
-    .select("*")
-    .eq("id", user_id)
-    .is("deleted_at", null)
-    .single();
-
-  if (existing) {
-    return NextResponse.json({ error: "Therapist already exists" }, { status: 400 });
-  }
-
-  // Insert into therapists table
-  const { error: insertError } = await supabase
-    .from("therapists")
-    .insert({ id: user_id, full_name, phone, email, deleted_at: null });
-
-  if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ success: true });
 }

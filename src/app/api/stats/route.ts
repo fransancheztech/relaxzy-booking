@@ -115,7 +115,8 @@ export async function GET(request: Request) {
     const revenueByTherapistRows = await prisma.$queryRaw<{
       therapist_id: string; therapist_name: string; revenue: number;
     }[]>`
-      SELECT th.id AS therapist_id, th.full_name AS therapist_name,
+      SELECT th.id AS therapist_id,
+        COALESCE(NULLIF(BTRIM(th.nickname), ''), NULLIF(BTRIM(th.name), ''), NULLIF(BTRIM(th.surname), ''), '—') AS therapist_name,
         (COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE'), 0)
           - COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0))::float AS revenue
       FROM payment_events pe
@@ -125,7 +126,7 @@ export async function GET(request: Request) {
       WHERE b.deleted_at IS NULL AND p.deleted_at IS NULL AND pe.deleted_at IS NULL
         AND th.deleted_at IS NULL AND th.active = true
         AND b.start_time >= ${from} AND b.start_time < ${to}
-      GROUP BY th.id, th.full_name
+      GROUP BY th.id
       ORDER BY revenue DESC
     `;
     const bookingSummaryRows = await prisma.$queryRaw<{
@@ -251,7 +252,8 @@ export async function GET(request: Request) {
       therapist_id: string; therapist_name: string;
       tip_count: number; gross_amount: number; net_amount: number;
     }[]>`
-      SELECT t.therapist_id, th.full_name AS therapist_name,
+      SELECT th.id AS therapist_id,
+        COALESCE(NULLIF(BTRIM(th.nickname), ''), NULLIF(BTRIM(th.name), ''), NULLIF(BTRIM(th.surname), ''), '—') AS therapist_name,
         COUNT(*)::int AS tip_count,
         SUM(t.amount)::float AS gross_amount,
         SUM(CASE WHEN t.iva_applies THEN t.amount * 0.79 ELSE t.amount END)::float AS net_amount
@@ -259,7 +261,7 @@ export async function GET(request: Request) {
       JOIN therapists th ON th.id = t.therapist_id
       WHERE t.deleted_at IS NULL AND th.deleted_at IS NULL AND th.active = true
         AND t.created_at >= ${from} AND t.created_at < ${to}
-      GROUP BY t.therapist_id, th.full_name ORDER BY gross_amount DESC
+      GROUP BY th.id ORDER BY gross_amount DESC
     `;
 
     // --- Vouchers ---

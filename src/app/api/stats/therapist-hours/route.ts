@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     >`
       SELECT
         t.id::text          AS therapist_id,
-        t.full_name,
+        COALESCE(NULLIF(BTRIM(t.nickname), ''), NULLIF(BTRIM(t.name), ''), NULLIF(BTRIM(t.surname), ''), '—') AS full_name,
         COUNT(b.id)::int    AS booking_count,
         COALESCE(
           SUM(EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0),
@@ -40,8 +40,8 @@ export async function GET(req: NextRequest) {
         AND b.start_time   >= ${from}
         AND b.start_time   <  ${to}
       WHERE t.deleted_at IS NULL AND t.active = true
-      GROUP BY t.id, t.full_name
-      ORDER BY t.full_name ASC
+      GROUP BY t.id
+      ORDER BY full_name ASC
     `;
 
     return NextResponse.json({

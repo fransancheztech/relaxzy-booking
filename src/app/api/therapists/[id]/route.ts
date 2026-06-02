@@ -30,14 +30,17 @@ export async function PUT(
   if (!parsed.success) {
     return NextResponse.json({ error: formatZodError(parsed.error) }, { status: 400 });
   }
-  const { full_name, email, phone, notes, active, off_days } = parsed.data;
+  const { nickname, name, surname, email, phone, notes, active, off_days } = parsed.data;
+  const norm = (v?: string) => (v && v.trim() !== "" ? v.trim() : null);
   const updated = await prisma.therapists.update({
     where: { id },
     data: {
-      full_name,
-      email,
-      phone,
-      notes,
+      nickname: norm(nickname),
+      name: norm(name),
+      surname: norm(surname),
+      email: norm(email),
+      phone: norm(phone),
+      notes: norm(notes),
       ...(active !== undefined && { active }),
       ...(off_days !== undefined && { off_days }),
     },

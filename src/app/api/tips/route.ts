@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   try {
     const tips = await prisma.tips.findMany({
       where: { booking_id: bookingId, deleted_at: null },
-      include: { therapists: { select: { id: true, full_name: true } } },
+      include: { therapists: { select: { id: true, nickname: true, name: true, surname: true } } },
       orderBy: { created_at: "asc" },
     });
 
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         notes: notes?.trim() || null,
         received_at: received_at ? new Date(received_at) : new Date(),
       },
-      include: { therapists: { select: { id: true, full_name: true } } },
+      include: { therapists: { select: { id: true, nickname: true, name: true, surname: true } } },
     });
 
     return NextResponse.json({ tip });

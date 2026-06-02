@@ -22,6 +22,7 @@ import { formatNullable } from "@/utils/formatNullable";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { therapists } from "generated/prisma/client";
 import { useTranslations } from "next-intl";
+import { therapistDisplayName } from "@/utils/therapistName";
 
 interface Props {
   therapists: therapists[];
@@ -78,7 +79,9 @@ const TherapistsTable = ({
   };
 
   const columns: GridColDef<therapists>[] = [
-    { field: "full_name", headerName: t("fullName"), flex: 1, valueFormatter: formatNullable },
+    { field: "nickname", headerName: t("nickname"), flex: 1, valueFormatter: formatNullable },
+    { field: "name", headerName: t("name"), flex: 1, valueFormatter: formatNullable },
+    { field: "surname", headerName: t("surname"), flex: 1, valueFormatter: formatNullable },
     { field: "email", headerName: tCommon("email"), flex: 1, valueFormatter: formatNullable },
     { field: "phone", headerName: tCommon("phone"), flex: 1, valueFormatter: formatNullable },
     { field: "notes", headerName: tCommon("notes"), flex: 1, valueFormatter: formatNullable },
@@ -184,7 +187,7 @@ const TherapistsTable = ({
       <DialogTitle>{t("restoreTitle")}</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          {t("restoreMessage", { name: restoreTarget?.full_name ?? "" })}
+          {t("restoreMessage", { name: restoreTarget ? therapistDisplayName(restoreTarget) : "" })}
         </DialogContentText>
       </DialogContent>
       <DialogActions>

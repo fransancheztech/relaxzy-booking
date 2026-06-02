@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { therapistDisplayName } from "@/utils/therapistName";
 
 const IVA_RATE = 0.21;
 
@@ -7,7 +8,7 @@ export async function GET() {
   try {
     const tips = await prisma.tips.findMany({
       where: { deleted_at: null, payout_id: null },
-      include: { therapists: { select: { id: true, full_name: true } } },
+      include: { therapists: { select: { id: true, nickname: true, name: true, surname: true } } },
       orderBy: { created_at: "asc" },
     });
 
@@ -34,7 +35,7 @@ export async function GET() {
       if (!map.has(key)) {
         map.set(key, {
           therapist_id: tip.therapist_id,
-          therapist_name: tip.therapists.full_name,
+          therapist_name: therapistDisplayName(tip.therapists),
           period_year: year,
           period_month: month,
           tips: [],

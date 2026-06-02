@@ -66,4 +66,5 @@ DONE
 - Revisar que desactivar terapeuta no tiene efectos secundarios y que el día de desactivación no importa
 - Añadir horas por terapeuta e ingresos por terapeuta
 - Añadir a la página propinas periodo un día
+- Cambiar full name por nickname en New Therapist
 

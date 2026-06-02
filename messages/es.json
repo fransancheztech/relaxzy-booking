@@ -309,6 +309,10 @@
   "Therapists": {
     "newTherapist": "Nuevo terapeuta",
     "fullName": "Nombre completo",
+    "nickname": "Apodo",
+    "name": "Nombre",
+    "surname": "Apellido",
+    "nameOrNicknameRequired": "Introduce al menos un apodo o un nombre.",
     "email": "Correo",
     "phone": "Teléfono",
     "notes": "Notas",

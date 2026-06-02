@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
+import { therapistDisplayName } from "@/utils/therapistName";
 
 const IVA_RATE = 0.21;
 
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
             }
           : {}),
       },
-      include: { therapists: { select: { id: true, full_name: true } } },
+      include: { therapists: { select: { id: true, nickname: true, name: true, surname: true } } },
       orderBy: { received_at: "desc" },
       take: 500,
     });
@@ -46,7 +47,7 @@ export async function GET(request: Request) {
         return {
           id: tip.id,
           therapist_id: tip.therapist_id,
-          therapist_name: tip.therapists.full_name,
+          therapist_name: therapistDisplayName(tip.therapists),
           iva_applies: tip.iva_applies,
           payment_method: tip.payment_method,
           notes: tip.notes,

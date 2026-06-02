@@ -10,7 +10,9 @@ export async function POST(req: NextRequest) {
       deleted_at: archived ? { not: null } : null,
       ...(searchTerm && {
         OR: [
-          { full_name: { contains: searchTerm, mode: "insensitive" } },
+          { nickname: { contains: searchTerm, mode: "insensitive" } },
+          { name: { contains: searchTerm, mode: "insensitive" } },
+          { surname: { contains: searchTerm, mode: "insensitive" } },
           { email: { contains: searchTerm, mode: "insensitive" } },
           { phone: { contains: searchTerm, mode: "insensitive" } },
           { notes: { contains: searchTerm, mode: "insensitive" } },
@@ -33,7 +35,9 @@ export async function POST(req: NextRequest) {
 
     const rows = therapists.map((t) => ({
       id: t.id,
-      full_name: t.full_name,
+      nickname: t.nickname,
+      name: t.name,
+      surname: t.surname,
       email: t.email,
       phone: t.phone,
       notes: t.notes,

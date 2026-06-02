@@ -10,6 +10,7 @@ import {
 } from "@/lib/clients/resolveBookingClients";
 import { CLIENT_CONTACT_TAKEN, CLIENT_NAME_CONFLICT } from "@/types/clientConflict";
 import type { ClientResolution } from "@/types/clientConflict";
+import { therapistDisplayName } from "@/utils/therapistName";
 
 type Body = {
   client_name?: string;
@@ -116,7 +117,7 @@ export async function GET(
       : null;
 
     const therapist = booking.therapists
-      ? { id: booking.therapists.id, full_name: booking.therapists.full_name }
+      ? { id: booking.therapists.id, full_name: therapistDisplayName(booking.therapists) }
       : null;
 
     return NextResponse.json({

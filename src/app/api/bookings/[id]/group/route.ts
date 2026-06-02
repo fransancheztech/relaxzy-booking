@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { therapistDisplayName } from "@/utils/therapistName";
 
 /* ======================================================
    GET /api/bookings/[id]/group
@@ -41,7 +42,7 @@ export async function GET(
       include: {
         clients: { select: { id: true, client_name: true, client_surname: true } },
         services_names: { select: { id: true, name: true } },
-        therapists: { select: { id: true, full_name: true } },
+        therapists: { select: { id: true, nickname: true, name: true, surname: true } },
       },
     });
 
@@ -63,7 +64,7 @@ export async function GET(
           ? { id: m.services_names.id, name: m.services_names.name }
           : null,
         therapist: m.therapists
-          ? { id: m.therapists.id, full_name: m.therapists.full_name }
+          ? { id: m.therapists.id, full_name: therapistDisplayName(m.therapists) }
           : null,
       })),
     });
