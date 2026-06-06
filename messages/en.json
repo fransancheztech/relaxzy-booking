@@ -551,7 +551,6 @@
     "statusReleased": "Released",
     "methodCash": "Cash",
     "methodCard": "Card",
-    "methodVoucher": "Voucher",
     "selectedCount": "{count} selected",
     "releaseSelected": "Release",
     "releaseSuccess": "{count} tips released",

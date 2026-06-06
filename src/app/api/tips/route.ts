@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { tip_payment_method } from "generated/prisma";
+import { ivaAppliesForTipMethod } from "@/utils/tipIva";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -27,7 +28,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { booking_id, therapist_id, amount, payment_method, iva_applies, notes, received_at } = body;
+    // iva_applies is derived from payment_method, never taken from the client.
+    const { booking_id, therapist_id, amount, payment_method, notes, received_at } = body;
 
     if (!therapist_id) {
       return NextResponse.json({ error: "Missing therapist_id" }, { status: 400 });
@@ -38,7 +40,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
     }
 
-    const validMethods: tip_payment_method[] = ["cash", "credit_card", "voucher"];
+    const validMethods: tip_payment_method[] = ["cash", "credit_card"];
     if (!validMethods.includes(payment_method)) {
       return NextResponse.json({ error: "Invalid payment_method" }, { status: 400 });
     }
@@ -49,7 +51,7 @@ export async function POST(request: Request) {
         therapist_id,
         amount: parsedAmount,
         payment_method: payment_method as tip_payment_method,
-        iva_applies: Boolean(iva_applies),
+        iva_applies: ivaAppliesForTipMethod(payment_method),
         notes: notes?.trim() || null,
         received_at: received_at ? new Date(received_at) : new Date(),
       },

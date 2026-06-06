@@ -25,13 +25,14 @@ import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import { useTherapists } from "@/hooks/useTherapists";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
+import { ivaAppliesForTipMethod } from "@/utils/tipIva";
 
 interface TipRow {
   id: string;
   therapist_id: string;
   therapist_name: string;
   iva_applies: boolean;
-  payment_method: "cash" | "credit_card" | "voucher";
+  payment_method: "cash" | "credit_card";
   notes: string | null;
   received_at: string;
   payout_id: string | null;
@@ -46,7 +47,7 @@ interface Props {
 interface FormState {
   therapist_id: string;
   received_at: Date | null;
-  payment_method: "cash" | "credit_card" | "voucher";
+  payment_method: "cash" | "credit_card";
   iva_applies: boolean;
   notes: string;
 }
@@ -151,16 +152,15 @@ const TipDetailDialog = ({ tip, onClose, onSaved }: Props) => {
               >
                 <MenuItem value="cash">{t("methodCash")}</MenuItem>
                 <MenuItem value="credit_card">{t("methodCard")}</MenuItem>
-                <MenuItem value="voucher">{t("methodVoucher")}</MenuItem>
               </Select>
             </FormControl>
 
+            {/* IVA is derived from the payment method — shown read-only */}
             <FormControlLabel
               control={
                 <Switch
-                  checked={form.iva_applies}
-                  onChange={(e) => set("iva_applies", e.target.checked)}
-                  disabled={isReleased}
+                  checked={ivaAppliesForTipMethod(form.payment_method)}
+                  disabled
                   size="small"
                 />
               }

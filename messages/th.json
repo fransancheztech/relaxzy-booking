@@ -551,7 +551,6 @@
     "statusReleased": "จ่ายแล้ว",
     "methodCash": "เงินสด",
     "methodCard": "บัตร",
-    "methodVoucher": "บัตรกำนัล",
     "selectedCount": "เลือก {count} รายการ",
     "releaseSelected": "จ่าย",
     "releaseSuccess": "จ่ายทิป {count} รายการแล้ว",

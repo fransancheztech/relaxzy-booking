@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { ivaAppliesForTipMethod } from "@/utils/tipIva";
 
-const VALID_METHODS = ["cash", "credit_card", "voucher"] as const;
+const VALID_METHODS = ["cash", "credit_card"] as const;
 
 export async function PATCH(
   request: Request,
@@ -29,8 +30,9 @@ export async function PATCH(
     if (body.payment_method !== undefined) {
       if (!VALID_METHODS.includes(body.payment_method)) return NextResponse.json({ error: "Invalid payment_method" }, { status: 400 });
       data.payment_method = body.payment_method;
+      // iva_applies is always derived from the method, never set by the client.
+      data.iva_applies = ivaAppliesForTipMethod(body.payment_method);
     }
-    if (body.iva_applies !== undefined) data.iva_applies = Boolean(body.iva_applies);
     if ("notes" in body) data.notes = body.notes?.trim() || null;
 
     if (Object.keys(data).length === 0) return NextResponse.json({ error: "No fields to update" }, { status: 400 });

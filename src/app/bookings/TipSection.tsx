@@ -30,6 +30,7 @@ import { useCallback, useEffect, useState } from "react";
 import { TipSchema, TipFormInput, TipFormOutput } from "@/schemas/tip.schema";
 import { useTherapists } from "@/hooks/useTherapists";
 import { therapistDisplayName } from "@/utils/therapistName";
+import { ivaAppliesForTipMethod } from "@/utils/tipIva";
 import { formatMoney } from "@/utils/formatMoney";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
@@ -39,7 +40,7 @@ interface Tip {
   id: string;
   therapist_id: string;
   amount: string | number;
-  payment_method: "cash" | "credit_card" | "voucher";
+  payment_method: "cash" | "credit_card";
   iva_applies: boolean;
   notes: string | null;
   received_at: string;
@@ -76,23 +77,12 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
       therapist_id: defaultTherapistId ?? "",
       amount: "",
       payment_method: "credit_card",
-      iva_applies: true,
       notes: "",
       received_at: new Date(),
     },
   });
 
   const paymentMethod = methods.watch("payment_method");
-
-  // When method changes away from voucher, enforce the correct iva_applies value
-  useEffect(() => {
-    if (paymentMethod === "cash") {
-      methods.setValue("iva_applies", false);
-    } else if (paymentMethod === "credit_card") {
-      methods.setValue("iva_applies", true);
-    }
-    // voucher: leave as-is (user controls it)
-  }, [paymentMethod]);
 
   const fetchTips = useCallback(async () => {
     if (!bookingId) return;
@@ -111,7 +101,7 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
   }, [fetchTips]);
 
   const methodLabel = (method: string) =>
-    ({ cash: t("cash"), credit_card: t("creditCard"), voucher: t("voucher") }[method] ?? method);
+    ({ cash: t("cash"), credit_card: t("creditCard") }[method] ?? method);
 
   const onSubmit = (data: TipFormOutput) =>
     guard(async () => {
@@ -124,7 +114,6 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
             therapist_id: data.therapist_id,
             amount: data.amount,
             payment_method: data.payment_method,
-            iva_applies: data.iva_applies,
             notes: data.notes,
             received_at: data.received_at,
           }),
@@ -141,7 +130,6 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
           therapist_id: defaultTherapistId ?? "",
           amount: "",
           payment_method: "credit_card",
-          iva_applies: true,
           notes: "",
           received_at: new Date(),
         });
@@ -296,27 +284,18 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
                   <RadioGroup row {...field}>
                     <FormControlLabel value="credit_card" control={<Radio size="small" />} label={t("creditCard")} />
                     <FormControlLabel value="cash" control={<Radio size="small" />} label={t("cash")} />
-                    <FormControlLabel value="voucher" control={<Radio size="small" />} label={t("voucher")} />
                   </RadioGroup>
                 )}
               />
             </Grid>
 
-            {/* IVA toggle — only visible for voucher */}
-            {paymentMethod === "voucher" && (
-              <Grid size={12}>
-                <Controller
-                  name="iva_applies"
-                  control={methods.control}
-                  render={({ field }) => (
-                    <FormControlLabel
-                      control={<Switch {...field} checked={field.value} size="small" />}
-                      label={<Typography variant="caption">{t("ivaApplies")}</Typography>}
-                    />
-                  )}
-                />
-              </Grid>
-            )}
+            {/* IVA is derived from the payment method — shown read-only */}
+            <Grid size={12}>
+              <FormControlLabel
+                control={<Switch checked={ivaAppliesForTipMethod(paymentMethod)} disabled size="small" />}
+                label={<Typography variant="caption">{t("ivaApplies")}</Typography>}
+              />
+            </Grid>
 
             {/* Received date */}
             <Grid size={6}>

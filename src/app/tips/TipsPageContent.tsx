@@ -38,7 +38,7 @@ interface TipRow {
   therapist_id: string;
   therapist_name: string;
   iva_applies: boolean;
-  payment_method: "cash" | "credit_card" | "voucher";
+  payment_method: "cash" | "credit_card";
   notes: string | null;
   received_at: string;
   payout_id: string | null;
@@ -150,7 +150,7 @@ const TipsPageContent = () => {
     });
 
   const methodLabel = (m: string) =>
-    ({ cash: t("methodCash"), credit_card: t("methodCard"), voucher: t("methodVoucher") }[m] ?? m);
+    ({ cash: t("methodCash"), credit_card: t("methodCard") }[m] ?? m);
 
   const columns: GridColDef<TipRow>[] = [
     {
@@ -279,8 +279,8 @@ const TipsPageContent = () => {
         />
       </Paper>
 
-      {/* Selection summary + release action — content always rendered to prevent layout shifts */}
-      {(() => {
+      {/* Selection summary + release action — admin only (only admins release tips) */}
+      {isAdmin && (() => {
         const summary = selectionSummary ?? { count: 0, gross: 0, iva: 0, net: 0 };
         const visible = !!selectionSummary;
         return (
@@ -332,7 +332,7 @@ const TipsPageContent = () => {
           rows={tips}
           columns={columns}
           loading={loading}
-          checkboxSelection
+          checkboxSelection={isAdmin}
           disableColumnFilter
           disableColumnMenu
           isRowSelectable={(p) => p.row.payout_id === null}

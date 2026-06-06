@@ -88,37 +88,34 @@ export async function GET(request: Request) {
     }
     voucherSales.total = Math.round((voucherSales.cash + voucherSales.card) * 100) / 100;
 
-    // Tips grouped by therapist
-    type TherapistTips = { therapist_id: string; therapist_name: string; cash: number; card: number; voucher: number; total: number };
+    // Tips grouped by therapist (cash / card only)
+    type TherapistTips = { therapist_id: string; therapist_name: string; cash: number; card: number; total: number };
     const therapistMap = new Map<string, TherapistTips>();
     for (const row of tipRows) {
       let entry = therapistMap.get(row.therapist_id);
       if (!entry) {
-        entry = { therapist_id: row.therapist_id, therapist_name: row.full_name, cash: 0, card: 0, voucher: 0, total: 0 };
+        entry = { therapist_id: row.therapist_id, therapist_name: row.full_name, cash: 0, card: 0, total: 0 };
         therapistMap.set(row.therapist_id, entry);
       }
       const amt = toNum(row.total);
       if (row.payment_method === "cash") entry.cash += amt;
       else if (row.payment_method === "credit_card") entry.card += amt;
-      else if (row.payment_method === "voucher") entry.voucher += amt;
-      entry.total = Math.round((entry.cash + entry.card + entry.voucher) * 100) / 100;
+      entry.total = Math.round((entry.cash + entry.card) * 100) / 100;
     }
 
     const byTherapist = Array.from(therapistMap.values()).map((e) => ({
       ...e,
       cash: Math.round(e.cash * 100) / 100,
       card: Math.round(e.card * 100) / 100,
-      voucher: Math.round(e.voucher * 100) / 100,
     }));
 
     const tipsCash = byTherapist.reduce((s, e) => s + e.cash, 0);
     const tipsCard = byTherapist.reduce((s, e) => s + e.card, 0);
-    const tipsVoucher = byTherapist.reduce((s, e) => s + e.voucher, 0);
-    const tipsTotal = Math.round((tipsCash + tipsCard + tipsVoucher) * 100) / 100;
+    const tipsTotal = Math.round((tipsCash + tipsCard) * 100) / 100;
 
     const combinedCash = Math.round((payments.cash + voucherSales.cash + tipsCash) * 100) / 100;
     const combinedCard = Math.round((payments.card + voucherSales.card + tipsCard) * 100) / 100;
-    const combinedTotal = Math.round((combinedCash + combinedCard + tipsVoucher) * 100) / 100;
+    const combinedTotal = Math.round((combinedCash + combinedCard) * 100) / 100;
 
     return NextResponse.json({
       payments,
@@ -126,7 +123,6 @@ export async function GET(request: Request) {
       tips: {
         cash: Math.round(tipsCash * 100) / 100,
         card: Math.round(tipsCard * 100) / 100,
-        voucher: Math.round(tipsVoucher * 100) / 100,
         total: tipsTotal,
         by_therapist: byTherapist,
       },

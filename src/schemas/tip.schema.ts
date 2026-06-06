@@ -17,8 +17,7 @@ export const TipSchema = z.object({
       .number({ message: "Amount must be a number" })
       .positive({ message: "Amount must be positive" })
   ),
-  payment_method: z.enum(["cash", "credit_card", "voucher"]),
-  iva_applies: z.boolean(),
+  payment_method: z.enum(["cash", "credit_card"]),
   notes: z.string().optional(),
   received_at: z.coerce.date().default(() => new Date()),
 });

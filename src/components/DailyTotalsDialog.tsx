@@ -43,14 +43,13 @@ interface TherapistTips {
   therapist_name: string;
   cash: number;
   card: number;
-  voucher: number;
   total: number;
 }
 
 interface DailyTotalsData {
   payments: { cash: number; card: number; total: number };
   voucher_sales: { cash: number; card: number; total: number };
-  tips: { cash: number; card: number; voucher: number; total: number; by_therapist: TherapistTips[] };
+  tips: { cash: number; card: number; total: number; by_therapist: TherapistTips[] };
   combined: { cash: number; card: number; total: number };
 }
 

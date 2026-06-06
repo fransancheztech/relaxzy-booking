@@ -551,7 +551,6 @@
     "statusReleased": "Liberada",
     "methodCash": "Efectivo",
     "methodCard": "Tarjeta",
-    "methodVoucher": "Bono",
     "selectedCount": "{count} seleccionadas",
     "releaseSelected": "Liberar",
     "releaseSuccess": "{count} propinas liberadas",

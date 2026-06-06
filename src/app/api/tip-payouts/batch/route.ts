@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
 
 const IVA_RATE = 0.21;
 
 export async function POST(request: Request) {
   try {
+    // Releasing tips (creating payouts) is an admin-only action.
+    const role = await getCurrentUserRole();
+    if (role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const body = await request.json();
     const { tip_ids } = body;
 
