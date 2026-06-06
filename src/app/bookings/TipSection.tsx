@@ -282,8 +282,8 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
                 control={methods.control}
                 render={({ field }) => (
                   <RadioGroup row {...field}>
-                    <FormControlLabel value="credit_card" control={<Radio size="small" />} label={t("creditCard")} />
                     <FormControlLabel value="cash" control={<Radio size="small" />} label={t("cash")} />
+                    <FormControlLabel value="credit_card" control={<Radio size="small" />} label={t("creditCard")} />
                   </RadioGroup>
                 )}
               />
