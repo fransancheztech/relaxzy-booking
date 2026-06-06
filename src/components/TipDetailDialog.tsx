@@ -40,6 +40,7 @@ interface TipRow {
 
 interface Props {
   tip: TipRow | null;
+  readOnly?: boolean;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -52,14 +53,16 @@ interface FormState {
   notes: string;
 }
 
-const TipDetailDialog = ({ tip, onClose, onSaved }: Props) => {
+const TipDetailDialog = ({ tip, readOnly = false, onClose, onSaved }: Props) => {
   const t = useTranslations("TipsPage");
   const tCommon = useTranslations("Common");
   const therapists = useTherapists();
   const [form, setForm] = useState<FormState | null>(null);
   const { submitting: saving, guard } = useSubmitGuard();
 
+  // Locked = nothing editable: released tips, or a view-only role (therapist).
   const isReleased = tip?.payout_id !== null;
+  const locked = isReleased || readOnly;
 
   useEffect(() => {
     if (tip) {
@@ -105,7 +108,7 @@ const TipDetailDialog = ({ tip, onClose, onSaved }: Props) => {
     <Dialog open={!!tip} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          {isReleased ? t("viewTip") : t("editTip")}
+          {locked ? t("viewTip") : t("editTip")}
           <Chip
             size="small"
             label={isReleased ? t("statusReleased") : t("statusPending")}
@@ -118,7 +121,7 @@ const TipDetailDialog = ({ tip, onClose, onSaved }: Props) => {
       <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "16px !important" }}>
         {form && (
           <>
-            <FormControl size="small" fullWidth disabled={isReleased}>
+            <FormControl size="small" fullWidth disabled={locked}>
               <InputLabel>{t("colTherapist")}</InputLabel>
               <Select
                 value={form.therapist_id}
@@ -137,13 +140,13 @@ const TipDetailDialog = ({ tip, onClose, onSaved }: Props) => {
                 value={form.received_at}
                 onChange={(d) => set("received_at", d)}
                 format="dd/MM/yyyy"
-                disabled={isReleased}
+                disabled={locked}
                 disableFuture
                 slotProps={{ textField: { size: "small", fullWidth: true } }}
               />
             </LocalizationProvider>
 
-            <FormControl size="small" fullWidth disabled={isReleased}>
+            <FormControl size="small" fullWidth disabled={locked}>
               <InputLabel>{t("colMethod")}</InputLabel>
               <Select
                 value={form.payment_method}
@@ -175,7 +178,7 @@ const TipDetailDialog = ({ tip, onClose, onSaved }: Props) => {
               label={tCommon("notes")}
               value={form.notes}
               onChange={(e) => set("notes", e.target.value)}
-              disabled={isReleased}
+              disabled={locked}
               multiline
               minRows={2}
             />
@@ -185,7 +188,7 @@ const TipDetailDialog = ({ tip, onClose, onSaved }: Props) => {
 
       <DialogActions>
         <Button onClick={onClose} color="inherit">{tCommon("close")}</Button>
-        {!isReleased && (
+        {!locked && (
           <Button variant="contained" onClick={handleSave} disabled={saving}>
             {saving ? tCommon("saving") : tCommon("save")}
           </Button>

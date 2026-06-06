@@ -119,7 +119,7 @@ export default function LayoutContent({
   const isAdmin = user?.app_metadata?.role === "admin";
   const isTherapist = user?.app_metadata?.role === "therapist";
   const adminOnlyPaths = new Set<string>();
-  const therapistOnlyPaths = new Set(["/calendar", "/guidelines", "/stats"]);
+  const therapistOnlyPaths = new Set(["/calendar", "/guidelines", "/stats", "/tips"]);
   const visiblePages = menuPages.filter((page) => {
     if (adminOnlyPaths.has(page.href) && !isAdmin) return false;
     if (isTherapist && !therapistOnlyPaths.has(page.href)) return false;

@@ -1,11 +1,8 @@
-import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
-import { redirect } from "next/navigation";
 import TipsPageContent from "./TipsPageContent";
 
-const TipsPage = async () => {
-  const role = await getCurrentUserRole();
-  if (role === "therapist") redirect("/");
-
+// Visible to all staff roles. What each role can do (release, edit, view-only) is
+// enforced inside TipsPageContent and the tip APIs.
+const TipsPage = () => {
   return <TipsPageContent />;
 };
 

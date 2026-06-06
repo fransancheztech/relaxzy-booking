@@ -52,7 +52,9 @@ const TipsPageContent = () => {
   const tCommon = useTranslations("Common");
   const { setButtonLabel, setOnButtonClick } = useLayout();
   const therapists = useTherapists();
-  const { isAdmin } = useRole();
+  const { isAdmin, isTherapist } = useRole();
+  // Admins and receptionists can edit individual tips; therapists are view-only.
+  const canEdit = !isTherapist;
 
   const [tips, setTips] = useState<TipRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -226,15 +228,19 @@ const TipsPageContent = () => {
       headerName: "",
       width: 48,
       sortable: false,
-      renderCell: ({ row }) => (
-        <Tooltip title={row.payout_id === null ? tCommon("edit") : tCommon("view")}>
-          <IconButton size="small" onClick={(e) => { e.stopPropagation(); setDetailTip(row); }}>
-            {row.payout_id === null
-              ? <EditIcon fontSize="small" />
-              : <VisibilityIcon fontSize="small" />}
-          </IconButton>
-        </Tooltip>
-      ),
+      renderCell: ({ row }) => {
+        // Editable only for admin/receptionist and only while the tip is still pending.
+        const editable = canEdit && row.payout_id === null;
+        return (
+          <Tooltip title={editable ? tCommon("edit") : tCommon("view")}>
+            <IconButton size="small" onClick={(e) => { e.stopPropagation(); setDetailTip(row); }}>
+              {editable
+                ? <EditIcon fontSize="small" />
+                : <VisibilityIcon fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+        );
+      },
     },
   ];
 
@@ -279,8 +285,8 @@ const TipsPageContent = () => {
         />
       </Paper>
 
-      {/* Selection summary + release action — admin only (only admins release tips) */}
-      {isAdmin && (() => {
+      {/* Selection summary — visible to all roles; the Release action is admin-only. */}
+      {(() => {
         const summary = selectionSummary ?? { count: 0, gross: 0, iva: 0, net: 0 };
         const visible = !!selectionSummary;
         return (
@@ -312,16 +318,18 @@ const TipsPageContent = () => {
                 {t("colNet")}: <strong>{formatMoney(summary.net)}</strong>
               </Typography>
             </Box>
-            <Button
-              variant="contained"
-              color="success"
-              size="small"
-              startIcon={<PayoutIcon fontSize="small" />}
-              onClick={handleRelease}
-              disabled={releasing}
-            >
-              {t("releaseSelected")}
-            </Button>
+            {isAdmin && (
+              <Button
+                variant="contained"
+                color="success"
+                size="small"
+                startIcon={<PayoutIcon fontSize="small" />}
+                onClick={handleRelease}
+                disabled={releasing}
+              >
+                {t("releaseSelected")}
+              </Button>
+            )}
           </Paper>
         );
       })()}
@@ -332,7 +340,7 @@ const TipsPageContent = () => {
           rows={tips}
           columns={columns}
           loading={loading}
-          checkboxSelection={isAdmin}
+          checkboxSelection
           disableColumnFilter
           disableColumnMenu
           isRowSelectable={(p) => p.row.payout_id === null}
@@ -344,6 +352,7 @@ const TipsPageContent = () => {
 
       <TipDetailDialog
         tip={detailTip}
+        readOnly={!canEdit}
         onClose={() => setDetailTip(null)}
         onSaved={loadTips}
       />
