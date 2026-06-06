@@ -79,9 +79,10 @@ export async function GET(
 
 /* ======================================================
    PATCH /api/bookings/[id]/group
-   Body: { action: "remove" }
-   Removes this booking from its group. If only one member remains
-   afterwards, null it there too — a group of 1 is meaningless.
+   Body: { action: "remove" } | { action: "add", targetId }
+   - remove: drops this booking from its group (dissolving a leftover group of 1).
+   - add: links targetId into this booking's group, creating a new group if this
+     booking isn't grouped yet.
    ====================================================== */
 export async function PATCH(
   req: Request,
@@ -97,7 +98,59 @@ export async function PATCH(
       );
     }
 
-    const body = (await req.json()) as { action?: string };
+    const body = (await req.json()) as { action?: string; targetId?: string };
+
+    if (body.action === "add") {
+      const targetId = body.targetId;
+      if (!targetId || typeof targetId !== "string" || targetId === id) {
+        return NextResponse.json({ error: "Invalid target booking" }, { status: 400 });
+      }
+
+      const result = await prisma.$transaction(async (tx) => {
+        const current = await tx.bookings.findUnique({
+          where: { id, deleted_at: null },
+          select: { booking_group_id: true },
+        });
+        if (!current) {
+          throw Object.assign(new Error("Booking not found"), { httpStatus: 404 });
+        }
+
+        const target = await tx.bookings.findUnique({
+          where: { id: targetId, deleted_at: null },
+          select: { booking_group_id: true },
+        });
+        if (!target) {
+          throw Object.assign(new Error("Target booking not found"), { httpStatus: 404 });
+        }
+
+        // Reuse this booking's group, or start a new one if it isn't grouped yet.
+        const groupId = current.booking_group_id ?? crypto.randomUUID();
+
+        if (target.booking_group_id && target.booking_group_id !== groupId) {
+          throw Object.assign(
+            new Error("That booking already belongs to another group"),
+            { httpStatus: 409 },
+          );
+        }
+
+        if (!current.booking_group_id) {
+          await tx.bookings.update({
+            where: { id },
+            data: { booking_group_id: groupId, updated_at: new Date() },
+          });
+        }
+        if (target.booking_group_id !== groupId) {
+          await tx.bookings.update({
+            where: { id: targetId },
+            data: { booking_group_id: groupId, updated_at: new Date() },
+          });
+        }
+
+        return { groupId };
+      });
+
+      return NextResponse.json(result, { status: 200 });
+    }
 
     if (body.action !== "remove") {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });

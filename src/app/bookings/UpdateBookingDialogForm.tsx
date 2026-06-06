@@ -168,6 +168,19 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
     reloadPaymentsSummary();
   }, [isPaymentDialogOpen, bookingId]);
 
+  // Re-read the booking's group after add/remove so the group section reflects it.
+  const refreshGroupId = async () => {
+    if (!bookingId) return;
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}`, { cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      setBookingGroupId(data.booking_group_id ?? null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // Pending submission held while the receptionist resolves a name conflict.
   const [conflicts, setConflicts] = useState<ClientConflict[]>([]);
   const [pendingData, setPendingData] = useState<BookingUpdateSchemaType | null>(null);
@@ -256,7 +269,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
                 clientNotes={clientNotes}
                 onClientPicked={(notes) => setClientNotes(notes)}
                 bookingGroupId={bookingGroupId}
-                onGroupChanged={() => setBookingGroupId(null)}
+                onGroupChanged={refreshGroupId}
               />
             </DialogContent>
             <DialogActions

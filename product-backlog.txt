@@ -1,4 +1,6 @@
 TO-DO
+- Pensar si añadimos Add Companion a Update Booking
+- Terapeutas quieren ver las propinas
 - Revisar texto de ayuda contextual para diferentes páginas y usuarios, importante para no liar a usuarios
 - Completar reservas Mayo
 - Añadir propina de las reservas antiguas.
