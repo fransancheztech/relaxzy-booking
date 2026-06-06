@@ -462,7 +462,6 @@ enum payment_types {
 enum tip_payment_method {
   cash
   credit_card
-  voucher
 }
 
 enum voucher_source {
