@@ -69,3 +69,4 @@ DONE
 - Cambiar full name por nickname en New Therapist
 - Añadido botón Add to group
 - Terapeutas quieren ver las propinas
+- Hacer que en toda mi aplicación, cuando se vaya a añadir un pago o un tip o cualquier cosa relacionada con dinero, y haya que elegir entre efectivo y tarjeta de crédito, aparezca por órden siempre el primero efectivo y luego tarjeta de crédito

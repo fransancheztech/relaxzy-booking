@@ -387,6 +387,7 @@
     "creditCard": "Credit Card",
     "paymentEvents": "Payment Events",
     "voucherUses": "Voucher Uses",
+    "bookingDeleted": "deleted",
     "noPaymentEvents": "No payment events",
     "noVoucherUses": "No voucher uses",
     "deleteUseTitle": "Delete Voucher Use",

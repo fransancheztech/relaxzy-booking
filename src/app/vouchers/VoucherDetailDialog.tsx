@@ -41,6 +41,7 @@ import { es } from "date-fns/locale";
 import { formatMoney } from "@/utils/formatMoney";
 import { toast } from "react-toastify";
 import VoucherPaymentEventDialog from "./VoucherPaymentEventDialog";
+import UpdateBookingDialogForm from "@/app/bookings/UpdateBookingDialogForm";
 import { useTranslations } from "next-intl";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
@@ -67,6 +68,13 @@ type VoucherUse = {
   notes: string | null;
   booking_id: string | null;
   created_at: string | null;
+  booking: {
+    id: string;
+    start_time: string | null;
+    deleted: boolean;
+    client_name: string | null;
+    service_name: string | null;
+  } | null;
 };
 
 type VoucherSource = "physical" | "online";
@@ -153,6 +161,7 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDeleteUse, setPendingDeleteUse] = useState<VoucherUse | null>(null);
+  const [bookingToView, setBookingToView] = useState<string | null>(null);
   const [confirmDeleteVoucherOpen, setConfirmDeleteVoucherOpen] = useState(false);
   const { submitting: deletingVoucher, guard: deleteGuard } = useSubmitGuard();
 
@@ -628,7 +637,33 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                   {details.voucherUses.map((vu) => (
                     <TableRow key={vu.id}>
                       <TableCell>{formatMoney(Number(vu.amount))}</TableCell>
-                      <TableCell>{vu.booking_id ?? "—"}</TableCell>
+                      <TableCell>
+                        {!vu.booking_id ? (
+                          "—"
+                        ) : vu.booking ? (
+                          <Button
+                            variant="text"
+                            size="small"
+                            onClick={() => setBookingToView(vu.booking!.id)}
+                            sx={{ textTransform: "none", p: 0, minWidth: 0, textAlign: "left", lineHeight: 1.3 }}
+                          >
+                            {[
+                              vu.booking.start_time
+                                ? new Date(vu.booking.start_time).toLocaleDateString("es-ES", {
+                                    day: "2-digit", month: "2-digit", year: "numeric",
+                                  })
+                                : null,
+                              vu.booking.client_name,
+                              vu.booking.service_name,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                            {vu.booking.deleted ? ` (${t("bookingDeleted")})` : ""}
+                          </Button>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
                       <TableCell>{vu.notes ?? "—"}</TableCell>
                       <TableCell>{formatDateTime(vu.created_at)}</TableCell>
                       <TableCell align="center">
@@ -735,6 +770,15 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
         onClose={() => setPaymentDialogOpen(false)}
         onSuccess={handlePaymentSuccess}
       />
+
+      {/* Booking opened from a voucher use — stacked on top of this dialog. */}
+      {bookingToView && (
+        <UpdateBookingDialogForm
+          open={!!bookingToView}
+          bookingId={bookingToView}
+          onClose={() => setBookingToView(null)}
+        />
+      )}
     </>
   );
 };

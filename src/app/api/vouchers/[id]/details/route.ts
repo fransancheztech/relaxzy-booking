@@ -38,7 +38,52 @@ export async function GET(
       }),
     ]);
 
-    return NextResponse.json({ voucher, buyer, recipient, paymentEvents, voucherUses });
+    // Enrich each use that has a booking with that booking's context, so the dialog
+    // can show a human-readable reference (and link to it) instead of a raw UUID.
+    const bookingIds = [
+      ...new Set(voucherUses.map((u) => u.booking_id).filter((b): b is string => !!b)),
+    ];
+    const bookings = bookingIds.length
+      ? await prisma.bookings.findMany({
+          where: { id: { in: bookingIds } },
+          select: {
+            id: true,
+            start_time: true,
+            deleted_at: true,
+            clients: { select: { client_name: true, client_surname: true } },
+            services_names: { select: { name: true, short_name: true } },
+          },
+        })
+      : [];
+    const bookingMap = new Map(bookings.map((b) => [b.id, b]));
+
+    const usesWithBooking = voucherUses.map((u) => {
+      const b = u.booking_id ? bookingMap.get(u.booking_id) : undefined;
+      return {
+        ...u,
+        booking: b
+          ? {
+              id: b.id,
+              start_time: b.start_time,
+              deleted: !!b.deleted_at,
+              client_name:
+                [b.clients?.client_name, b.clients?.client_surname]
+                  .filter(Boolean)
+                  .join(" ")
+                  .trim() || null,
+              service_name: b.services_names?.short_name ?? b.services_names?.name ?? null,
+            }
+          : null,
+      };
+    });
+
+    return NextResponse.json({
+      voucher,
+      buyer,
+      recipient,
+      paymentEvents,
+      voucherUses: usesWithBooking,
+    });
   } catch (err) {
     console.error("Error fetching voucher details", err);
     return NextResponse.json(

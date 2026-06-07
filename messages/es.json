@@ -387,6 +387,7 @@
     "creditCard": "Tarjeta",
     "paymentEvents": "Eventos de pago",
     "voucherUses": "Usos del bono",
+    "bookingDeleted": "eliminada",
     "noPaymentEvents": "Sin eventos de pago",
     "noVoucherUses": "Sin usos del bono",
     "deleteUseTitle": "Eliminar uso del bono",

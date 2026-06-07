@@ -41,10 +41,16 @@ export const ClientUpdateSchema = z
         });
       }
       if (!data.client_email && !data.client_phone) {
+        // Surface on rendered fields so the error is actually visible in the dialog.
         ctx.addIssue({
           code: "custom",
           message: "Provide at least a phone or email for the client",
-          path: ["booking_creation_form"],
+          path: ["client_phone"],
+        });
+        ctx.addIssue({
+          code: "custom",
+          message: "Provide at least a phone or email for the client",
+          path: ["client_email"],
         });
       }
     }

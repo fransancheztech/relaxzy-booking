@@ -387,6 +387,7 @@
     "creditCard": "บัตรเครดิต",
     "paymentEvents": "ประวัติการชำระเงิน",
     "voucherUses": "การใช้บัตรกำนัล",
+    "bookingDeleted": "ถูกลบแล้ว",
     "noPaymentEvents": "ไม่มีประวัติการชำระเงิน",
     "noVoucherUses": "ไม่มีการใช้บัตรกำนัล",
     "deleteUseTitle": "ลบการใช้บัตรกำนัล",
