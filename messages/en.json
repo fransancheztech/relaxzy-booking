@@ -146,6 +146,8 @@
     "conflictModifyWarning": "This updates the client's details on all their bookings.",
     "conflictPrimaryLabel": "Main client",
     "conflictCompanionLabel": "Companion {n}",
+    "conflictBuyerLabel": "Buyer",
+    "conflictRecipientLabel": "Recipient",
     "conflictCancel": "Go back",
     "conflictConfirm": "Continue",
     "conflictContactTaken": "Couldn't save: that phone or email already belongs to another client.",

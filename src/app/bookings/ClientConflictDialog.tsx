@@ -48,6 +48,8 @@ const ClientConflictDialog = ({ open, conflicts, submitting, onCancel, onResolve
 
   const slotLabel = (slot: string) => {
     if (slot === "primary") return t("conflictPrimaryLabel");
+    if (slot === "buyer") return t("conflictBuyerLabel");
+    if (slot === "recipient") return t("conflictRecipientLabel");
     const idx = Number(slot.split("-")[1] ?? 0);
     return t("conflictCompanionLabel", { n: idx + 1 });
   };

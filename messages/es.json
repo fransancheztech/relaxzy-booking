@@ -146,6 +146,8 @@
     "conflictModifyWarning": "Esto actualiza los datos del cliente en todas sus reservas.",
     "conflictPrimaryLabel": "Cliente principal",
     "conflictCompanionLabel": "Acompañante {n}",
+    "conflictBuyerLabel": "Comprador",
+    "conflictRecipientLabel": "Destinatario",
     "conflictCancel": "Volver",
     "conflictConfirm": "Continuar",
     "conflictContactTaken": "No se pudo guardar: ese teléfono o email ya pertenece a otro cliente.",

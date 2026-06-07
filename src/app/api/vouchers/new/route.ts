@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "generated/prisma";
 import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 import { VoucherContactSchema } from "@/schemas/clientContact.schema";
 import { formatZodError } from "@/utils/zodApiError";
+import {
+  applyClientSlot,
+  ClientConflictError,
+  detectClientConflict,
+  type ClientInput,
+} from "@/lib/clients/resolveBookingClients";
+import { CLIENT_CONTACT_TAKEN, CLIENT_NAME_CONFLICT } from "@/types/clientConflict";
+import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
 
 type Body = {
   buyer_name?: string;
@@ -21,7 +28,16 @@ type Body = {
   created_at?: string | Date;
   source?: "physical" | "online";
   external_reference?: string;
+  // Per-slot decisions for name conflicts: "buyer", "recipient".
+  clientResolutions?: Record<string, ClientResolution>;
 };
+
+const clientInputFor = (body: Body, prefix: "buyer" | "recipient"): ClientInput => ({
+  client_name: (body as Record<string, string | undefined>)[`${prefix}_name`],
+  client_surname: (body as Record<string, string | undefined>)[`${prefix}_surname`],
+  client_email: (body as Record<string, string | undefined>)[`${prefix}_email`],
+  client_phone: (body as Record<string, string | undefined>)[`${prefix}_phone`],
+});
 
 const normalizeString = (v?: string | null) =>
   v && v.trim() !== "" ? v.trim() : null;
@@ -67,59 +83,6 @@ function nextSequenceForPrefix(
   return max + 1;
 }
 
-async function findOrCreateClientFromVoucher(
-  tx: Prisma.TransactionClient,
-  prefix: "buyer" | "recipient",
-  body: Body,
-) {
-  const name = normalizeString(
-    (body as Record<string, unknown>)[`${prefix}_name`] as string | undefined,
-  );
-  const surname = normalizeString(
-    (body as Record<string, unknown>)[`${prefix}_surname`] as string | undefined,
-  );
-  const email = normalizeString(
-    (body as Record<string, unknown>)[`${prefix}_email`] as string | undefined,
-  );
-  const phone = normalizeString(
-    (body as Record<string, unknown>)[`${prefix}_phone`] as string | undefined,
-  );
-
-  if (!name) {
-    throw new Error(`${prefix} must have a name`);
-  }
-
-  let clientId: string | null = null;
-
-  if (email) {
-    const clientByEmail = await tx.clients.findFirst({
-      where: { client_email: email, deleted_at: null },
-    });
-    clientId = clientByEmail?.id ?? null;
-  }
-
-  if (!clientId && phone) {
-    const clientByPhone = await tx.clients.findFirst({
-      where: { client_phone: phone, deleted_at: null },
-    });
-    clientId = clientByPhone?.id ?? null;
-  }
-
-  if (!clientId) {
-    const created = await tx.clients.create({
-      data: {
-        client_name: name,
-        client_surname: surname,
-        client_email: email,
-        client_phone: phone,
-      },
-    });
-    clientId = created.id;
-  }
-
-  return clientId;
-}
-
 const MAX_CODE_RETRIES = 8;
 
 function isPrismaUniqueViolation(err: unknown): boolean {
@@ -129,6 +92,15 @@ function isPrismaUniqueViolation(err: unknown): boolean {
     "code" in err &&
     (err as { code?: string }).code === "P2002"
   );
+}
+
+// Only the voucher *code* unique collision should be retried. A client phone/email
+// collision must surface to the user, not loop.
+function isVoucherCodeCollision(err: unknown): boolean {
+  if (!isPrismaUniqueViolation(err)) return false;
+  const target = (err as { meta?: { target?: unknown } }).meta?.target;
+  const s = Array.isArray(target) ? target.join(",") : String(target ?? "");
+  return s.includes("code");
 }
 
 export async function POST(request: Request) {
@@ -193,11 +165,15 @@ export async function POST(request: Request) {
 
     const performedBy = await getCurrentUserId();
 
-    const hasRecipientInfo =
+    const hasRecipientInfo = !!(
       body.recipient_name ||
       body.recipient_surname ||
       body.recipient_email ||
-      body.recipient_phone;
+      body.recipient_phone
+    );
+    const resolutions = body.clientResolutions ?? {};
+    const buyerInput = clientInputFor(body, "buyer");
+    const recipientInput = clientInputFor(body, "recipient");
 
     const voucherNotes = normalizeString(body.notes) ?? undefined;
     const source = body.source as "physical" | "online";
@@ -217,10 +193,21 @@ export async function POST(request: Request) {
     for (let attempt = 0; attempt < MAX_CODE_RETRIES; attempt++) {
       try {
         const result = await prisma.$transaction(async (tx) => {
-          const buyerId = await findOrCreateClientFromVoucher(tx, "buyer", body);
+          // Phase 1 — detect name conflicts before any write (buyer + recipient).
+          const conflicts: ClientConflict[] = [];
+          const buyerConflict = await detectClientConflict(tx, "buyer", buyerInput, resolutions["buyer"]);
+          if (buyerConflict) conflicts.push(buyerConflict);
+          if (hasRecipientInfo) {
+            const recipientConflict = await detectClientConflict(tx, "recipient", recipientInput, resolutions["recipient"]);
+            if (recipientConflict) conflicts.push(recipientConflict);
+          }
+          if (conflicts.length > 0) throw new ClientConflictError(conflicts);
 
+          // Phase 2 — resolve clients (contact optional for vouchers).
+          const buyerId = await applyClientSlot(tx, buyerInput, resolutions["buyer"], { requireContact: false });
+          if (!buyerId) throw new Error("Buyer name is required");
           const recipientId = hasRecipientInfo
-            ? await findOrCreateClientFromVoucher(tx, "recipient", body)
+            ? await applyClientSlot(tx, recipientInput, resolutions["recipient"], { requireContact: false })
             : buyerId;
 
           const sameDay = await tx.vouchers.findMany({
@@ -271,7 +258,7 @@ export async function POST(request: Request) {
         break;
       } catch (e: unknown) {
         lastErr = e;
-        if (isPrismaUniqueViolation(e)) {
+        if (isVoucherCodeCollision(e)) {
           continue;
         }
         throw e;
@@ -288,6 +275,15 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ voucher }, { status: 201 });
   } catch (err: unknown) {
+    if (err instanceof ClientConflictError) {
+      return NextResponse.json(
+        { error: CLIENT_NAME_CONFLICT, conflicts: err.conflicts },
+        { status: 409 },
+      );
+    }
+    if (isPrismaUniqueViolation(err)) {
+      return NextResponse.json({ error: CLIENT_CONTACT_TAKEN }, { status: 409 });
+    }
     console.error("Error creating voucher", err);
 
     const message =

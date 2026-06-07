@@ -146,6 +146,8 @@
     "conflictModifyWarning": "การนี้จะอัปเดตข้อมูลลูกค้าในการจองทั้งหมดของพวกเขา",
     "conflictPrimaryLabel": "ลูกค้าหลัก",
     "conflictCompanionLabel": "ผู้ติดตาม {n}",
+    "conflictBuyerLabel": "ผู้ซื้อ",
+    "conflictRecipientLabel": "ผู้รับ",
     "conflictCancel": "ย้อนกลับ",
     "conflictConfirm": "ดำเนินการต่อ",
     "conflictContactTaken": "บันทึกไม่ได้: เบอร์โทรหรืออีเมลนี้เป็นของลูกค้าคนอื่นแล้ว",

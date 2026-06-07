@@ -9,9 +9,12 @@ import handleSubmitCreateVoucher from '@/handlers/handleSubmitCreateVoucher';
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CloseIcon from "@mui/icons-material/Close";
 import NewVoucherFormFields from './NewVoucherFormFields';
+import ClientConflictDialog from '@/app/bookings/ClientConflictDialog';
 import { useTranslations } from "next-intl";
+import { toast } from "react-toastify";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 import { useRef, useState } from "react";
+import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
 
 /**
  * A voucher is missing contact info only when there is no phone or email saved
@@ -64,12 +67,38 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
     const [confirmOpen, setConfirmOpen] = useState(false);
     const pendingDataRef = useRef<VoucherSchemaType | null>(null);
 
-    const createVoucher = (data: VoucherSchemaType) =>
-      guard(async () => {
-        await handleSubmitCreateVoucher(data);
+    // Pending submission held while the receptionist resolves a name conflict.
+    const [conflicts, setConflicts] = useState<ClientConflict[]>([]);
+    const [pendingData, setPendingData] = useState<VoucherSchemaType | null>(null);
+
+    const submit = async (
+      data: VoucherSchemaType,
+      clientResolutions?: Record<string, ClientResolution>,
+    ) => {
+      const result = await handleSubmitCreateVoucher(data, clientResolutions);
+      if (result.status === "ok") {
+        setConflicts([]);
+        setPendingData(null);
         methods.reset();
         onClose();
-      });
+        return;
+      }
+      if (result.status === "conflict") {
+        setPendingData(data);
+        setConflicts(result.conflicts);
+        return;
+      }
+      if (result.status === "contact_taken") {
+        toast.error(t("contactTaken"));
+        return;
+      }
+      // "error" — already surfaced by the handler.
+    };
+
+    const createVoucher = (data: VoucherSchemaType) => guard(() => submit(data));
+
+    const onResolveConflict = (resolutions: Record<string, ClientResolution>) =>
+      guard(() => (pendingData ? submit(pendingData, resolutions) : Promise.resolve()));
 
     const onSubmit = (data: VoucherSchemaType) => {
         // Contact info isn't enforced, but warn before creating a voucher without it.
@@ -149,6 +178,14 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <ClientConflictDialog
+                open={conflicts.length > 0}
+                conflicts={conflicts}
+                submitting={submitting}
+                onCancel={() => setConflicts([])}
+                onResolve={onResolveConflict}
+            />
         </Dialog>
     )
 }
