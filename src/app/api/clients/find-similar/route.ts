@@ -2,20 +2,11 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "generated/prisma";
 
-const COLUMN_MAP = {
-  client_name: Prisma.sql`client_name`,
-  client_surname: Prisma.sql`client_surname`,
-  client_email: Prisma.sql`client_email`,
-  client_phone: Prisma.sql`client_phone`,
-} as const;
-
-type FieldKey = keyof typeof COLUMN_MAP;
+const FIELDS = ["client_name", "client_surname", "client_email", "client_phone"] as const;
+type FieldKey = (typeof FIELDS)[number];
 
 const isFieldKey = (s: unknown): s is FieldKey =>
-  s === "client_name" ||
-  s === "client_surname" ||
-  s === "client_email" ||
-  s === "client_phone";
+  typeof s === "string" && (FIELDS as readonly string[]).includes(s);
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -27,48 +18,73 @@ export async function POST(req: Request) {
 }
 
 /* -----------------------------------------------------------
-   New per-field ranked search
+   New per-field ranked search.
+   Filters on the focused field, then ranks in JS (exact > prefix > contains,
+   tie-broken by how many of the other typed fields also overlap). Done in JS
+   rather than raw SQL so it doesn't depend on fragile raw-query composition.
    ----------------------------------------------------------- */
 async function handlePerField(body: {
   field: FieldKey;
   value?: string;
   others?: Partial<Record<FieldKey, string>>;
 }) {
+  const field = body.field;
   const value = (body.value ?? "").trim();
   if (!value) return NextResponse.json([], { status: 200 });
 
-  const focusedCol = COLUMN_MAP[body.field];
   const others = body.others ?? {};
 
-  const overlapExprs: Prisma.Sql[] = [];
-  for (const k of Object.keys(COLUMN_MAP) as FieldKey[]) {
-    if (k === body.field) continue;
-    const v = (others[k] ?? "").trim();
-    if (!v) continue;
-    overlapExprs.push(
-      Prisma.sql`(CASE WHEN ${COLUMN_MAP[k]} ILIKE ${`%${v}%`} THEN 1 ELSE 0 END)`,
-    );
-  }
-  const overlapOrderBy = overlapExprs.length
-    ? Prisma.sql`(${Prisma.join(overlapExprs, ` + `)}) DESC,`
-    : Prisma.empty;
-
   try {
-    const rows = await prisma.$queryRaw`
-      SELECT id, client_name, client_surname, client_email, client_phone,
-             client_notes, created_at, updated_at
-      FROM clients
-      WHERE deleted_at IS NULL
-        AND ${focusedCol} ILIKE ${`%${value}%`}
-      ORDER BY
-        (CASE WHEN LOWER(${focusedCol}) = LOWER(${value}) THEN 2
-              WHEN ${focusedCol} ILIKE ${`${value}%`} THEN 1
-              ELSE 0 END) DESC,
-        ${overlapOrderBy}
-        ${focusedCol} ASC NULLS LAST
-      LIMIT 15;
-    `;
-    return NextResponse.json(rows);
+    const rows = await prisma.clients.findMany({
+      where: {
+        deleted_at: null,
+        [field]: { contains: value, mode: "insensitive" },
+      },
+      select: {
+        id: true,
+        client_name: true,
+        client_surname: true,
+        client_email: true,
+        client_phone: true,
+        client_notes: true,
+        created_at: true,
+        updated_at: true,
+      },
+      take: 50,
+    });
+
+    const lc = (s: string | null | undefined) => (s ?? "").toLowerCase();
+    const valLc = value.toLowerCase();
+
+    const focusedScore = (row: (typeof rows)[number]) => {
+      const f = lc(row[field]);
+      if (f === valLc) return 2;
+      if (f.startsWith(valLc)) return 1;
+      return 0;
+    };
+
+    const overlapScore = (row: (typeof rows)[number]) => {
+      let s = 0;
+      for (const k of FIELDS) {
+        if (k === field) continue;
+        const v = (others[k] ?? "").trim().toLowerCase();
+        if (v && lc(row[k]).includes(v)) s += 1;
+      }
+      return s;
+    };
+
+    const ranked = rows
+      .map((row) => ({ row, fs: focusedScore(row), os: overlapScore(row) }))
+      .sort(
+        (a, b) =>
+          b.fs - a.fs ||
+          b.os - a.os ||
+          lc(a.row[field]).localeCompare(lc(b.row[field])),
+      )
+      .slice(0, 15)
+      .map((r) => r.row);
+
+    return NextResponse.json(ranked);
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Error finding clients" }, { status: 500 });

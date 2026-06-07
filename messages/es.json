@@ -388,6 +388,8 @@
     "paymentEvents": "Eventos de pago",
     "voucherUses": "Usos del bono",
     "bookingDeleted": "eliminada",
+    "contactTaken": "Ese teléfono o email ya pertenece a otro cliente.",
+    "contactTakenBy": "Ese teléfono o email ya pertenece a {name}.",
     "noPaymentEvents": "Sin eventos de pago",
     "noVoucherUses": "Sin usos del bono",
     "deleteUseTitle": "Eliminar uso del bono",

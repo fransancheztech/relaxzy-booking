@@ -388,6 +388,8 @@
     "paymentEvents": "Payment Events",
     "voucherUses": "Voucher Uses",
     "bookingDeleted": "deleted",
+    "contactTaken": "That phone or email already belongs to another client.",
+    "contactTakenBy": "That phone or email already belongs to {name}.",
     "noPaymentEvents": "No payment events",
     "noVoucherUses": "No voucher uses",
     "deleteUseTitle": "Delete Voucher Use",

@@ -388,6 +388,8 @@
     "paymentEvents": "ประวัติการชำระเงิน",
     "voucherUses": "การใช้บัตรกำนัล",
     "bookingDeleted": "ถูกลบแล้ว",
+    "contactTaken": "เบอร์โทรหรืออีเมลนี้เป็นของลูกค้าคนอื่นแล้ว",
+    "contactTakenBy": "เบอร์โทรหรืออีเมลนี้เป็นของ {name} แล้ว",
     "noPaymentEvents": "ไม่มีประวัติการชำระเงิน",
     "noVoucherUses": "ไม่มีการใช้บัตรกำนัล",
     "deleteUseTitle": "ลบการใช้บัตรกำนัล",

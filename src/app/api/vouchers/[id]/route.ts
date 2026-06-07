@@ -1,7 +1,48 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "generated/prisma";
+import { CLIENT_CONTACT_TAKEN } from "@/types/clientConflict";
 
 const norm = (v?: string | null) => (v && v.trim() !== "" ? v.trim() : null);
+
+const fullName = (c: { client_name: string | null; client_surname: string | null }) =>
+  [c.client_name, c.client_surname].filter(Boolean).join(" ").trim() || null;
+
+// Thrown when a buyer/recipient contact edit collides with another client's unique
+// phone/email — surfaced as a clear 409 instead of a raw P2002 / 500.
+class ContactTakenError extends Error {
+  constructor(
+    public party: "buyer" | "recipient",
+    public field: "email" | "phone",
+    public clientName: string | null,
+  ) {
+    super(CLIENT_CONTACT_TAKEN);
+  }
+}
+
+// Reject a new email/phone already held by a *different* active client.
+async function assertContactFree(
+  tx: Prisma.TransactionClient,
+  clientId: string,
+  party: "buyer" | "recipient",
+  email: string | null,
+  phone: string | null,
+) {
+  if (email) {
+    const other = await tx.clients.findFirst({
+      where: { client_email: email, deleted_at: null, NOT: { id: clientId } },
+      select: { client_name: true, client_surname: true },
+    });
+    if (other) throw new ContactTakenError(party, "email", fullName(other));
+  }
+  if (phone) {
+    const other = await tx.clients.findFirst({
+      where: { client_phone: phone, deleted_at: null, NOT: { id: clientId } },
+      select: { client_name: true, client_surname: true },
+    });
+    if (other) throw new ContactTakenError(party, "phone", fullName(other));
+  }
+}
 
 // Vouchers with any remaining balance must be refunded to 0 before deletion.
 // Tolerance covers any residual float-precision drift in the stored Decimal.
@@ -48,13 +89,16 @@ export async function PATCH(
 
       // Buyer client
       if (body.buyer_name !== undefined) {
+        const email = norm(body.buyer_email);
+        const phone = norm(body.buyer_phone);
+        await assertContactFree(tx, voucher.buyer_id, "buyer", email, phone);
         await tx.clients.update({
           where: { id: voucher.buyer_id },
           data: {
             client_name: norm(body.buyer_name),
             client_surname: norm(body.buyer_surname),
-            client_phone: norm(body.buyer_phone),
-            client_email: norm(body.buyer_email),
+            client_phone: phone,
+            client_email: email,
           },
         });
       }
@@ -62,13 +106,16 @@ export async function PATCH(
       // Recipient client (only when they are a different person from the buyer)
       const recipientId = voucher.recipient_id;
       if (body.recipient_name !== undefined && recipientId && recipientId !== voucher.buyer_id) {
+        const email = norm(body.recipient_email);
+        const phone = norm(body.recipient_phone);
+        await assertContactFree(tx, recipientId, "recipient", email, phone);
         await tx.clients.update({
           where: { id: recipientId },
           data: {
             client_name: norm(body.recipient_name),
             client_surname: norm(body.recipient_surname),
-            client_phone: norm(body.recipient_phone),
-            client_email: norm(body.recipient_email),
+            client_phone: phone,
+            client_email: email,
           },
         });
       }
@@ -76,6 +123,18 @@ export async function PATCH(
 
     return NextResponse.json({ success: true });
   } catch (err) {
+    if (err instanceof ContactTakenError) {
+      return NextResponse.json(
+        {
+          error: CLIENT_CONTACT_TAKEN,
+          conflict: { party: err.party, field: err.field, name: err.clientName },
+        },
+        { status: 409 },
+      );
+    }
+    if (typeof err === "object" && err !== null && (err as { code?: string }).code === "P2002") {
+      return NextResponse.json({ error: CLIENT_CONTACT_TAKEN }, { status: 409 });
+    }
     console.error("Error updating voucher", err);
     return NextResponse.json({ error: "Error updating voucher" }, { status: 500 });
   }

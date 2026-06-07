@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Box,
@@ -42,6 +42,10 @@ import { formatMoney } from "@/utils/formatMoney";
 import { toast } from "react-toastify";
 import VoucherPaymentEventDialog from "./VoucherPaymentEventDialog";
 import UpdateBookingDialogForm from "@/app/bookings/UpdateBookingDialogForm";
+import ClientDropdown from "@/app/bookings/ClientDropdown";
+import { useClientSearch, type FocusedClientField } from "@/hooks/useClientSearch";
+import type { ClientRow } from "@/hooks/useSimilarClients";
+import { CLIENT_CONTACT_TAKEN } from "@/types/clientConflict";
 import { useTranslations } from "next-intl";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
@@ -169,6 +173,75 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
   const [editData, setEditData] = useState<EditData | null>(null);
   const { submitting: saving, guard: saveGuard } = useSubmitGuard();
 
+  // Client autocomplete for the buyer/recipient fields while editing.
+  const [focusedClient, setFocusedClient] = useState<{
+    party: "buyer" | "recipient";
+    kind: "name" | "surname" | "phone" | "email";
+  } | null>(null);
+  const clientBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const API_KIND: Record<"name" | "surname" | "phone" | "email", Exclude<FocusedClientField, null>> = {
+    name: "client_name",
+    surname: "client_surname",
+    phone: "client_phone",
+    email: "client_email",
+  };
+
+  const fp = focusedClient?.party;
+  const { clients: clientMatches, clear: clearClientMatches } = useClientSearch({
+    focusedField: focusedClient ? API_KIND[focusedClient.kind] : null,
+    name: fp ? editData?.[`${fp}_name`] : undefined,
+    surname: fp ? editData?.[`${fp}_surname`] : undefined,
+    email: fp ? editData?.[`${fp}_email`] : undefined,
+    phone: fp ? editData?.[`${fp}_phone`] : undefined,
+  });
+
+  const selectClient = (party: "buyer" | "recipient", c: ClientRow) => {
+    setEditData((p) => {
+      if (!p) return p;
+      return party === "buyer"
+        ? { ...p, buyer_name: c.client_name ?? "", buyer_surname: c.client_surname ?? "", buyer_phone: c.client_phone ?? "", buyer_email: c.client_email ?? "" }
+        : { ...p, recipient_name: c.client_name ?? "", recipient_surname: c.client_surname ?? "", recipient_phone: c.client_phone ?? "", recipient_email: c.client_email ?? "" };
+    });
+    clearClientMatches();
+    if (clientBlurTimer.current) clearTimeout(clientBlurTimer.current);
+    setFocusedClient(null);
+  };
+
+  // A buyer/recipient text field with the shared client autocomplete dropdown.
+  const clientField = (
+    party: "buyer" | "recipient",
+    kind: "name" | "surname" | "phone" | "email",
+    label: string,
+  ) => {
+    const key = `${party}_${kind}` as `${"buyer" | "recipient"}_${"name" | "surname" | "phone" | "email"}`;
+    const value = editData?.[key] ?? "";
+    return (
+      <Box sx={{ position: "relative" }}>
+        <TextField
+          size="small"
+          fullWidth
+          label={label}
+          value={value}
+          onChange={(e) => {
+            const v = e.target.value;
+            setEditData((p) => (p ? { ...p, [key]: v } : p));
+          }}
+          onFocus={() => {
+            if (clientBlurTimer.current) clearTimeout(clientBlurTimer.current);
+            setFocusedClient({ party, kind });
+          }}
+          onBlur={() => {
+            clientBlurTimer.current = setTimeout(() => setFocusedClient(null), 150);
+          }}
+        />
+        {focusedClient?.party === party && focusedClient?.kind === kind && clientMatches.length > 0 && (
+          <ClientDropdown clients={clientMatches} onSelect={(c) => selectClient(party, c)} query={value} />
+        )}
+      </Box>
+    );
+  };
+
   const loadDetails = useCallback(async () => {
     setLoading(true);
     setFetchError(null);
@@ -257,7 +330,16 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
             expiration_date: editData.expiration_date?.toISOString(),
           }),
         });
-        if (!res.ok) throw new Error();
+        if (!res.ok) {
+          const result = await res.json().catch(() => ({}));
+          if (result?.error === CLIENT_CONTACT_TAKEN) {
+            const name = result?.conflict?.name;
+            toast.error(name ? t("contactTakenBy", { name }) : t("contactTaken"));
+          } else {
+            toast.error(t("errorSavingDetails"));
+          }
+          return;
+        }
         toast.success(t("detailsSaved"));
         loadDetails();
         window.dispatchEvent(new CustomEvent("refreshVouchersData"));
@@ -391,26 +473,10 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                           {t("buyer")}
                         </Typography>
                       </Grid>
-                      <Grid size={3}>
-                        <TextField size="small" fullWidth label={tCommon("name")}
-                          value={editData?.buyer_name ?? ""}
-                          onChange={(e) => setEditData((p) => p && ({ ...p, buyer_name: e.target.value }))} />
-                      </Grid>
-                      <Grid size={3}>
-                        <TextField size="small" fullWidth label={tCommon("surname")}
-                          value={editData?.buyer_surname ?? ""}
-                          onChange={(e) => setEditData((p) => p && ({ ...p, buyer_surname: e.target.value }))} />
-                      </Grid>
-                      <Grid size={3}>
-                        <TextField size="small" fullWidth label={tCommon("phone")}
-                          value={editData?.buyer_phone ?? ""}
-                          onChange={(e) => setEditData((p) => p && ({ ...p, buyer_phone: e.target.value }))} />
-                      </Grid>
-                      <Grid size={3}>
-                        <TextField size="small" fullWidth label={tCommon("email")}
-                          value={editData?.buyer_email ?? ""}
-                          onChange={(e) => setEditData((p) => p && ({ ...p, buyer_email: e.target.value }))} />
-                      </Grid>
+                      <Grid size={3}>{clientField("buyer", "name", tCommon("name"))}</Grid>
+                      <Grid size={3}>{clientField("buyer", "surname", tCommon("surname"))}</Grid>
+                      <Grid size={3}>{clientField("buyer", "phone", tCommon("phone"))}</Grid>
+                      <Grid size={3}>{clientField("buyer", "email", tCommon("email"))}</Grid>
 
                       {hasSeparateRecipient && (
                         <>
@@ -419,26 +485,10 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                               {t("recipient")}
                             </Typography>
                           </Grid>
-                          <Grid size={3}>
-                            <TextField size="small" fullWidth label={tCommon("name")}
-                              value={editData?.recipient_name ?? ""}
-                              onChange={(e) => setEditData((p) => p && ({ ...p, recipient_name: e.target.value }))} />
-                          </Grid>
-                          <Grid size={3}>
-                            <TextField size="small" fullWidth label={tCommon("surname")}
-                              value={editData?.recipient_surname ?? ""}
-                              onChange={(e) => setEditData((p) => p && ({ ...p, recipient_surname: e.target.value }))} />
-                          </Grid>
-                          <Grid size={3}>
-                            <TextField size="small" fullWidth label={tCommon("phone")}
-                              value={editData?.recipient_phone ?? ""}
-                              onChange={(e) => setEditData((p) => p && ({ ...p, recipient_phone: e.target.value }))} />
-                          </Grid>
-                          <Grid size={3}>
-                            <TextField size="small" fullWidth label={tCommon("email")}
-                              value={editData?.recipient_email ?? ""}
-                              onChange={(e) => setEditData((p) => p && ({ ...p, recipient_email: e.target.value }))} />
-                          </Grid>
+                          <Grid size={3}>{clientField("recipient", "name", tCommon("name"))}</Grid>
+                          <Grid size={3}>{clientField("recipient", "surname", tCommon("surname"))}</Grid>
+                          <Grid size={3}>{clientField("recipient", "phone", tCommon("phone"))}</Grid>
+                          <Grid size={3}>{clientField("recipient", "email", tCommon("email"))}</Grid>
                         </>
                       )}
 
