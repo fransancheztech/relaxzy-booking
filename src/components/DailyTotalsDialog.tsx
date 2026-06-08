@@ -17,6 +17,7 @@ import {
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 import type { SxProps, Theme } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { formatMoney } from "@/utils/formatMoney";
@@ -36,6 +37,24 @@ const TOTAL_ROW_SX: SxProps<Theme> = {
 const HEADER_ROW_SX: SxProps<Theme> = {
   bgcolor: "action.hover",
   "& th": { fontWeight: 700 },
+};
+
+/** Sections that include tips — visually flagged as NOT standard accounting. */
+const TIPS_ACCENT_SX: SxProps<Theme> = {
+  borderLeft: "3px solid",
+  borderColor: "warning.main",
+  bgcolor: (theme) => alpha(theme.palette.warning.main, 0.08),
+  borderRadius: 1,
+  px: 2,
+  py: 1.5,
+};
+
+/** Neutral total box — the accounting figure (bookings + vouchers, no tips). */
+const TOTAL_BOX_SX: SxProps<Theme> = {
+  bgcolor: "action.selected",
+  borderRadius: 1,
+  px: 2,
+  py: 1.5,
 };
 
 interface TherapistTips {
@@ -168,8 +187,30 @@ const DailyTotalsDialog = ({ open, onClose, start, end }: Props) => {
 
             <Divider />
 
-            {/* Tips */}
-            <Box>
+            {/* Total — bookings + vouchers, EXCLUDES tips (the accounting figure) */}
+            <Box sx={TOTAL_BOX_SX}>
+              <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+                {t("totalsSection")}
+              </Typography>
+              <Box sx={{ display: "flex", gap: 4, flexWrap: "wrap", mb: 1.5 }}>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">{t("totalsCash")}</Typography>
+                  <Typography variant="h6" fontWeight={700}>{formatMoney(data.payments.cash + data.voucher_sales.cash)}</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">{t("totalsCard")}</Typography>
+                  <Typography variant="h6" fontWeight={700}>{formatMoney(data.payments.card + data.voucher_sales.card)}</Typography>
+                </Box>
+              </Box>
+              <Divider sx={{ mb: 1.5 }} />
+              <Box>
+                <Typography variant="caption" color="text.secondary">{t("total")}</Typography>
+                <Typography variant="h5" fontWeight={800}>{formatMoney(data.payments.total + data.voucher_sales.total)}</Typography>
+              </Box>
+            </Box>
+
+            {/* Tips — NOT standard accounting; accented */}
+            <Box sx={TIPS_ACCENT_SX}>
               <Typography variant="subtitle2" fontWeight={700} gutterBottom>
                 {t("tipsSection")}
               </Typography>
@@ -205,13 +246,16 @@ const DailyTotalsDialog = ({ open, onClose, start, end }: Props) => {
               )}
             </Box>
 
-            <Divider />
-
-            {/* End of day */}
-            <Box sx={{ bgcolor: "action.selected", borderRadius: 1, px: 2, py: 1.5 }}>
-              <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-                {t("endOfDaySection")}
-              </Typography>
+            {/* End of day grand totals — INCLUDES tips; accented + flagged */}
+            <Box sx={TIPS_ACCENT_SX}>
+              <Box sx={{ display: "flex", alignItems: "baseline", gap: 1, mb: 0.5, flexWrap: "wrap" }}>
+                <Typography variant="subtitle2" fontWeight={700}>
+                  {t("endOfDaySection")}
+                </Typography>
+                <Typography variant="caption" sx={{ color: "warning.main", fontStyle: "italic" }}>
+                  {t("includesTips")}
+                </Typography>
+              </Box>
               <Box sx={{ display: "flex", gap: 4, flexWrap: "wrap", mb: 1.5 }}>
                 <Box>
                   <Typography variant="caption" color="text.secondary">{t("totalCash")}</Typography>
