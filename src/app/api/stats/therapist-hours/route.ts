@@ -39,7 +39,8 @@ export async function GET(req: NextRequest) {
         AND b.deleted_at   IS NULL
         AND b.start_time   >= ${from}
         AND b.start_time   <  ${to}
-      WHERE t.deleted_at IS NULL AND t.active = true
+      -- Includes inactive/deleted therapists (symmetric with the Tips section);
+      -- the INNER JOIN already limits to therapists with completed bookings in range.
       GROUP BY t.id
       ORDER BY full_name ASC
     `;

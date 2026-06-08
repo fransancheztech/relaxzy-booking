@@ -2,10 +2,12 @@
 
 import {
   Box,
+  Checkbox,
   CircularProgress,
   Divider,
   FormControl,
   InputLabel,
+  ListItemText,
   MenuItem,
   Paper,
   Select,
@@ -47,7 +49,6 @@ export default function TherapistHoursSection({
 }) {
   const t = useTranslations("Stats");
 
-  const [filterTherapist, setFilterTherapist] = useState<string>("all");
   const [rows, setRows] = useState<HoursRow[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -71,24 +72,15 @@ export default function TherapistHoursSection({
     return () => { cancelled = true; };
   }, [fromIso, toIso]);
 
-  const therapistOptions = rows.map((r) => ({
-    id: r.therapist_id,
-    name: r.full_name,
-  }));
+  // Default to all therapists; reset only when the set changes (period change).
+  const optionKey = rows.map((r) => r.therapist_id).join(",");
+  const [selected, setSelected] = useState<string[]>([]);
+  useEffect(() => {
+    setSelected(optionKey ? optionKey.split(",") : []);
+  }, [optionKey]);
+  const selectedSet = new Set(selected);
 
-  // Therapist accounts have no "All" option — fall back to a concrete therapist
-  // (also handles the selected therapist having no hours in a newly picked range).
-  const effectiveFilter =
-    isTherapist &&
-    (filterTherapist === "all" ||
-      !rows.some((r) => r.therapist_id === filterTherapist))
-      ? rows[0]?.therapist_id ?? "all"
-      : filterTherapist;
-
-  const visibleRows =
-    effectiveFilter === "all"
-      ? rows
-      : rows.filter((r) => r.therapist_id === effectiveFilter);
+  const visibleRows = rows.filter((r) => selectedSet.has(r.therapist_id));
 
   const totalHours = visibleRows.reduce((s, r) => s + r.total_hours, 0);
   const totalBookings = visibleRows.reduce((s, r) => s + r.booking_count, 0);
@@ -106,19 +98,30 @@ export default function TherapistHoursSection({
         </Typography>
       </Box>
 
-      {/* Therapist filter */}
-      {therapistOptions.length > 1 && (
+      {/* Therapist filter (multi-select) */}
+      {rows.length > 1 && (
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2, flexWrap: "wrap" }}>
-          <FormControl size="small" sx={{ minWidth: 180 }}>
-            <InputLabel>{isTherapist ? t("therapistCol") : t("allTherapists")}</InputLabel>
+          <FormControl size="small" sx={{ minWidth: 200 }}>
+            <InputLabel>{t("tipsTherapistsLabel")}</InputLabel>
             <Select
-              value={effectiveFilter}
-              label={isTherapist ? t("therapistCol") : t("allTherapists")}
-              onChange={(e) => setFilterTherapist(e.target.value)}
+              multiple
+              value={selected}
+              label={t("tipsTherapistsLabel")}
+              onChange={(e) =>
+                setSelected(typeof e.target.value === "string" ? e.target.value.split(",") : e.target.value)
+              }
+              renderValue={(sel) =>
+                (sel as string[]).length === rows.length
+                  ? t("allTherapists")
+                  : t("therapistsSelected", { count: (sel as string[]).length })
+              }
+              MenuProps={{ PaperProps: { sx: { maxHeight: 320 } } }}
             >
-              {!isTherapist && <MenuItem value="all">{t("allTherapists")}</MenuItem>}
-              {therapistOptions.map((o) => (
-                <MenuItem key={o.id} value={o.id}>{o.name}</MenuItem>
+              {rows.map((r) => (
+                <MenuItem key={r.therapist_id} value={r.therapist_id}>
+                  <Checkbox checked={selectedSet.has(r.therapist_id)} size="small" />
+                  <ListItemText primary={r.full_name} />
+                </MenuItem>
               ))}
             </Select>
           </FormControl>

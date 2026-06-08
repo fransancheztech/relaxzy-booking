@@ -221,7 +221,7 @@ const StatsPageContent = ({ role }: Props) => {
             <>
               <Divider sx={{ mb: 4 }} />
               <Box sx={{ mb: 4 }}>
-                <TipsSection tips={data.tips} />
+                <TipsSection tips={data.tips} bucket={data.meta.date_bucket} onBucketChange={handleBucketChange} />
               </Box>
             </>
           )}

@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "generated/prisma";
 import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
-import { StatsResponse, StatsRevenuePeriodPoint } from "@/types/stats";
+import { StatsResponse, StatsRevenuePeriodPoint, StatsTipsPeriodPoint } from "@/types/stats";
+import { therapistDisplayName } from "@/utils/therapistName";
 
 const toNum = (v: unknown): number => Number(v ?? 0);
 
@@ -250,18 +251,41 @@ export async function GET(request: Request) {
     `;
     const tipsRows = await prisma.$queryRaw<{
       therapist_id: string; therapist_name: string;
-      tip_count: number; gross_amount: number; net_amount: number;
+      cash_count: number; cash_gross: number; cash_net: number;
+      card_count: number; card_gross: number; card_net: number;
     }[]>`
       SELECT th.id AS therapist_id,
         COALESCE(NULLIF(BTRIM(th.nickname), ''), NULLIF(BTRIM(th.name), ''), NULLIF(BTRIM(th.surname), ''), '—') AS therapist_name,
-        COUNT(*)::int AS tip_count,
-        SUM(t.amount)::float AS gross_amount,
-        SUM(CASE WHEN t.iva_applies THEN t.amount * 0.79 ELSE t.amount END)::float AS net_amount
+        COUNT(*) FILTER (WHERE t.payment_method = 'cash')::int AS cash_count,
+        COALESCE(SUM(t.amount) FILTER (WHERE t.payment_method = 'cash'), 0)::float AS cash_gross,
+        COALESCE(SUM(CASE WHEN t.iva_applies THEN t.amount * 0.79 ELSE t.amount END) FILTER (WHERE t.payment_method = 'cash'), 0)::float AS cash_net,
+        COUNT(*) FILTER (WHERE t.payment_method = 'credit_card')::int AS card_count,
+        COALESCE(SUM(t.amount) FILTER (WHERE t.payment_method = 'credit_card'), 0)::float AS card_gross,
+        COALESCE(SUM(CASE WHEN t.iva_applies THEN t.amount * 0.79 ELSE t.amount END) FILTER (WHERE t.payment_method = 'credit_card'), 0)::float AS card_net
       FROM tips t
       JOIN therapists th ON th.id = t.therapist_id
-      WHERE t.deleted_at IS NULL AND th.deleted_at IS NULL AND th.active = true
+      -- Tips analytics include inactive/deleted therapists (symmetric with the
+      -- over-time card); only the tip rows themselves must be non-deleted.
+      WHERE t.deleted_at IS NULL
         AND t.created_at >= ${from} AND t.created_at < ${to}
-      GROUP BY th.id ORDER BY gross_amount DESC
+      GROUP BY th.id
+      ORDER BY SUM(t.amount) DESC
+    `;
+    // Tips over time, per therapist and payment method. Unlike the section above,
+    // this intentionally includes inactive/deleted therapists (no therapist filter)
+    // so their historical tips can be visualised in the over-time card.
+    const tipsOverTimeRows = await prisma.$queryRaw<{
+      period: Date; therapist_id: string; cash: number; credit_card: number;
+    }[]>`
+      SELECT date_trunc(${bSql}, t.created_at) AS period,
+        t.therapist_id::text AS therapist_id,
+        COALESCE(SUM(t.amount) FILTER (WHERE t.payment_method = 'cash'), 0)::float AS cash,
+        COALESCE(SUM(t.amount) FILTER (WHERE t.payment_method = 'credit_card'), 0)::float AS credit_card
+      FROM tips t
+      WHERE t.deleted_at IS NULL
+        AND t.created_at >= ${from} AND t.created_at < ${to}
+      GROUP BY period, t.therapist_id
+      ORDER BY period
     `;
 
     // --- Vouchers ---
@@ -403,9 +427,42 @@ export async function GET(request: Request) {
     const retentionRate = totalUnique > 0 ? (returningInPeriod / totalUnique) * 100 : 0;
 
     // --- Tips ---
-    const tipCount = tipsRows.reduce((s, t) => s + toNum(t.tip_count), 0);
-    const totalGross = tipsRows.reduce((s, t) => s + toNum(t.gross_amount), 0);
-    const totalNet = tipsRows.reduce((s, t) => s + toNum(t.net_amount), 0);
+    const tipsByMethod = {
+      cash: {
+        count: tipsRows.reduce((s, t) => s + toNum(t.cash_count), 0),
+        gross: tipsRows.reduce((s, t) => s + toNum(t.cash_gross), 0),
+        net: tipsRows.reduce((s, t) => s + toNum(t.cash_net), 0),
+      },
+      credit_card: {
+        count: tipsRows.reduce((s, t) => s + toNum(t.card_count), 0),
+        gross: tipsRows.reduce((s, t) => s + toNum(t.card_gross), 0),
+        net: tipsRows.reduce((s, t) => s + toNum(t.card_net), 0),
+      },
+    };
+    const tipCount = tipsByMethod.cash.count + tipsByMethod.credit_card.count;
+
+    // Tips over time: pivot to period → { therapist_id → {cash, card} }, and resolve
+    // names for ALL therapists with tips (active, inactive, or deleted).
+    const tipsOtMap = new Map<string, StatsTipsPeriodPoint>();
+    for (const row of tipsOverTimeRows) {
+      const key = new Date(row.period).toISOString();
+      let p = tipsOtMap.get(key);
+      if (!p) { p = { period: key, by_therapist: {} }; tipsOtMap.set(key, p); }
+      p.by_therapist[row.therapist_id] = { cash: toNum(row.cash), credit_card: toNum(row.credit_card) };
+    }
+    const tipsOverTime = Array.from(tipsOtMap.values()).sort((a, b) => a.period.localeCompare(b.period));
+
+    const tipTherapistIds = [...new Set(tipsOverTimeRows.map((r) => r.therapist_id))];
+    const tipTherapistRows = tipTherapistIds.length
+      ? await prisma.therapists.findMany({
+          where: { id: { in: tipTherapistIds } },
+          select: { id: true, nickname: true, name: true, surname: true },
+        })
+      : [];
+    const tipTherapistName = new Map(tipTherapistRows.map((th) => [th.id, therapistDisplayName(th)]));
+    const tipsOverTimeTherapists = tipTherapistIds
+      .map((id) => ({ therapist_id: id, therapist_name: tipTherapistName.get(id) ?? "—" }))
+      .sort((a, b) => a.therapist_name.localeCompare(b.therapist_name));
 
     // --- Vouchers ---
     const voucherBySource = voucherBySourceRows.map((r) => ({
@@ -498,16 +555,16 @@ export async function GET(request: Request) {
       },
 
       tips: {
-        total_gross: totalGross,
-        total_net: totalNet,
         tip_count: tipCount,
+        by_method: tipsByMethod,
         by_therapist: tipsRows.map((t) => ({
           therapist_id: t.therapist_id,
           therapist_name: t.therapist_name,
-          tip_count: toNum(t.tip_count),
-          gross_amount: toNum(t.gross_amount),
-          net_amount: toNum(t.net_amount),
+          cash: { count: toNum(t.cash_count), gross: toNum(t.cash_gross), net: toNum(t.cash_net) },
+          credit_card: { count: toNum(t.card_count), gross: toNum(t.card_gross), net: toNum(t.card_net) },
         })),
+        over_time: tipsOverTime,
+        over_time_therapists: tipsOverTimeTherapists,
       },
 
       vouchers: {

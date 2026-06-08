@@ -38,17 +38,32 @@ export interface StatsBookingsByDuration {
   count: number;
 }
 
+export interface StatsTipsMethodTotals {
+  count: number;
+  gross: number;
+  net: number;
+}
+
 export interface StatsTipsByTherapist {
   therapist_id: string;
   therapist_name: string;
-  tip_count: number;
-  gross_amount: number;
-  net_amount: number;
+  cash: StatsTipsMethodTotals;
+  credit_card: StatsTipsMethodTotals;
 }
 
 export interface StatsTicketDistribution {
   bucket: string;
   count: number;
+}
+
+export interface StatsTipsTherapist {
+  therapist_id: string;
+  therapist_name: string;
+}
+
+export interface StatsTipsPeriodPoint {
+  period: string;
+  by_therapist: Record<string, { cash: number; credit_card: number }>;
 }
 
 export interface StatsVoucherBySource {
@@ -115,10 +130,12 @@ export interface StatsResponse {
   };
 
   tips: {
-    total_gross: number;
-    total_net: number;
-    tip_count: number;
+    tip_count: number; // all methods, current roster — for the section gate
+    by_method: { cash: StatsTipsMethodTotals; credit_card: StatsTipsMethodTotals };
     by_therapist: StatsTipsByTherapist[];
+    // Over-time card: includes deleted/inactive therapists on purpose.
+    over_time: StatsTipsPeriodPoint[];
+    over_time_therapists: StatsTipsTherapist[];
   };
 
   vouchers: {
