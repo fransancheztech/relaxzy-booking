@@ -1,8 +1,13 @@
-export interface StatsRevenuePeriodPoint {
-  period: string;
-  total: number;
+export interface StatsRevenueStreamAmounts {
   cash: number;
   credit_card: number;
+  refunds: number;
+}
+
+export interface StatsRevenuePeriodPoint {
+  period: string;
+  bookings: StatsRevenueStreamAmounts;
+  vouchers: StatsRevenueStreamAmounts;
 }
 
 export interface StatsRevenueByTherapist {

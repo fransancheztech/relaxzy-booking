@@ -325,21 +325,33 @@ export async function GET(request: Request) {
     const refundsTotal = toNum(rev.refunds) + toNum(vrev.refunds);
     const totalRevenue = cashTotal + cardTotal - refundsTotal;
 
-    // Merge revenue over time — both streams keyed by their truncated period
+    // Revenue over time, kept split by stream (bookings / vouchers) so the card can
+    // toggle each. Each stream keeps its cash/card/refunds so the bars and tooltip
+    // still break down by payment method.
     const overtimeMap = new Map<string, StatsRevenuePeriodPoint>();
-    for (const row of [...revenueOverTimeRows, ...voucherOverTimeRows]) {
-      const key = new Date(row.period).toISOString();
-      const cash = toNum(row.cash);
-      const credit_card = toNum(row.credit_card);
-      const net = cash + credit_card - toNum(row.refunds);
-      const existing = overtimeMap.get(key);
-      if (existing) {
-        existing.cash += cash;
-        existing.credit_card += credit_card;
-        existing.total += net;
-      } else {
-        overtimeMap.set(key, { period: key, total: net, cash, credit_card });
+    const ensurePoint = (key: string) => {
+      let p = overtimeMap.get(key);
+      if (!p) {
+        p = {
+          period: key,
+          bookings: { cash: 0, credit_card: 0, refunds: 0 },
+          vouchers: { cash: 0, credit_card: 0, refunds: 0 },
+        };
+        overtimeMap.set(key, p);
       }
+      return p;
+    };
+    for (const row of revenueOverTimeRows) {
+      const b = ensurePoint(new Date(row.period).toISOString()).bookings;
+      b.cash += toNum(row.cash);
+      b.credit_card += toNum(row.credit_card);
+      b.refunds += toNum(row.refunds);
+    }
+    for (const row of voucherOverTimeRows) {
+      const v = ensurePoint(new Date(row.period).toISOString()).vouchers;
+      v.cash += toNum(row.cash);
+      v.credit_card += toNum(row.credit_card);
+      v.refunds += toNum(row.refunds);
     }
     const revenueOverTime = Array.from(overtimeMap.values()).sort((a, b) =>
       a.period.localeCompare(b.period)

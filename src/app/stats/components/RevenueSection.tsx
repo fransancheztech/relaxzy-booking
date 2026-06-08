@@ -5,9 +5,12 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { StatsResponse } from "@/types/stats";
 import { formatMoney } from "@/utils/formatMoney";
+
+type Stream = "bookings" | "vouchers";
 
 type Bucket = StatsResponse["meta"]["date_bucket"];
 
@@ -36,6 +39,11 @@ const RevenueSection = ({ revenue, bucket, onBucketChange }: Props) => {
   const hasData = revenue.over_time.length > 0;
   const bucketLabel = bucket === "day" ? t("revenuePerDay") : bucket === "week" ? t("revenuePerWeek") : t("revenuePerMonth");
 
+  // Which revenue streams feed the over-time bars (cash/card breakdown is kept).
+  const [streams, setStreams] = useState<Stream[]>(["bookings", "vouchers"]);
+  const showBookings = streams.includes("bookings");
+  const showVouchers = streams.includes("vouchers");
+
   const empty = (
     <Typography variant="body2" color="text.disabled" sx={{ py: 4, textAlign: "center" }}>
       {t("noDataForPeriod")}
@@ -48,9 +56,13 @@ const RevenueSection = ({ revenue, bucket, onBucketChange }: Props) => {
     if (bucket === "day") label = d.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" });
     else if (bucket === "week") label = `W${Math.ceil(d.getDate() / 7)} ${d.toLocaleDateString("es-ES", { month: "short" })}`;
     else label = d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
-    // p.total is already net of refunds; derive the period's refund amount from the gap.
-    return { label, cash: p.cash, credit_card: p.credit_card, total: p.total, refunds: p.cash + p.credit_card - p.total };
+    const cash = (showBookings ? p.bookings.cash : 0) + (showVouchers ? p.vouchers.cash : 0);
+    const credit_card = (showBookings ? p.bookings.credit_card : 0) + (showVouchers ? p.vouchers.credit_card : 0);
+    const refunds = (showBookings ? p.bookings.refunds : 0) + (showVouchers ? p.vouchers.refunds : 0);
+    return { label, cash, credit_card, refunds, total: cash + credit_card - refunds };
   });
+
+  const selectedRefundsTotal = barData.reduce((s, d) => s + d.refunds, 0);
 
   const pieData = [
     { name: t("cash"), value: revenue.cash },
@@ -99,7 +111,7 @@ const RevenueSection = ({ revenue, bucket, onBucketChange }: Props) => {
         <Grid size={{ xs: 12, md: 8 }}>
           <Paper elevation={1} sx={{ p: 2, borderRadius: 2 }}>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
                 <Typography variant="subtitle2" color="text.secondary">
                   {bucketLabel}
                 </Typography>
@@ -114,10 +126,19 @@ const RevenueSection = ({ revenue, bucket, onBucketChange }: Props) => {
                   <ToggleButton value="week">{t("bucketWeek")}</ToggleButton>
                   <ToggleButton value="month">{t("bucketMonth")}</ToggleButton>
                 </ToggleButtonGroup>
+                <ToggleButtonGroup
+                  value={streams}
+                  size="small"
+                  onChange={(_, v: Stream[]) => setStreams(v)}
+                  sx={{ "& .MuiToggleButton-root": { py: 0.25, px: 1, fontSize: "0.7rem" } }}
+                >
+                  <ToggleButton value="bookings">{t("bookings")}</ToggleButton>
+                  <ToggleButton value="vouchers">{t("voucherSectionTitle")}</ToggleButton>
+                </ToggleButtonGroup>
               </Box>
-              {revenue.refunds_total > 0 && (
+              {selectedRefundsTotal > 0 && (
                 <Chip
-                  label={t("refundsChip", { amount: formatMoney(revenue.refunds_total) })}
+                  label={t("refundsChip", { amount: formatMoney(selectedRefundsTotal) })}
                   size="small" color="error" variant="outlined"
                   sx={{ fontSize: "0.7rem" }}
                 />
