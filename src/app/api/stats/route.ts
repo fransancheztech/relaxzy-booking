@@ -264,10 +264,11 @@ export async function GET(request: Request) {
         COALESCE(SUM(CASE WHEN t.iva_applies THEN t.amount * 0.79 ELSE t.amount END) FILTER (WHERE t.payment_method = 'credit_card'), 0)::float AS card_net
       FROM tips t
       JOIN therapists th ON th.id = t.therapist_id
-      -- Tips analytics include inactive/deleted therapists (symmetric with the
-      -- over-time card); only the tip rows themselves must be non-deleted.
+      JOIN bookings b ON b.id = t.booking_id
+      -- A tip's date is its booking's appointment date (start_time). Includes
+      -- inactive/deleted therapists and tips of cancelled/deleted bookings.
       WHERE t.deleted_at IS NULL
-        AND t.created_at >= ${from} AND t.created_at < ${to}
+        AND b.start_time >= ${from} AND b.start_time < ${to}
       GROUP BY th.id
       ORDER BY SUM(t.amount) DESC
     `;
@@ -277,13 +278,14 @@ export async function GET(request: Request) {
     const tipsOverTimeRows = await prisma.$queryRaw<{
       period: Date; therapist_id: string; cash: number; credit_card: number;
     }[]>`
-      SELECT date_trunc(${bSql}, t.created_at) AS period,
+      SELECT date_trunc(${bSql}, b.start_time) AS period,
         t.therapist_id::text AS therapist_id,
         COALESCE(SUM(t.amount) FILTER (WHERE t.payment_method = 'cash'), 0)::float AS cash,
         COALESCE(SUM(t.amount) FILTER (WHERE t.payment_method = 'credit_card'), 0)::float AS credit_card
       FROM tips t
+      JOIN bookings b ON b.id = t.booking_id
       WHERE t.deleted_at IS NULL
-        AND t.created_at >= ${from} AND t.created_at < ${to}
+        AND b.start_time >= ${from} AND b.start_time < ${to}
       GROUP BY period, t.therapist_id
       ORDER BY period
     `;

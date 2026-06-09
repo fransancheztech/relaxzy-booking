@@ -26,17 +26,23 @@ export async function GET(request: Request) {
         ...(status === "pending" ? { payout_id: null } : {}),
         ...(status === "released" ? { payout_id: { not: null } } : {}),
         ...(therapist_id ? { therapist_id } : {}),
+        // A tip's date is its booking's appointment date (start_time).
         ...(start_date || end_date
           ? {
-              received_at: {
-                ...(start_date ? { gte: new Date(start_date) } : {}),
-                ...(end_date ? { lte: new Date(end_date) } : {}),
+              bookings: {
+                start_time: {
+                  ...(start_date ? { gte: new Date(start_date) } : {}),
+                  ...(end_date ? { lte: new Date(end_date) } : {}),
+                },
               },
             }
           : {}),
       },
-      include: { therapists: { select: { id: true, nickname: true, name: true, surname: true } } },
-      orderBy: { received_at: "desc" },
+      include: {
+        therapists: { select: { id: true, nickname: true, name: true, surname: true } },
+        bookings: { select: { start_time: true } },
+      },
+      orderBy: { bookings: { start_time: "desc" } },
       take: 500,
     });
 
@@ -51,7 +57,7 @@ export async function GET(request: Request) {
           iva_applies: tip.iva_applies,
           payment_method: tip.payment_method,
           notes: tip.notes,
-          received_at: tip.received_at,
+          date: tip.bookings?.start_time ?? null,
           payout_id: tip.payout_id,
           gross,
           iva,

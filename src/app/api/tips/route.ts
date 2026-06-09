@@ -28,9 +28,13 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    // iva_applies is derived from payment_method, never taken from the client.
-    const { booking_id, therapist_id, amount, payment_method, notes, received_at } = body;
+    // iva_applies is derived from payment_method; received_at is no longer used
+    // (a tip's date is its booking's start_time), so it's left to the DB default.
+    const { booking_id, therapist_id, amount, payment_method, notes } = body;
 
+    if (!booking_id) {
+      return NextResponse.json({ error: "Missing booking_id" }, { status: 400 });
+    }
     if (!therapist_id) {
       return NextResponse.json({ error: "Missing therapist_id" }, { status: 400 });
     }
@@ -47,13 +51,12 @@ export async function POST(request: Request) {
 
     const tip = await prisma.tips.create({
       data: {
-        booking_id: booking_id ?? null,
+        booking_id,
         therapist_id,
         amount: parsedAmount,
         payment_method: payment_method as tip_payment_method,
         iva_applies: ivaAppliesForTipMethod(payment_method),
         notes: notes?.trim() || null,
-        received_at: received_at ? new Date(received_at) : new Date(),
       },
       include: { therapists: { select: { id: true, nickname: true, name: true, surname: true } } },
     });

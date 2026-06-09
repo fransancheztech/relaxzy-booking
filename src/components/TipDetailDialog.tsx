@@ -17,9 +17,6 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { es } from "date-fns/locale";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
@@ -34,7 +31,6 @@ interface TipRow {
   iva_applies: boolean;
   payment_method: "cash" | "credit_card";
   notes: string | null;
-  received_at: string;
   payout_id: string | null;
 }
 
@@ -47,7 +43,6 @@ interface Props {
 
 interface FormState {
   therapist_id: string;
-  received_at: Date | null;
   payment_method: "cash" | "credit_card";
   iva_applies: boolean;
   notes: string;
@@ -68,7 +63,6 @@ const TipDetailDialog = ({ tip, readOnly = false, onClose, onSaved }: Props) => 
     if (tip) {
       setForm({
         therapist_id: tip.therapist_id,
-        received_at: new Date(tip.received_at),
         payment_method: tip.payment_method,
         iva_applies: tip.iva_applies,
         notes: tip.notes ?? "",
@@ -83,10 +77,7 @@ const TipDetailDialog = ({ tip, readOnly = false, onClose, onSaved }: Props) => 
         const res = await fetch(`/api/tips/${tip.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...form,
-            received_at: form.received_at?.toISOString(),
-          }),
+          body: JSON.stringify(form),
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
@@ -133,18 +124,6 @@ const TipDetailDialog = ({ tip, readOnly = false, onClose, onSaved }: Props) => 
                 ))}
               </Select>
             </FormControl>
-
-            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-              <DatePicker
-                label={t("colReceivedOn")}
-                value={form.received_at}
-                onChange={(d) => set("received_at", d)}
-                format="dd/MM/yyyy"
-                disabled={locked}
-                disableFuture
-                slotProps={{ textField: { size: "small", fullWidth: true } }}
-              />
-            </LocalizationProvider>
 
             <FormControl size="small" fullWidth disabled={locked}>
               <InputLabel>{t("colMethod")}</InputLabel>

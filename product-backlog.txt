@@ -1,4 +1,5 @@
 TO-DO
+- Añadir advertencia cada vez que se guarde una reserva o se pague con un precio distinto
 - Revisar texto de ayuda contextual para diferentes páginas y usuarios, importante para no liar a usuarios
 - Completar reservas Mayo
 - Añadir propina de las reservas antiguas.

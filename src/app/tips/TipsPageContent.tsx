@@ -40,7 +40,7 @@ interface TipRow {
   iva_applies: boolean;
   payment_method: "cash" | "credit_card";
   notes: string | null;
-  received_at: string;
+  date: string | null;
   payout_id: string | null;
   gross: number;
   iva: number;
@@ -162,15 +162,17 @@ const TipsPageContent = () => {
       minWidth: 130,
     },
     {
-      field: "received_at",
-      headerName: t("colReceivedOn"),
+      field: "date",
+      headerName: t("colDate"),
       width: 115,
-      valueFormatter: (value: string) =>
-        new Date(value).toLocaleDateString("es-ES", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }),
+      valueFormatter: (value: string | null) =>
+        value
+          ? new Date(value).toLocaleDateString("es-ES", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })
+          : "—",
     },
     {
       field: "payment_method",

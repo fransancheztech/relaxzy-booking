@@ -8,8 +8,11 @@ export async function GET() {
   try {
     const tips = await prisma.tips.findMany({
       where: { deleted_at: null, payout_id: null },
-      include: { therapists: { select: { id: true, nickname: true, name: true, surname: true } } },
-      orderBy: { created_at: "asc" },
+      include: {
+        therapists: { select: { id: true, nickname: true, name: true, surname: true } },
+        bookings: { select: { start_time: true } },
+      },
+      orderBy: { bookings: { start_time: "asc" } },
     });
 
     // Group by therapist + year + month
@@ -27,7 +30,8 @@ export async function GET() {
     const map = new Map<string, Group>();
 
     for (const tip of tips) {
-      const date = tip.received_at;
+      // A tip's date is its booking's appointment date (start_time).
+      const date = tip.bookings?.start_time ?? tip.created_at;
       const year = date.getFullYear();
       const month = date.getMonth() + 1;
       const key = `${tip.therapist_id}_${year}_${month}`;

@@ -21,9 +21,6 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { es } from "date-fns/locale";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useState } from "react";
@@ -78,7 +75,6 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
       amount: "",
       payment_method: "credit_card",
       notes: "",
-      received_at: new Date(),
     },
   });
 
@@ -115,7 +111,6 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
             amount: data.amount,
             payment_method: data.payment_method,
             notes: data.notes,
-            received_at: data.received_at,
           }),
         });
 
@@ -131,7 +126,6 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
           amount: "",
           payment_method: "credit_card",
           notes: "",
-          received_at: new Date(),
         });
         setShowForm(false);
         fetchTips();
@@ -297,28 +291,8 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
               />
             </Grid>
 
-            {/* Received date */}
-            <Grid size={6}>
-              <Controller
-                name="received_at"
-                control={methods.control}
-                render={({ field }) => (
-                  <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-                    <DatePicker
-                      label={t("receivedDate")}
-                      value={(field.value as Date) ?? null}
-                      onChange={(date) => field.onChange(date ?? new Date())}
-                      format="dd/MM/yyyy"
-                      disableFuture
-                      slotProps={{ textField: { size: "small", fullWidth: true } }}
-                    />
-                  </LocalizationProvider>
-                )}
-              />
-            </Grid>
-
-            {/* Notes */}
-            <Grid size={6}>
+            {/* Notes — the tip's date is the booking's appointment date, not entered here */}
+            <Grid size={12}>
               <Controller
                 name="notes"
                 control={methods.control}

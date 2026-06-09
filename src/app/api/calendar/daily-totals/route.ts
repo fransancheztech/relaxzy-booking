@@ -58,9 +58,10 @@ export async function GET(request: Request) {
           SUM(t.amount) AS total
         FROM tips t
         JOIN therapists th ON th.id = t.therapist_id
+        JOIN bookings b ON b.id = t.booking_id
         WHERE
-          t.received_at >= ${startDate}
-          AND t.received_at < ${endDate}
+          b.start_time >= ${startDate}
+          AND b.start_time < ${endDate}
           AND t.deleted_at IS NULL
         GROUP BY t.therapist_id, th.id, t.payment_method
         ORDER BY full_name, t.payment_method

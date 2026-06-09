@@ -22,11 +22,6 @@ export async function PATCH(
 
     const data: Record<string, unknown> = {};
     if (body.therapist_id !== undefined) data.therapist_id = body.therapist_id;
-    if (body.received_at !== undefined) {
-      const d = new Date(body.received_at);
-      if (Number.isNaN(d.getTime())) return NextResponse.json({ error: "Invalid received_at" }, { status: 400 });
-      data.received_at = d;
-    }
     if (body.payment_method !== undefined) {
       if (!VALID_METHODS.includes(body.payment_method)) return NextResponse.json({ error: "Invalid payment_method" }, { status: 400 });
       data.payment_method = body.payment_method;
