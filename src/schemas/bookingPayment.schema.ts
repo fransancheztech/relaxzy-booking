@@ -52,7 +52,7 @@ export const BookingPaymentSchema = z
     if (data.price !== undefined && totalPayment > data.price - totalPaid) {
       ctx.addIssue({
         code: "custom",
-        message: "The payment exceeds the booking price",
+        message: "This payment would bring the total paid above the booking price",
         path: ["payment_form"],
       });
     }
