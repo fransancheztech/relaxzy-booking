@@ -556,6 +556,8 @@
     "colTherapist": "Therapist",
     "colReceivedOn": "Received on",
     "colDate": "Date",
+    "colBooking": "Booking",
+    "bookingDeleted": "deleted",
     "colMethod": "Method",
     "colGross": "Gross",
     "colIva": "IVA",

@@ -556,6 +556,8 @@
     "colTherapist": "นักบำบัด",
     "colReceivedOn": "วันที่รับ",
     "colDate": "วันที่",
+    "colBooking": "การจอง",
+    "bookingDeleted": "ถูกลบ",
     "colMethod": "วิธีการ",
     "colGross": "ก่อนหัก",
     "colIva": "ภาษี",

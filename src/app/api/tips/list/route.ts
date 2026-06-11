@@ -40,7 +40,15 @@ export async function GET(request: Request) {
       },
       include: {
         therapists: { select: { id: true, nickname: true, name: true, surname: true } },
-        bookings: { select: { start_time: true } },
+        bookings: {
+          select: {
+            id: true,
+            start_time: true,
+            deleted_at: true,
+            clients: { select: { client_name: true, client_surname: true } },
+            services_names: { select: { name: true, short_name: true } },
+          },
+        },
       },
       orderBy: { bookings: { start_time: "desc" } },
       take: 500,
@@ -50,6 +58,7 @@ export async function GET(request: Request) {
       tips: tips.map((tip) => {
         const gross = Number(tip.amount);
         const iva = tip.iva_applies ? Math.round(gross * IVA_RATE * 100) / 100 : 0;
+        const b = tip.bookings;
         return {
           id: tip.id,
           therapist_id: tip.therapist_id,
@@ -57,11 +66,21 @@ export async function GET(request: Request) {
           iva_applies: tip.iva_applies,
           payment_method: tip.payment_method,
           notes: tip.notes,
-          date: tip.bookings?.start_time ?? null,
+          date: b?.start_time ?? null,
           payout_id: tip.payout_id,
           gross,
           iva,
           net: Math.round((gross - iva) * 100) / 100,
+          booking: b
+            ? {
+                id: b.id,
+                start_time: b.start_time,
+                client_name:
+                  [b.clients?.client_name, b.clients?.client_surname].filter(Boolean).join(" ") || null,
+                service_name: b.services_names?.short_name ?? b.services_names?.name ?? null,
+                deleted: b.deleted_at != null,
+              }
+            : null,
         };
       }),
     });

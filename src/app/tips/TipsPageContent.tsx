@@ -20,6 +20,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { DataGrid, GridColDef, GridRowId } from "@mui/x-data-grid";
 import TipDetailDialog from "@/components/TipDetailDialog";
+import UpdateBookingDialogForm from "@/app/bookings/UpdateBookingDialogForm";
 import { startOfDay, endOfDay } from "date-fns";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
@@ -45,6 +46,13 @@ interface TipRow {
   gross: number;
   iva: number;
   net: number;
+  booking: {
+    id: string;
+    start_time: string | null;
+    client_name: string | null;
+    service_name: string | null;
+    deleted: boolean;
+  } | null;
 }
 
 const TipsPageContent = () => {
@@ -62,6 +70,7 @@ const TipsPageContent = () => {
   const [selectedIds, setSelectedIds] = useState<Set<GridRowId>>(new Set());
 
   const [detailTip, setDetailTip] = useState<TipRow | null>(null);
+  const [bookingToView, setBookingToView] = useState<string | null>(null);
 
   const [status, setStatus] = useState<StatusFilter>("pending");
   const [therapistId, setTherapistId] = useState("");
@@ -173,6 +182,33 @@ const TipsPageContent = () => {
               year: "numeric",
             })
           : "—",
+    },
+    {
+      field: "booking",
+      headerName: t("colBooking"),
+      flex: 1,
+      minWidth: 160,
+      sortable: false,
+      renderCell: ({ row }) => {
+        const b = row.booking;
+        if (!b) return "—";
+        const time = b.start_time
+          ? new Date(b.start_time).toLocaleTimeString("es-ES", {
+              hour: "2-digit", minute: "2-digit",
+            })
+          : null;
+        const label = [b.client_name, b.service_name, time].filter(Boolean).join(" · ") || tCommon("view");
+        return (
+          <Button
+            variant="text"
+            size="small"
+            onClick={(e) => { e.stopPropagation(); setBookingToView(b.id); }}
+            sx={{ textTransform: "none", p: 0, minWidth: 0, textAlign: "left", lineHeight: 1.3 }}
+          >
+            {label}{b.deleted ? ` (${t("bookingDeleted")})` : ""}
+          </Button>
+        );
+      },
     },
     {
       field: "payment_method",
@@ -358,6 +394,16 @@ const TipsPageContent = () => {
         onClose={() => setDetailTip(null)}
         onSaved={loadTips}
       />
+
+      {/* Booking opened from a tip row — refetch on close in case the booking's
+          appointment date (the tip's date) or therapist changed. */}
+      {bookingToView && (
+        <UpdateBookingDialogForm
+          open={!!bookingToView}
+          bookingId={bookingToView}
+          onClose={() => { setBookingToView(null); loadTips(); }}
+        />
+      )}
     </Box>
   );
 };

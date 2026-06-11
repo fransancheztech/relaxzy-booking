@@ -556,6 +556,8 @@
     "colTherapist": "Terapeuta",
     "colReceivedOn": "Fecha de recepción",
     "colDate": "Fecha",
+    "colBooking": "Reserva",
+    "bookingDeleted": "eliminada",
     "colMethod": "Método",
     "colGross": "Bruto",
     "colIva": "IVA",
