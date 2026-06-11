@@ -16,7 +16,7 @@ export const ClientUpdateSchema = z
       .string()
       .optional()
       .refine((val) => !val || phoneValidator(val), {
-        message: "Invalid phone number",
+        message: "Invalid phone. For a non-Spanish number, add the international prefix (e.g. +33 for France).",
       }),
     client_notes: z.string().optional(),
   })

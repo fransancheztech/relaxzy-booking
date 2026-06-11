@@ -5,7 +5,7 @@ export const VoucherSchema = z.object({
     buyer_name: z.string().min(1, "Buyer name is required"),
     buyer_surname: z.string().optional(),
     buyer_phone: z.string().optional().refine((val) => !val || phoneValidator(val), {
-        message: "Invalid phone number",
+        message: "Invalid phone. For a non-Spanish number, add the international prefix (e.g. +33 for France).",
     }),
     buyer_email: z.string().optional().refine((val) => !val || z.email().safeParse(val).success, {
         message: "Invalid email address",
@@ -13,7 +13,7 @@ export const VoucherSchema = z.object({
     recipient_name: z.string().optional(),
     recipient_surname: z.string().optional(),
     recipient_phone: z.string().optional().refine((val) => !val || phoneValidator(val), {
-        message: "Invalid phone number",
+        message: "Invalid phone. For a non-Spanish number, add the international prefix (e.g. +33 for France).",
     }),
     recipient_email: z.string().optional().refine((val) => !val || z.email().safeParse(val).success, {
         message: "Invalid email address",

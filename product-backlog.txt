@@ -1,7 +1,4 @@
 TO-DO
-- Añade safewards para detectar nombres como walk-in, unassigned, empty, etc
-- Cuando se intenta pagar por segunda vez una reserva ya pagada, el mensaje del toast es erroneo
-- Mejorar comportamiento de la biblioteca de reconocimiento de número de teléfono
 - Adding Booking column to Tips table
 - In the Sold vs. redeemed over time graph, stick together the Redeedmed and Sold bars of each day, so it is clearer that they represent the same day. The bar separation should be between days only.
 - In the Revenue per day/week/month, add the Tips chip along with the Bookings and Vouchers.
@@ -19,6 +16,7 @@ TO-DO
 STILL DELIBERATING
 - 5 Creación de facturas, descarga y almacenamiento en Drive automático de las mismas
 - Implementar fuzzy search para clients y vouchers
+- Añadir selector de país o código de país en fields de teléfono
 
 
 DONE
@@ -82,3 +80,5 @@ DONE
 - Hacer que en toda mi aplicación, cuando se vaya a añadir un pago o un tip o cualquier cosa relacionada con dinero, y haya que elegir entre efectivo y tarjeta de crédito, aparezca por órden siempre el primero efectivo y luego tarjeta de crédito
 - Al crear una nueva reserva, colocar un companion que ya exista solo con un nombre, siempre crea un nuevo cliente con el mismo nombre
 - Permitir buscar vouchers por datos de cliente
+- Añade safewards para detectar nombres como walk-in, unassigned, empty, etc
+- Cuando se intenta pagar por segunda vez una reserva ya pagada, el mensaje del toast es erroneo

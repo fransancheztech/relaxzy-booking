@@ -17,7 +17,7 @@ export const UpdateTherapistSchema = z
       .string()
       .optional()
       .refine((val) => !val || phoneValidator(val), {
-        message: "Invalid phone number",
+        message: "Invalid phone. For a non-Spanish number, add the international prefix (e.g. +33 for France).",
       }),
     notes: z.string().max(500).optional(),
     active: z.boolean().optional(),
