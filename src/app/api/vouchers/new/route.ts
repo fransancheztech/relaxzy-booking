@@ -6,6 +6,7 @@ import { formatZodError } from "@/utils/zodApiError";
 import {
   applyClientSlot,
   ClientConflictError,
+  PlaceholderNameError,
   detectClientConflict,
   type ClientInput,
 } from "@/lib/clients/resolveBookingClients";
@@ -280,6 +281,9 @@ export async function POST(request: Request) {
         { error: CLIENT_NAME_CONFLICT, conflicts: err.conflicts },
         { status: 409 },
       );
+    }
+    if (err instanceof PlaceholderNameError) {
+      return NextResponse.json({ error: err.message }, { status: err.httpStatus });
     }
     if (isPrismaUniqueViolation(err)) {
       return NextResponse.json({ error: CLIENT_CONTACT_TAKEN }, { status: 409 });

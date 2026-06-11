@@ -5,6 +5,7 @@ import { formatZodError } from "@/utils/zodApiError";
 import {
   applyClientSlot,
   ClientConflictError,
+  PlaceholderNameError,
   detectClientConflict,
 } from "@/lib/clients/resolveBookingClients";
 import { CLIENT_CONTACT_TAKEN, CLIENT_NAME_CONFLICT } from "@/types/clientConflict";
@@ -249,6 +250,9 @@ export async function POST(request: Request) {
         { error: CLIENT_NAME_CONFLICT, conflicts: err.conflicts },
         { status: 409 },
       );
+    }
+    if (err instanceof PlaceholderNameError) {
+      return NextResponse.json({ error: err.message }, { status: err.httpStatus });
     }
     if (typeof err === "object" && err !== null && (err as { code?: string }).code === "P2002") {
       return NextResponse.json({ error: CLIENT_CONTACT_TAKEN }, { status: 409 });

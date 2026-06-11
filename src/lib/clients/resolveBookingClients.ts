@@ -1,5 +1,6 @@
 import { Prisma } from "generated/prisma";
 import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
+import { isPlaceholderClientName } from "@/utils/placeholderName";
 
 export type ClientInput = {
   client_name?: string | null;
@@ -18,6 +19,16 @@ export class ClientConflictError extends Error {
     super("CLIENT_NAME_CONFLICT");
     this.name = "ClientConflictError";
     this.conflicts = conflicts;
+  }
+}
+
+// Thrown when a client name is a placeholder for an unknown client (e.g. "walk-in",
+// "anon"). Carries httpStatus so routes can surface it as a 400 with the message.
+export class PlaceholderNameError extends Error {
+  httpStatus = 400;
+  constructor(message: string) {
+    super(message);
+    this.name = "PlaceholderNameError";
   }
 }
 
@@ -128,6 +139,10 @@ export async function applyClientSlot(
   const { requireContact = true } = opts;
   if (!hasClientInfo(input)) return null;
   if (!input.client_name) throw new Error("Client name is required");
+  if (isPlaceholderClientName(input.client_name))
+    throw new PlaceholderNameError(
+      "Placeholder names (e.g. \"walk-in\", \"anon\") aren't allowed. Enter the client's real name, or leave the client fields empty for an unknown client.",
+    );
   if (requireContact && !input.client_email && !input.client_phone)
     throw new Error("Provide at least a phone or email for the client");
 

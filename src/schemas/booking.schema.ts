@@ -1,6 +1,10 @@
 import * as z from "zod";
 import { phoneValidator } from "@/utils/phoneValidator";
+import { isPlaceholderClientName } from "@/utils/placeholderName";
 import { booking_status } from "generated/prisma";
+
+const PLACEHOLDER_NAME_MSG =
+  "This looks like a placeholder. For an unknown client, use the toggle above (or leave the fields empty) instead of typing a name.";
 
 export const CompanionSchema = z
   .object({
@@ -42,6 +46,12 @@ export const CompanionSchema = z
       ctx.addIssue({
         code: "custom",
         message: "Companion name is required (or enable 'Same client as primary')",
+        path: ["client_name"],
+      });
+    } else if (isPlaceholderClientName(data.client_name)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Placeholder names (e.g. \"walk-in\", \"anon\") aren't allowed. Use the companion's real name, or if you don't have it, leave all fields empty, or enable the toggle above.",
         path: ["client_name"],
       });
     }
@@ -101,6 +111,8 @@ export const BookingSchema = BookingObject.superRefine((data, ctx) => {
   if (!hasClientInfo(data)) return;
   if (!data.client_name) {
     ctx.addIssue({ code: "custom", message: "Client name is required if identifying a client", path: ["client_name"] });
+  } else if (isPlaceholderClientName(data.client_name)) {
+    ctx.addIssue({ code: "custom", message: PLACEHOLDER_NAME_MSG, path: ["client_name"] });
   }
   if (!data.client_email && !data.client_phone) {
     ctx.addIssue({ code: "custom", message: "Provide at least a phone or email for the client", path: ["client_phone"] });
@@ -118,6 +130,8 @@ export const BookingUpdateSchema = BookingObject.safeExtend({
   // does NOT require a contact channel — only a name when any client info is present.
   if (hasClientInfo(data) && !data.client_name) {
     ctx.addIssue({ code: "custom", message: "Client name is required if identifying a client", path: ["client_name"] });
+  } else if (hasClientInfo(data) && isPlaceholderClientName(data.client_name)) {
+    ctx.addIssue({ code: "custom", message: PLACEHOLDER_NAME_MSG, path: ["client_name"] });
   }
 
   const totalPaid = data.totalPaid ?? 0;

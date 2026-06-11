@@ -46,6 +46,23 @@ export const FETCH_LIMIT = 100;
 
 export const PROTECTED_FIELDS = new Set(["id", "created_at"]);
 
+// Placeholder "names" receptionists sometimes type for an unknown client. The correct
+// path for an unknown client is the Walk-in toggle (empty contact fields), so these are
+// hard-blocked to keep junk client records out of the DB. Entries are stored in their
+// NORMALIZED form (lowercase, accent-stripped, punctuation→single space, trimmed) and
+// compared against the normalized whole name — see isPlaceholderClientName().
+export const PLACEHOLDER_CLIENT_NAMES = new Set([
+  "walkin", "walk in",
+  "anon", "anonimo", "anonima", "anonymous", "anonymus",
+  "desconocido", "desconocida",
+  "sin nombre", "nn",
+  "cliente", "client", "customer",
+  "na", "n a", "sn", "s n",
+  "x", "xx", "xxx",
+  "test", "prueba", "pruebas",
+  "unknown",
+]);
+
 export const PROTECTED_FIELDS_FOR_EDIT_BOOKING = new Set(["client_name", "client_surname", "client_phone", "client_email"]);
 
 export const FORM_FIELDS_EDIT_BOOKING: FormFieldConfigModel<BookingModel>[] = [
