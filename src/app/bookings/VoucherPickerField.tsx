@@ -95,6 +95,10 @@ function VoucherPickerField<TFieldValues extends FieldValues>({
             options={options}
             value={selectedOption}
             getOptionLabel={(o) => o.code}
+            // Results are already filtered server-side (by code, name, phone, email,
+            // notes, external ref). Disable MUI's local filter, which would otherwise
+            // drop matches whose label (the code) doesn't contain the typed text.
+            filterOptions={(x) => x}
             isOptionEqualToValue={(o, v) => o.code === v.code}
             loading={loading}
             clearOnBlur={false}

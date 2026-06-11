@@ -52,8 +52,9 @@ export async function GET(request: Request) {
         AND COALESCE(v.balance, 0) > 0
         AND v.expiration_date > NOW()
         AND (
-          v.code               ILIKE ${pattern}
-          OR v.notes           ILIKE ${pattern}
+          v.code                  ILIKE ${pattern}
+          OR v.notes              ILIKE ${pattern}
+          OR v.external_reference ILIKE ${pattern}
           OR cr.client_name    ILIKE ${pattern}
           OR cr.client_surname ILIKE ${pattern}
           OR cr.client_phone   ILIKE ${pattern}
