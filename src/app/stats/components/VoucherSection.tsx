@@ -84,7 +84,7 @@ const VoucherSection = ({ vouchers, bucket }: Props) => {
             </Typography>
             {hasOverTime ? (
               <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={barData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                <BarChart data={barData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }} barGap={0} barCategoryGap="20%">
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                   <YAxis tickFormatter={(v) => `${v} €`} tick={{ fontSize: 11 }} width={55} />
