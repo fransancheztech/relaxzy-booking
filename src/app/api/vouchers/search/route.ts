@@ -6,10 +6,17 @@ type VoucherRow = {
   code: string;
   balance: string | null;
   expiration_date: Date;
+  notes: string | null;
+  source: string;
+  external_reference: string | null;
   recipient_name: string | null;
   recipient_surname: string | null;
+  recipient_phone: string | null;
+  recipient_email: string | null;
   buyer_name: string | null;
   buyer_surname: string | null;
+  buyer_phone: string | null;
+  buyer_email: string | null;
 };
 
 export async function GET(request: Request) {
@@ -27,10 +34,17 @@ export async function GET(request: Request) {
         v.code,
         v.balance::text,
         v.expiration_date,
+        v.notes,
+        v.source,
+        v.external_reference,
         cr.client_name     AS recipient_name,
         cr.client_surname  AS recipient_surname,
+        cr.client_phone    AS recipient_phone,
+        cr.client_email    AS recipient_email,
         cb.client_name     AS buyer_name,
-        cb.client_surname  AS buyer_surname
+        cb.client_surname  AS buyer_surname,
+        cb.client_phone    AS buyer_phone,
+        cb.client_email    AS buyer_email
       FROM vouchers v
       LEFT JOIN clients cr ON cr.id = v.recipient_id AND cr.deleted_at IS NULL
       LEFT JOIN clients cb ON cb.id = v.buyer_id     AND cb.deleted_at IS NULL

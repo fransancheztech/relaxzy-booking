@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Autocomplete, Box, CircularProgress, TextField, Typography } from "@mui/material";
+import { Autocomplete, Box, CircularProgress, TextField, Tooltip, Typography } from "@mui/material";
 import { Control, Controller, FieldValues, Path } from "react-hook-form";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import { formatMoney } from "@/utils/formatMoney";
 import { useTranslations } from "next-intl";
 
@@ -8,11 +10,33 @@ type VoucherOption = {
   id: string;
   code: string;
   balance: string | null;
+  expiration_date: string | null;
+  notes: string | null;
+  source: string | null;
+  external_reference: string | null;
   recipient_name: string | null;
   recipient_surname: string | null;
+  recipient_phone: string | null;
+  recipient_email: string | null;
   buyer_name: string | null;
   buyer_surname: string | null;
+  buyer_phone: string | null;
+  buyer_email: string | null;
 };
+
+function fullName(first: string | null, last: string | null): string {
+  return [first, last].filter(Boolean).join(" ");
+}
+
+// Join a party's name + phone + email, dropping any that are absent.
+function partyLine(
+  first: string | null,
+  last: string | null,
+  phone: string | null,
+  email: string | null,
+): string {
+  return [fullName(first, last), phone, email].filter(Boolean).join(" · ");
+}
 
 function getClientName(v: VoucherOption): string {
   const first = v.recipient_name ?? v.buyer_name;
@@ -34,6 +58,7 @@ function VoucherPickerField<TFieldValues extends FieldValues>({
   onSetVoucherPayment,
 }: Props<TFieldValues>) {
   const t = useTranslations("BookingPayment");
+  const tv = useTranslations("Vouchers");
   const [options, setOptions] = useState<VoucherOption[]>([]);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -107,17 +132,43 @@ function VoucherPickerField<TFieldValues extends FieldValues>({
             renderOption={(props, option) => {
               const name = getClientName(option);
               const balance = option.balance != null ? formatMoney(Number(option.balance)) : null;
-              return (
-                <Box component="li" {...props} key={option.id}>
-                  <Box>
-                    <Typography variant="body2" fontWeight={600}>
-                      {option.code}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {[balance, name].filter(Boolean).join(" · ")}
-                    </Typography>
-                  </Box>
+
+              const buyer = partyLine(option.buyer_name, option.buyer_surname, option.buyer_phone, option.buyer_email);
+              const recipient = partyLine(option.recipient_name, option.recipient_surname, option.recipient_phone, option.recipient_email);
+              const expires = option.expiration_date
+                ? format(new Date(option.expiration_date), "dd/MM/yyyy", { locale: es })
+                : null;
+              const source = option.source
+                ? tv(option.source === "online" ? "sourceOnline" : "sourcePhysical")
+                : null;
+              const externalRef = option.external_reference?.trim() || null;
+              const notes = option.notes?.trim() || null;
+
+              const hasInfo = !!(buyer || recipient || expires || source || externalRef || notes);
+              const tooltip = (
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
+                  {buyer && <span>{tv("buyer")}: {buyer}</span>}
+                  {recipient && <span>{tv("recipient")}: {recipient}</span>}
+                  {expires && <span>{tv("expires")}: {expires}</span>}
+                  {source && <span>{tv("source")}: {source}</span>}
+                  {externalRef && <span>{tv("externalReference")}: {externalRef}</span>}
+                  {notes && <span>{tv("notes")}: {notes}</span>}
                 </Box>
+              );
+
+              return (
+                <Tooltip key={option.id} title={hasInfo ? tooltip : ""} placement="left" arrow>
+                  <Box component="li" {...props} key={option.id}>
+                    <Box>
+                      <Typography variant="body2" fontWeight={600}>
+                        {option.code}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {[balance, name].filter(Boolean).join(" · ")}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Tooltip>
               );
             }}
             renderInput={(params) => (
