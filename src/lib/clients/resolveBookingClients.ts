@@ -32,13 +32,22 @@ type MatchedClient = {
   client_phone: string | null;
 };
 
-// Resolve an existing active client by email (priority) then phone.
+// Resolve an existing active client by email (priority), then phone, then — when no
+// contact was entered at all — by name. The name tier keeps name-only clients (e.g.
+// companions, walk-ins) from being duplicated on every booking: identity derives from
+// the entered data, exactly like contact matching. It is scoped to contactless clients
+// (email AND phone null) and matches name + surname, so it never folds a name-only entry
+// into a contactable client. Names aren't unique, so two genuinely distinct contactless
+// people sharing a name will resolve to the same record — acceptable, as they're already
+// indistinguishable in the data.
 async function findClientMatch(
   tx: Prisma.TransactionClient,
   input: ClientInput,
-): Promise<{ client: MatchedClient; matchedBy: "email" | "phone" } | null> {
+): Promise<{ client: MatchedClient; matchedBy: "email" | "phone" | "name" } | null> {
   const email = normalize(input.client_email);
   const phone = normalize(input.client_phone);
+  const name = normalize(input.client_name);
+  const surname = normalize(input.client_surname);
 
   if (email) {
     const client = await tx.clients.findFirst({ where: { client_email: email, deleted_at: null } });
@@ -47,6 +56,20 @@ async function findClientMatch(
   if (phone) {
     const client = await tx.clients.findFirst({ where: { client_phone: phone, deleted_at: null } });
     if (client) return { client, matchedBy: "phone" };
+  }
+  if (!email && !phone && name) {
+    const client = await tx.clients.findFirst({
+      where: {
+        deleted_at: null,
+        client_email: null,
+        client_phone: null,
+        client_name: { equals: name, mode: "insensitive" },
+        client_surname: surname
+          ? { equals: surname, mode: "insensitive" }
+          : null,
+      },
+    });
+    if (client) return { client, matchedBy: "name" };
   }
   return null;
 }
@@ -70,7 +93,9 @@ export async function detectClientConflict(
 ): Promise<ClientConflict | null> {
   if (!hasClientInfo(input) || resolution) return null;
   const match = await findClientMatch(tx, input);
-  if (!match || !nameDiffers(input, match.client)) return null;
+  // A name-tier match can't be a name conflict (the name is the match key), so only
+  // contact-tier matches with a differing name need an explicit decision.
+  if (!match || match.matchedBy === "name" || !nameDiffers(input, match.client)) return null;
 
   return {
     slot,
@@ -109,6 +134,7 @@ export async function applyClientSlot(
   const match = await findClientMatch(tx, input);
 
   if (!match) {
+    // No existing client matches the entered contact/name — create a new one.
     const created = await tx.clients.create({
       data: {
         client_name: input.client_name,

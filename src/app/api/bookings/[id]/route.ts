@@ -225,6 +225,11 @@ export async function PUT(
        Update (soft-delete aware)
        ----------------------------- */
     const updated = await prisma.$transaction(async (tx) => {
+      const currentBooking = await tx.bookings.findUnique({
+        where: { id, deleted_at: null },
+        select: { status: true },
+      });
+
       /* -----------------------------
        Resolve service_id
        ----------------------------- */
@@ -250,16 +255,16 @@ export async function PUT(
       } else if (hasClientInfo) {
         const conflict = await detectClientConflict(tx, "primary", body, body.clientResolution);
         if (conflict) throw new ClientConflictError([conflict]);
-        clientId = await applyClientSlot(tx, body, body.clientResolution);
+        // A booking's client may be name-only (no contact). findClientMatch reuses an
+        // existing contactless client by name, so this won't duplicate on every save.
+        clientId = await applyClientSlot(tx, body, body.clientResolution, {
+          requireContact: false,
+        });
       }
 
       // Reject therapist assignment on cancelled bookings
       if ("therapist_id" in bookingData && bookingData.therapist_id !== null) {
-        const current = await tx.bookings.findUnique({
-          where: { id, deleted_at: null },
-          select: { status: true },
-        });
-        const effectiveStatus = bookingData.status ?? current?.status;
+        const effectiveStatus = bookingData.status ?? currentBooking?.status;
         if (effectiveStatus === "cancelled") {
           throw Object.assign(
             new Error("Cannot assign a therapist to a cancelled booking"),
