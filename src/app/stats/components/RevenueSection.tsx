@@ -10,7 +10,7 @@ import { useTranslations } from "next-intl";
 import { StatsResponse } from "@/types/stats";
 import { formatMoney } from "@/utils/formatMoney";
 
-type Stream = "bookings" | "vouchers";
+type Stream = "bookings" | "vouchers" | "tips";
 
 type Bucket = StatsResponse["meta"]["date_bucket"];
 
@@ -43,6 +43,7 @@ const RevenueSection = ({ revenue, bucket, onBucketChange }: Props) => {
   const [streams, setStreams] = useState<Stream[]>(["bookings", "vouchers"]);
   const showBookings = streams.includes("bookings");
   const showVouchers = streams.includes("vouchers");
+  const showTips = streams.includes("tips");
 
   const empty = (
     <Typography variant="body2" color="text.disabled" sx={{ py: 4, textAlign: "center" }}>
@@ -56,8 +57,8 @@ const RevenueSection = ({ revenue, bucket, onBucketChange }: Props) => {
     if (bucket === "day") label = d.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" });
     else if (bucket === "week") label = `W${Math.ceil(d.getDate() / 7)} ${d.toLocaleDateString("es-ES", { month: "short" })}`;
     else label = d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
-    const cash = (showBookings ? p.bookings.cash : 0) + (showVouchers ? p.vouchers.cash : 0);
-    const credit_card = (showBookings ? p.bookings.credit_card : 0) + (showVouchers ? p.vouchers.credit_card : 0);
+    const cash = (showBookings ? p.bookings.cash : 0) + (showVouchers ? p.vouchers.cash : 0) + (showTips ? p.tips.cash : 0);
+    const credit_card = (showBookings ? p.bookings.credit_card : 0) + (showVouchers ? p.vouchers.credit_card : 0) + (showTips ? p.tips.credit_card : 0);
     const refunds = (showBookings ? p.bookings.refunds : 0) + (showVouchers ? p.vouchers.refunds : 0);
     return { label, cash, credit_card, refunds, total: cash + credit_card - refunds };
   });
@@ -134,6 +135,7 @@ const RevenueSection = ({ revenue, bucket, onBucketChange }: Props) => {
                 >
                   <ToggleButton value="bookings">{t("bookings")}</ToggleButton>
                   <ToggleButton value="vouchers">{t("voucherSectionTitle")}</ToggleButton>
+                  <ToggleButton value="tips">{t("tipsSectionTitle")}</ToggleButton>
                 </ToggleButtonGroup>
               </Box>
               {selectedRefundsTotal > 0 && (

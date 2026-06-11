@@ -8,6 +8,9 @@ export interface StatsRevenuePeriodPoint {
   period: string;
   bookings: StatsRevenueStreamAmounts;
   vouchers: StatsRevenueStreamAmounts;
+  // Tips are not real revenue; surfaced as an opt-in stream on the revenue-over-time
+  // chart only. Always refunds: 0 (tips have no refunds).
+  tips: StatsRevenueStreamAmounts;
 }
 
 export interface StatsRevenueByTherapist {

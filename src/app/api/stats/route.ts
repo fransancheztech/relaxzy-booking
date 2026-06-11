@@ -11,7 +11,8 @@ type DateBucket = "day" | "week" | "month";
 
 function getBucket(from: Date, to: Date): DateBucket {
   const days = (to.getTime() - from.getTime()) / 86_400_000;
-  if (days <= 14) return "day";
+  // Up to ~45 days (covers a full month preset) defaults to day granularity.
+  if (days <= 45) return "day";
   if (days <= 90) return "week";
   return "month";
 }
@@ -362,6 +363,7 @@ export async function GET(request: Request) {
           period: key,
           bookings: { cash: 0, credit_card: 0, refunds: 0 },
           vouchers: { cash: 0, credit_card: 0, refunds: 0 },
+          tips: { cash: 0, credit_card: 0, refunds: 0 },
         };
         overtimeMap.set(key, p);
       }
@@ -378,6 +380,12 @@ export async function GET(request: Request) {
       v.cash += toNum(row.cash);
       v.credit_card += toNum(row.credit_card);
       v.refunds += toNum(row.refunds);
+    }
+    // Tips per period (summed across therapists); opt-in stream on the revenue chart.
+    for (const row of tipsOverTimeRows) {
+      const tp = ensurePoint(new Date(row.period).toISOString()).tips;
+      tp.cash += toNum(row.cash);
+      tp.credit_card += toNum(row.credit_card);
     }
     const revenueOverTime = Array.from(overtimeMap.values()).sort((a, b) =>
       a.period.localeCompare(b.period)
