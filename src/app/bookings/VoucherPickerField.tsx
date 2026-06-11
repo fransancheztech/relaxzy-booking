@@ -73,6 +73,14 @@ function VoucherPickerField<TFieldValues extends FieldValues>({
             isOptionEqualToValue={(o, v) => o.code === v.code}
             loading={loading}
             clearOnBlur={false}
+            // Keep the list anchored below the field: with the result cap removed the
+            // popup can be tall, and Popper would otherwise flip it above the input.
+            slotProps={{
+              popper: {
+                placement: "bottom-start",
+                modifiers: [{ name: "flip", enabled: false }],
+              },
+            }}
             onInputChange={(_, value, reason) => {
               if (reason === "input") {
                 fetchVouchers(value);

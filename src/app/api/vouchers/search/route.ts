@@ -17,6 +17,9 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get("q")?.trim() ?? "";
     const pattern = q ? `%${q}%` : "%";
+    // Relevance tiers for the ORDER BY: exact code, then code-prefix, then code-contains.
+    const exact = q; // ILIKE with no wildcards = case-insensitive exact match
+    const prefix = q ? `${q}%` : "%";
 
     const rows = await prisma.$queryRaw<VoucherRow[]>`
       SELECT
@@ -54,8 +57,14 @@ export async function GET(request: Request) {
               AND vu.notes ILIKE ${pattern}
           )
         )
-      ORDER BY v.created_at DESC
-      LIMIT 10
+      ORDER BY
+        CASE
+          WHEN v.code ILIKE ${exact}  THEN 0
+          WHEN v.code ILIKE ${prefix} THEN 1
+          WHEN v.code ILIKE ${pattern} THEN 2
+          ELSE 3
+        END,
+        v.created_at DESC
     `;
 
     return NextResponse.json({ vouchers: rows });

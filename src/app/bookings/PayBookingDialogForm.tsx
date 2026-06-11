@@ -133,7 +133,6 @@ const PayBookingDialogForm = ({
           <DialogContent>
             <Grid
               container
-              sx={{ paddingTop: "1rem" }}
               spacing={{ xs: 1, xl: 2 }}
             >
               <Grid size={12}>
