@@ -122,6 +122,14 @@ const RevenueSection = ({ revenue, bucket, onBucketChange, streams, onStreamsCha
             <ToggleButton value="tips">{t("tipsSectionTitle")}</ToggleButton>
           </ToggleButtonGroup>
         </Box>
+        {/* Refunds for the selected streams — always visible (muted when zero). */}
+        <Chip
+          label={t("refundsChip", { amount: formatMoney(selectedRefundsTotal) })}
+          size="small"
+          color={selectedRefundsTotal > 0 ? "error" : "default"}
+          variant="outlined"
+          sx={{ fontSize: "0.7rem" }}
+        />
       </Box>
       <Grid container spacing={2}>
         {/* Revenue over time */}
@@ -144,13 +152,6 @@ const RevenueSection = ({ revenue, bucket, onBucketChange, streams, onStreamsCha
                   <ToggleButton value="month">{t("bucketMonth")}</ToggleButton>
                 </ToggleButtonGroup>
               </Box>
-              {selectedRefundsTotal > 0 && (
-                <Chip
-                  label={t("refundsChip", { amount: formatMoney(selectedRefundsTotal) })}
-                  size="small" color="error" variant="outlined"
-                  sx={{ fontSize: "0.7rem" }}
-                />
-              )}
             </Box>
             {hasData ? (
               <ResponsiveContainer width="100%" height={260}>

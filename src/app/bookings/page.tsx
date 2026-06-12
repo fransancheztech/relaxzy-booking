@@ -90,7 +90,15 @@ export default function BookingsPage() {
     eventSource.onmessage = () => {
       loadBookingsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current);
     };
-    return () => eventSource.close();
+    // Payment/group writes don't touch the bookings table, so the SSE stream won't fire.
+    // A `refreshBookingsData` window event (dispatched by those flows) refetches the list.
+    const onRefresh = () =>
+      loadBookingsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current);
+    window.addEventListener("refreshBookingsData", onRefresh);
+    return () => {
+      eventSource.close();
+      window.removeEventListener("refreshBookingsData", onRefresh);
+    };
   }, []);
 
   // -------------------------------

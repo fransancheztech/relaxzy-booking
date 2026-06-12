@@ -238,8 +238,21 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
     onClose();
   };
 
+  // Payment writes don't touch the bookings table, so the SSE stream won't fire. Broadcast
+  // explicitly so the calendar event block (paid amount/colour) and the bookings list refresh.
+  const broadcastBookingChange = () => {
+    window.dispatchEvent(new CustomEvent("refreshCalendarData"));
+    window.dispatchEvent(new CustomEvent("refreshBookingsData"));
+  };
+
   const onPaymentSuccess = () => {
     reloadPaymentsSummary();
+    broadcastBookingChange();
+  };
+
+  const onPaymentChanged = () => {
+    reloadPaymentsSummary();
+    broadcastBookingChange();
   };
 
   return (
@@ -327,7 +340,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
         open={isManagePaymentsDialogOpen}
         onClose={() => setIsManagePaymentsDialogOpen(false)}
         bookingId={bookingId}
-        onPaymentChanged={reloadPaymentsSummary}
+        onPaymentChanged={onPaymentChanged}
       />
 
       <DialogDeletion

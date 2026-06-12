@@ -1,7 +1,4 @@
 TO-DO
-- The Total Revenue card at the top, should also have the Bookings/Vouchers/Tips selectors, as the Revenue per day/week/month. Or maybe the Bookings/Vouchers/Tips should have an i with a tooltip informing that the selected options affect Revenue per day/week/month, By payment method and Total revenue
-- In the Stats page, Revenue section, add a card with a small table of refunds
-- Los precios no se actualizan en los bloques del calendario al actualizar una reserva
 - Añadir advertencia cada vez que se guarde una reserva o se pague con un precio distinto
 - Revisar texto de ayuda contextual para diferentes páginas y usuarios, importante para no liar a usuarios
 - Completar reservas Mayo
@@ -82,3 +79,6 @@ DONE
 - Adding Booking column to Tips table
 - In the Sold vs. redeemed over time graph, stick together the Redeedmed and Sold bars of each day, so it is clearer that they represent the same day. The bar separation should be between days only.
 - In the Revenue per day/week/month, add the Tips chip along with the Bookings and Vouchers.
+- The Total Revenue card at the top, should also have the Bookings/Vouchers/Tips selectors, as the Revenue per day/week/month. Or maybe the Bookings/Vouchers/Tips should have an i with a tooltip informing that the selected options affect Revenue per day/week/month, By payment method and Total revenue
+- In the Stats page, Revenue section, add a card with a small table of refunds
+- Los precios no se actualizan en los bloques del calendario al actualizar una reserva
