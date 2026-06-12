@@ -429,7 +429,9 @@
   },
   "Stats": {
     "totalRevenue": "Ingresos totales",
-    "tooltipRevenue": "Efectivo y tarjeta cobrados por reservas (según la fecha de la cita) más ventas de bonos (según la fecha de creación del bono), menos reembolsos.",
+    "tooltipRevenue": "Suma de los flujos seleccionados en la cabecera de Ingresos, menos reembolsos. Las reservas se cuentan por fecha de la cita, las ventas de bonos por fecha de creación y las propinas por fecha de la cita. Nota: las propinas son gratificaciones, no ingresos reales.",
+    "includeLabel": "Incluir:",
+    "noneSelected": "Ningún flujo seleccionado",
     "tooltipBookings": "Reservas contadas hasta hoy: completadas, pendientes y confirmadas. Las reservas canceladas no se incluyen.",
     "tooltipAvgPrice": "Precio medio de las reservas completadas en el período. P25 y P75 marcan el rango de precios inferior y superior.",
     "tooltipRevenuePerHour": "Ingresos totales divididos entre las horas reservadas de las reservas completadas en el período.",

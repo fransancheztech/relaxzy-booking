@@ -6,7 +6,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 interface Props {
   label: string;
   value: string;
-  secondary?: string;
+  secondary?: React.ReactNode;
   icon?: React.ReactNode;
   tooltip?: string;
 }

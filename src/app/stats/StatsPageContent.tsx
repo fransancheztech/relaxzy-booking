@@ -15,7 +15,7 @@ import { StatsResponse } from "@/types/stats";
 import { formatMoney } from "@/utils/formatMoney";
 import DateRangeFilter, { Preset, resolvePreset } from "./components/DateRangeFilter";
 import KpiCard from "./components/KpiCard";
-import RevenueSection from "./components/RevenueSection";
+import RevenueSection, { type Stream } from "./components/RevenueSection";
 import BookingsSection from "./components/BookingsSection";
 import ClientSection from "./components/ClientSection";
 import VoucherSection from "./components/VoucherSection";
@@ -45,6 +45,41 @@ const StatsPageContent = ({ role }: Props) => {
   const [data, setData] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Revenue streams feeding the headline "Total revenue" card AND the over-time chart.
+  // Tips off by default (they're gratuities, not real revenue).
+  const [streams, setStreams] = useState<Stream[]>(["bookings", "vouchers"]);
+
+  // Selected-streams total, summed from over_time so it always matches the chart.
+  const selectedRevenue = useMemo(() => {
+    if (!data) return 0;
+    return data.revenue.over_time.reduce((sum, p) => {
+      let s = 0;
+      if (streams.includes("bookings")) s += p.bookings.cash + p.bookings.credit_card - p.bookings.refunds;
+      if (streams.includes("vouchers")) s += p.vouchers.cash + p.vouchers.credit_card - p.vouchers.refunds;
+      if (streams.includes("tips")) s += p.tips.cash + p.tips.credit_card;
+      return sum + s;
+    }, 0);
+  }, [data, streams]);
+
+  // Composition caption for the card: names the included streams; Tips is tinted to
+  // signal it isn't real revenue.
+  const revenueComposition = (() => {
+    const segs: { label: string; tip: boolean }[] = [];
+    if (streams.includes("bookings")) segs.push({ label: t("bookings"), tip: false });
+    if (streams.includes("vouchers")) segs.push({ label: t("voucherSectionTitle"), tip: false });
+    if (streams.includes("tips")) segs.push({ label: t("tipsSectionTitle"), tip: true });
+    if (segs.length === 0) return t("noneSelected");
+    return (
+      <>
+        {segs.map((s, i) => (
+          <Box key={s.label} component="span" sx={s.tip ? { color: "warning.main", fontWeight: 600 } : undefined}>
+            {i > 0 ? " + " : ""}{s.label}
+          </Box>
+        ))}
+      </>
+    );
+  })();
 
   useEffect(() => {
     setButtonLabel("");
@@ -133,8 +168,8 @@ const StatsPageContent = ({ role }: Props) => {
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }}>
               <KpiCard
                 label={t("totalRevenue")}
-                value={formatMoney(data.revenue.total)}
-                secondary={`${t("refunds")} −${formatMoney(data.revenue.refunds_total)}`}
+                value={formatMoney(selectedRevenue)}
+                secondary={revenueComposition}
                 icon={<TrendingUpIcon fontSize="small" />}
                 tooltip={t("tooltipRevenue")}
               />
@@ -192,7 +227,7 @@ const StatsPageContent = ({ role }: Props) => {
 
           {/* Revenue section */}
           <Box sx={{ mb: 4 }}>
-            <RevenueSection revenue={data.revenue} bucket={data.meta.date_bucket} onBucketChange={handleBucketChange} />
+            <RevenueSection revenue={data.revenue} bucket={data.meta.date_bucket} onBucketChange={handleBucketChange} streams={streams} onStreamsChange={setStreams} />
           </Box>
 
           <Divider sx={{ mb: 4 }} />

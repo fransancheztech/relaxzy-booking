@@ -5,12 +5,11 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { StatsResponse } from "@/types/stats";
 import { formatMoney } from "@/utils/formatMoney";
 
-type Stream = "bookings" | "vouchers" | "tips";
+export type Stream = "bookings" | "vouchers" | "tips";
 
 type Bucket = StatsResponse["meta"]["date_bucket"];
 
@@ -30,17 +29,19 @@ interface Props {
   revenue: StatsResponse["revenue"];
   bucket: Bucket;
   onBucketChange: (bucket: Bucket) => void;
+  // Lifted to the page so the headline "Total revenue" card and this chart share one selection.
+  streams: Stream[];
+  onStreamsChange: (streams: Stream[]) => void;
 }
 
 const PIE_COLORS = ["#002d04", "#60a561"];
 
-const RevenueSection = ({ revenue, bucket, onBucketChange }: Props) => {
+const RevenueSection = ({ revenue, bucket, onBucketChange, streams, onStreamsChange }: Props) => {
   const t = useTranslations("Stats");
   const hasData = revenue.over_time.length > 0;
   const bucketLabel = bucket === "day" ? t("revenuePerDay") : bucket === "week" ? t("revenuePerWeek") : t("revenuePerMonth");
 
-  // Which revenue streams feed the over-time bars (cash/card breakdown is kept).
-  const [streams, setStreams] = useState<Stream[]>(["bookings", "vouchers"]);
+  // Which streams feed the headline total and the over-time bars (cash/card breakdown is kept).
   const showBookings = streams.includes("bookings");
   const showVouchers = streams.includes("vouchers");
   const showTips = streams.includes("tips");
@@ -106,7 +107,22 @@ const RevenueSection = ({ revenue, bucket, onBucketChange }: Props) => {
 
   return (
     <Box>
-      <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>{t("revenueSectionTitle")}</Typography>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap", mb: 2 }}>
+        <Typography variant="h6" fontWeight={600}>{t("revenueSectionTitle")}</Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography variant="caption" color="text.secondary">{t("includeLabel")}</Typography>
+          <ToggleButtonGroup
+            value={streams}
+            size="small"
+            onChange={(_, v: Stream[]) => onStreamsChange(v)}
+            sx={{ "& .MuiToggleButton-root": { py: 0.25, px: 1, fontSize: "0.7rem" } }}
+          >
+            <ToggleButton value="bookings">{t("bookings")}</ToggleButton>
+            <ToggleButton value="vouchers">{t("voucherSectionTitle")}</ToggleButton>
+            <ToggleButton value="tips">{t("tipsSectionTitle")}</ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+      </Box>
       <Grid container spacing={2}>
         {/* Revenue over time */}
         <Grid size={{ xs: 12, md: 8 }}>
@@ -126,16 +142,6 @@ const RevenueSection = ({ revenue, bucket, onBucketChange }: Props) => {
                   <ToggleButton value="day">{t("bucketDay")}</ToggleButton>
                   <ToggleButton value="week">{t("bucketWeek")}</ToggleButton>
                   <ToggleButton value="month">{t("bucketMonth")}</ToggleButton>
-                </ToggleButtonGroup>
-                <ToggleButtonGroup
-                  value={streams}
-                  size="small"
-                  onChange={(_, v: Stream[]) => setStreams(v)}
-                  sx={{ "& .MuiToggleButton-root": { py: 0.25, px: 1, fontSize: "0.7rem" } }}
-                >
-                  <ToggleButton value="bookings">{t("bookings")}</ToggleButton>
-                  <ToggleButton value="vouchers">{t("voucherSectionTitle")}</ToggleButton>
-                  <ToggleButton value="tips">{t("tipsSectionTitle")}</ToggleButton>
                 </ToggleButtonGroup>
               </Box>
               {selectedRefundsTotal > 0 && (
