@@ -163,6 +163,7 @@
     "noCompanions": "No companions — same client info and start time, no extra data needed.",
     "dateTime": "Date & Time",
     "removeCompanion": "Remove companion",
+    "priceMismatchHint": "⚠ The standard catalog price for {service} · {duration} min is €{catalogPrice} (entered €{entered})",
     "tooltipInfo": "Always create one single booking per person. For couples or groups, feel free to use the Companions section below.",
     "status": "Status",
     "payment": "Payment",

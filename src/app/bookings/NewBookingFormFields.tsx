@@ -38,6 +38,7 @@ import { es } from "date-fns/locale";
 import { useEffect, useState } from "react";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import { normalizeMoney, normalizeMoneyInput } from "@/utils/normalizeMoney";
+import { priceMismatch } from "@/utils/priceMismatch";
 
 const toPaymentNumber = (raw: string): number | undefined => {
   const filtered = normalizeMoneyInput(raw);
@@ -279,6 +280,8 @@ const CompanionRow = ({
     if (duration != null) setValue(`companions.${index}.duration`, duration);
   }, [companionService, companionPrice, lookupDuration, index, getValues, setValue]);
 
+  const companionMismatch = priceMismatch(companionService, companionDuration, companionPrice, lookupPrice);
+
   return (
     <Box
       sx={{
@@ -404,6 +407,12 @@ const CompanionRow = ({
         </Tooltip>
       </Box>
 
+      {companionMismatch && (
+        <Typography variant="caption" color="warning.main" sx={{ display: "block", mt: 0.5 }}>
+          {t("priceMismatchHint", companionMismatch)}
+        </Typography>
+      )}
+
       <Box sx={{ mt: 0.5 }}>
         <Controller
           name={`companions.${index}.same_as_primary`}
@@ -476,6 +485,8 @@ const NewBookingFormFields = () => {
   const serviceOptions = availableServices.length > 0 ? availableServices : BOOKING_DEFAULT_SERVICES;
   const durationOptions = availableDurations.length > 0 ? availableDurations : BOOKING_DEFAULT_DURATIONS;
   const priceOptions = availablePrices.length > 0 ? availablePrices : BOOKING_DEFAULT_PRICES;
+
+  const primaryMismatch = priceMismatch(primaryService, primaryDuration, primaryPrice, lookupPrice);
 
   // Autofill price when service + duration set and price is empty
   useEffect(() => {
@@ -658,6 +669,11 @@ const NewBookingFormFields = () => {
             />
           )}
         />
+        {primaryMismatch && (
+          <Typography variant="caption" color="warning.main" sx={{ display: "block", mt: 0.5 }}>
+            {t("priceMismatchHint", primaryMismatch)}
+          </Typography>
+        )}
       </Grid>
       <Grid size={12}>
         <Controller

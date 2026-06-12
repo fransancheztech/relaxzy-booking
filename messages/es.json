@@ -163,6 +163,7 @@
     "noCompanions": "Sin acompañantes — misma información de cliente y hora de inicio, no se necesitan datos adicionales.",
     "dateTime": "Fecha y hora",
     "removeCompanion": "Eliminar acompañante",
+    "priceMismatchHint": "⚠ El precio estándar de catálogo para {service} · {duration} min es €{catalogPrice} (introducido €{entered})",
     "tooltipInfo": "Crea siempre una única reserva por persona. Para parejas o grupos, usa la sección de Acompañantes de abajo.",
     "status": "Estado",
     "payment": "Pago",

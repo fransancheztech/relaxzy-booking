@@ -38,6 +38,7 @@ import { Dispatch, SetStateAction } from "react";
 import BookingClientSection from "./BookingClientSection";
 import BookingGroupSection from "./BookingGroupSection";
 import { normalizeMoney } from "@/utils/normalizeMoney";
+import { priceMismatch } from "@/utils/priceMismatch";
 import { formatMoney, formatMoneyInput } from "@/utils/formatMoney";
 import { useTherapists } from "@/hooks/useTherapists";
 import TipSection from "./TipSection";
@@ -74,11 +75,16 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
   const therapists = useTherapists();
   const therapistId = watch("therapist_id");
   const therapistRequested = watch("therapist_requested");
+  const serviceName = watch("service_name");
+  const duration = watch("duration");
+  const price = watch("price");
 
-  const { availableServices, availableDurations, availablePrices } = useServiceLookups();
+  const { availableServices, availableDurations, availablePrices, lookupPrice } = useServiceLookups();
   const serviceOptions = availableServices.length > 0 ? availableServices : BOOKING_DEFAULT_SERVICES;
   const durationOptions = availableDurations.length > 0 ? availableDurations : BOOKING_DEFAULT_DURATIONS;
   const priceOptions = availablePrices.length > 0 ? availablePrices : BOOKING_DEFAULT_PRICES;
+
+  const mismatch = priceMismatch(serviceName, duration, price, lookupPrice);
 
   return (
     <Grid container spacing={{ xs: 1  , xl: 2 }}>
@@ -257,6 +263,11 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
             />
           )}
         />
+        {!readOnly && mismatch && (
+          <Typography variant="caption" color="warning.main" sx={{ display: "block", mt: 0.5 }}>
+            {t("priceMismatchHint", mismatch)}
+          </Typography>
+        )}
       </Grid>
       <Grid size={6}>
         <Controller
