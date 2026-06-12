@@ -42,15 +42,15 @@ const PAGE_KEYS: Record<string, PageKey> = {
 };
 
 const SECTION_COUNTS: Record<PageKey, number[]> = {
-  calendar:    [4, 3, 4, 2, 4],
-  bookings:    [3, 3, 3, 3, 2, 4],
+  calendar:    [5, 4, 4, 3, 2, 4],
+  bookings:    [3, 4, 3, 3, 3, 2, 4],
   clients:     [2, 2, 1, 2],
   payments:    [3, 2],
-  services:    [2, 2, 2],
+  services:    [3, 2, 2],
   therapists:  [3, 2, 2],
-  vouchers:    [2, 2, 2, 2],
-  stats:       [2, 3],
-  tips:        [2, 3, 1],
+  vouchers:    [3, 3, 3, 2],
+  stats:       [3, 5, 1],
+  tips:        [3, 3, 2],
   fallback:    [3],
 };
 
