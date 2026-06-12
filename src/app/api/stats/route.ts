@@ -112,8 +112,8 @@ export async function GET(request: Request) {
     `;
     // Revenue per therapist — booking payments only (cash + card − refunds), attributed
     // to the booking's therapist by service date. Vouchers and unassigned bookings aren't
-    // therapist-keyed, so they're excluded. Active, non-deleted therapists only (matching
-    // the Tips-by-therapist and Therapist Hours scoping).
+    // therapist-keyed, so they're excluded. Includes inactive/deleted therapists who had
+    // revenue in the period (matching the Tips-by-therapist and Therapist Hours scoping).
     const revenueByTherapistRows = await prisma.$queryRaw<{
       therapist_id: string; therapist_name: string; revenue: number;
     }[]>`
@@ -126,7 +126,6 @@ export async function GET(request: Request) {
       JOIN bookings b ON b.id = p.booking_id
       JOIN therapists th ON th.id = b.therapist_id
       WHERE b.deleted_at IS NULL AND p.deleted_at IS NULL AND pe.deleted_at IS NULL
-        AND th.deleted_at IS NULL AND th.active = true
         AND b.start_time >= ${from} AND b.start_time < ${to}
       GROUP BY th.id
       ORDER BY revenue DESC
