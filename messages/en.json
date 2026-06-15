@@ -217,6 +217,7 @@
     "confirmRemove": "Confirm removal",
     "voucherCode": "Voucher",
     "voucherCodeUnknown": "Unknown",
+    "usedOn": "Used on {date}",
     "loadError": "Failed to load payment details",
     "refundAmountInvalid": "Enter a valid refund amount",
     "refundSuccess": "Refund registered",

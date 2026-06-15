@@ -217,6 +217,7 @@
     "confirmRemove": "Confirmar eliminación",
     "voucherCode": "Bono",
     "voucherCodeUnknown": "Desconocido",
+    "usedOn": "Usado el {date}",
     "loadError": "Error al cargar los detalles de pago",
     "refundAmountInvalid": "Introduce un importe de devolución válido",
     "refundSuccess": "Devolución registrada",

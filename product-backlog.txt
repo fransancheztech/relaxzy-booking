@@ -1,6 +1,4 @@
 TO-DO
-- Revisar texto de ayuda contextual para diferentes páginas y usuarios, importante para no liar a usuarios
-- Completar reservas Mayo
 - Añadir propina de las reservas antiguas.
 - Añadir regalos de las reservas antiguas.
 - Crear vouchers automaticamente cuando compren vouchers online
@@ -13,6 +11,7 @@ STILL DELIBERATING
 
 
 DONE
+- Completar reservas Mayo
 - 8 Implementar los masajes múltiples, de forma que se sepa que están vinculados, que no sea necesario introducir información personal de más de un cliente, que permita saber qué terapeuta hace cada masaje y qué cada uno pueda tener su duración, masaje y precio
 - 8 Permitir usar bonos para pagos de reservas o implementar pagina/tablas de bonos a mantener manualmente
 - 8 Probar pagos con vouchers
@@ -82,3 +81,4 @@ DONE
 - In the Stats page, Revenue section, add a card with a small table of refunds
 - Los precios no se actualizan en los bloques del calendario al actualizar una reserva
 - Añadir advertencia cada vez que se guarde una reserva o se pague con un precio distinto
+- Revisar texto de ayuda contextual para diferentes páginas y usuarios, importante para no liar a usuarios

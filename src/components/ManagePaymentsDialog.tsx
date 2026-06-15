@@ -26,6 +26,7 @@ import { useTranslations } from "next-intl";
 import { formatMoney } from "@/utils/formatMoney";
 import { normalizeMoneyInput } from "@/utils/normalizeMoney";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
+import VoucherInfoTooltip, { type VoucherInfo } from "@/components/VoucherInfoTooltip";
 
 interface PaymentEventRow {
   id: string;
@@ -46,7 +47,7 @@ interface PaymentRow {
   events: PaymentEventRow[];
 }
 
-interface VoucherUseRow {
+interface VoucherUseRow extends VoucherInfo {
   id: string;
   amount: number;
   voucher_code: string | null;
@@ -441,7 +442,16 @@ export default function ManagePaymentsDialog({
                         {formatMoney(vu.amount)}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {t("voucherCode")}: {vu.voucher_code ?? t("voucherCodeUnknown")} · {formatDate(vu.created_at)}
+                        {t("voucherCode")}:{" "}
+                        <VoucherInfoTooltip info={vu} placement="top">
+                          <Box
+                            component="span"
+                            sx={{ textDecoration: "underline dotted", textUnderlineOffset: 2, cursor: "help" }}
+                          >
+                            {vu.voucher_code ?? t("voucherCodeUnknown")}
+                          </Box>
+                        </VoucherInfoTooltip>
+                        {" · "}{t("usedOn", { date: formatDate(vu.created_at) })}
                       </Typography>
                     </Box>
                     <Button

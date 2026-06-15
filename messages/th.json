@@ -217,6 +217,7 @@
     "confirmRemove": "ยืนยันการลบ",
     "voucherCode": "บัตรกำนัล",
     "voucherCodeUnknown": "ไม่ทราบ",
+    "usedOn": "ใช้เมื่อ {date}",
     "loadError": "ไม่สามารถโหลดรายละเอียดการชำระเงิน",
     "refundAmountInvalid": "กรุณาระบุจำนวนเงินที่คืนที่ถูกต้อง",
     "refundSuccess": "บันทึกการคืนเงินแล้ว",
