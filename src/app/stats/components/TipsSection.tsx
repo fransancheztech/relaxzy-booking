@@ -23,6 +23,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { StatsResponse } from "@/types/stats";
 import { formatMoney } from "@/utils/formatMoney";
+import { formatBusinessBucketLabel } from "@/utils/businessTime";
 
 type Bucket = StatsResponse["meta"]["date_bucket"];
 type Method = "cash" | "credit_card";
@@ -82,11 +83,7 @@ const TipsSection = ({ tips, bucket, onBucketChange }: Props) => {
   // --- Over time (cash/card per period for the selected therapists) ---
   const bucketLabel = bucket === "day" ? t("tipsPerDay") : bucket === "week" ? t("tipsPerWeek") : t("tipsPerMonth");
   const otBars = tips.over_time.map((p) => {
-    const d = new Date(p.period);
-    let label: string;
-    if (bucket === "day") label = d.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" });
-    else if (bucket === "week") label = `W${Math.ceil(d.getDate() / 7)} ${d.toLocaleDateString("es-ES", { month: "short" })}`;
-    else label = d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
+    const label = formatBusinessBucketLabel(p.period, bucket);
     let cash = 0;
     let credit_card = 0;
     for (const [id, amt] of Object.entries(p.by_therapist)) {

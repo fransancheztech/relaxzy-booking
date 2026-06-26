@@ -20,6 +20,8 @@ import type { SxProps, Theme } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { DateTime } from "luxon";
+import { BUSINESS_TIMEZONE } from "@/constants";
 import { formatMoney } from "@/utils/formatMoney";
 
 /** Summary row — tinted, bold, separated from the itemized rows by a top border. */
@@ -106,7 +108,10 @@ const DailyTotalsDialog = ({ open, onClose, start, end }: Props) => {
   }, [open, start, end]);
 
   const dateLabel = start
-    ? start.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+    ? DateTime.fromJSDate(start)
+        .setZone(BUSINESS_TIMEZONE)
+        .setLocale(locale)
+        .toLocaleString({ weekday: "long", day: "numeric", month: "long", year: "numeric" })
     : "";
 
   return (

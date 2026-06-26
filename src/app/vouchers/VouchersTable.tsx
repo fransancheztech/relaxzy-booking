@@ -11,6 +11,7 @@ import { FETCH_LIMIT } from "@/constants/index";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatNullable } from "@/utils/formatNullable";
 import { formatDateTime } from "@/utils/formatDateTime";
+import { formatBusinessDate } from "@/utils/businessTime";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
 import { useTranslations } from "next-intl";
@@ -125,9 +126,7 @@ const VouchersTable = () => {
         valueGetter: (_, row) => (row.expiration_date ? new Date(row.expiration_date) : null),
         renderCell: (params) => {
           const value = params.value as Date | null;
-          const label = value
-            ? value.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" })
-            : "";
+          const label = value ? formatBusinessDate(value) : "";
           if (!isExpiredWithBalance(params.row)) return label;
           return (
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "warning.main", fontWeight: 600 }}>

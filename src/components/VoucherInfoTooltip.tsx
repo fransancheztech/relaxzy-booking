@@ -2,9 +2,8 @@
 
 import { ReactElement } from "react";
 import { Box, Tooltip } from "@mui/material";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { useTranslations } from "next-intl";
+import { formatBusinessDate } from "@/utils/businessTime";
 
 export type VoucherInfo = {
   buyer_name?: string | null;
@@ -49,9 +48,7 @@ export default function VoucherInfoTooltip({ info, children, placement = "left" 
 
   const buyer = partyLine(info.buyer_name, info.buyer_surname, info.buyer_phone, info.buyer_email);
   const recipient = partyLine(info.recipient_name, info.recipient_surname, info.recipient_phone, info.recipient_email);
-  const expires = info.expiration_date
-    ? format(new Date(info.expiration_date), "dd/MM/yyyy", { locale: es })
-    : null;
+  const expires = info.expiration_date ? formatBusinessDate(info.expiration_date) : null;
   const source = info.source
     ? tv(info.source === "online" ? "sourceOnline" : "sourcePhysical")
     : null;

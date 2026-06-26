@@ -40,7 +40,7 @@ function buildFilterCondition(
     case "created_at": {
       const parsed = new Date(value);
       if (isNaN(parsed.getTime())) return null;
-      const dateStr = parsed.toLocaleDateString("es-ES");
+      const dateStr = parsed.toLocaleDateString("es-ES", { timeZone: "Europe/Madrid" });
       const range = getMadridDateRange(dateStr);
       if (!range) return null;
       switch (operator) {

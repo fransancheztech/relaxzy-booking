@@ -1,4 +1,5 @@
 TO-DO
+- Añadir fecha creación del voucher al tooltip del buscador de vouchers
 - Añadir propina de las reservas antiguas.
 - Añadir regalos de las reservas antiguas.
 - Crear vouchers automaticamente cuando compren vouchers online

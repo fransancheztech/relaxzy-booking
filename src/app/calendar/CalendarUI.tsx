@@ -9,6 +9,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid";
+import luxon3Plugin from "@fullcalendar/luxon3";
 import { DatesSetArg, EventClickArg, EventContentArg } from "@fullcalendar/core";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -22,7 +23,7 @@ import { useCalendarData } from "@/hooks/useCalendarData";
 import { useLayout } from "../context/LayoutContext";
 import { TherapistOption, useTherapistsWithLoaded } from "@/hooks/useTherapists";
 import { DateTime } from "luxon";
-import { STATUS_COLORS } from "@/constants";
+import { STATUS_COLORS, BUSINESS_TIMEZONE } from "@/constants";
 import { BookingModel } from "@/types/bookings";
 import DailyTotalsDialog from "@/components/DailyTotalsDialog";
 import { useRole } from "@/hooks/useRole";
@@ -169,8 +170,9 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
       return {
         id: b.id,
         title: `${b.client_name} · ${b.short_service_name ?? ""}`,
-        start: DateTime.fromISO(b.start_time!, { zone: "Europe/Madrid" }).toISO()!,
-        end: DateTime.fromISO(b.end_time!, { zone: "Europe/Madrid" }).toISO()!,
+        // Feed the raw UTC instants; FullCalendar renders them in `timeZone` (Madrid).
+        start: b.start_time!,
+        end: b.end_time!,
         resourceId: b.therapist_id ?? "none",
         extendedProps: { booking: b },
         backgroundColor: colors.bg,
@@ -199,9 +201,12 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
   // For the visible day, build a sequence of 5-min color stripes positioned over the time gutter
   const overlayStripes = useMemo(() => {
     if (!range || currentView !== "resourceTimeGridDay") return [];
-    const dayStart = new Date(range.start);
-    dayStart.setHours(DAY_START_HOUR, 0, 0, 0);
-    const dayStartMs = dayStart.getTime();
+    // Real instant of DAY_START_HOUR (Madrid) on the visible day, so the occupancy stripes
+    // align with the Madrid time gutter regardless of the device timezone.
+    const dayStartMs = DateTime.fromJSDate(range.start)
+      .setZone(BUSINESS_TIMEZONE)
+      .set({ hour: DAY_START_HOUR, minute: 0, second: 0, millisecond: 0 })
+      .toMillis();
 
     const stripes: { topPct: number; heightPct: number; color: string }[] = [];
     const totalSlots = (MINUTES_IN_VIEW * 60_000) / SLOT_MS;
@@ -231,7 +236,10 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
 
   const formattedDate = useMemo(() => {
     if (!range) return "";
-    return range.start.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" });
+    return DateTime.fromJSDate(range.start)
+      .setZone(BUSINESS_TIMEZONE)
+      .setLocale(locale)
+      .toLocaleString({ weekday: "long", day: "numeric", month: "long" });
   }, [range, locale]);
 
   const confirmedCountRef = useRef(0);
@@ -357,7 +365,10 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
   }, [setSelectedBookingId, setIsOpenBookingDialog]);
 
   const handleDatesSet = useCallback((info: DatesSetArg) => {
-    setRange({ start: info.start, end: info.end });
+    // With a named `timeZone`, FullCalendar's `start`/`end` are timezone-naive marker
+    // dates. `startStr`/`endStr` are offset-correct ISO strings, so parse those to get the
+    // true UTC instants for the Madrid day bounds (used for fetching + the API calls).
+    setRange({ start: new Date(info.startStr), end: new Date(info.endStr) });
     setCurrentView(info.view.type);
   }, []);
 
@@ -406,7 +417,8 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
       <div style={{ opacity: loading ? 0.55 : 1, transition: "opacity 0.25s" }}>
         <FullCalendar
           ref={calendarRef}
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, resourceTimeGridPlugin]}
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, resourceTimeGridPlugin, luxon3Plugin]}
+          timeZone={BUSINESS_TIMEZONE}
           schedulerLicenseKey="CC-Attribution-NonCommercial-NoDerivatives"
           locales={FC_LOCALES}
           locale={locale}

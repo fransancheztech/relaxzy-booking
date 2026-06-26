@@ -25,6 +25,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect, useState } from "react";
 import { TipSchema, TipFormInput, TipFormOutput } from "@/schemas/tip.schema";
+import { formatBusinessDate } from "@/utils/businessTime";
 import { useTherapists } from "@/hooks/useTherapists";
 import { therapistDisplayName } from "@/utils/therapistName";
 import { ivaAppliesForTipMethod } from "@/utils/tipIva";
@@ -57,7 +58,7 @@ function isToday(iso: string): boolean {
 }
 
 function formatShortDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return formatBusinessDate(iso);
 }
 
 const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {

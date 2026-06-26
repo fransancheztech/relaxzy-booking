@@ -6,6 +6,7 @@ import {
 } from "recharts";
 import { useTranslations } from "next-intl";
 import { StatsResponse } from "@/types/stats";
+import { formatBusinessBucketLabel } from "@/utils/businessTime";
 
 interface Props {
   clients: StatsResponse["clients"];
@@ -21,14 +22,10 @@ const ClientSection = ({ clients, bucket }: Props) => {
     </Typography>
   );
 
-  const chartData = clients.new_over_time.map((p) => {
-    const d = new Date(p.period);
-    let label: string;
-    if (bucket === "day") label = d.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" });
-    else if (bucket === "week") label = `W${Math.ceil(d.getDate() / 7)} ${d.toLocaleDateString("es-ES", { month: "short" })}`;
-    else label = d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
-    return { label, count: p.count };
-  });
+  const chartData = clients.new_over_time.map((p) => ({
+    label: formatBusinessBucketLabel(p.period, bucket),
+    count: p.count,
+  }));
 
   const newVsReturning = [
     { label: t("new"), value: clients.new_in_period, color: "#60a561" },

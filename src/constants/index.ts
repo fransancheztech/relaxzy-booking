@@ -18,6 +18,11 @@ export const menuPages: menuPageModel[] = [
 
 export const drawerWidth: number = 240;
 
+// The business operates in a single fixed timezone. All times are displayed, entered and
+// bucketed in this zone regardless of the operator's device timezone (e.g. staff abroad).
+// This is the single seam for a future per-business timezone setting.
+export const BUSINESS_TIMEZONE = "Europe/Madrid";
+
 export const BOOKING_DEFAULT_DURATIONS = [30, 60, 90, 120];
 
 export const BOOKING_DEFAULT_PRICES = [30, 55, 60, 65, 80, 85, 90];

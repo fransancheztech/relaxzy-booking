@@ -26,13 +26,14 @@ export async function GET(request: Request) {
         ...(status === "pending" ? { payout_id: null } : {}),
         ...(status === "released" ? { payout_id: { not: null } } : {}),
         ...(therapist_id ? { therapist_id } : {}),
-        // A tip's date is its booking's appointment date (start_time).
+        // A tip's date is its booking's appointment date (start_time). Half-open window:
+        // [start_date, end_date) — the client sends Madrid business-day bounds.
         ...(start_date || end_date
           ? {
               bookings: {
                 start_time: {
                   ...(start_date ? { gte: new Date(start_date) } : {}),
-                  ...(end_date ? { lte: new Date(end_date) } : {}),
+                  ...(end_date ? { lt: new Date(end_date) } : {}),
                 },
               },
             }

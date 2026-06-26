@@ -11,10 +11,8 @@ import {
     Typography,
     Autocomplete
 } from '@mui/material';
-import { DatePicker, DateTimePicker, LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { es } from 'date-fns/locale';
 import { useState } from 'react';
+import { BusinessDatePicker, BusinessDateTimePicker } from '@/components/BusinessDatePickers';
 
 type GridFormElementProps<T> = {
     type: string;
@@ -127,42 +125,37 @@ export function GridFormElement<T>({
                 const value = formData[formKey];
                 return (
                     <Grid size={size}>
-                        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-                            {showTime ? (
-                                <DateTimePicker
-                                    disabled={isDisabled}
-                                    label={label}
-                                    value={value ? (value instanceof Date ? value : new Date(value as string)) : null}
-                                    onChange={(newValue) => {
-                                        setFormData((prevData) => ({
-                                            ...prevData,
-                                            [formKey]: newValue || ''
-                                        }));
-                                    }}
-                                    format='dd/MM/yyyy HH:mm'
-                                    ampm={false}
-                                    slotProps={{
-                                        textField: { size: 'small', sx: { borderRadius: '5px', width: '100%' } }
-                                    }}
-                                />
-                            ) : (
-                                <DatePicker
-                                    disabled={isDisabled}
-                                    label={label}
-                                    value={value ? (value instanceof Date ? value : new Date(value as string)) : null}
-                                    onChange={(newValue) => {
-                                        setFormData((prevData) => ({
-                                            ...prevData,
-                                            [formKey]: newValue || ''
-                                        }));
-                                    }}
-                                    format='dd/MM/yyyy'
-                                    slotProps={{
-                                        textField: { size: 'small', sx: { borderRadius: '5px', width: '100%' } }
-                                    }}
-                                />
-                            )}
-                        </LocalizationProvider>
+                        {showTime ? (
+                            <BusinessDateTimePicker
+                                disabled={isDisabled}
+                                label={label}
+                                value={value ? (value instanceof Date ? value : new Date(value as string)) : null}
+                                onChange={(newValue) => {
+                                    setFormData((prevData) => ({
+                                        ...prevData,
+                                        [formKey]: newValue || ''
+                                    }));
+                                }}
+                                slotProps={{
+                                    textField: { size: 'small', sx: { borderRadius: '5px', width: '100%' } }
+                                }}
+                            />
+                        ) : (
+                            <BusinessDatePicker
+                                disabled={isDisabled}
+                                label={label}
+                                value={value ? (value instanceof Date ? value : new Date(value as string)) : null}
+                                onChange={(newValue) => {
+                                    setFormData((prevData) => ({
+                                        ...prevData,
+                                        [formKey]: newValue || ''
+                                    }));
+                                }}
+                                slotProps={{
+                                    textField: { size: 'small', sx: { borderRadius: '5px', width: '100%' } }
+                                }}
+                            />
+                        )}
                     </Grid>
                 );
             case 'checkbox':

@@ -21,7 +21,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import { DataGrid, GridColDef, GridRowId } from "@mui/x-data-grid";
 import TipDetailDialog from "@/components/TipDetailDialog";
 import UpdateBookingDialogForm from "@/app/bookings/UpdateBookingDialogForm";
-import { startOfDay, endOfDay } from "date-fns";
+import { businessDayStartUtc, businessDayEndExclusiveUtc, formatBusinessDate, formatBusinessTime } from "@/utils/businessTime";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
@@ -102,9 +102,11 @@ const TipsPageContent = () => {
       if (status !== "all") params.set("status", status);
       if (therapistId) params.set("therapist_id", therapistId);
 
-      // Whole-day inclusive range (the tips API filters received_at between these).
-      params.set("start_date", startOfDay(pickFrom).toISOString());
-      params.set("end_date", endOfDay(pickTo).toISOString());
+      // Half-open business-day (Europe/Madrid) range: [start of pickFrom's Madrid day,
+      // start of the day after pickTo's Madrid day). The tips API filters on the booking's
+      // start_time within these bounds.
+      params.set("start_date", businessDayStartUtc(pickFrom)!.toISOString());
+      params.set("end_date", businessDayEndExclusiveUtc(pickTo)!.toISOString());
 
       const res = await fetch(`/api/tips/list?${params.toString()}`);
       if (!res.ok) throw new Error();
@@ -174,14 +176,7 @@ const TipsPageContent = () => {
       field: "date",
       headerName: t("colDate"),
       width: 115,
-      valueFormatter: (value: string | null) =>
-        value
-          ? new Date(value).toLocaleDateString("es-ES", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-            })
-          : "—",
+      valueFormatter: (value: string | null) => formatBusinessDate(value),
     },
     {
       field: "booking",
@@ -192,11 +187,7 @@ const TipsPageContent = () => {
       renderCell: ({ row }) => {
         const b = row.booking;
         if (!b) return "—";
-        const time = b.start_time
-          ? new Date(b.start_time).toLocaleTimeString("es-ES", {
-              hour: "2-digit", minute: "2-digit",
-            })
-          : null;
+        const time = b.start_time ? formatBusinessTime(b.start_time) : null;
         const label = [b.client_name, b.service_name, time].filter(Boolean).join(" · ") || tCommon("view");
         return (
           <Button

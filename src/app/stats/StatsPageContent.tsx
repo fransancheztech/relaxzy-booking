@@ -8,7 +8,7 @@ import LoopIcon from "@mui/icons-material/Loop";
 import TimerIcon from "@mui/icons-material/Timer";
 import EuroIcon from "@mui/icons-material/Euro";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { startOfDay, addDays } from "date-fns";
+import { businessDayStartUtc, businessDayEndExclusiveUtc } from "@/utils/businessTime";
 import { useTranslations } from "next-intl";
 import { useLayout } from "@/app/context/LayoutContext";
 import { StatsResponse } from "@/types/stats";
@@ -36,10 +36,11 @@ const StatsPageContent = ({ role }: Props) => {
   const [pickFrom, setPickFrom] = useState<Date>(() => resolvePreset("month").from);
   const [pickTo, setPickTo] = useState<Date>(() => resolvePreset("month").to);
 
-  // Effective half-open query window; `to` is the start of the day after pickTo so the
-  // selected end day is fully included. Single source of truth for both data sources.
-  const from = useMemo(() => startOfDay(pickFrom), [pickFrom]);
-  const to = useMemo(() => addDays(startOfDay(pickTo), 1), [pickTo]);
+  // Effective half-open query window in business time (Europe/Madrid): `from` is the start
+  // of pickFrom's Madrid day, `to` is the start of the day after pickTo's Madrid day, so the
+  // selected end day is fully included regardless of the operator's device timezone.
+  const from = useMemo(() => businessDayStartUtc(pickFrom)!, [pickFrom]);
+  const to = useMemo(() => businessDayEndExclusiveUtc(pickTo)!, [pickTo]);
 
 
   const [data, setData] = useState<StatsResponse | null>(null);

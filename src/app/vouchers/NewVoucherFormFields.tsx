@@ -2,13 +2,11 @@
 
 import { VoucherSchemaInput } from "@/schemas/voucher.schema";
 import { Divider, FormControl, FormControlLabel, FormHelperText, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField, Typography } from "@mui/material";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { es } from "date-fns/locale";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import VoucherClientSection from "./VoucherClientSection";
 import { useTranslations } from "next-intl";
 import { normalizeMoneyInput } from "@/utils/normalizeMoney";
+import { BusinessDatePicker } from "@/components/BusinessDatePickers";
 
 const NewVoucherFormFields = () => {
   const t = useTranslations("Vouchers");
@@ -84,26 +82,23 @@ const NewVoucherFormFields = () => {
           name="created_at"
           control={control}
           render={({ field }) => (
-            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-              <DatePicker
-                label={t("createdAt")}
-                value={(field.value as Date) ?? null}
-                onChange={(date) => field.onChange(date ?? new Date())}
-                format="dd/MM/yyyy"
-                disableFuture
-                slotProps={{
-                  textField: {
-                    error: !!errors.created_at,
-                    helperText: errors.created_at?.message,
-                    size: "small",
-                    sx: { width: "100%" },
-                    onBlur: field.onBlur,
-                    name: field.name,
-                    inputRef: field.ref,
-                  },
-                }}
-              />
-            </LocalizationProvider>
+            <BusinessDatePicker
+              label={t("createdAt")}
+              value={(field.value as Date) ?? null}
+              onChange={(date) => field.onChange(date ?? new Date())}
+              disableFuture
+              slotProps={{
+                textField: {
+                  error: !!errors.created_at,
+                  helperText: errors.created_at?.message,
+                  size: "small",
+                  sx: { width: "100%" },
+                  onBlur: field.onBlur,
+                  name: field.name,
+                  inputRef: field.ref,
+                },
+              }}
+            />
           )}
         />
       </Grid>
@@ -113,26 +108,23 @@ const NewVoucherFormFields = () => {
           name="expiration_date"
           control={control}
           render={({ field }) => (
-            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-              <DatePicker
-                label={t("expirationDate")}
-                value={field.value ?? null}
-                onChange={(date) => field.onChange(date)}
-                format="dd/MM/yyyy"
-                slotProps={{
-                  textField: {
-                    required: true,
-                    error: !!errors.expiration_date,
-                    helperText: errors.expiration_date?.message,
-                    size: "small",
-                    sx: { borderRadius: "5px", width: "100%" },
-                    onBlur: field.onBlur,
-                    name: field.name,
-                    inputRef: field.ref,
-                  },
-                }}
-              />
-            </LocalizationProvider>
+            <BusinessDatePicker
+              label={t("expirationDate")}
+              value={field.value ?? null}
+              onChange={(date) => field.onChange(date)}
+              slotProps={{
+                textField: {
+                  required: true,
+                  error: !!errors.expiration_date,
+                  helperText: errors.expiration_date?.message,
+                  size: "small",
+                  sx: { borderRadius: "5px", width: "100%" },
+                  onBlur: field.onBlur,
+                  name: field.name,
+                  inputRef: field.ref,
+                },
+              }}
+            />
           )}
         />
       </Grid>

@@ -35,9 +35,8 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
 import EditIcon from "@mui/icons-material/Edit";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { es } from "date-fns/locale";
+import { BusinessDatePicker } from "@/components/BusinessDatePickers";
+import { formatBusinessDate, formatBusinessDateTime } from "@/utils/businessTime";
 import { formatMoney } from "@/utils/formatMoney";
 import { toast } from "react-toastify";
 import VoucherPaymentEventDialog from "./VoucherPaymentEventDialog";
@@ -124,26 +123,8 @@ type Props = {
   onClose: () => void;
 };
 
-const formatDate = (value: string | null | undefined) => {
-  if (!value) return "—";
-  return new Date(value).toLocaleDateString("es-ES", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-};
-
-const formatDateTime = (value: string | null) => {
-  if (!value) return "—";
-  return new Date(value).toLocaleString("es-ES", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-};
+const formatDate = (value: string | null | undefined) => formatBusinessDate(value);
+const formatDateTime = (value: string | null) => formatBusinessDateTime(value);
 
 const clientLabel = (c: Client | null) => {
   if (!c) return "—";
@@ -466,8 +447,7 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                     </Tooltip>
                   </Box>
                 ) : (
-                  <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-                    <Grid container spacing={1.5}>
+                  <Grid container spacing={1.5}>
                       <Grid size={12}>
                         <Typography variant="caption" color="text.secondary" fontWeight={600}>
                           {t("buyer")}
@@ -493,21 +473,19 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                       )}
 
                       <Grid size={3}>
-                        <DatePicker
+                        <BusinessDatePicker
                           label={t("createdAt")}
                           value={editData?.created_at ?? null}
                           onChange={(d) => setEditData((p) => p && ({ ...p, created_at: d }))}
-                          format="dd/MM/yyyy"
                           disableFuture
                           slotProps={{ textField: { size: "small", fullWidth: true } }}
                         />
                       </Grid>
                       <Grid size={3}>
-                        <DatePicker
+                        <BusinessDatePicker
                           label={t("expirationDate")}
                           value={editData?.expiration_date ?? null}
                           onChange={(d) => setEditData((p) => p && ({ ...p, expiration_date: d }))}
-                          format="dd/MM/yyyy"
                           slotProps={{ textField: { size: "small", fullWidth: true } }}
                         />
                       </Grid>
@@ -595,7 +573,6 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                         </Button>
                       </Grid>
                     </Grid>
-                  </LocalizationProvider>
                 )}
               </Paper>
 
@@ -698,11 +675,7 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                             sx={{ textTransform: "none", p: 0, minWidth: 0, textAlign: "left", lineHeight: 1.3 }}
                           >
                             {[
-                              vu.booking.start_time
-                                ? new Date(vu.booking.start_time).toLocaleDateString("es-ES", {
-                                    day: "2-digit", month: "2-digit", year: "numeric",
-                                  })
-                                : null,
+                              vu.booking.start_time ? formatBusinessDate(vu.booking.start_time) : null,
                               vu.booking.client_name,
                               vu.booking.service_name,
                             ]

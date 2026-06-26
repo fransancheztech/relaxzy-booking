@@ -12,6 +12,7 @@ import NoRowsOverlay from "@/components/NoRowsOverlay";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatNullable } from "@/utils/formatNullable";
 import { formatDateTime } from "@/utils/formatDateTime";
+import { formatBusinessDate, formatBusinessTime } from "@/utils/businessTime";
 import { useTranslations } from "next-intl";
 
 interface Props {
@@ -89,14 +90,7 @@ export const BookingsTable = ({
       field: "start_time",
       headerName: t("date"),
       flex: 1,
-      valueGetter: (_, row) =>
-        row.start_time
-          ? new Date(row.start_time).toLocaleDateString("es-ES", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-            })
-          : "",
+      valueGetter: (_, row) => (row.start_time ? formatBusinessDate(row.start_time) : ""),
     },
     {
       field: "time",
@@ -104,13 +98,7 @@ export const BookingsTable = ({
       flex: 1,
       sortable: false,
       filterable: false,
-      valueGetter: (_, row) =>
-        row.start_time
-          ? new Date(row.start_time).toLocaleTimeString("es-ES", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : "",
+      valueGetter: (_, row) => (row.start_time ? formatBusinessTime(row.start_time) : ""),
     },
     {
       field: "duration",

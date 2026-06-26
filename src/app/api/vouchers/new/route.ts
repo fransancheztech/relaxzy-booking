@@ -12,6 +12,7 @@ import {
 } from "@/lib/clients/resolveBookingClients";
 import { CLIENT_CONTACT_TAKEN, CLIENT_NAME_CONFLICT } from "@/types/clientConflict";
 import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
+import { businessDdMmYy, businessDayStartUtc, businessDayEndExclusiveUtc } from "@/utils/businessTime";
 
 type Body = {
   buyer_name?: string;
@@ -54,21 +55,6 @@ const normalizeExternalRef = (
   return value;
 };
 
-/** DDMMYY in UTC, matching e.g. V-150326-1 */
-function formatDdMmYyUtc(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(d.getUTCDate())}${pad(d.getUTCMonth() + 1)}${pad(d.getFullYear() % 100)}`;
-}
-
-function utcDayBounds(d: Date): { start: Date; end: Date } {
-  const start = new Date(
-    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0),
-  );
-  const end = new Date(
-    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1, 0, 0, 0, 0),
-  );
-  return { start, end };
-}
 
 function nextSequenceForPrefix(
   codes: { code: string }[],
@@ -184,8 +170,10 @@ export async function POST(request: Request) {
     if (Number.isNaN(createdAt.getTime())) {
       return NextResponse.json({ error: "Invalid created_at date" }, { status: 400 });
     }
-    const { start: dayStart, end: dayEnd } = utcDayBounds(createdAt);
-    const ddmmyy = formatDdMmYyUtc(createdAt);
+    // Voucher code + same-day uniqueness window use the business calendar (Madrid).
+    const dayStart = businessDayStartUtc(createdAt)!;
+    const dayEnd = businessDayEndExclusiveUtc(createdAt)!;
+    const ddmmyy = businessDdMmYy(createdAt);
     const codePrefix = `V-${ddmmyy}-`;
 
     let voucher: Awaited<ReturnType<typeof prisma.vouchers.create>> | undefined;

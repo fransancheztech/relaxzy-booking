@@ -16,6 +16,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import { useLayout } from "@/app/context/LayoutContext";
+import { formatBusinessDate } from "@/utils/businessTime";
 import { useRole } from "@/hooks/useRole";
 import GuidelineDialog, { GuidelineRow } from "./GuidelineDialog";
 
@@ -139,12 +140,7 @@ export default function GuidelinesPage() {
     }
   };
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+  const formatDate = (iso: string) => formatBusinessDate(iso);
 
   return (
     <Box

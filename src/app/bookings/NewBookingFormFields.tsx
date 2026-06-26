@@ -32,13 +32,11 @@ import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { es } from "date-fns/locale";
 import { useEffect, useState } from "react";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import { normalizeMoney, normalizeMoneyInput } from "@/utils/normalizeMoney";
 import { priceMismatch } from "@/utils/priceMismatch";
+import { BusinessDateTimePicker } from "@/components/BusinessDatePickers";
 
 const toPaymentNumber = (raw: string): number | undefined => {
   const filtered = normalizeMoneyInput(raw);
@@ -522,28 +520,23 @@ const NewBookingFormFields = () => {
           name="start_time"
           control={control}
           render={({ field }) => (
-            <LocalizationProvider
-              dateAdapter={AdapterDateFns}
-              adapterLocale={es}
-            >
-              <DateTimePicker
-                {...field}
-                label={t("dateTime")}
-                value={field.value}
-                onChange={(date) => field.onChange(date)}
-                format="dd/MM/yyyy HH:mm"
-                ampm={false}
-                slotProps={{
-                  textField: {
-                    required: true,
-                    error: !!errors.start_time,
-                    helperText: errors.start_time?.message,
-                    size: "small",
-                    sx: { borderRadius: "5px", width: "100%" },
-                  },
-                }}
-              />
-            </LocalizationProvider>
+            <BusinessDateTimePicker
+              label={t("dateTime")}
+              value={field.value}
+              onChange={(date) => field.onChange(date)}
+              slotProps={{
+                textField: {
+                  required: true,
+                  error: !!errors.start_time,
+                  helperText: errors.start_time?.message,
+                  size: "small",
+                  sx: { borderRadius: "5px", width: "100%" },
+                  onBlur: field.onBlur,
+                  name: field.name,
+                  inputRef: field.ref,
+                },
+              }}
+            />
           )}
         ></Controller>
       </Grid>

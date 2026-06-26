@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { formatBusinessTime } from "@/utils/businessTime";
 import { useTranslations } from "next-intl";
 import {
   Box,
@@ -55,8 +56,7 @@ type Props = {
   onGroupChanged?: () => void;
 };
 
-const fmtTime = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) : "";
+const fmtTime = (iso: string | null) => (iso ? formatBusinessTime(iso) : "");
 
 const BookingGroupSection = ({
   bookingId,

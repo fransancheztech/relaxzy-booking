@@ -8,6 +8,7 @@ import {
 import { useTranslations } from "next-intl";
 import { StatsResponse } from "@/types/stats";
 import { formatMoney } from "@/utils/formatMoney";
+import { formatBusinessBucketLabel } from "@/utils/businessTime";
 
 type Bucket = StatsResponse["meta"]["date_bucket"];
 
@@ -38,11 +39,7 @@ const VoucherSection = ({ vouchers, bucket }: Props) => {
         : source;
 
   const barData = vouchers.over_time.map((p) => {
-    const d = new Date(p.period);
-    let label: string;
-    if (bucket === "day") label = d.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit" });
-    else if (bucket === "week") label = `W${Math.ceil(d.getDate() / 7)} ${d.toLocaleDateString("es-ES", { month: "short" })}`;
-    else label = d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
+    const label = formatBusinessBucketLabel(p.period, bucket);
     return { label, sold: p.sold, redeemed: p.redeemed };
   });
 

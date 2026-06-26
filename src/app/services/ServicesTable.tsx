@@ -1,6 +1,7 @@
 "use client";
 
 import { FETCH_LIMIT } from "@/constants";
+import { formatBusinessDateTime } from "@/utils/businessTime";
 import { services_names } from "generated/prisma/client";
 import { Container, Paper, Tooltip } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
@@ -59,18 +60,7 @@ const ServicesTable = ({
       flex: 1,
       valueGetter: (_, row) =>
         row.created_at ? new Date(row.created_at) : null,
-      valueFormatter: (value: Date | null) =>
-        value
-          ? value.toLocaleString("es-ES", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-              hour12: false,
-            })
-          : "",
+      valueFormatter: (value: Date | null) => (value ? formatBusinessDateTime(value) : ""),
     },
     // Actions column
     {

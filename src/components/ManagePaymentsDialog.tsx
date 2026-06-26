@@ -27,6 +27,7 @@ import { formatMoney } from "@/utils/formatMoney";
 import { normalizeMoneyInput } from "@/utils/normalizeMoney";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 import VoucherInfoTooltip, { type VoucherInfo } from "@/components/VoucherInfoTooltip";
+import { formatBusinessDate, formatBusinessDateTime } from "@/utils/businessTime";
 
 interface PaymentEventRow {
   id: string;
@@ -191,17 +192,8 @@ export default function ManagePaymentsDialog({
       }
     });
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" });
-
-  const formatDateTime = (iso: string) =>
-    new Date(iso).toLocaleString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const formatDate = (iso: string) => formatBusinessDate(iso);
+  const formatDateTime = (iso: string) => formatBusinessDateTime(iso);
 
   const methodLabel = (method: string) =>
     method === "credit_card" ? t("card") : t("cash");

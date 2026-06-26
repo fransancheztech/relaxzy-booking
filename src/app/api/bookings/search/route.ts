@@ -100,7 +100,7 @@ function buildFilterCondition(
       if (typeof value !== "string") return null;
       const parsed = new Date(value);
       if (isNaN(parsed.getTime())) return null;
-      const dateStr = parsed.toLocaleDateString("es-ES");
+      const dateStr = parsed.toLocaleDateString("es-ES", { timeZone: "Europe/Madrid" });
       const range = getMadridDateRange(dateStr);
       if (!range) return null;
       switch (operator) {

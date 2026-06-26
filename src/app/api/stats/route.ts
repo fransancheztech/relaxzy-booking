@@ -4,6 +4,7 @@ import { Prisma } from "generated/prisma";
 import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
 import { StatsResponse, StatsRevenuePeriodPoint, StatsTipsPeriodPoint } from "@/types/stats";
 import { therapistDisplayName } from "@/utils/therapistName";
+import { BUSINESS_TIMEZONE } from "@/constants";
 
 const toNum = (v: unknown): number => Number(v ?? 0);
 
@@ -51,6 +52,12 @@ export async function GET(request: Request) {
       : getBucket(from, to);
   const bSql = bucketSql(bucket);
 
+  // Bucket a timestamptz column by the business calendar (Europe/Madrid), returning the
+  // bucket start as a proper UTC instant: convert to Madrid wall-clock, floor, then convert
+  // back to timestamptz interpreting the floored value as Madrid local.
+  const truncBusiness = (col: Prisma.Sql) =>
+    Prisma.sql`(date_trunc(${bSql}, ${col} AT TIME ZONE ${BUSINESS_TIMEZONE}) AT TIME ZONE ${BUSINESS_TIMEZONE})`;
+
   try {
     // Sequential queries — one connection at a time to avoid exhausting the pool
     //
@@ -86,7 +93,7 @@ export async function GET(request: Request) {
     `;
     const revenueOverTimeRows = await prisma.$queryRaw<{ period: Date; cash: number; credit_card: number; refunds: number }[]>`
       SELECT
-        date_trunc(${bSql}, b.start_time) AS period,
+        ${truncBusiness(Prisma.sql`b.start_time`)} AS period,
         COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'cash'), 0)::float AS cash,
         COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'credit_card'), 0)::float AS credit_card,
         COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0)::float AS refunds
@@ -99,7 +106,7 @@ export async function GET(request: Request) {
     `;
     const voucherOverTimeRows = await prisma.$queryRaw<{ period: Date; cash: number; credit_card: number; refunds: number }[]>`
       SELECT
-        date_trunc(${bSql}, v.created_at) AS period,
+        ${truncBusiness(Prisma.sql`v.created_at`)} AS period,
         COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'cash'), 0)::float AS cash,
         COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'credit_card'), 0)::float AS credit_card,
         COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0)::float AS refunds
@@ -159,7 +166,7 @@ export async function GET(request: Request) {
       GROUP BY sn.name ORDER BY count DESC
     `;
     const byDayOfWeekRows = await prisma.$queryRaw<{ day_of_week: number; count: number }[]>`
-      SELECT EXTRACT(DOW FROM start_time)::int AS day_of_week, COUNT(*)::int AS count
+      SELECT EXTRACT(DOW FROM start_time AT TIME ZONE 'Europe/Madrid')::int AS day_of_week, COUNT(*)::int AS count
       FROM bookings
       WHERE deleted_at IS NULL AND start_time >= ${from} AND start_time < ${to}
       GROUP BY day_of_week ORDER BY day_of_week
@@ -241,7 +248,7 @@ export async function GET(request: Request) {
       ) sub
     `;
     const newOverTimeRows = await prisma.$queryRaw<{ period: Date; count: number }[]>`
-      SELECT date_trunc(${bSql}, first_booking) AS period, COUNT(*)::int AS count
+      SELECT ${truncBusiness(Prisma.sql`first_booking`)} AS period, COUNT(*)::int AS count
       FROM (
         SELECT client_id, MIN(start_time) AS first_booking
         FROM bookings WHERE deleted_at IS NULL AND client_id IS NOT NULL GROUP BY client_id
@@ -278,7 +285,7 @@ export async function GET(request: Request) {
     const tipsOverTimeRows = await prisma.$queryRaw<{
       period: Date; therapist_id: string; cash: number; credit_card: number;
     }[]>`
-      SELECT date_trunc(${bSql}, b.start_time) AS period,
+      SELECT ${truncBusiness(Prisma.sql`b.start_time`)} AS period,
         t.therapist_id::text AS therapist_id,
         COALESCE(SUM(t.amount) FILTER (WHERE t.payment_method = 'cash'), 0)::float AS cash,
         COALESCE(SUM(t.amount) FILTER (WHERE t.payment_method = 'credit_card'), 0)::float AS credit_card
@@ -324,7 +331,7 @@ export async function GET(request: Request) {
       FROM vouchers WHERE deleted_at IS NULL
     `;
     const voucherSoldOverTimeRows = await prisma.$queryRaw<{ period: Date; value: number }[]>`
-      SELECT date_trunc(${bSql}, v.created_at) AS period,
+      SELECT ${truncBusiness(Prisma.sql`v.created_at`)} AS period,
         (COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE'), 0)
           - COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0))::float AS value
       FROM vouchers v
@@ -334,7 +341,7 @@ export async function GET(request: Request) {
       GROUP BY period ORDER BY period
     `;
     const voucherRedeemedOverTimeRows = await prisma.$queryRaw<{ period: Date; value: number }[]>`
-      SELECT date_trunc(${bSql}, created_at) AS period,
+      SELECT ${truncBusiness(Prisma.sql`created_at`)} AS period,
         COALESCE(SUM(amount), 0)::float AS value
       FROM voucher_uses
       WHERE deleted_at IS NULL AND created_at >= ${from} AND created_at < ${to}

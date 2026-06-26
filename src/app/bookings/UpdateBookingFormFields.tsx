@@ -30,9 +30,6 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { es } from "date-fns/locale";
 import { Controller, useFormContext } from "react-hook-form";
 import { Dispatch, SetStateAction } from "react";
 import BookingClientSection from "./BookingClientSection";
@@ -40,6 +37,7 @@ import BookingGroupSection from "./BookingGroupSection";
 import { normalizeMoney } from "@/utils/normalizeMoney";
 import { priceMismatch } from "@/utils/priceMismatch";
 import { formatMoney, formatMoneyInput } from "@/utils/formatMoney";
+import { BusinessDateTimePicker } from "@/components/BusinessDatePickers";
 import { useTherapists } from "@/hooks/useTherapists";
 import TipSection from "./TipSection";
 
@@ -112,29 +110,24 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
           name="start_time"
           control={control}
           render={({ field }) => (
-            <LocalizationProvider
-              dateAdapter={AdapterDateFns}
-              adapterLocale={es}
-            >
-              <DateTimePicker
-                {...field}
-                label={t("dateTime")}
-                value={field.value}
-                onChange={(date) => field.onChange(date)}
-                format="dd/MM/yyyy HH:mm"
-                ampm={false}
-                disabled={readOnly}
-                slotProps={{
-                  textField: {
-                    required: true,
-                    error: !!errors.start_time,
-                    helperText: errors.start_time?.message,
-                    size: "small",
-                    sx: { borderRadius: "5px", width: "100%" },
-                  },
-                }}
-              />
-            </LocalizationProvider>
+            <BusinessDateTimePicker
+              label={t("dateTime")}
+              value={field.value}
+              onChange={(date) => field.onChange(date)}
+              disabled={readOnly}
+              slotProps={{
+                textField: {
+                  required: true,
+                  error: !!errors.start_time,
+                  helperText: errors.start_time?.message,
+                  size: "small",
+                  sx: { borderRadius: "5px", width: "100%" },
+                  onBlur: field.onBlur,
+                  name: field.name,
+                  inputRef: field.ref,
+                },
+              }}
+            />
           )}
         ></Controller>
       </Grid>
