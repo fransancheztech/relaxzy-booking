@@ -63,9 +63,14 @@ const RevenueSection = ({ revenue, bucket, onBucketChange, streams, onStreamsCha
 
   const selectedRefundsTotal = barData.reduce((s, d) => s + d.refunds, 0);
 
+  // Cash/card totals for the selected streams, so the payment-method breakdown follows the
+  // Include chips (Bookings / Vouchers / Tips) just like the bars and the headline total.
+  const selectedCash = barData.reduce((s, d) => s + d.cash, 0);
+  const selectedCard = barData.reduce((s, d) => s + d.credit_card, 0);
+
   const pieData = [
-    { name: t("cash"), value: revenue.cash },
-    { name: t("card"), value: revenue.credit_card },
+    { name: t("cash"), value: selectedCash },
+    { name: t("card"), value: selectedCard },
   ].filter((d) => d.value > 0);
 
   const therapistData = revenue.by_therapist.map((th) => ({
@@ -191,8 +196,8 @@ const RevenueSection = ({ revenue, bucket, onBucketChange, streams, onStreamsCha
             ) : empty}
             <Box sx={{ mt: 1.5, display: "flex", flexDirection: "column", gap: 0.5 }}>
               {[
-                { label: t("cash"), value: revenue.cash, color: "#002d04" },
-                { label: t("card"), value: revenue.credit_card, color: "#60a561" },
+                { label: t("cash"), value: selectedCash, color: "#002d04" },
+                { label: t("card"), value: selectedCard, color: "#60a561" },
               ].map(({ label, value, color }) => (
                 <Box key={label} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>

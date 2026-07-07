@@ -1,4 +1,6 @@
 TO-DO
+- Fix month view, sometimes the events appear more rich
+- The "By payment method" pie does not respect the selected chips (Bookings|Voucehrs|Tips)
 - Añadir fecha creación del voucher al tooltip del buscador de vouchers
 - Añadir propina de las reservas antiguas.
 - Añadir regalos de las reservas antiguas.
