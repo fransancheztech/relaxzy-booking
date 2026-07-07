@@ -58,9 +58,14 @@ export function businessDdMmYy(value: DateInput): string {
   return dt.toFormat("ddMMyy");
 }
 
-/** Axis label for a stats time bucket, formatted in business time. */
-export function formatBusinessBucketLabel(value: DateInput, bucket: "day" | "week" | "month"): string {
-  const dt = (toBusiness(value) ?? nowBusiness()).setLocale("es");
+// Axis label for a stats time bucket. Numeric layout stays Spanish-style; month names
+// follow the app language (pass the session locale).
+export function formatBusinessBucketLabel(
+  value: DateInput,
+  bucket: "day" | "week" | "month",
+  locale = "es",
+): string {
+  const dt = (toBusiness(value) ?? nowBusiness()).setLocale(locale);
   if (bucket === "day") return dt.toFormat("dd/MM");
   if (bucket === "week") return `W${Math.ceil(dt.day / 7)} ${dt.toFormat("LLL")}`;
   return dt.toFormat("LLL yy");

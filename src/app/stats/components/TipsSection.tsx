@@ -20,7 +20,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { StatsResponse } from "@/types/stats";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatBusinessBucketLabel } from "@/utils/businessTime";
@@ -42,6 +42,7 @@ interface Props {
 
 const TipsSection = ({ tips, bucket, onBucketChange }: Props) => {
   const t = useTranslations("Stats");
+  const locale = useLocale();
 
   // Section-wide payment-method filter (default both).
   const [methods, setMethods] = useState<Method[]>(["cash", "credit_card"]);
@@ -83,7 +84,7 @@ const TipsSection = ({ tips, bucket, onBucketChange }: Props) => {
   // --- Over time (cash/card per period for the selected therapists) ---
   const bucketLabel = bucket === "day" ? t("tipsPerDay") : bucket === "week" ? t("tipsPerWeek") : t("tipsPerMonth");
   const otBars = tips.over_time.map((p) => {
-    const label = formatBusinessBucketLabel(p.period, bucket);
+    const label = formatBusinessBucketLabel(p.period, bucket, locale);
     let cash = 0;
     let credit_card = 0;
     for (const [id, amt] of Object.entries(p.by_therapist)) {

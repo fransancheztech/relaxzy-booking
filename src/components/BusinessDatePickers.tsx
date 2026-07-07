@@ -2,6 +2,7 @@
 
 import { ReactNode } from "react";
 import { DateTime } from "luxon";
+import { useLocale } from "next-intl";
 import { DatePicker, DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
 import { BUSINESS_TIMEZONE } from "@/constants";
@@ -37,8 +38,11 @@ export function BusinessDateTimePicker({
   slotProps,
   ...rest
 }: CommonProps & { ampm?: boolean; slotProps?: DateTimeSlotProps }) {
+  // Names (months/weekdays in the popup) follow the app language; the explicit `format`
+  // keeps the numeric layout Spanish-style (dd/MM/yyyy) regardless of locale.
+  const locale = useLocale();
   return (
-    <LocalizationProvider dateAdapter={AdapterLuxon} adapterLocale="es">
+    <LocalizationProvider dateAdapter={AdapterLuxon} adapterLocale={locale}>
       <DateTimePicker
         {...rest}
         timezone={BUSINESS_TIMEZONE}
@@ -59,8 +63,9 @@ export function BusinessDatePicker({
   slotProps,
   ...rest
 }: CommonProps & { slotProps?: DateSlotProps }) {
+  const locale = useLocale();
   return (
-    <LocalizationProvider dateAdapter={AdapterLuxon} adapterLocale="es">
+    <LocalizationProvider dateAdapter={AdapterLuxon} adapterLocale={locale}>
       <DatePicker
         {...rest}
         timezone={BUSINESS_TIMEZONE}

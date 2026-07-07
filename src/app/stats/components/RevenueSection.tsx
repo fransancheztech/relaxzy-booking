@@ -5,7 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { StatsResponse } from "@/types/stats";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatBusinessBucketLabel } from "@/utils/businessTime";
@@ -39,6 +39,7 @@ const PIE_COLORS = ["#002d04", "#60a561"];
 
 const RevenueSection = ({ revenue, bucket, onBucketChange, streams, onStreamsChange }: Props) => {
   const t = useTranslations("Stats");
+  const locale = useLocale();
   const hasData = revenue.over_time.length > 0;
   const bucketLabel = bucket === "day" ? t("revenuePerDay") : bucket === "week" ? t("revenuePerWeek") : t("revenuePerMonth");
 
@@ -54,7 +55,7 @@ const RevenueSection = ({ revenue, bucket, onBucketChange, streams, onStreamsCha
   );
 
   const barData = revenue.over_time.map((p) => {
-    const label = formatBusinessBucketLabel(p.period, bucket);
+    const label = formatBusinessBucketLabel(p.period, bucket, locale);
     const cash = (showBookings ? p.bookings.cash : 0) + (showVouchers ? p.vouchers.cash : 0) + (showTips ? p.tips.cash : 0);
     const credit_card = (showBookings ? p.bookings.credit_card : 0) + (showVouchers ? p.vouchers.credit_card : 0) + (showTips ? p.tips.credit_card : 0);
     const refunds = (showBookings ? p.bookings.refunds : 0) + (showVouchers ? p.vouchers.refunds : 0);

@@ -5,7 +5,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { StatsResponse } from "@/types/stats";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatBusinessBucketLabel } from "@/utils/businessTime";
@@ -25,6 +25,7 @@ const FALLBACK_COLORS = ["#002d04", "#60a561", "#9cc39d"];
 
 const VoucherSection = ({ vouchers, bucket }: Props) => {
   const t = useTranslations("Stats");
+  const locale = useLocale();
   const hasOverTime = vouchers.over_time.length > 0;
 
   const empty = (
@@ -39,7 +40,7 @@ const VoucherSection = ({ vouchers, bucket }: Props) => {
         : source;
 
   const barData = vouchers.over_time.map((p) => {
-    const label = formatBusinessBucketLabel(p.period, bucket);
+    const label = formatBusinessBucketLabel(p.period, bucket, locale);
     return { label, sold: p.sold, redeemed: p.redeemed };
   });
 

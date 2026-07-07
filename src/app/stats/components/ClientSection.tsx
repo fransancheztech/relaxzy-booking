@@ -4,7 +4,7 @@ import { Box, Chip, Grid, Paper, Stack, Typography } from "@mui/material";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { StatsResponse } from "@/types/stats";
 import { formatBusinessBucketLabel } from "@/utils/businessTime";
 
@@ -15,6 +15,7 @@ interface Props {
 
 const ClientSection = ({ clients, bucket }: Props) => {
   const t = useTranslations("Stats");
+  const locale = useLocale();
 
   const empty = (
     <Typography variant="body2" color="text.disabled" sx={{ py: 3, textAlign: "center" }}>
@@ -23,7 +24,7 @@ const ClientSection = ({ clients, bucket }: Props) => {
   );
 
   const chartData = clients.new_over_time.map((p) => ({
-    label: formatBusinessBucketLabel(p.period, bucket),
+    label: formatBusinessBucketLabel(p.period, bucket, locale),
     count: p.count,
   }));
 

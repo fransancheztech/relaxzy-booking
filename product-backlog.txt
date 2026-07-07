@@ -1,6 +1,4 @@
 TO-DO
-- Fix month view, sometimes the events appear more rich
-- The "By payment method" pie does not respect the selected chips (Bookings|Voucehrs|Tips)
 - Añadir fecha creación del voucher al tooltip del buscador de vouchers
 - Añadir propina de las reservas antiguas.
 - Añadir regalos de las reservas antiguas.
@@ -85,3 +83,5 @@ DONE
 - Los precios no se actualizan en los bloques del calendario al actualizar una reserva
 - Añadir advertencia cada vez que se guarde una reserva o se pague con un precio distinto
 - Revisar texto de ayuda contextual para diferentes páginas y usuarios, importante para no liar a usuarios
+- The "By payment method" pie does not respect the selected chips (Bookings|Voucehrs|Tips)
+- The month names in the Stats month selector appear in spanish even when the app is in English
