@@ -5,9 +5,12 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Box,
   Button,
   CircularProgress,
   Container,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,8 +20,10 @@ import {
 } from "@/schemas/client.schema";
 import { useEffect, useState } from "react";
 import UpdateClientFormFields from "./UpdateClientFormFields";
+import ClientHistorySection from "./ClientHistorySection";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
+import EditIcon from "@mui/icons-material/Edit";
 import handleSubmitUpdateClient from "@/handlers/handleSubmitUpdateClient";
 import DialogConfirmDeleteClient from "./ConfirmDeleteClientDialog";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -56,6 +61,8 @@ const UpdateClientDialogForm = ({
   const t = useTranslations("Clients");
   const tCommon = useTranslations("Common");
   const [loading, setLoading] = useState(false);
+  // The dialog opens in view mode; the pencil switches to edit.
+  const [editMode, setEditMode] = useState(false);
   const { submitting, guard } = useSubmitGuard();
 
   const methods = useForm<ClientUpdateSchemaType>({
@@ -63,10 +70,11 @@ const UpdateClientDialogForm = ({
     defaultValues: defaultValuesClientForm,
   });
 
-  // Load client data when dialog opens
+  // Load client data when dialog opens (always land in view mode)
   useEffect(() => {
     if (!open || !clientId) return;
-    
+    setEditMode(false);
+
     const loadClient = async () => {
       setLoading(true);
       try {
@@ -114,18 +122,35 @@ const UpdateClientDialogForm = ({
       }
       if (result.status === "error") return; // already surfaced by the handler
 
-      onClose();
+      // Back to view mode showing the saved data (keep the dialog + history open).
+      setEditMode(false);
     });
 
-  const onCancel = () => {
+  // Close the whole dialog.
+  const handleClose = () => {
     methods.reset();
     onClose();
   };
 
+  // Leave edit mode, discarding changes (revert to the loaded values).
+  const handleCancelEdit = () => {
+    methods.reset();
+    setEditMode(false);
+  };
+
   return (
     <>
-      <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
-        <DialogTitle>{t("editClient")}</DialogTitle>
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pr: 1 }}>
+          {editMode ? t("editClient") : t("viewClient")}
+          {!editMode && (
+            <Tooltip title={tCommon("edit")}>
+              <IconButton size="small" onClick={() => setEditMode(true)}>
+                <EditIcon fontSize="small" color="primary" />
+              </IconButton>
+            </Tooltip>
+          )}
+        </DialogTitle>
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(onSubmit)} noValidate>
             <DialogContent
@@ -134,32 +159,43 @@ const UpdateClientDialogForm = ({
                 pointerEvents: loading ? "none" : "auto",
               }}
             >
-              <UpdateClientFormFields />
+              <UpdateClientFormFields readOnly={!editMode} />
+              <ClientHistorySection clientId={clientId} open={open} />
             </DialogContent>
             <DialogActions
               sx={{ display: "flex", justifyContent: "space-between" }}
             >
-              <Button
-                startIcon={<DeleteIcon />}
-                color="error"
-                variant="contained"
-                onClick={() => setConfirmDeleteOpen(true)}
-                disabled={submitting}
-              >
-                {tCommon("delete")}
-              </Button>
-              <Container sx={{ display: "flex", justifyContent: "flex-end" }}>
-                <Button
-                  startIcon={<CloseIcon />}
-                  onClick={onCancel}
-                  disabled={submitting}
-                >
-                  {tCommon("cancel")}
-                </Button>
-                <Button startIcon={<SaveIcon />} color="success" type="submit" disabled={submitting}>
-                  {tCommon("save")}
-                </Button>
-              </Container>
+              {editMode ? (
+                <>
+                  <Button
+                    startIcon={<DeleteIcon />}
+                    color="error"
+                    variant="contained"
+                    onClick={() => setConfirmDeleteOpen(true)}
+                    disabled={submitting}
+                  >
+                    {tCommon("delete")}
+                  </Button>
+                  <Container sx={{ display: "flex", justifyContent: "flex-end" }}>
+                    <Button
+                      startIcon={<CloseIcon />}
+                      onClick={handleCancelEdit}
+                      disabled={submitting}
+                    >
+                      {tCommon("cancel")}
+                    </Button>
+                    <Button startIcon={<SaveIcon />} color="success" type="submit" disabled={submitting}>
+                      {tCommon("save")}
+                    </Button>
+                  </Container>
+                </>
+              ) : (
+                <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%" }}>
+                  <Button startIcon={<CloseIcon />} onClick={handleClose}>
+                    {tCommon("close")}
+                  </Button>
+                </Box>
+              )}
             </DialogActions>
           </form>
         </FormProvider>

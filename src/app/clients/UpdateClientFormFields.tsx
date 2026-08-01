@@ -1,17 +1,42 @@
 "use client";
 
 import { TextField, Grid, Typography } from "@mui/material";
-import { Controller, useFormContext } from "react-hook-form";
+import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { ClientUpdateSchemaType } from "@/schemas/client.schema";
 import { useTranslations } from "next-intl";
 
-const UpdateClientFormFields = () => {
+// Plain labelled value shown in view mode — deliberately NOT a text field, so it's obvious
+// the info is read-only (no focus, no caret) rather than looking like a broken form.
+const ReadOnlyField = ({ label, value }: { label: string; value?: string | null }) => (
+  <>
+    <Typography variant="caption" color="text.secondary">{label}</Typography>
+    <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+      {value?.trim() ? value : "—"}
+    </Typography>
+  </>
+);
+
+const UpdateClientFormFields = ({ readOnly = false }: { readOnly?: boolean }) => {
   const t = useTranslations("Clients");
   const tCommon = useTranslations("Common");
   const {
     control,
     formState: { errors },
   } = useFormContext<ClientUpdateSchemaType>();
+
+  const values = useWatch({ control });
+
+  if (readOnly) {
+    return (
+      <Grid container sx={{ paddingTop: "1rem" }} spacing={2}>
+        <Grid size={6}><ReadOnlyField label={t("name")} value={values.client_name} /></Grid>
+        <Grid size={6}><ReadOnlyField label={t("surname")} value={values.client_surname} /></Grid>
+        <Grid size={6}><ReadOnlyField label={t("email")} value={values.client_email} /></Grid>
+        <Grid size={6}><ReadOnlyField label={t("phone")} value={values.client_phone} /></Grid>
+        <Grid size={12}><ReadOnlyField label={t("notes")} value={values.client_notes} /></Grid>
+      </Grid>
+    );
+  }
 
   return (
     <Grid container sx={{ paddingTop: "1rem" }} spacing={{ xs: 1, xl: 2 }}>

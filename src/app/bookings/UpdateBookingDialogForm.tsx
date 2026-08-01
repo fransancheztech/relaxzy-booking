@@ -37,6 +37,10 @@ type Props = {
   open: boolean;
   onClose: () => void;
   bookingId: string;
+  // Hard, role-independent read-only. Used when the booking is opened from a context that
+  // must never allow edits (e.g. a client's history), so nobody — not even admins — can
+  // modify a booking from there. Booking edits stay in their own workflows.
+  readOnly?: boolean;
 };
 
 export const defaultValuesUpdateBookingForm: Partial<BookingUpdateSchemaType> =
@@ -55,10 +59,12 @@ export const defaultValuesUpdateBookingForm: Partial<BookingUpdateSchemaType> =
     status: "",
   };
 
-const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
+const UpdateBookingDialogForm = ({ open, onClose, bookingId, readOnly = false }: Props) => {
   const t = useTranslations("BookingForm");
   const tCommon = useTranslations("Common");
   const { isTherapist } = useRole();
+  // View-only when the role is therapist OR the caller forced read-only.
+  const viewOnly = isTherapist || readOnly;
 
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] =
     useState(false);
@@ -218,7 +224,10 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
     // "error" — already surfaced by the handler; keep the form open.
   };
 
-  const onSubmit = (data: BookingUpdateSchemaType) => guard(() => submit(data));
+  const onSubmit = (data: BookingUpdateSchemaType) => {
+    if (viewOnly) return; // never persist from a read-only context
+    return guard(() => submit(data));
+  };
 
   // Edit only ever resolves the primary client.
   const onResolveConflict = (resolutions: Record<string, ClientResolution>) =>
@@ -266,7 +275,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
                 overflowY: "hidden",
                 opacity: loading ? 0.5 : 1,
                 pointerEvents: loading ? "none" : "auto",
-                ...(isTherapist && {
+                ...(viewOnly && {
                   "& .MuiInputBase-input.Mui-disabled": { WebkitTextFillColor: "rgba(0,0,0,0.87)" },
                   "& .MuiSelect-select.Mui-disabled": { WebkitTextFillColor: "rgba(0,0,0,0.87)" },
                   "& .MuiInputLabel-root.Mui-disabled": { color: "rgba(0,0,0,0.6)" },
@@ -278,7 +287,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
                 setIsPaymentDialogOpen={setIsPaymentDialogOpen}
                 setIsManagePaymentsDialogOpen={setIsManagePaymentsDialogOpen}
                 paymentSummary={paymentSummary}
-                readOnly={isTherapist}
+                readOnly={viewOnly}
                 clientNotes={clientNotes}
                 onClientPicked={(notes) => setClientNotes(notes)}
                 bookingGroupId={bookingGroupId}
@@ -288,7 +297,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
             <DialogActions
               sx={{ display: "flex", justifyContent: "space-between" }}
             >
-              {!isTherapist && (
+              {!viewOnly && (
                 <Button
                   startIcon={<DeleteIcon />}
                   color="error"
@@ -303,7 +312,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId }: Props) => {
                 <Button startIcon={<CloseIcon />} onClick={onCancel} disabled={submitting}>
                   {tCommon("cancel")}
                 </Button>
-                {!isTherapist && (
+                {!viewOnly && (
                   <Button startIcon={<SaveIcon />} color="success" type="submit" disabled={submitting}>
                     {tCommon("saveChanges")}
                   </Button>

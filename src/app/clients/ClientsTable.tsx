@@ -6,7 +6,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridColDef, GridFilterModel } from "@mui/x-data-grid";
-import EditIcon from "@mui/icons-material/Edit";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { FETCH_LIMIT } from "@/constants";
 import { clients as ClientType } from "generated/prisma/client";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
@@ -68,16 +68,16 @@ export const ClientsTable = ({
       getActions: (params) => [
         <GridActionsCellItem
           icon={
-            <Tooltip title={tCommon("edit")}>
-              <EditIcon color="primary" />
+            <Tooltip title={tCommon("view")}>
+              <VisibilityIcon color="primary" />
             </Tooltip>
           }
-          label={tCommon("edit")}
+          label={tCommon("view")}
           onClick={() => {
             setSelectedClientId(params.row.id);
             setIsOpenEditClientDialog(true);
           }}
-          key="edit"
+          key="view"
         />,
       ],
     },
