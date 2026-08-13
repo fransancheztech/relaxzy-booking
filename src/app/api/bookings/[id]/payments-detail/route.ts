@@ -33,7 +33,8 @@ export async function GET(
         id: string;
         amount: number;
         voucher_code: string | null;
-        created_at: Date;
+        used_at: Date;
+        created_at: Date | null;
         expiration_date: Date | null;
         source: string | null;
         external_reference: string | null;
@@ -51,7 +52,11 @@ export async function GET(
           vu.id::text,
           vu.amount::float,
           v.code AS voucher_code,
-          vu.created_at,
+          -- Redemption date follows the booking's appointment date (like tips), so a
+          -- late-entered redemption still reflects the day of service. Falls back to the
+          -- insert timestamp if the use isn't linked to a booking.
+          COALESCE(b.start_time, vu.created_at) AS used_at,
+          v.created_at,
           v.expiration_date,
           v.source::text AS source,
           v.external_reference,
@@ -66,6 +71,7 @@ export async function GET(
           cr.client_email    AS recipient_email
         FROM voucher_uses vu
         LEFT JOIN vouchers v ON v.id = vu.voucher_id AND v.deleted_at IS NULL
+        LEFT JOIN bookings b ON b.id = vu.booking_id AND b.deleted_at IS NULL
         LEFT JOIN clients cb ON cb.id = v.buyer_id     AND cb.deleted_at IS NULL
         LEFT JOIN clients cr ON cr.id = v.recipient_id AND cr.deleted_at IS NULL
         WHERE vu.booking_id = ${id}::uuid AND vu.deleted_at IS NULL
@@ -132,7 +138,8 @@ export async function GET(
         id: vu.id,
         amount: Number(vu.amount),
         voucher_code: vu.voucher_code,
-        created_at: vu.created_at,
+        used_at: vu.used_at,          // when the voucher was redeemed on this booking
+        created_at: vu.created_at,    // when the voucher itself was created
         expiration_date: vu.expiration_date,
         source: vu.source,
         external_reference: vu.external_reference,

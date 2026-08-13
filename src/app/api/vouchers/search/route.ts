@@ -5,6 +5,7 @@ type VoucherRow = {
   id: string;
   code: string;
   balance: string | null;
+  created_at: Date | null;
   expiration_date: Date;
   notes: string | null;
   source: string;
@@ -33,6 +34,7 @@ export async function GET(request: Request) {
         v.id,
         v.code,
         v.balance::text,
+        v.created_at,
         v.expiration_date,
         v.notes,
         v.source,

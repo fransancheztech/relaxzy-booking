@@ -52,7 +52,7 @@ interface VoucherUseRow extends VoucherInfo {
   id: string;
   amount: number;
   voucher_code: string | null;
-  created_at: string;
+  used_at: string; // redemption date (distinct from the voucher's created_at in VoucherInfo)
 }
 
 interface Props {
@@ -443,7 +443,7 @@ export default function ManagePaymentsDialog({
                             {vu.voucher_code ?? t("voucherCodeUnknown")}
                           </Box>
                         </VoucherInfoTooltip>
-                        {" · "}{t("usedOn", { date: formatDate(vu.created_at) })}
+                        {" · "}{t("usedOn", { date: formatDate(vu.used_at) })}
                       </Typography>
                     </Box>
                     <Button

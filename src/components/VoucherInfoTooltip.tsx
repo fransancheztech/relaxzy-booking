@@ -14,6 +14,7 @@ export type VoucherInfo = {
   recipient_surname?: string | null;
   recipient_phone?: string | null;
   recipient_email?: string | null;
+  created_at?: string | null;
   expiration_date?: string | null;
   source?: string | null;
   external_reference?: string | null;
@@ -48,6 +49,7 @@ export default function VoucherInfoTooltip({ info, children, placement = "left" 
 
   const buyer = partyLine(info.buyer_name, info.buyer_surname, info.buyer_phone, info.buyer_email);
   const recipient = partyLine(info.recipient_name, info.recipient_surname, info.recipient_phone, info.recipient_email);
+  const created = info.created_at ? formatBusinessDate(info.created_at) : null;
   const expires = info.expiration_date ? formatBusinessDate(info.expiration_date) : null;
   const source = info.source
     ? tv(info.source === "online" ? "sourceOnline" : "sourcePhysical")
@@ -55,13 +57,14 @@ export default function VoucherInfoTooltip({ info, children, placement = "left" 
   const externalRef = info.external_reference?.trim() || null;
   const notes = info.notes?.trim() || null;
 
-  const hasInfo = !!(buyer || recipient || expires || source || externalRef || notes);
+  const hasInfo = !!(buyer || recipient || created || expires || source || externalRef || notes);
   if (!hasInfo) return children;
 
   const content = (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
       {buyer && <span>{tv("buyer")}: {buyer}</span>}
       {recipient && <span>{tv("recipient")}: {recipient}</span>}
+      {created && <span>{tv("created")}: {created}</span>}
       {expires && <span>{tv("expires")}: {expires}</span>}
       {source && <span>{tv("source")}: {source}</span>}
       {externalRef && <span>{tv("externalReference")}: {externalRef}</span>}

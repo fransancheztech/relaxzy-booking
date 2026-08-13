@@ -688,7 +688,9 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                         )}
                       </TableCell>
                       <TableCell>{vu.notes ?? "—"}</TableCell>
-                      <TableCell>{formatDateTime(vu.created_at)}</TableCell>
+                      {/* Redemption date follows the booking's appointment date (like tips),
+                          falling back to the insert timestamp when there's no booking. */}
+                      <TableCell>{formatDateTime(vu.booking?.start_time ?? vu.created_at)}</TableCell>
                       <TableCell align="center">
                         <Tooltip title={tCommon("delete")}>
                           <span>

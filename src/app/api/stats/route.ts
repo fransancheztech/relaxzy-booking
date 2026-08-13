@@ -299,7 +299,8 @@ export async function GET(request: Request) {
 
     // --- Vouchers ---
     // Sales: vouchers created in period, valued by their net payment events
-    // (CHARGE − REFUND). Redemptions: voucher_uses logged in period (money
+    // (CHARGE − REFUND). Redemptions: voucher_uses attributed to the booking's appointment
+    // date (like tips), falling back to the insert timestamp when there's no booking (money
     // already counted at sale time — shown for activity, not as revenue).
     const voucherBySourceRows = await prisma.$queryRaw<{ source: string; count: number; value: number }[]>`
       SELECT v.source,
@@ -314,9 +315,12 @@ export async function GET(request: Request) {
     `;
     const voucherRedeemedRows = await prisma.$queryRaw<{ redeemed_count: number; redeemed_value: number }[]>`
       SELECT COUNT(*)::int AS redeemed_count,
-        COALESCE(SUM(amount), 0)::float AS redeemed_value
-      FROM voucher_uses
-      WHERE deleted_at IS NULL AND created_at >= ${from} AND created_at < ${to}
+        COALESCE(SUM(vu.amount), 0)::float AS redeemed_value
+      FROM voucher_uses vu
+      LEFT JOIN bookings b ON b.id = vu.booking_id AND b.deleted_at IS NULL
+      WHERE vu.deleted_at IS NULL
+        AND COALESCE(b.start_time, vu.created_at) >= ${from}
+        AND COALESCE(b.start_time, vu.created_at) < ${to}
     `;
     // Outstanding balance is a snapshot of all active vouchers, independent of the period.
     const voucherOutstandingRows = await prisma.$queryRaw<{
@@ -341,10 +345,13 @@ export async function GET(request: Request) {
       GROUP BY period ORDER BY period
     `;
     const voucherRedeemedOverTimeRows = await prisma.$queryRaw<{ period: Date; value: number }[]>`
-      SELECT ${truncBusiness(Prisma.sql`created_at`)} AS period,
-        COALESCE(SUM(amount), 0)::float AS value
-      FROM voucher_uses
-      WHERE deleted_at IS NULL AND created_at >= ${from} AND created_at < ${to}
+      SELECT ${truncBusiness(Prisma.sql`COALESCE(b.start_time, vu.created_at)`)} AS period,
+        COALESCE(SUM(vu.amount), 0)::float AS value
+      FROM voucher_uses vu
+      LEFT JOIN bookings b ON b.id = vu.booking_id AND b.deleted_at IS NULL
+      WHERE vu.deleted_at IS NULL
+        AND COALESCE(b.start_time, vu.created_at) >= ${from}
+        AND COALESCE(b.start_time, vu.created_at) < ${to}
       GROUP BY period ORDER BY period
     `;
 
