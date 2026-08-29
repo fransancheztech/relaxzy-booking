@@ -486,7 +486,7 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                           label={t("expirationDate")}
                           value={editData?.expiration_date ?? null}
                           onChange={(d) => setEditData((p) => p && ({ ...p, expiration_date: d }))}
-                          slotProps={{ textField: { size: "small", fullWidth: true } }}
+                          slotProps={{ textField: { size: "small", fullWidth: true, required: true } }}
                         />
                       </Grid>
                       <Grid size={3}>

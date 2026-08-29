@@ -111,7 +111,7 @@ const VoucherPaymentEventDialog = ({
           onChange={(e) => setAmount(normalizeMoneyInput(e.target.value))}
           slotProps={{ htmlInput: { inputMode: "decimal" } }}
         />
-        <FormControl fullWidth size="small">
+        <FormControl fullWidth size="small" required>
           <InputLabel>{t("paymentMethod")}</InputLabel>
           <Select
             value={method}
