@@ -3,19 +3,32 @@
 import { VoucherSchemaInput } from "@/schemas/voucher.schema";
 import { Divider, FormControl, FormControlLabel, FormHelperText, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField, Typography } from "@mui/material";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
+import { useEffect } from "react";
 import VoucherClientSection from "./VoucherClientSection";
 import { useTranslations } from "next-intl";
 import { normalizeMoneyInput } from "@/utils/normalizeMoney";
 import { BusinessDatePicker } from "@/components/BusinessDatePickers";
+import { addBusinessDays } from "@/utils/businessTime";
 
 const NewVoucherFormFields = () => {
   const t = useTranslations("Vouchers");
   const tCommon = useTranslations("Common");
   const {
     control,
-    formState: { errors },
+    setValue,
+    formState: { errors, dirtyFields },
   } = useFormContext<VoucherSchemaInput>();
   const source = useWatch({ control, name: "source" });
+  const createdAt = useWatch({ control, name: "created_at" });
+
+  // Keep the expiry defaulted to exactly 180 days after the (sale) created_at date. Recompute
+  // whenever created_at changes — including backdating — but stop once the receptionist
+  // has manually edited the expiry (so their choice is never overwritten).
+  useEffect(() => {
+    if (!createdAt || dirtyFields.expiration_date) return;
+    const next = addBusinessDays(createdAt as Date, 180);
+    if (next) setValue("expiration_date", next);
+  }, [createdAt, dirtyFields.expiration_date, setValue]);
 
   return (
     <Grid container spacing={{ xs: 1, xl: 2 }}>

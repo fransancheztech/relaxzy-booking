@@ -52,6 +52,13 @@ export function businessDayEndExclusiveUtc(value: DateInput): Date | null {
   return dt ? dt.startOf("day").plus({ days: 1 }).toUTC().toJSDate() : null;
 }
 
+/** Add N calendar days in business time (DST-aware, so the resulting Madrid date is exactly
+ *  N days later). Returns the resulting instant as a JS Date. */
+export function addBusinessDays(value: DateInput, days: number): Date | null {
+  const dt = toBusiness(value);
+  return dt ? dt.plus({ days }).toJSDate() : null;
+}
+
 /** DDMMYY in business time (e.g. voucher codes like V-150626-1). */
 export function businessDdMmYy(value: DateInput): string {
   const dt = toBusiness(value) ?? nowBusiness();

@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 import { useRef, useState } from "react";
 import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
+import { addBusinessDays } from "@/utils/businessTime";
 
 /**
  * A voucher is missing contact info only when there is no phone or email saved
@@ -53,7 +54,9 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
         notes: "",
         source: "physical",
         external_reference: "",
-        expiration_date: new Date(Date.now() + 183 * 24 * 60 * 60 * 1000),
+        // Default expiry: exactly 180 days from the (sale) created_at date. Recomputed
+        // reactively in the form when created_at changes, unless the receptionist overrides it.
+        expiration_date: addBusinessDays(new Date(), 180)!,
         created_at: new Date(),
     };
 
