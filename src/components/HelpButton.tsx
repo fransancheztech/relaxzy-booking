@@ -48,7 +48,7 @@ const SECTION_COUNTS: Record<PageKey, number[]> = {
   payments:    [3, 2],
   services:    [3, 2, 2],
   therapists:  [3, 2, 2],
-  vouchers:    [3, 3, 3, 2],
+  vouchers:    [3, 3, 3, 5, 2],
   stats:       [3, 5, 1],
   tips:        [3, 3, 2],
   fallback:    [3],

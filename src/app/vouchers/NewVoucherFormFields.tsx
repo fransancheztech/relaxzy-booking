@@ -1,7 +1,8 @@
 "use client";
 
 import { VoucherSchemaInput } from "@/schemas/voucher.schema";
-import { Divider, FormControl, FormControlLabel, FormHelperText, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField, Typography } from "@mui/material";
+import { Divider, FormControl, FormControlLabel, FormHelperText, FormLabel, Grid, InputAdornment, InputLabel, MenuItem, Radio, RadioGroup, Select, TextField, Tooltip, Typography } from "@mui/material";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { useEffect } from "react";
 import VoucherClientSection from "./VoucherClientSection";
@@ -9,6 +10,20 @@ import { useTranslations } from "next-intl";
 import { normalizeMoneyInput } from "@/utils/normalizeMoney";
 import { BusinessDatePicker } from "@/components/BusinessDatePickers";
 import { addBusinessDays } from "@/utils/businessTime";
+
+// Small info icon + tooltip for per-field contextual help.
+const FieldHelp = ({ title }: { title: string }) => (
+  <Tooltip title={title} arrow enterTouchDelay={0}>
+    <InfoOutlinedIcon sx={{ fontSize: 15, color: "text.disabled", cursor: "help" }} />
+  </Tooltip>
+);
+
+// Same icon wrapped as an input adornment, for placing inside a field.
+const HelpAdornment = ({ title, position }: { title: string; position: "start" | "end" }) => (
+  <InputAdornment position={position}>
+    <FieldHelp title={title} />
+  </InputAdornment>
+);
 
 const NewVoucherFormFields = () => {
   const t = useTranslations("Vouchers");
@@ -61,7 +76,10 @@ const NewVoucherFormFields = () => {
               onBlur={field.onBlur}
               name={field.name}
               inputRef={field.ref}
-              slotProps={{ htmlInput: { inputMode: "decimal" } }}
+              slotProps={{
+                htmlInput: { inputMode: "decimal" },
+                input: { endAdornment: <HelpAdornment title={t("balanceHelp")} position="end" /> },
+              }}
             />
           )}
         />
@@ -109,6 +127,7 @@ const NewVoucherFormFields = () => {
                   onBlur: field.onBlur,
                   name: field.name,
                   inputRef: field.ref,
+                  InputProps: { startAdornment: <HelpAdornment title={t("createdAtHelp")} position="start" /> },
                 },
               }}
             />
@@ -135,6 +154,7 @@ const NewVoucherFormFields = () => {
                   onBlur: field.onBlur,
                   name: field.name,
                   inputRef: field.ref,
+                  InputProps: { startAdornment: <HelpAdornment title={t("expirationDateHelp")} position="start" /> },
                 },
               }}
             />
@@ -174,9 +194,13 @@ const NewVoucherFormFields = () => {
                   px: 0.5,
                   fontSize: 12,
                   lineHeight: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.25,
                 }}
               >
                 {t("source")}
+                <FieldHelp title={t("sourceHelp")} />
               </FormLabel>
               <RadioGroup {...field} row sx={{ flexWrap: "nowrap" }}>
                 <FormControlLabel
@@ -221,17 +245,14 @@ const NewVoucherFormFields = () => {
               size="small"
               type="text"
               variant="outlined"
-              slotProps={
-                source === "online"
-                  ? {
-                      input: {
-                        startAdornment: (
-                          <InputAdornment position="start">#</InputAdornment>
-                        ),
-                      },
-                    }
-                  : undefined
-              }
+              slotProps={{
+                input: {
+                  ...(source === "online"
+                    ? { startAdornment: <InputAdornment position="start">#</InputAdornment> }
+                    : {}),
+                  endAdornment: <HelpAdornment title={t("externalReferenceHelp")} position="end" />,
+                },
+              }}
             />
           )}
         />

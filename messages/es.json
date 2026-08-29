@@ -433,7 +433,12 @@
     "source": "Origen",
     "sourcePhysical": "Físico",
     "sourceOnline": "Online",
-    "externalReference": "Referencia externa"
+    "externalReference": "Referencia externa",
+    "createdAtHelp": "El día en que el bono se compró en la vida real, es decir, el día del pago.",
+    "balanceHelp": "El saldo inicial con el que se creó el bono.",
+    "expirationDateHelp": "Se fija automáticamente a 180 días después de la fecha de creación.",
+    "sourceHelp": "Físico: emitido en nuestro mostrador. Online: comprado en nuestra web pública.",
+    "externalReferenceHelp": "El ID del bono online, que aparece en el correo de confirmación de compra que recibimos. Déjalo en blanco para bonos físicos."
   },
   "Stats": {
     "totalRevenue": "Ingresos totales",
@@ -718,9 +723,15 @@
       "section2tip0": "Busca por código del bono o nombre de cliente en la tabla — la columna Saldo muestra el crédito restante.",
       "section2tip1": "Los bonos vencidos que aún tienen saldo se resaltan para que puedas avisar al cliente.",
       "section2tip2": "Abre un bono para añadir saldo, reembolsar un pago o revisar sus usos — cada uso enlaza con su reserva.",
-      "section3heading": "Formato de teléfono y correo",
-      "section3tip0": "Los teléfonos asumen formato español por defecto (p.ej. 666123456). Para números internacionales, escribe el prefijo de país con + (p.ej. +33 609415297 para Francia).",
-      "section3tip1": "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com)."
+      "section3heading": "Qué significa cada campo",
+      "section3tip0": "Fecha de creación: el día en que el bono se compró en la vida real, es decir, el día del pago. Retrasa la fecha si lo registras más tarde.",
+      "section3tip1": "Saldo: el saldo inicial con el que se creó el bono.",
+      "section3tip2": "Fecha de vencimiento: se fija automáticamente a 180 días después de la fecha de creación (puedes cambiarla).",
+      "section3tip3": "Origen: Físico si se emite en el mostrador, Online si se compra en la web pública.",
+      "section3tip4": "Referencia externa: el ID del bono online que aparece en el correo de confirmación de compra — déjalo en blanco para bonos físicos.",
+      "section4heading": "Formato de teléfono y correo",
+      "section4tip0": "Los teléfonos asumen formato español por defecto (p.ej. 666123456). Para números internacionales, escribe el prefijo de país con + (p.ej. +33 609415297 para Francia).",
+      "section4tip1": "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com)."
     },
     "stats": {
       "title": "Estadísticas",
