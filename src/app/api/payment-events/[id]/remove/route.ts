@@ -40,11 +40,18 @@ export async function POST(
         ? event.amount
         : (event.amount as any)?.toNumber?.() ?? 0;
 
-    const updatedNotes = event.notes
-      ? `${event.notes} [Removed by ${performed_by}: ${notes.trim()}]`
-      : `[Removed by ${performed_by}: ${notes.trim()}]`;
+    // "Who removed it" is now captured by the audit log (see below); the notes keep just
+    // the human-readable reason.
+    const reasonNote = `Reason of delete: ${notes.trim()}`;
+    const updatedNotes = event.notes ? `${event.notes} ${reasonNote}` : reasonNote;
 
     await prisma.$transaction(async (tx) => {
+      // Attribute this write to the acting user so the payment-events/payments audit-log
+      // triggers record who removed the event. Prisma writes don't populate auth.uid(),
+      // so we pass the id via a transaction-local GUC the triggers read (falling back to
+      // auth.uid() when unset). Must run before the writes, in the same transaction.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by ?? ""}, true)`;
+
       await tx.payment_events.update({
         where: { id: eventId },
         data: { deleted_at: new Date(), notes: updatedNotes },

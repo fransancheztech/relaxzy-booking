@@ -11,6 +11,7 @@ import {
 import { CLIENT_CONTACT_TAKEN, CLIENT_NAME_CONFLICT } from "@/types/clientConflict";
 import type { ClientResolution } from "@/types/clientConflict";
 import { therapistDisplayName } from "@/utils/therapistName";
+import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 
 type Body = {
   client_name?: string;
@@ -382,8 +383,14 @@ export async function DELETE(
     }
 
     const now = new Date();
+    const performed_by = await getCurrentUserId();
 
     const result = await prisma.$transaction(async (tx) => {
+      // Attribute the cascade soft-delete of this booking's payments/payment_events to the
+      // acting user, so the audit-log triggers record who did it (Prisma writes don't set
+      // auth.uid()). Must run before the writes, in the same transaction.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by ?? ""}, true)`;
+
       // Read group membership before soft-deleting so we can dissolve a
       // group-of-1 left behind by this deletion.
       const before = await tx.bookings.findUnique({

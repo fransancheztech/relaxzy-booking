@@ -340,7 +340,7 @@ model tip_payouts {
 model tips {
   id             String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   therapist_id   String             @db.Uuid
-  booking_id     String?            @db.Uuid
+  booking_id     String             @db.Uuid
   amount         Decimal            @db.Decimal(10, 2)
   payment_method tip_payment_method @default(credit_card)
   iva_applies    Boolean            @default(true)
@@ -349,7 +349,7 @@ model tips {
   deleted_at     DateTime?          @db.Timestamptz(6)
   payout_id      String?            @db.Uuid
   received_at    DateTime           @default(now()) @db.Timestamptz(6)
-  bookings       bookings?          @relation(fields: [booking_id], references: [id], onUpdate: NoAction)
+  bookings       bookings           @relation(fields: [booking_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
   tip_payouts    tip_payouts?       @relation(fields: [payout_id], references: [id], onUpdate: NoAction)
   therapists     therapists         @relation(fields: [therapist_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
