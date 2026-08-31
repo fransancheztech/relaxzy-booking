@@ -58,6 +58,16 @@ export async function GET(request: Request) {
   const truncBusiness = (col: Prisma.Sql) =>
     Prisma.sql`(date_trunc(${bSql}, ${col} AT TIME ZONE ${BUSINESS_TIMEZONE}) AT TIME ZONE ${BUSINESS_TIMEZONE})`;
 
+  // Revenue attribution basis for BOOKING payments (default = payment/cash basis):
+  //  - "payment": the payment event's own date (money counted when taken).
+  //  - "service": the booking's appointment date (money counted when served).
+  // Only booking-payment money figures switch (total revenue, over-time, by-method, refunds,
+  // per-therapist). Voucher sales (sale date), tips (service date), and revenue-per-hour
+  // (service date, so it matches booked hours) never switch.
+  const basisParam = searchParams.get("basis");
+  const basis: "payment" | "service" = basisParam === "service" ? "service" : "payment";
+  const bookingDateCol = basis === "payment" ? Prisma.sql`pe.created_at` : Prisma.sql`b.start_time`;
+
   try {
     // Sequential queries — one connection at a time to avoid exhausting the pool
     //
@@ -69,17 +79,25 @@ export async function GET(request: Request) {
     //    are NOT revenue — that money was already counted at the time of sale.
     // Both streams are classified purely by payment method (cash / credit_card); there
     // is no separate "voucher" method — a voucher top-up is itself cash or card.
-    const revenueRows = await prisma.$queryRaw<{ cash: number; credit_card: number; refunds: number }[]>`
-      SELECT
-        COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'cash'), 0)::float AS cash,
-        COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'credit_card'), 0)::float AS credit_card,
-        COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0)::float AS refunds
-      FROM payment_events pe
-      JOIN payments p ON p.id = pe.payment_id
-      JOIN bookings b ON b.id = p.booking_id
-      WHERE b.deleted_at IS NULL AND p.deleted_at IS NULL AND pe.deleted_at IS NULL
-        AND b.start_time >= ${from} AND b.start_time < ${to}
-    `;
+    // Booking-payment cash/card/refund totals, date-scoped by a chosen column.
+    const bookingRevenueTotals = (dateCol: Prisma.Sql) =>
+      prisma.$queryRaw<{ cash: number; credit_card: number; refunds: number }[]>`
+        SELECT
+          COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'cash'), 0)::float AS cash,
+          COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'credit_card'), 0)::float AS credit_card,
+          COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0)::float AS refunds
+        FROM payment_events pe
+        JOIN payments p ON p.id = pe.payment_id
+        JOIN bookings b ON b.id = p.booking_id
+        WHERE b.deleted_at IS NULL AND p.deleted_at IS NULL AND pe.deleted_at IS NULL
+          AND ${dateCol} >= ${from} AND ${dateCol} < ${to}
+      `;
+    // Always compute the service-date total (feeds revenue-per-hour, which must match booked
+    // hours). The basis-selected total drives the headline/pie/refunds; reuse in service mode.
+    const revenueServiceRows = await bookingRevenueTotals(Prisma.sql`b.start_time`);
+    const revenueRows = basis === "payment"
+      ? await bookingRevenueTotals(Prisma.sql`pe.created_at`)
+      : revenueServiceRows;
     const voucherRevenueRows = await prisma.$queryRaw<{ cash: number; credit_card: number; refunds: number }[]>`
       SELECT
         COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'cash'), 0)::float AS cash,
@@ -93,7 +111,7 @@ export async function GET(request: Request) {
     `;
     const revenueOverTimeRows = await prisma.$queryRaw<{ period: Date; cash: number; credit_card: number; refunds: number }[]>`
       SELECT
-        ${truncBusiness(Prisma.sql`b.start_time`)} AS period,
+        ${truncBusiness(bookingDateCol)} AS period,
         COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'cash'), 0)::float AS cash,
         COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'credit_card'), 0)::float AS credit_card,
         COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0)::float AS refunds
@@ -101,7 +119,7 @@ export async function GET(request: Request) {
       JOIN payments p ON p.id = pe.payment_id
       JOIN bookings b ON b.id = p.booking_id
       WHERE b.deleted_at IS NULL AND p.deleted_at IS NULL AND pe.deleted_at IS NULL
-        AND b.start_time >= ${from} AND b.start_time < ${to}
+        AND ${bookingDateCol} >= ${from} AND ${bookingDateCol} < ${to}
       GROUP BY period ORDER BY period
     `;
     const voucherOverTimeRows = await prisma.$queryRaw<{ period: Date; cash: number; credit_card: number; refunds: number }[]>`
@@ -133,7 +151,7 @@ export async function GET(request: Request) {
       JOIN bookings b ON b.id = p.booking_id
       JOIN therapists th ON th.id = b.therapist_id
       WHERE b.deleted_at IS NULL AND p.deleted_at IS NULL AND pe.deleted_at IS NULL
-        AND b.start_time >= ${from} AND b.start_time < ${to}
+        AND ${bookingDateCol} >= ${from} AND ${bookingDateCol} < ${to}
       GROUP BY th.id
       ORDER BY revenue DESC
     `;
@@ -426,7 +444,14 @@ export async function GET(request: Request) {
     // --- Financial ---
     const fin = financialRows[0] ?? { avg_ticket: 0, p25: 0, p75: 0 };
     const totalBookedHours = toNum(bs.total_booked_hours);
-    const revenuePerHour = totalBookedHours > 0 ? totalRevenue / totalBookedHours : 0;
+    // Revenue-per-hour always uses SERVICE-date revenue so numerator (money) and denominator
+    // (booked hours) describe the same appointments — independent of the display basis.
+    const revService = revenueServiceRows[0] ?? { cash: 0, credit_card: 0, refunds: 0 };
+    const totalRevenueService =
+      toNum(revService.cash) + toNum(vrev.cash)
+      + toNum(revService.credit_card) + toNum(vrev.credit_card)
+      - (toNum(revService.refunds) + toNum(vrev.refunds));
+    const revenuePerHour = totalBookedHours > 0 ? totalRevenueService / totalBookedHours : 0;
 
     // Ticket distribution: bucket into €10 ranges
     const bucketLabels = ["<€30", "€30–39", "€40–49", "€50–59", "€60–69", "€70–79", "€80–89", "€90+"];
@@ -517,7 +542,7 @@ export async function GET(request: Request) {
     );
 
     const response: StatsResponse = {
-      meta: { from: from.toISOString(), to: to.toISOString(), date_bucket: bucket },
+      meta: { from: from.toISOString(), to: to.toISOString(), date_bucket: bucket, basis },
 
       revenue: {
         total: totalRevenue,

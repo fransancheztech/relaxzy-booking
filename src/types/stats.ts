@@ -86,6 +86,8 @@ export interface StatsResponse {
     from: string;
     to: string;
     date_bucket: "day" | "week" | "month";
+    // Attribution basis for booking-payment revenue figures.
+    basis: "payment" | "service";
   };
 
   revenue: {

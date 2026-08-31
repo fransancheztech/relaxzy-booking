@@ -1,7 +1,8 @@
 "use client";
 
-import { Alert, Box, CircularProgress, Divider, Grid } from "@mui/material";
+import { Alert, Box, CircularProgress, Divider, Grid, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from "@mui/material";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import PeopleIcon from "@mui/icons-material/People";
 import LoopIcon from "@mui/icons-material/Loop";
@@ -51,6 +52,9 @@ const StatsPageContent = ({ role }: Props) => {
   // Tips off by default (they're gratuities, not real revenue).
   const [streams, setStreams] = useState<Stream[]>(["bookings", "vouchers"]);
 
+  // Revenue attribution basis for booking payments (default = payment/cash basis).
+  const [basis, setBasis] = useState<"payment" | "service">("payment");
+
   // Selected-streams total, summed from over_time so it always matches the chart.
   const selectedRevenue = useMemo(() => {
     if (!data) return 0;
@@ -95,7 +99,7 @@ const StatsPageContent = ({ role }: Props) => {
     setLoading(true);
     setError(null);
     try {
-      const url = `/api/stats?from=${f.toISOString()}&to=${t.toISOString()}${bucket ? `&bucket=${bucket}` : ""}`;
+      const url = `/api/stats?from=${f.toISOString()}&to=${t.toISOString()}&basis=${basis}${bucket ? `&bucket=${bucket}` : ""}`;
       const res = await fetch(url);
       if (!res.ok) {
         const err = await res.json();
@@ -107,7 +111,7 @@ const StatsPageContent = ({ role }: Props) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [basis]);
 
   // Only admins hit /api/stats (it 403s for other roles). Therapists get just the
   // Therapist Hours section, which fetches separately.
@@ -143,6 +147,26 @@ const StatsPageContent = ({ role }: Props) => {
           onFromChange={handleFromChange}
           onToChange={handleToChange}
         />
+
+        {/* Revenue basis — admin only; re-dates booking-payment revenue figures. */}
+        {isAdmin && (
+          <Box sx={{ mt: 1.5, display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+            <Typography variant="caption" color="text.secondary">{t("revenueBasis")}</Typography>
+            <ToggleButtonGroup
+              value={basis}
+              exclusive
+              size="small"
+              onChange={(_, v: "payment" | "service" | null) => { if (v) setBasis(v); }}
+              sx={{ "& .MuiToggleButton-root": { py: 0.25, px: 1, fontSize: "0.7rem" } }}
+            >
+              <ToggleButton value="payment">{t("basisPayment")}</ToggleButton>
+              <ToggleButton value="service">{t("basisService")}</ToggleButton>
+            </ToggleButtonGroup>
+            <Tooltip title={t("basisTooltip")} arrow enterTouchDelay={0}>
+              <InfoOutlinedIcon sx={{ fontSize: 15, color: "text.disabled", cursor: "help" }} />
+            </Tooltip>
+          </Box>
+        )}
       </Box>
 
       {/* Loading overlay — admin only */}

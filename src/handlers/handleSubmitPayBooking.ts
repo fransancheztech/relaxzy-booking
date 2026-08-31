@@ -3,7 +3,7 @@ import { BookingPaymentFormOutput } from "@/schemas/bookingPayment.schema";
 import { toast } from "react-toastify";
 
 const handleSubmitPayBooking = async (
-  data: BookingPaymentFormOutput & { id: string }
+  data: BookingPaymentFormOutput & { id: string; paymentDate?: string }
 ) => {
   try {
     const res = await fetch(`/api/bookings/${data.id}/payment`, {
@@ -14,6 +14,7 @@ const handleSubmitPayBooking = async (
         cardPayment: data.cardPayment,
         voucherPayment: data.voucherPayment,
         voucherCode: data.voucherCode,
+        paymentDate: data.paymentDate,
       }),
     });
 

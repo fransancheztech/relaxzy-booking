@@ -12,10 +12,14 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import type { SxProps, Theme } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { useEffect, useState } from "react";
@@ -87,15 +91,24 @@ const DailyTotalsDialog = ({ open, onClose, start, end }: Props) => {
   const [data, setData] = useState<DailyTotalsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  // Booking-payment basis (default = payment/cash basis: money taken that day).
+  const [basis, setBasis] = useState<"payment" | "service">("payment");
+
+  // Clear the shown totals only when the DAY changes — not when the basis toggles — so a
+  // basis switch keeps the panel mounted (stable height) and just dims while refetching.
+  useEffect(() => {
+    setData(null);
+    setError(false);
+  }, [start, end]);
 
   useEffect(() => {
     if (!open || !start || !end) return;
     setLoading(true);
-    setData(null);
     setError(false);
     const params = new URLSearchParams({
       start: start.toISOString(),
       end: end.toISOString(),
+      basis,
     });
     fetch(`/api/calendar/daily-totals?${params}`)
       .then((r) => {
@@ -105,7 +118,7 @@ const DailyTotalsDialog = ({ open, onClose, start, end }: Props) => {
       .then((d) => setData(d))
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, [open, start, end]);
+  }, [open, start, end, basis]);
 
   const dateLabel = start
     ? DateTime.fromJSDate(start)
@@ -127,20 +140,51 @@ const DailyTotalsDialog = ({ open, onClose, start, end }: Props) => {
       </DialogTitle>
 
       <DialogContent dividers>
-        {loading && (
+        {/* Booking-payment basis toggle (default = payment/cash basis). */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", mb: 1.5 }}>
+          <Typography variant="caption" color="text.secondary">{t("basisLabel")}</Typography>
+          <ToggleButtonGroup
+            value={basis}
+            exclusive
+            size="small"
+            onChange={(_, v: "payment" | "service" | null) => { if (v) setBasis(v); }}
+            sx={{ "& .MuiToggleButton-root": { py: 0.25, px: 1, fontSize: "0.7rem" } }}
+          >
+            <ToggleButton value="payment">{t("basisPayment")}</ToggleButton>
+            <ToggleButton value="service">{t("basisService")}</ToggleButton>
+          </ToggleButtonGroup>
+          <Tooltip title={t("basisTooltip")} arrow enterTouchDelay={0}>
+            <InfoOutlinedIcon sx={{ fontSize: 15, color: "text.disabled", cursor: "help" }} />
+          </Tooltip>
+        </Box>
+
+        {/* Initial load only — once we have data we keep it mounted and just dim on refetch. */}
+        {loading && !data && (
           <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
             <CircularProgress size={32} />
           </Box>
         )}
 
-        {!loading && error && (
+        {error && !data && (
           <Typography color="error" variant="body2" sx={{ py: 2 }}>
             {t("loadError")}
           </Typography>
         )}
 
-        {!loading && data && (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+        {data && (
+          <Box sx={{ position: "relative" }}>
+            {/* Subtle overlay while a basis switch refetches, keeping height stable. */}
+            {loading && (
+              <Box sx={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1 }}>
+                <CircularProgress size={28} />
+              </Box>
+            )}
+            <Box sx={{
+              display: "flex", flexDirection: "column", gap: 2.5,
+              opacity: loading ? 0.4 : 1,
+              pointerEvents: loading ? "none" : "auto",
+              transition: "opacity 0.2s",
+            }}>
 
             {/* Booking payments */}
             <Box>
@@ -278,6 +322,7 @@ const DailyTotalsDialog = ({ open, onClose, start, end }: Props) => {
               </Box>
             </Box>
 
+            </Box>
           </Box>
         )}
       </DialogContent>

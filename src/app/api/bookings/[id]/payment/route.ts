@@ -21,6 +21,7 @@ export async function POST(
       cardPayment = 0,
       voucherPayment = 0,
       voucherCode,
+      paymentDate,
     } = await req.json();
 
     if (cashPayment <= 0 && cardPayment <= 0 && voucherPayment <= 0) {
@@ -28,6 +29,16 @@ export async function POST(
         { error: "At least one payment must be greater than zero" },
         { status: 400 }
       );
+    }
+
+    // Optional custom payment date (from the standalone Add Payment dialog). Empty = now().
+    let paymentCreatedAt = "";
+    if (paymentDate != null && paymentDate !== "") {
+      const d = new Date(paymentDate);
+      if (Number.isNaN(d.getTime())) {
+        return NextResponse.json({ error: "Invalid payment date" }, { status: 400 });
+      }
+      paymentCreatedAt = d.toISOString();
     }
 
     const performed_by = await getCurrentUserId();
@@ -139,6 +150,9 @@ export async function POST(
     // 4. Register all payments atomically
     // ---------------------------------------------------
     await prisma.$transaction(async (tx) => {
+      // Custom payment date (if any) for register_payment_event, via a transaction-local GUC.
+      await tx.$queryRaw`SELECT set_config('app.payment_created_at', ${paymentCreatedAt}, true)`;
+
       if (cashPayment > 0) {
         await tx.$queryRaw`
           SELECT register_payment_event(

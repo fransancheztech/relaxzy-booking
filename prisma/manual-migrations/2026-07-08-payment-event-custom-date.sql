@@ -1,0 +1,37 @@
+-- Let the standalone Add Payment dialog set a custom payment date (payment_events.created_at)
+-- for a payment collected earlier but entered late — WITHOUT changing register_payment_event's
+-- signature (so every existing caller keeps working and CREATE OR REPLACE replaces cleanly).
+--
+-- Mechanism: the same transaction-local GUC pattern as app.user_id. The app sets
+-- app.payment_created_at in the same transaction before calling register_payment_event; the
+-- proc reads it for the payment_events INSERT, falling back to now() when unset (the normal
+-- "entered now" case — and refunds / New-Booking payments, which never set it).
+--
+-- ┌──────────────────────────────────────────────────────────────────────────────┐
+-- │ IN-PLACE EDIT to register_payment_event. Keep the whole function as-is —       │
+-- │ including the `PERFORM set_config('app.user_id', …)` line you added earlier and │
+-- │ any SECURITY DEFINER / SET search_path — and change ONLY the payment_events     │
+-- │ INSERT, then re-run its CREATE OR REPLACE.                                      │
+-- └──────────────────────────────────────────────────────────────────────────────┘
+--
+-- Change the payment_events INSERT from:
+--
+--     INSERT INTO payment_events (
+--       payment_id, type, amount, method, performed_by, notes
+--     )
+--     VALUES (
+--       v_payment_id, p_event_type, p_amount, p_method, p_performed_by, p_notes
+--     );
+--
+-- to (adds created_at, sourced from the GUC with a now() fallback):
+--
+--     INSERT INTO payment_events (
+--       payment_id, type, amount, method, performed_by, notes, created_at
+--     )
+--     VALUES (
+--       v_payment_id, p_event_type, p_amount, p_method, p_performed_by, p_notes,
+--       COALESCE(NULLIF(current_setting('app.payment_created_at', true), '')::timestamptz, now())
+--     );
+--
+-- Nothing else changes. voucher redemptions (register_voucher_use) are untouched — their
+-- date is already the booking's appointment date for display.

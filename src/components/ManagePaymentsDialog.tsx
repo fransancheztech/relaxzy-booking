@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Alert,
   Box,
   Button,
   Chip,
@@ -20,6 +21,8 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import UndoIcon from "@mui/icons-material/Undo";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import EditCalendarIcon from "@mui/icons-material/EditCalendar";
+import { BusinessDatePicker } from "@/components/BusinessDatePickers";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
@@ -87,6 +90,9 @@ export default function ManagePaymentsDialog({
   const [removeEventNote, setRemoveEventNote] = useState("");
   const [removeEventNoteError, setRemoveEventNoteError] = useState(false);
 
+  const [activeEditDateId, setActiveEditDateId] = useState<string | null>(null);
+  const [editDate, setEditDate] = useState<Date | null>(null);
+
   const loadDetail = async () => {
     setLoading(true);
     try {
@@ -109,6 +115,7 @@ export default function ManagePaymentsDialog({
     setActiveRemoveEventId(null);
     setRemoveEventNote("");
     setRemoveEventNoteError(false);
+    setActiveEditDateId(null);
     loadDetail();
   }, [open, bookingId]);
 
@@ -192,6 +199,28 @@ export default function ManagePaymentsDialog({
       }
     });
 
+  const handleEditDate = (eventId: string) =>
+    guard(async () => {
+      if (!editDate) return;
+      try {
+        const res = await fetch(`/api/payment-events/${eventId}/date`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date: editDate.toISOString() }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error ?? "");
+        }
+        toast.success(t("editDateSuccess"));
+        setActiveEditDateId(null);
+        onPaymentChanged();
+        await loadDetail();
+      } catch (err: any) {
+        toast.error(err.message || t("editDateError"));
+      }
+    });
+
   const formatDate = (iso: string) => formatBusinessDate(iso);
   const formatDateTime = (iso: string) => formatBusinessDateTime(iso);
 
@@ -256,6 +285,7 @@ export default function ManagePaymentsDialog({
                       {p.events.map((e) => {
                         const isCharge = e.type === "CHARGE";
                         const isRemovingThis = activeRemoveEventId === e.id;
+                        const isEditingDate = activeEditDateId === e.id;
                         return (
                           <Box key={e.id}>
                             <Box
@@ -280,6 +310,24 @@ export default function ManagePaymentsDialog({
                               <Typography variant="caption" color="text.secondary">
                                 {methodLabel(e.method)} · {formatDateTime(e.created_at)}
                               </Typography>
+                              <IconButton
+                                size="small"
+                                disabled={actionLoading}
+                                onClick={() => {
+                                  if (isEditingDate) {
+                                    setActiveEditDateId(null);
+                                  } else {
+                                    setActiveEditDateId(e.id);
+                                    setEditDate(new Date(e.created_at));
+                                    setActiveRemoveEventId(null);
+                                    setActiveRefundId(null);
+                                  }
+                                }}
+                                sx={{ p: 0.25 }}
+                                title={t("editDateAction")}
+                              >
+                                <EditCalendarIcon sx={{ fontSize: "0.9rem" }} />
+                              </IconButton>
                               {e.notes && (
                                 <Typography
                                   variant="caption"
@@ -356,6 +404,33 @@ export default function ManagePaymentsDialog({
                                     disabled={actionLoading}
                                   >
                                     {t("confirmRemoveEvent")}
+                                  </Button>
+                                </Box>
+                              </Box>
+                            )}
+                            {isEditingDate && (
+                              <Box sx={{ mt: 0.5, mb: 0.5, p: 1.5, bgcolor: "action.hover", borderRadius: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+                                <Alert severity="warning" sx={{ py: 0, fontSize: "0.72rem", "& .MuiAlert-message": { py: 0.75 } }}>
+                                  {t("editDateWarning")}
+                                </Alert>
+                                <BusinessDatePicker
+                                  value={editDate}
+                                  onChange={setEditDate}
+                                  disableFuture
+                                  slotProps={{ textField: { size: "small", label: t("editDateLabel"), fullWidth: true } }}
+                                />
+                                <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
+                                  <Button size="small" onClick={() => setActiveEditDateId(null)} disabled={actionLoading}>
+                                    {tCommon("cancel")}
+                                  </Button>
+                                  <Button
+                                    size="small"
+                                    variant="contained"
+                                    color="warning"
+                                    onClick={() => handleEditDate(e.id)}
+                                    disabled={actionLoading}
+                                  >
+                                    {t("editDateConfirm")}
                                   </Button>
                                 </Box>
                               </Box>

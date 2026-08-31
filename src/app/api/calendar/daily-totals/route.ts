@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "generated/prisma";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const start = searchParams.get("start");
   const end = searchParams.get("end");
+  // Booking-payment attribution basis (default = payment/cash basis). Voucher sales and
+  // tips are always dated by their own basis (sale date / appointment date).
+  const basis = searchParams.get("basis") === "service" ? "service" : "payment";
+  const bookingDateCol = basis === "payment" ? Prisma.sql`pe.created_at` : Prisma.sql`b.start_time`;
 
   if (!start || !end) {
     return NextResponse.json({ error: "start and end are required" }, { status: 400 });
@@ -18,7 +23,8 @@ export async function GET(request: Request) {
     type TipRow = { therapist_id: string; full_name: string; payment_method: string; total: unknown };
 
     const [bookingPaymentRows, voucherSaleRows, tipRows] = await Promise.all([
-      // Booking payments — date-scoped by when the booking took place
+      // Booking payments — date-scoped by the chosen basis (payment date = cash basis,
+      // i.e. money counted when taken; service date = the booking's appointment day).
       prisma.$queryRaw<PaymentRow[]>`
         SELECT
           pe.method AS payment_method,
@@ -27,8 +33,8 @@ export async function GET(request: Request) {
         JOIN payments p ON p.id = pe.payment_id
         JOIN bookings b ON b.id = p.booking_id
         WHERE
-          b.start_time >= ${startDate}
-          AND b.start_time < ${endDate}
+          ${bookingDateCol} >= ${startDate}
+          AND ${bookingDateCol} < ${endDate}
           AND b.deleted_at IS NULL
           AND pe.deleted_at IS NULL
         GROUP BY pe.method
