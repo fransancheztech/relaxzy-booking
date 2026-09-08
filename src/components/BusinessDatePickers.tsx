@@ -36,8 +36,15 @@ export function BusinessDateTimePicker({
   ampm = false,
   format = "dd/MM/yyyy HH:mm",
   slotProps,
+  views,
   ...rest
-}: CommonProps & { ampm?: boolean; slotProps?: DateTimeSlotProps }) {
+}: CommonProps & {
+  ampm?: boolean;
+  slotProps?: DateTimeSlotProps;
+  // Exposed so a caller can pin which views appear — notably to guarantee no seconds view,
+  // rather than relying on MUI's default view list staying seconds-free across upgrades.
+  views?: React.ComponentProps<typeof DateTimePicker>["views"];
+}) {
   // Names (months/weekdays in the popup) follow the app language; the explicit `format`
   // keeps the numeric layout Spanish-style (dd/MM/yyyy) regardless of locale.
   const locale = useLocale();
@@ -48,6 +55,7 @@ export function BusinessDateTimePicker({
         timezone={BUSINESS_TIMEZONE}
         ampm={ampm}
         format={format}
+        views={views}
         slotProps={slotProps}
         value={toBusinessValue(value) as never}
         onChange={(dt) => onChange(fromPickerValue(dt))}

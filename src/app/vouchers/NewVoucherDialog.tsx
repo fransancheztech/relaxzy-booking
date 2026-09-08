@@ -13,7 +13,7 @@ import ClientConflictDialog from '@/app/bookings/ClientConflictDialog';
 import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
 import { addBusinessDays } from "@/utils/businessTime";
 
@@ -64,6 +64,16 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
         resolver: zodResolver(VoucherSchema),
         defaultValues,
     });
+
+    // Re-seed the sale date every time the dialog opens. `useForm` captures defaultValues only
+    // once, at mount — i.e. when the Vouchers page was navigated to — so without this a browser
+    // left open past midnight defaults "Created at" to yesterday, which silently produces the
+    // wrong voucher code prefix (V-ddmmyy-N) and a 180-day expiry counted from the wrong day.
+    useEffect(() => {
+        if (!open) return;
+        methods.reset(defaultValues);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open]);
 
     const { submitting, guard } = useSubmitGuard();
 

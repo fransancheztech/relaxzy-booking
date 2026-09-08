@@ -42,6 +42,10 @@ export async function POST(request: Request) {
     const performed_by = await getCurrentUserId();
 
     const payment_id = await prisma.$transaction(async (tx) => {
+      // Set explicitly so the vouchers_history trigger fired by recalculateVoucherBalance is
+      // attributed, rather than relying on register_payment_event having set the same GUC.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by ?? ""}, true)`;
+
       const result = await tx.$queryRaw<{ register_payment_event: string }[]>`
         SELECT register_payment_event(
           ${body.payment_type}::payment_types,

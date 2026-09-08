@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 import { recalculateVoucherBalance } from "@/lib/recalculateVoucherBalance";
 
 export async function POST(
@@ -8,8 +9,13 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
+    const performed_by = await getCurrentUserId();
 
     await prisma.$transaction(async (tx) => {
+      // Attributes both the voucher_uses_history row and the vouchers_history row that
+      // recalculateVoucherBalance's update triggers.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by ?? ""}, true)`;
+
       const use = await tx.voucher_uses.findFirst({
         where: { id, deleted_at: null },
       });

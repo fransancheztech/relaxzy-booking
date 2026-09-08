@@ -166,6 +166,11 @@ export async function POST(request: Request) {
     const source = body.source as "physical" | "online";
     const externalReference = normalizeExternalRef(normalizeString(body.external_reference), source);
 
+    // created_at is the real purchase datetime — date AND time — as entered by the receptionist,
+    // and is taken verbatim. It is pure business data: it dates the sale for all revenue
+    // reporting (Stats and Daily Totals both scope voucher sales by v.created_at). Tracing when
+    // a voucher was actually keyed in, and by whom, lives in vouchers_history.performed_at /
+    // performed_by, so nothing here needs to encode data-entry time.
     const createdAt = body.created_at ? new Date(body.created_at as string | Date) : new Date();
     if (Number.isNaN(createdAt.getTime())) {
       return NextResponse.json({ error: "Invalid created_at date" }, { status: 400 });
@@ -182,6 +187,11 @@ export async function POST(request: Request) {
     for (let attempt = 0; attempt < MAX_CODE_RETRIES; attempt++) {
       try {
         const result = await prisma.$transaction(async (tx) => {
+          // Attribute every vouchers_history row the triggers write in this transaction.
+          // auth.uid() is NULL under Prisma's pooled connection, so the user must be passed
+          // explicitly via this transaction-local GUC.
+          await tx.$queryRaw`SELECT set_config('app.user_id', ${performedBy ?? ""}, true)`;
+
           // Phase 1 — detect name conflicts before any write (buyer + recipient).
           const conflicts: ClientConflict[] = [];
           const buyerConflict = await detectClientConflict(tx, "buyer", buyerInput, resolutions["buyer"]);

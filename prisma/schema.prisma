@@ -282,6 +282,8 @@ model vouchers_history {
   notes              String?
   source             voucher_source?
   external_reference String?
+  performed_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  performed_by       String?         @db.Uuid
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.

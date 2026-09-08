@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "generated/prisma";
+import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 import { CLIENT_CONTACT_TAKEN } from "@/types/clientConflict";
 
 const norm = (v?: string | null) => (v && v.trim() !== "" ? v.trim() : null);
@@ -61,7 +62,12 @@ export async function PATCH(
       return NextResponse.json({ error: "Voucher not found" }, { status: 404 });
     }
 
+    const performed_by = await getCurrentUserId();
+
     await prisma.$transaction(async (tx) => {
+      // Attribute the vouchers_history rows written by the triggers in this transaction.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by ?? ""}, true)`;
+
       // Voucher own fields
       const voucherData: Record<string, unknown> = {};
       if (body.created_at !== undefined) {
@@ -163,9 +169,16 @@ export async function DELETE(
       );
     }
 
-    await prisma.vouchers.update({
-      where: { id },
-      data: { deleted_at: new Date() },
+    const performed_by = await getCurrentUserId();
+
+    // Wrapped in a transaction because set_config(..., true) is transaction-local: a bare
+    // update would leave the history trigger with no user to attribute the deletion to.
+    await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by ?? ""}, true)`;
+      await tx.vouchers.update({
+        where: { id },
+        data: { deleted_at: new Date() },
+      });
     });
 
     return NextResponse.json({ success: true });

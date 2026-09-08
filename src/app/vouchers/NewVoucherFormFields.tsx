@@ -8,8 +8,27 @@ import { useEffect } from "react";
 import VoucherClientSection from "./VoucherClientSection";
 import { useTranslations } from "next-intl";
 import { normalizeMoneyInput } from "@/utils/normalizeMoney";
-import { BusinessDatePicker } from "@/components/BusinessDatePickers";
+import { BusinessDatePicker, BusinessDateTimePicker } from "@/components/BusinessDatePickers";
 import { addBusinessDays } from "@/utils/businessTime";
+import { BUSINESS_TIMEZONE } from "@/constants";
+import { DateTime } from "luxon";
+
+// "Created at" is seeded with the moment the form was opened, so its odd seconds/milliseconds
+// mark a time the receptionist never touched — on a back-dated voucher that default time is
+// meaningless. Zeroing them the instant she edits the time turns `:00.000` into an at-a-glance
+// "a human set this", whether exact (read off an online order) or approximate. The authoritative
+// check remains vouchers_history.performed_at vs vouchers.created_at; this is just the shortcut.
+//
+// Only a *time* edit zeroes them: changing just the date must preserve the seeded seconds, or
+// every back-dated voucher would look hand-timed. Comparing against the previous value makes
+// this a pure function of (prev, next) — no mount-ordering or "did she touch the widget" guesswork.
+const applySecondsSentinel = (prev: Date | null | undefined, next: Date): Date => {
+  if (!prev) return next;
+  const p = DateTime.fromJSDate(prev).setZone(BUSINESS_TIMEZONE);
+  const n = DateTime.fromJSDate(next).setZone(BUSINESS_TIMEZONE);
+  if (p.hour === n.hour && p.minute === n.minute) return next;
+  return n.set({ second: 0, millisecond: 0 }).toJSDate();
+};
 
 // Small info icon + tooltip for per-field contextual help.
 const FieldHelp = ({ title }: { title: string }) => (
@@ -113,10 +132,15 @@ const NewVoucherFormFields = () => {
           name="created_at"
           control={control}
           render={({ field }) => (
-            <BusinessDatePicker
+            <BusinessDateTimePicker
               label={t("createdAt")}
               value={(field.value as Date) ?? null}
-              onChange={(date) => field.onChange(date ?? new Date())}
+              onChange={(date) =>
+                field.onChange(
+                  date ? applySecondsSentinel(field.value as Date | undefined, date) : new Date(),
+                )
+              }
+              views={["year", "day", "hours", "minutes"]}
               disableFuture
               slotProps={{
                 textField: {
