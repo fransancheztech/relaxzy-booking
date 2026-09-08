@@ -104,6 +104,11 @@ const DialogRefund = ({
         <DialogContent>
           <Grid container spacing={2} sx={{ pt: 1 }}>
             <Grid size={12}>
+              <Alert severity="info" sx={{ py: 0, fontSize: "0.8rem", "& .MuiAlert-message": { py: 1 } }}>
+                {t("refundGuidance")}
+              </Alert>
+            </Grid>
+            <Grid size={12}>
               <Controller
                 name="amount"
                 control={methods.control}
@@ -158,7 +163,12 @@ const DialogRefund = ({
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label={tCommon("notes")}
+                    label={t("refundReasonLabel")}
+                    required
+                    error={!!methods.formState.errors.notes}
+                    helperText={
+                      methods.formState.errors.notes ? t("refundReasonRequired") : undefined
+                    }
                     fullWidth
                     size="small"
                     multiline

@@ -169,8 +169,8 @@ export async function POST(request: Request) {
     // created_at is the real purchase datetime — date AND time — as entered by the receptionist,
     // and is taken verbatim. It is pure business data: it dates the sale for all revenue
     // reporting (Stats and Daily Totals both scope voucher sales by v.created_at). Tracing when
-    // a voucher was actually keyed in, and by whom, lives in vouchers_history.performed_at /
-    // performed_by, so nothing here needs to encode data-entry time.
+    // a voucher was actually keyed in, and by whom, lives in vouchers_history.changed_at /
+    // changed_by, so nothing here needs to encode data-entry time.
     const createdAt = body.created_at ? new Date(body.created_at as string | Date) : new Date();
     if (Number.isNaN(createdAt.getTime())) {
       return NextResponse.json({ error: "Invalid created_at date" }, { status: 400 });

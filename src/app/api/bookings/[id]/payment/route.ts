@@ -150,6 +150,12 @@ export async function POST(
     // 4. Register all payments atomically
     // ---------------------------------------------------
     await prisma.$transaction(async (tx) => {
+      // Attribute every audit-log row the triggers write in this transaction. Needed even though
+      // the stored procs take performed_by explicitly: register_voucher_use also updates
+      // vouchers.balance, and that UPDATE fires log_voucher_changes, which reads this GUC.
+      // Without it a voucher-paid booking writes a vouchers_history row with performed_by NULL.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by ?? ""}, true)`;
+
       // Custom payment date (if any) for register_payment_event, via a transaction-local GUC.
       await tx.$queryRaw`SELECT set_config('app.payment_created_at', ${paymentCreatedAt}, true)`;
 

@@ -38,6 +38,15 @@ export async function POST(
       );
     }
 
+    // A refund moves real money back to the client and permanently reduces reported revenue,
+    // so it has to say why — same bar as removing a payment event.
+    if (!notes || typeof notes !== "string" || notes.trim().length === 0) {
+      return NextResponse.json(
+        { error: "A reason note is required" },
+        { status: 400 }
+      );
+    }
+
     // 🔐 Resolve identity server-side
     const performed_by = await getCurrentUserId();
 
@@ -80,7 +89,7 @@ export async function POST(
         ${amount}::numeric,
         ${method}::payment_methods,
         ${performed_by}::uuid,
-        ${notes ?? null}::text,
+        ${notes.trim()}::text,
         ${payment.booking_id}::uuid
       )
     `;

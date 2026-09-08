@@ -4,11 +4,22 @@ import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 import { recalculateVoucherBalance } from "@/lib/recalculateVoucherBalance";
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
+    const { notes } = await request.json().catch(() => ({ notes: undefined }));
+
+    // Removing a redemption puts spendable balance back on the voucher, so it has to say why —
+    // same bar as removing a payment event.
+    if (!notes || typeof notes !== "string" || notes.trim().length === 0) {
+      return NextResponse.json(
+        { error: "A reason note is required" },
+        { status: 400 },
+      );
+    }
+
     const performed_by = await getCurrentUserId();
 
     await prisma.$transaction(async (tx) => {
@@ -22,9 +33,14 @@ export async function POST(
 
       if (!use) throw new Error("Voucher use not found");
 
+      // Appended, not replaced — the row may already carry a note from when it was redeemed.
+      // Same prefix convention as the payment-event removal, so both read alike in the DB.
+      const reasonNote = `Reason of delete: ${notes.trim()}`;
+      const updatedNotes = use.notes ? `${use.notes} ${reasonNote}` : reasonNote;
+
       await tx.voucher_uses.update({
         where: { id },
-        data: { deleted_at: new Date() },
+        data: { deleted_at: new Date(), notes: updatedNotes },
       });
 
       await recalculateVoucherBalance(tx, use.voucher_id);

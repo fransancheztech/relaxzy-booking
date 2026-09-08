@@ -83,8 +83,11 @@ export default function ManagePaymentsDialog({
   const [refundAmount, setRefundAmount] = useState("");
   const [refundMethod, setRefundMethod] = useState("cash");
   const [refundNotes, setRefundNotes] = useState("");
+  const [refundNotesError, setRefundNotesError] = useState(false);
 
   const [activeRemoveId, setActiveRemoveId] = useState<string | null>(null);
+  const [removeUseNote, setRemoveUseNote] = useState("");
+  const [removeUseNoteError, setRemoveUseNoteError] = useState(false);
 
   const [activeRemoveEventId, setActiveRemoveEventId] = useState<string | null>(null);
   const [removeEventNote, setRemoveEventNote] = useState("");
@@ -111,7 +114,10 @@ export default function ManagePaymentsDialog({
   useEffect(() => {
     if (!open || !bookingId) return;
     setActiveRefundId(null);
+    setRefundNotesError(false);
     setActiveRemoveId(null);
+    setRemoveUseNote("");
+    setRemoveUseNoteError(false);
     setActiveRemoveEventId(null);
     setRemoveEventNote("");
     setRemoveEventNoteError(false);
@@ -124,6 +130,7 @@ export default function ManagePaymentsDialog({
     setRefundAmount(p.net > 0 ? String(p.net) : "");
     setRefundMethod(p.method === "credit_card" ? "credit_card" : "cash");
     setRefundNotes("");
+    setRefundNotesError(false);
     setActiveRemoveId(null);
   };
 
@@ -134,11 +141,15 @@ export default function ManagePaymentsDialog({
         toast.error(t("refundAmountInvalid"));
         return;
       }
+      if (!refundNotes.trim()) {
+        setRefundNotesError(true);
+        return;
+      }
       try {
         const res = await fetch(`/api/payments/${paymentId}/refund`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount, method: refundMethod, notes: refundNotes || null }),
+          body: JSON.stringify({ amount, method: refundMethod, notes: refundNotes.trim() }),
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
@@ -155,9 +166,15 @@ export default function ManagePaymentsDialog({
 
   const handleRemoveVoucherUse = (id: string) =>
     guard(async () => {
+      if (!removeUseNote.trim()) {
+        setRemoveUseNoteError(true);
+        return;
+      }
       try {
         const res = await fetch(`/api/voucher-uses/${id}/delete`, {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ notes: removeUseNote.trim() }),
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
@@ -186,7 +203,13 @@ export default function ManagePaymentsDialog({
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          throw new Error(err.error ?? "");
+          // Reachable in normal use (removing a charge that still has refunds against it),
+          // so it gets a translated message rather than the raw server code.
+          throw new Error(
+            err.error === "REMOVE_WOULD_GO_NEGATIVE"
+              ? t("removeEventNegativeError")
+              : err.error ?? "",
+          );
         }
         toast.success(t("removeEventSuccess"));
         setActiveRemoveEventId(null);
@@ -344,33 +367,41 @@ export default function ManagePaymentsDialog({
                                   · {e.notes}
                                 </Typography>
                               )}
-                              {isCharge && (
-                                <IconButton
-                                  size="small"
-                                  color="error"
-                                  disabled={actionLoading}
-                                  onClick={() => {
-                                    if (isRemovingThis) {
-                                      setActiveRemoveEventId(null);
-                                      setRemoveEventNote("");
-                                      setRemoveEventNoteError(false);
-                                    } else {
-                                      setActiveRemoveEventId(e.id);
-                                      setRemoveEventNote("");
-                                      setRemoveEventNoteError(false);
-                                      setActiveRefundId(null);
-                                    }
-                                  }}
-                                  sx={{ ml: "auto", p: 0.25 }}
-                                  title={t("removeEventAction")}
-                                >
-                                  <DeleteOutlineIcon sx={{ fontSize: "0.9rem" }} />
-                                </IconButton>
-                              )}
+                              {/* Refunds are removable too (a refund on the wrong booking has to be
+                                  undoable); the server rejects any removal that would leave the
+                                  payment with more refunded than charged. */}
+                              <IconButton
+                                size="small"
+                                color="error"
+                                disabled={actionLoading}
+                                onClick={() => {
+                                  if (isRemovingThis) {
+                                    setActiveRemoveEventId(null);
+                                    setRemoveEventNote("");
+                                    setRemoveEventNoteError(false);
+                                  } else {
+                                    setActiveRemoveEventId(e.id);
+                                    setRemoveEventNote("");
+                                    setRemoveEventNoteError(false);
+                                    setActiveRefundId(null);
+                                  }
+                                }}
+                                sx={{ ml: "auto", p: 0.25 }}
+                                title={isCharge ? t("removeEventAction") : t("removeRefundAction")}
+                              >
+                                <DeleteOutlineIcon sx={{ fontSize: "0.9rem" }} />
+                              </IconButton>
                             </Box>
                             {isRemovingThis && (
                               <Box sx={{ mt: 0.5, mb: 0.5, p: 1.5, bgcolor: "action.hover", borderRadius: 1, display: "flex", flexDirection: "column", gap: 1 }}>
-                                <Typography variant="body2">{t("confirmRemoveEventText")}</Typography>
+                                {/* Removal and Refund sit inches apart and do opposite things, so
+                                    each panel states when it is the right one. */}
+                                <Alert severity="warning" sx={{ py: 0, fontSize: "0.72rem", "& .MuiAlert-message": { py: 0.75 } }}>
+                                  {isCharge ? t("removeEventGuidance") : t("removeRefundGuidance")}
+                                </Alert>
+                                <Typography variant="body2">
+                                  {isCharge ? t("confirmRemoveEventText") : t("confirmRemoveRefundText")}
+                                </Typography>
                                 <TextField
                                   size="small"
                                   required
@@ -443,6 +474,9 @@ export default function ManagePaymentsDialog({
 
                   {activeRefundId === p.id && (
                     <Box sx={{ mt: 1, p: 1.5, bgcolor: "action.hover", borderRadius: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+                      <Alert severity="info" sx={{ py: 0, fontSize: "0.72rem", "& .MuiAlert-message": { py: 0.75 } }}>
+                        {t("refundGuidance")}
+                      </Alert>
                       <Box sx={{ display: "flex", gap: 1 }}>
                         <TextField
                           size="small"
@@ -466,9 +500,15 @@ export default function ManagePaymentsDialog({
                       </Box>
                       <TextField
                         size="small"
-                        label={t("notesOptional")}
+                        required
+                        label={t("refundReasonLabel")}
                         value={refundNotes}
-                        onChange={(e) => setRefundNotes(e.target.value)}
+                        onChange={(e) => {
+                          setRefundNotes(e.target.value);
+                          if (e.target.value.trim()) setRefundNotesError(false);
+                        }}
+                        error={refundNotesError}
+                        helperText={refundNotesError ? t("refundReasonRequired") : undefined}
                         fullWidth
                       />
                       <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
@@ -526,7 +566,11 @@ export default function ManagePaymentsDialog({
                       variant="outlined"
                       color="error"
                       startIcon={<DeleteOutlineIcon fontSize="small" />}
-                      onClick={() => setActiveRemoveId(activeRemoveId === vu.id ? null : vu.id)}
+                      onClick={() => {
+                        setActiveRemoveId(activeRemoveId === vu.id ? null : vu.id);
+                        setRemoveUseNote("");
+                        setRemoveUseNoteError(false);
+                      }}
                       disabled={actionLoading}
                     >
                       {t("removeAction")}
@@ -535,7 +579,24 @@ export default function ManagePaymentsDialog({
 
                   {activeRemoveId === vu.id && (
                     <Box sx={{ mt: 1, p: 1.5, bgcolor: "action.hover", borderRadius: 1 }}>
+                      <Alert severity="warning" sx={{ mb: 1, py: 0, fontSize: "0.72rem", "& .MuiAlert-message": { py: 0.75 } }}>
+                        {t("removeVoucherUseGuidance")}
+                      </Alert>
                       <Typography variant="body2" sx={{ mb: 1 }}>{t("confirmRemoveText")}</Typography>
+                      <TextField
+                        size="small"
+                        required
+                        label={t("removeEventReasonLabel")}
+                        value={removeUseNote}
+                        onChange={(e) => {
+                          setRemoveUseNote(e.target.value);
+                          if (e.target.value.trim()) setRemoveUseNoteError(false);
+                        }}
+                        error={removeUseNoteError}
+                        helperText={removeUseNoteError ? t("removeEventReasonRequired") : undefined}
+                        fullWidth
+                        sx={{ mb: 1 }}
+                      />
                       <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
                         <Button size="small" onClick={() => setActiveRemoveId(null)} disabled={actionLoading}>
                           {tCommon("cancel")}

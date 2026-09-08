@@ -237,12 +237,21 @@
     "editDateWarning": "Delicate change: this moves the day this money is counted in your accounting (payment-date totals). Only change it to correct the real payment date.",
     "editDateSuccess": "Payment date updated",
     "editDateError": "Failed to update payment date",
+    "removeRefundAction": "Remove refund",
+    "confirmRemoveRefundText": "Remove this refund? The booking total will be updated.",
+    "removeRefundGuidance": "Only for a refund that should never have been recorded — registered on the wrong booking, or entered when the charge itself should have been removed. If money really was given back to the client, keep it.",
+    "removeEventNegativeError": "Remove this payment's refunds first — removing this charge would leave more refunded than charged.",
+    "removeEventGuidance": "Only for a charge that should never have been recorded — a typo, a duplicate, or the wrong booking. If money was actually given back to the client, close this and use Refund instead.",
+    "refundGuidance": "Use this when money was actually given back to the client. If the charge should never have been recorded at all, use \"Remove charge\" on the charge line instead.",
     "removeEventReasonLabel": "Reason for removal (required)",
     "removeEventReasonRequired": "A reason is required",
     "confirmRemoveEventText": "Remove this charge? The booking total will be updated.",
     "confirmRemoveEvent": "Confirm removal",
     "removeEventSuccess": "Charge removed",
-    "removeEventError": "Failed to remove charge"
+    "removeEventError": "Failed to remove charge",
+    "refundReasonLabel": "Reason for the refund (required)",
+    "refundReasonRequired": "A reason is required",
+    "removeVoucherUseGuidance": "Only for a redemption that should never have been recorded — applied to the wrong booking or the wrong voucher. The balance goes back onto the voucher, so the client can spend it again."
   },
   "BookingPayment": {
     "payBooking": "Pay Booking",
@@ -324,7 +333,10 @@
     "system": "System",
     "refundPayment": "Refund Payment",
     "refundAmount": "Refund amount",
-    "refund": "Refund"
+    "refund": "Refund",
+    "refundGuidance": "Use this when money was actually given back to the client. If the charge should never have been recorded at all, remove it from the booking’s Manage payments instead.",
+    "refundReasonLabel": "Reason for the refund (required)",
+    "refundReasonRequired": "A reason is required"
   },
   "Services": {
     "newService": "New Service",
@@ -454,7 +466,10 @@
     "balanceHelp": "The initial balance the voucher was created with.",
     "expirationDateHelp": "Set automatically to 180 days after the Created at date.",
     "sourceHelp": "Physical: issued at our counter desk. Online: purchased on our public website.",
-    "externalReferenceHelp": "The online voucher's ID, found in the purchase-confirmation email we receive. Leave blank for physical vouchers."
+    "externalReferenceHelp": "The online voucher's ID, found in the purchase-confirmation email we receive. Leave blank for physical vouchers.",
+    "refundGuidance": "Use this when money was actually given back to the buyer. This reduces the voucher balance and is counted against the voucher’s original sale date.",
+    "refundReasonLabel": "Reason for the refund (required)",
+    "refundReasonRequired": "A reason is required"
   },
   "Stats": {
     "totalRevenue": "Total revenue",

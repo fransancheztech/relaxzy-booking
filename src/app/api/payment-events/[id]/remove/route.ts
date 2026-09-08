@@ -27,18 +27,31 @@ export async function POST(
       return NextResponse.json({ error: "Payment event not found" }, { status: 404 });
     }
 
-    if (event.type !== "CHARGE") {
-      return NextResponse.json(
-        { error: "Only CHARGE events can be removed" },
-        { status: 400 }
-      );
+    // Refunds are removable too — a refund registered on the wrong booking, or entered when the
+    // charge itself should have been removed, has to be undoable. What's enforced instead is the
+    // real invariant: a payment must never end up with more refunded than charged (a phantom
+    // negative payment). That also forces the correct order — a mistaken refund must be removed
+    // before the charge it was taken against.
+    if (event.payment_id) {
+      const [remaining] = await prisma.$queryRaw<{ net: number }[]>`
+        SELECT COALESCE(
+          SUM(CASE WHEN pe.type = 'CHARGE' THEN pe.amount ELSE -pe.amount END), 0
+        )::float AS net
+        FROM payment_events pe
+        WHERE pe.payment_id = ${event.payment_id}::uuid
+          AND pe.deleted_at IS NULL
+          AND pe.id <> ${eventId}::uuid
+      `;
+      // Tolerance absorbs float drift on values the DB stores as numeric(10,2).
+      if (Number(remaining?.net ?? 0) < -0.005) {
+        return NextResponse.json(
+          { error: "REMOVE_WOULD_GO_NEGATIVE" },
+          { status: 409 }
+        );
+      }
     }
 
     const performed_by = await getCurrentUserId();
-    const amount =
-      typeof event.amount === "number"
-        ? event.amount
-        : (event.amount as any)?.toNumber?.() ?? 0;
 
     // "Who removed it" is now captured by the audit log (see below); the notes keep just
     // the human-readable reason.
@@ -58,10 +71,19 @@ export async function POST(
       });
 
       if (event.payment_id) {
-        await tx.payments.update({
-          where: { id: event.payment_id },
-          data: { amount: { decrement: amount } },
-        });
+        // Recomputed from the surviving events rather than applying a delta: the direction
+        // depends on the event type (removing a CHARGE lowers the net, removing a REFUND raises
+        // it), and a full recompute is self-healing if the stored total ever drifted. Runs after
+        // the soft-delete above, so the removed event is already excluded.
+        await tx.$queryRaw`
+          UPDATE payments p
+          SET amount = COALESCE((
+            SELECT SUM(CASE WHEN pe.type = 'CHARGE' THEN pe.amount ELSE -pe.amount END)
+            FROM payment_events pe
+            WHERE pe.payment_id = p.id AND pe.deleted_at IS NULL
+          ), 0)
+          WHERE p.id = ${event.payment_id}::uuid
+        `;
       }
     });
 

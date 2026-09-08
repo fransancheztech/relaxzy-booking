@@ -17,7 +17,7 @@ import { DateTime } from "luxon";
 // mark a time the receptionist never touched — on a back-dated voucher that default time is
 // meaningless. Zeroing them the instant she edits the time turns `:00.000` into an at-a-glance
 // "a human set this", whether exact (read off an online order) or approximate. The authoritative
-// check remains vouchers_history.performed_at vs vouchers.created_at; this is just the shortcut.
+// check remains vouchers_history.changed_at vs vouchers.created_at; this is just the shortcut.
 //
 // Only a *time* edit zeroes them: changing just the date must preserve the seeded seconds, or
 // every back-dated voucher would look hand-timed. Comparing against the previous value makes

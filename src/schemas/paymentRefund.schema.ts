@@ -27,7 +27,9 @@ export const PaymentRefundSchema = z.object({
         moneySchema
       ),
   method: z.enum(payment_methods),
-  notes: z.string().optional(),
+  // Required: a refund moves real money back out and permanently reduces reported revenue,
+  // so it must record why. The UI shows a localized message in place of this one.
+  notes: z.string().trim().min(1, { message: "A reason for the refund is required" }),
 });
 
 export type PaymentRefundFormInput = z.input<typeof PaymentRefundSchema>;

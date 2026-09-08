@@ -39,6 +39,18 @@ export async function POST(request: Request) {
       );
     }
 
+    // Refunds must justify themselves (money going back out, revenue reduced). A CHARGE here is
+    // a voucher top-up — money coming in — and stays free-form.
+    if (
+      body.payment_type === "REFUND" &&
+      (!body.notes || typeof body.notes !== "string" || body.notes.trim().length === 0)
+    ) {
+      return NextResponse.json(
+        { error: "A reason note is required" },
+        { status: 400 },
+      );
+    }
+
     const performed_by = await getCurrentUserId();
 
     const payment_id = await prisma.$transaction(async (tx) => {

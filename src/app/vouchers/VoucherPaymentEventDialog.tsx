@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  Alert,
   Button,
   Dialog,
   DialogActions,
@@ -43,6 +44,7 @@ const VoucherPaymentEventDialog = ({
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<string>("cash");
   const [notes, setNotes] = useState("");
+  const [notesError, setNotesError] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { submitting, guard } = useSubmitGuard();
 
@@ -51,6 +53,7 @@ const VoucherPaymentEventDialog = ({
       setAmount(defaultAmount != null ? String(defaultAmount) : "");
       setMethod(defaultMethod ?? "cash");
       setNotes("");
+      setNotesError(false);
       setError(null);
     }
   }, [open, defaultAmount, defaultMethod]);
@@ -66,6 +69,13 @@ const VoucherPaymentEventDialog = ({
         setError(t("amountPositive"));
         return;
       }
+      // A refund sends money back out and reduces reported revenue, so it must say why.
+      // A charge here is a voucher top-up (money in) and stays free-form.
+      if (mode === "refund" && !notes.trim()) {
+        setNotesError(true);
+        return;
+      }
+      setNotesError(false);
       setError(null);
       try {
         const res = await fetch("/api/payments/new", {
@@ -102,6 +112,11 @@ const VoucherPaymentEventDialog = ({
       <DialogContent
         sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "1rem !important" }}
       >
+        {mode === "refund" && (
+          <Alert severity="info" sx={{ py: 0, fontSize: "0.75rem", "& .MuiAlert-message": { py: 1 } }}>
+            {t("refundGuidance")}
+          </Alert>
+        )}
         <TextField
           label={t("amountEur")}
           type="text"
@@ -123,11 +138,17 @@ const VoucherPaymentEventDialog = ({
           </Select>
         </FormControl>
         <TextField
-          label={tCommon("notes")}
+          label={mode === "refund" ? t("refundReasonLabel") : tCommon("notes")}
+          required={mode === "refund"}
+          error={notesError}
+          helperText={notesError ? t("refundReasonRequired") : undefined}
           size="small"
           fullWidth
           value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          onChange={(e) => {
+            setNotes(e.target.value);
+            if (e.target.value.trim()) setNotesError(false);
+          }}
         />
         {error && <FormHelperText error>{error}</FormHelperText>}
       </DialogContent>

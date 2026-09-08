@@ -237,12 +237,21 @@
     "editDateWarning": "Cambio delicado: esto mueve el día en que este dinero se cuenta en tu contabilidad (totales por fecha de pago). Cámbialo solo para corregir la fecha real del pago.",
     "editDateSuccess": "Fecha de pago actualizada",
     "editDateError": "No se pudo actualizar la fecha de pago",
+    "removeRefundAction": "Eliminar reembolso",
+    "confirmRemoveRefundText": "¿Eliminar este reembolso? Se actualizará el total de la reserva.",
+    "removeRefundGuidance": "Solo para un reembolso que nunca debió registrarse: hecho en la reserva equivocada, o introducido cuando lo correcto era eliminar el cobro. Si el dinero se devolvió realmente al cliente, consérvalo.",
+    "removeEventNegativeError": "Elimina primero los reembolsos de este pago: quitar este cobro dejaría más reembolsado que cobrado.",
+    "removeEventGuidance": "Solo para un cobro que nunca debió registrarse: un error de tecleo, un duplicado o la reserva equivocada. Si el dinero se devolvió realmente al cliente, cierra esto y usa Reembolsar.",
+    "refundGuidance": "Úsalo cuando el dinero se haya devuelto realmente al cliente. Si el cobro nunca debió registrarse, usa «Eliminar cobro» en la línea del cobro.",
     "removeEventReasonLabel": "Motivo de la eliminación (obligatorio)",
     "removeEventReasonRequired": "El motivo es obligatorio",
     "confirmRemoveEventText": "¿Eliminar este cargo? El total de la reserva se actualizará.",
     "confirmRemoveEvent": "Confirmar eliminación",
     "removeEventSuccess": "Cargo eliminado",
-    "removeEventError": "Error al eliminar el cargo"
+    "removeEventError": "Error al eliminar el cargo",
+    "refundReasonLabel": "Motivo del reembolso (obligatorio)",
+    "refundReasonRequired": "El motivo es obligatorio",
+    "removeVoucherUseGuidance": "Solo para un canje que nunca debió registrarse: aplicado a la reserva o al bono equivocados. El saldo vuelve al bono, así que el cliente podrá gastarlo de nuevo."
   },
   "BookingPayment": {
     "payBooking": "Pagar reserva",
@@ -324,7 +333,10 @@
     "system": "Sistema",
     "refundPayment": "Reembolsar pago",
     "refundAmount": "Importe del reembolso",
-    "refund": "Reembolsar"
+    "refund": "Reembolsar",
+    "refundGuidance": "Úsalo cuando el dinero se haya devuelto realmente al cliente. Si el cobro nunca debió registrarse, elíminalo desde Gestionar pagos de la reserva.",
+    "refundReasonLabel": "Motivo del reembolso (obligatorio)",
+    "refundReasonRequired": "El motivo es obligatorio"
   },
   "Services": {
     "newService": "Nuevo servicio",
@@ -454,7 +466,10 @@
     "balanceHelp": "El saldo inicial con el que se creó el bono.",
     "expirationDateHelp": "Se fija automáticamente a 180 días después de la fecha de creación.",
     "sourceHelp": "Físico: emitido en nuestro mostrador. Online: comprado en nuestra web pública.",
-    "externalReferenceHelp": "El ID del bono online, que aparece en el correo de confirmación de compra que recibimos. Déjalo en blanco para bonos físicos."
+    "externalReferenceHelp": "El ID del bono online, que aparece en el correo de confirmación de compra que recibimos. Déjalo en blanco para bonos físicos.",
+    "refundGuidance": "Úsalo cuando el dinero se haya devuelto realmente al comprador. Esto reduce el saldo del bono y se contabiliza en la fecha de venta original del bono.",
+    "refundReasonLabel": "Motivo del reembolso (obligatorio)",
+    "refundReasonRequired": "El motivo es obligatorio"
   },
   "Stats": {
     "totalRevenue": "Ingresos totales",
