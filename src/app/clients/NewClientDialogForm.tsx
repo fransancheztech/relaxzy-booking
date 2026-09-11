@@ -20,6 +20,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
 import handleSubmitCreateClient from "@/handlers/handleSubmitCreateClient";
 import { useTranslations } from "next-intl";
+import { toast } from "react-toastify";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
 type Props = {
@@ -48,7 +49,21 @@ const NewClientDialogForm = ({ open, onClose }: Props) => {
 
   const onSubmit = (data: ClientUpdateSchemaType) =>
     guard(async () => {
-      await handleSubmitCreateClient(data);
+      const result = await handleSubmitCreateClient(data);
+
+      if (result.status === "contact_taken") {
+        // Name the field and the owner so she can correct the actual value, and keep the
+        // dialog open so everything she typed is still there. Mirrors UpdateClientDialogForm.
+        const msg = result.name
+          ? result.field === "email"
+            ? t("contactTakenEmail", { name: result.name })
+            : t("contactTakenPhone", { name: result.name })
+          : t("contactTaken");
+        toast.error(msg);
+        return;
+      }
+      if (result.status === "error") return; // already surfaced by the handler
+
       onClose();
     });
 

@@ -471,7 +471,9 @@
     "externalReferenceHelp": "The online voucher's ID, found in the purchase-confirmation email we receive. Leave blank for physical vouchers.",
     "refundGuidance": "Use this when money was actually given back to the buyer. This reduces the voucher balance and is counted against the voucher’s original sale date.",
     "refundReasonLabel": "Reason for the refund (required)",
-    "refundReasonRequired": "A reason is required"
+    "refundReasonRequired": "A reason is required",
+    "contactTakenEmail": "That email already belongs to {name}.",
+    "contactTakenPhone": "That phone already belongs to {name}."
   },
   "Stats": {
     "totalRevenue": "Total revenue",

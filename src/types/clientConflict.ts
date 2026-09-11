@@ -36,6 +36,14 @@ export type BookingSubmitResult =
   | { status: "contact_taken" }
   | { status: "error" };
 
+// Creating a client can only fail on a contact collision with an existing client. Fields are
+// required (though nullable) so a handler cannot quietly forget to pass the detail through —
+// which is exactly how the vague "phone or email" message survived on five surfaces.
+export type CreateClientResult =
+  | { status: "ok"; client: unknown }
+  | { status: "contact_taken"; field: "email" | "phone" | null; name: string | null }
+  | { status: "error" };
+
 // Editing a client by id can't be a name conflict (the record is fixed), only a
 // contact collision with another client — carry that other client's name so the
 // dialog can say whose phone/email it is.

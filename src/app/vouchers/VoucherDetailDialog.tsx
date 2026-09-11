@@ -314,8 +314,19 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
         if (!res.ok) {
           const result = await res.json().catch(() => ({}));
           if (result?.error === CLIENT_CONTACT_TAKEN) {
+            // The route already sends which field clashed; naming it saves her guessing
+            // whether to fix the phone or the email.
             const name = result?.conflict?.name;
-            toast.error(name ? t("contactTakenBy", { name }) : t("contactTaken"));
+            const field = result?.conflict?.field;
+            toast.error(
+              name
+                ? field === "email"
+                  ? t("contactTakenEmail", { name })
+                  : field === "phone"
+                    ? t("contactTakenPhone", { name })
+                    : t("contactTakenBy", { name })
+                : t("contactTaken"),
+            );
           } else {
             toast.error(t("errorSavingDetails"));
           }

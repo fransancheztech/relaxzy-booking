@@ -471,7 +471,9 @@
     "externalReferenceHelp": "El ID del bono online, que aparece en el correo de confirmación de compra que recibimos. Déjalo en blanco para bonos físicos.",
     "refundGuidance": "Úsalo cuando el dinero se haya devuelto realmente al comprador. Esto reduce el saldo del bono y se contabiliza en la fecha de venta original del bono.",
     "refundReasonLabel": "Motivo del reembolso (obligatorio)",
-    "refundReasonRequired": "El motivo es obligatorio"
+    "refundReasonRequired": "El motivo es obligatorio",
+    "contactTakenEmail": "Ese correo ya pertenece a {name}.",
+    "contactTakenPhone": "Ese teléfono ya pertenece a {name}."
   },
   "Stats": {
     "totalRevenue": "Ingresos totales",
