@@ -5,6 +5,19 @@ import { Controller, useFormContext } from "react-hook-form";
 import { ClientUpdateSchemaType } from "@/schemas/client.schema";
 import { useTranslations } from "next-intl";
 
+// No similar-client dropdown here, deliberately. The booking and voucher forms have one
+// because their client fields answer "WHICH client is this for?", so picking a match and
+// prefilling is the point. Here the fields are the record's own details:
+//
+//   - New Client: prefilling from a match would just recreate someone who already exists,
+//     so the pick has nowhere useful to go.
+//   - Edit Client: the row is fixed by clientId, so picking another client would copy their
+//     details onto THIS record rather than switching which one is being edited.
+//
+// Duplicates are caught on submit instead: the routes pre-check with assertContactFree and
+// return which field clashed and who owns it, and the dialog keeps the input for correction.
+// Known limit: that only covers email/phone (the unique index). The same name with a
+// different phone is not a collision and will not be flagged.
 const NewClientFormFields = () => {
   const t = useTranslations("Clients");
   const tCommon = useTranslations("Common");

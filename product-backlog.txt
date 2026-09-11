@@ -1,5 +1,6 @@
 TO-DO
-- Regarding clients clash errors: Ship the hotfix now (shipped). Then do the standardisation as one deliberate change — and I'd order it New Client first (it's the only surface leaking untranslated English), then Edit Voucher (one line), then the three bare ones (beware also companions).
+- Añadir top clients a los Stats
+- Añadir 
 - Añadir fecha creación del voucher al tooltip del buscador de vouchers
 - Añadir propina de las reservas antiguas.
 - Añadir regalos de las reservas antiguas.
