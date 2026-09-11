@@ -81,13 +81,30 @@ function isPrismaUniqueViolation(err: unknown): boolean {
   );
 }
 
-// Only the voucher *code* unique collision should be retried. A client phone/email
-// collision must surface to the user, not loop.
-function isVoucherCodeCollision(err: unknown): boolean {
-  if (!isPrismaUniqueViolation(err)) return false;
+// Which field(s) a P2002 was raised on. Prisma's payload shape varies by driver: under the pg
+// driver adapter `meta.target` is frequently absent, so matching on it alone silently failed —
+// in the 2026-09-11 incident all 13 code collisions rethrew instead of retrying. The message
+// always names the field, so both sources are searched.
+function uniqueViolationFields(err: unknown): string {
+  if (!isPrismaUniqueViolation(err)) return "";
   const target = (err as { meta?: { target?: unknown } }).meta?.target;
-  const s = Array.isArray(target) ? target.join(",") : String(target ?? "");
-  return s.includes("code");
+  const fromTarget = Array.isArray(target) ? target.join(",") : String(target ?? "");
+  const fromMessage = String((err as { message?: unknown }).message ?? "");
+  return `${fromTarget} ${fromMessage}`;
+}
+
+// A genuine clients phone/email clash — the only case that may tell the receptionist her
+// client's contact details are taken. Previously ANY P2002 claimed this, so a voucher-code
+// collision sent her hunting for a duplicate client that did not exist.
+function isClientContactCollision(err: unknown): boolean {
+  return /client_email|client_phone|clients_email|clients_phone/.test(uniqueViolationFields(err));
+}
+
+// Within this route the only other unique constraint is vouchers.code, so any P2002 that is not
+// a contact clash is a code collision — retryable with a freshly computed sequence number.
+// Classifying by exhaustion keeps this correct whatever shape the driver reports.
+function isVoucherCodeCollision(err: unknown): boolean {
+  return isPrismaUniqueViolation(err) && !isClientContactCollision(err);
 }
 
 export async function POST(request: Request) {
@@ -283,7 +300,7 @@ export async function POST(request: Request) {
     if (err instanceof PlaceholderNameError) {
       return NextResponse.json({ error: err.message }, { status: err.httpStatus });
     }
-    if (isPrismaUniqueViolation(err)) {
+    if (isClientContactCollision(err)) {
       return NextResponse.json({ error: CLIENT_CONTACT_TAKEN }, { status: 409 });
     }
     console.error("Error creating voucher", err);
