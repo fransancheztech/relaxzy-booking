@@ -196,7 +196,9 @@ const PayBookingDialogForm = ({
                 {/* Never hide an armed back-date silently: flag it even while the panel is closed. */}
                 {!dateOpen && isBackdated && (
                   <Typography variant="caption" color="warning.main" sx={{ display: "block", mt: 0.25 }}>
-                    {t("paymentDateArmed", { date: pickedDay?.toFormat("dd/MM/yyyy") ?? "" })}
+                    {voucherN > 0
+                      ? t("paymentDateArmedVoucher", { date: pickedDay?.toFormat("dd/MM/yyyy") ?? "" })
+                      : t("paymentDateArmed", { date: pickedDay?.toFormat("dd/MM/yyyy") ?? "" })}
                   </Typography>
                 )}
                 <Collapse in={dateOpen} unmountOnExit>
@@ -223,6 +225,14 @@ const PayBookingDialogForm = ({
                     ) : (
                       <Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
                         {t("paymentDateTodayHint")}
+                      </Typography>
+                    )}
+                    {/* The picked date only reaches register_payment_event. A voucher amount goes
+                        through register_voucher_use, which ignores it — rightly, since that money
+                        was already counted when the voucher was sold. Say so when one is in play. */}
+                    {voucherN > 0 && (
+                      <Typography variant="caption" color="warning.main" sx={{ display: "block" }}>
+                        {t("paymentDateVoucherNote")}
                       </Typography>
                     )}
                     <BusinessDatePicker

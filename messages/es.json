@@ -266,7 +266,9 @@
     "paymentDateReset": "Restablecer a hoy",
     "paymentDateArmed": "Fecha del pago fijada al {date}",
     "paymentDateTodayHint": "Por defecto es hoy. Cámbiala solo si este pago se cobró realmente en una fecha anterior.",
-    "paymentDateBackdatedWarning": "Estás fechando este pago en el pasado, el {date}. Contará en los totales y los ingresos (por fecha de pago) de ese día, no de hoy."
+    "paymentDateBackdatedWarning": "Estás fechando este pago en el pasado, el {date}. Contará en los totales y los ingresos (por fecha de pago) de ese día, no de hoy.",
+    "paymentDateVoucherNote": "Los importes de bono no se ven afectados por esta fecha: ese dinero ya se contabilizó cuando se vendió el bono. Esta fecha solo afecta a efectivo y tarjeta.",
+    "paymentDateArmedVoucher": "Fecha del pago fijada al {date} — solo efectivo y tarjeta; los importes de bono no se ven afectados."
   },
   "BookingDelete": {
     "title": "¿Eliminar reserva?",

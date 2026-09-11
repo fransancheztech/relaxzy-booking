@@ -266,7 +266,9 @@
     "paymentDateReset": "Reset to today",
     "paymentDateArmed": "Payment date set to {date}",
     "paymentDateTodayHint": "Defaults to today. Change it only if this payment was actually collected on an earlier date.",
-    "paymentDateBackdatedWarning": "You are back-dating this payment to {date}. It will count toward that day's totals and revenue (by payment date), not today's."
+    "paymentDateBackdatedWarning": "You are back-dating this payment to {date}. It will count toward that day's totals and revenue (by payment date), not today's.",
+    "paymentDateVoucherNote": "Voucher amounts are not affected by this date — that money was already counted when the voucher was sold. This date applies to cash and card only.",
+    "paymentDateArmedVoucher": "Payment date set to {date} — cash and card only; voucher amounts are unaffected."
   },
   "BookingDelete": {
     "title": "Delete Booking?",
