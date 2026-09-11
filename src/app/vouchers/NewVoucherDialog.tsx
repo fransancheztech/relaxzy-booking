@@ -102,7 +102,15 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
         return;
       }
       if (result.status === "contact_taken") {
-        toast.error(t("contactTaken"));
+        // Name the field and the owner so she can fix the actual value, not guess which one.
+        const msg = result.name
+          ? result.field === "email"
+            ? t("contactTakenEmail", { name: result.name })
+            : result.field === "phone"
+              ? t("contactTakenPhone", { name: result.name })
+              : t("contactTaken")
+          : t("contactTaken");
+        toast.error(msg);
         return;
       }
       // "error" — already surfaced by the handler.

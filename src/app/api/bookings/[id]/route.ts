@@ -9,6 +9,7 @@ import {
   detectClientConflict,
 } from "@/lib/clients/resolveBookingClients";
 import { CLIENT_CONTACT_TAKEN, CLIENT_NAME_CONFLICT } from "@/types/clientConflict";
+import { ContactTakenError, contactTakenBody } from "@/lib/clients/contactCollision";
 import type { ClientResolution } from "@/types/clientConflict";
 import { therapistDisplayName } from "@/utils/therapistName";
 import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
@@ -292,6 +293,9 @@ export async function PUT(
 
     return NextResponse.json(updated, { status: 200 });
   } catch (error: any) {
+    if (error instanceof ContactTakenError) {
+      return NextResponse.json(contactTakenBody(error), { status: 409 });
+    }
     if (error instanceof ClientConflictError) {
       return NextResponse.json(
         { error: CLIENT_NAME_CONFLICT, conflicts: error.conflicts },

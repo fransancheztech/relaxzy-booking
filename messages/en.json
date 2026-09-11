@@ -200,7 +200,9 @@
     "addToGroupError": "Failed to add booking to the group",
     "groupTooltip": "Part of a group booking",
     "sameClientAsPrimary": "Re-use the primary client's info",
-    "sameClientAsPrimaryHelper": "No separate client record will be created for this companion"
+    "sameClientAsPrimaryHelper": "No separate client record will be created for this companion",
+    "conflictContactTakenEmail": "Couldn't save: that email already belongs to {name}.",
+    "conflictContactTakenPhone": "Couldn't save: that phone already belongs to {name}."
   },
   "ManagePayments": {
     "title": "Manage Payments",

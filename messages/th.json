@@ -200,7 +200,9 @@
     "addToGroupError": "ไม่สามารถเพิ่มการจองเข้ากลุ่มได้",
     "groupTooltip": "เป็นส่วนหนึ่งของการจองแบบกลุ่ม",
     "sameClientAsPrimary": "ใช้ข้อมูลของลูกค้าหลักซ้ำ",
-    "sameClientAsPrimaryHelper": "จะไม่สร้างข้อมูลลูกค้าแยกสำหรับผู้ร่วมเดินทางคนนี้"
+    "sameClientAsPrimaryHelper": "จะไม่สร้างข้อมูลลูกค้าแยกสำหรับผู้ร่วมเดินทางคนนี้",
+    "conflictContactTakenEmail": "บันทึกไม่ได้: อีเมลนี้เป็นของ {name} อยู่แล้ว",
+    "conflictContactTakenPhone": "บันทึกไม่ได้: เบอร์โทรนี้เป็นของ {name} อยู่แล้ว"
   },
   "ManagePayments": {
     "title": "จัดการการชำระเงิน",

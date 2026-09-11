@@ -72,7 +72,12 @@ const handleSubmitCreateBooking = async (
         return { status: "conflict", conflicts: result.conflicts ?? [] };
       }
       if (res.status === 409 && result?.error === CLIENT_CONTACT_TAKEN) {
-        return { status: "contact_taken" };
+        // Carry through which field clashed and whose it is, so the dialog can name both.
+        return {
+          status: "contact_taken",
+          field: result?.conflict?.field ?? null,
+          name: result?.conflict?.name ?? null,
+        };
       }
       toast.error(result?.error || `Error creating booking`);
       return { status: "error" };

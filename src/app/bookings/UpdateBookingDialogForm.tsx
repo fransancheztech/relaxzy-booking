@@ -218,7 +218,15 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId, readOnly = false }:
       return;
     }
     if (result.status === "contact_taken") {
-      toast.error(t("conflictContactTaken"));
+      // Name the field and the owner so she can fix the actual value, not guess which one.
+      const msg = result.name
+        ? result.field === "email"
+          ? t("conflictContactTakenEmail", { name: result.name })
+          : result.field === "phone"
+            ? t("conflictContactTakenPhone", { name: result.name })
+            : t("conflictContactTaken")
+        : t("conflictContactTaken");
+      toast.error(msg);
       return;
     }
     // "error" — already surfaced by the handler; keep the form open.

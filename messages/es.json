@@ -200,7 +200,9 @@
     "addToGroupError": "No se pudo añadir la reserva al grupo",
     "groupTooltip": "Forma parte de una reserva de grupo",
     "sameClientAsPrimary": "Re-utilizar los datos del cliente principal",
-    "sameClientAsPrimaryHelper": "No se creará un registro de cliente separado para este acompañante"
+    "sameClientAsPrimaryHelper": "No se creará un registro de cliente separado para este acompañante",
+    "conflictContactTakenEmail": "No se pudo guardar: ese correo ya pertenece a {name}.",
+    "conflictContactTakenPhone": "No se pudo guardar: ese teléfono ya pertenece a {name}."
   },
   "ManagePayments": {
     "title": "Gestionar pagos",

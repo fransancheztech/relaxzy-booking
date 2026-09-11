@@ -11,6 +11,7 @@ import {
   type ClientInput,
 } from "@/lib/clients/resolveBookingClients";
 import { CLIENT_CONTACT_TAKEN, CLIENT_NAME_CONFLICT } from "@/types/clientConflict";
+import { ContactTakenError, contactTakenBody } from "@/lib/clients/contactCollision";
 import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
 import { businessDdMmYy } from "@/utils/businessTime";
 
@@ -218,10 +219,16 @@ export async function POST(request: Request) {
           if (conflicts.length > 0) throw new ClientConflictError(conflicts);
 
           // Phase 2 — resolve clients (contact optional for vouchers).
-          const buyerId = await applyClientSlot(tx, buyerInput, resolutions["buyer"], { requireContact: false });
+          const buyerId = await applyClientSlot(tx, buyerInput, resolutions["buyer"], {
+            requireContact: false,
+            party: "buyer",
+          });
           if (!buyerId) throw new Error("Buyer name is required");
           const recipientId = hasRecipientInfo
-            ? await applyClientSlot(tx, recipientInput, resolutions["recipient"], { requireContact: false })
+            ? await applyClientSlot(tx, recipientInput, resolutions["recipient"], {
+                requireContact: false,
+                party: "recipient",
+              })
             : buyerId;
 
           const sameDay = await tx.vouchers.findMany({
@@ -291,6 +298,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ voucher }, { status: 201 });
   } catch (err: unknown) {
+    if (err instanceof ContactTakenError) {
+      return NextResponse.json(contactTakenBody(err), { status: 409 });
+    }
     if (err instanceof ClientConflictError) {
       return NextResponse.json(
         { error: CLIENT_NAME_CONFLICT, conflicts: err.conflicts },

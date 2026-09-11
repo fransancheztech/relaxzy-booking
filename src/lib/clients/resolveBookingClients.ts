@@ -1,6 +1,7 @@
 import { Prisma } from "generated/prisma";
 import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
 import { isPlaceholderClientName } from "@/utils/placeholderName";
+import { assertContactFree } from "@/lib/clients/contactCollision";
 
 export type ClientInput = {
   client_name?: string | null;
@@ -134,9 +135,9 @@ export async function applyClientSlot(
   tx: Prisma.TransactionClient,
   input: ClientInput,
   resolution?: ClientResolution,
-  opts: { requireContact?: boolean } = {},
+  opts: { requireContact?: boolean; party?: string } = {},
 ): Promise<string | null> {
-  const { requireContact = true } = opts;
+  const { requireContact = true, party } = opts;
   if (!hasClientInfo(input)) return null;
   if (!input.client_name) throw new Error("Client name is required");
   if (isPlaceholderClientName(input.client_name))
@@ -162,6 +163,20 @@ export async function applyClientSlot(
   }
 
   if (resolution === "update_existing") {
+    // findClientMatch returns on the FIRST tier that hits, so a match found by email never
+    // looked at the phone — yet this update writes both. If the typed phone belongs to a third
+    // client, this is exactly where it collides. Pre-checking here is what lets the dialog say
+    // WHICH field and WHOSE, instead of a bare "phone or email already taken".
+    //
+    // It has to be a pre-check, not a catch: Postgres aborts the whole transaction on a failed
+    // statement, so no lookup is possible after the fact from inside `tx`.
+    await assertContactFree(tx, {
+      email: normalize(input.client_email),
+      phone: normalize(input.client_phone),
+      excludeClientId: match.client.id,
+      party,
+    });
+
     await tx.clients.update({
       where: { id: match.client.id },
       data: {

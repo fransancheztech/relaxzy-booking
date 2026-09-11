@@ -33,7 +33,9 @@ export type ClientConflictResponse = {
 export type BookingSubmitResult =
   | { status: "ok" }
   | { status: "conflict"; conflicts: ClientConflict[] }
-  | { status: "contact_taken" }
+  // Required (though nullable) so a handler cannot quietly drop the detail and leave the
+  // dialog showing the old "phone or email" message.
+  | { status: "contact_taken"; field: "email" | "phone" | null; name: string | null }
   | { status: "error" };
 
 // Creating a client can only fail on a contact collision with an existing client. Fields are

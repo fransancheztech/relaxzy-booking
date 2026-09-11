@@ -9,6 +9,7 @@ import {
   detectClientConflict,
 } from "@/lib/clients/resolveBookingClients";
 import { CLIENT_CONTACT_TAKEN, CLIENT_NAME_CONFLICT } from "@/types/clientConflict";
+import { ContactTakenError, contactTakenBody } from "@/lib/clients/contactCollision";
 import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
 
 type CompanionInput = {
@@ -177,7 +178,7 @@ export async function POST(request: Request) {
       if (conflicts.length > 0) throw new ClientConflictError(conflicts);
 
       // Phase 2 — resolve the primary client (requires phone/email)
-      const clientId = await applyClientSlot(tx, body, resolutions["primary"]);
+      const clientId = await applyClientSlot(tx, body, resolutions["primary"], { party: "primary" });
 
       // Soft duplicate check (warn, don't block)
       if (clientId) {
@@ -210,7 +211,10 @@ export async function POST(request: Request) {
       // (which then needs only a name — contact info is optional).
       const resolveCompanionClientId = async (c: CompanionInput, i: number): Promise<string | null> => {
         if (!companionResolvesOwnClient(c)) return clientId;
-        return applyClientSlot(tx, c, resolutions[`companion-${i}`], { requireContact: false });
+        return applyClientSlot(tx, c, resolutions[`companion-${i}`], {
+          requireContact: false,
+          party: `companion-${i}`,
+        });
       };
 
       const created = await Promise.all(
@@ -245,6 +249,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ booking, companionBookings });
   } catch (err) {
+    if (err instanceof ContactTakenError) {
+      return NextResponse.json(contactTakenBody(err), { status: 409 });
+    }
     if (err instanceof ClientConflictError) {
       return NextResponse.json(
         { error: CLIENT_NAME_CONFLICT, conflicts: err.conflicts },
