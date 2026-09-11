@@ -12,7 +12,7 @@ import {
 } from "@/lib/clients/resolveBookingClients";
 import { CLIENT_CONTACT_TAKEN, CLIENT_NAME_CONFLICT } from "@/types/clientConflict";
 import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
-import { businessDdMmYy, businessDayStartUtc, businessDayEndExclusiveUtc } from "@/utils/businessTime";
+import { businessDdMmYy } from "@/utils/businessTime";
 
 type Body = {
   buyer_name?: string;
@@ -175,9 +175,7 @@ export async function POST(request: Request) {
     if (Number.isNaN(createdAt.getTime())) {
       return NextResponse.json({ error: "Invalid created_at date" }, { status: 400 });
     }
-    // Voucher code + same-day uniqueness window use the business calendar (Madrid).
-    const dayStart = businessDayStartUtc(createdAt)!;
-    const dayEnd = businessDayEndExclusiveUtc(createdAt)!;
+    // The voucher code encodes the sale day on the business calendar (Madrid).
     const ddmmyy = businessDdMmYy(createdAt);
     const codePrefix = `V-${ddmmyy}-`;
 
@@ -210,8 +208,10 @@ export async function POST(request: Request) {
             : buyerId;
 
           const sameDay = await tx.vouchers.findMany({
+            // Keyed on the code prefix alone: `code` carries a GLOBAL unique constraint, so the
+            // only thing that can collide is another row with this prefix — whatever its
+            // created_at now says (it is editable) and whether or not it is soft-deleted.
             where: {
-              created_at: { gte: dayStart, lt: dayEnd },
               code: { startsWith: codePrefix },
             },
             select: { code: true },
