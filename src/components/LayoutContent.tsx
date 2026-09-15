@@ -134,6 +134,12 @@ export default function LayoutContent({
   // Grows when the agenda ticker is showing, so the content offset, the sidebar and the
   // loading spinner all shift with it instead of being overlapped.
   const appBarHeight = 64 + (agendaBarVisible ? AGENDA_BAR_HEIGHT : 0);
+
+  // Published to CSS so scroll anchoring stays correct when the agenda bar shows or hides.
+  // Without this, in-page links land behind the header by exactly the bar's height.
+  useEffect(() => {
+    document.documentElement.style.setProperty("--app-bar-height", `${appBarHeight}px`);
+  }, [appBarHeight]);
   const currentWidth = collapsed ? COLLAPSED_WIDTH : drawerWidth;
   const currentPageHref = menuPages.find((p) => p.href === pathname)?.href;
   const currentPage = currentPageHref ? t(currentPageHref.slice(1) as Parameters<typeof t>[0]) : "";

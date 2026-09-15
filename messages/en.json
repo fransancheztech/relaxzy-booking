@@ -835,7 +835,12 @@
     "deletedSuccess": "Guideline deleted",
     "deleteError": "Failed to delete guideline",
     "confirmDelete": "Delete guideline \"{label}\"? This cannot be undone.",
-    "navContents": "Contents"
+    "navContents": "Contents",
+    "tabEdit": "Edit",
+    "tabPreview": "Preview",
+    "previewEmpty": "Nothing to preview yet — write something in the Edit tab.",
+    "markdownHint": "Formatting:  **bold**  ·  ## Heading  ·  ### Subheading  ·  - list  ·  1. numbered list  ·  > note  ·  [text](https://…)  ·  --- divider.  Leave a blank line between blocks.",
+    "onThisPage": "On this page"
   },
   "Agenda": {
     "title": "Agenda",

@@ -835,7 +835,12 @@
     "deletedSuccess": "Pauta eliminada",
     "deleteError": "Error al eliminar la pauta",
     "confirmDelete": "¿Eliminar la pauta \"{label}\"? Esta acción no se puede deshacer.",
-    "navContents": "Índice"
+    "navContents": "Índice",
+    "tabEdit": "Editar",
+    "tabPreview": "Vista previa",
+    "previewEmpty": "Todavía no hay nada que previsualizar — escribe algo en la pestaña Editar.",
+    "markdownHint": "Formato:  **negrita**  ·  ## Título  ·  ### Subtítulo  ·  - lista  ·  1. lista numerada  ·  > nota  ·  [texto](https://…)  ·  --- separador.  Deja una línea en blanco entre bloques.",
+    "onThisPage": "En esta página"
   },
   "Agenda": {
     "title": "Agenda",
