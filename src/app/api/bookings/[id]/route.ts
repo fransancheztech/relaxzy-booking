@@ -358,6 +358,7 @@ export async function DELETE(
             },
           },
         },
+
       },
     });
 
@@ -366,10 +367,7 @@ export async function DELETE(
     }
 
     if (existing.status === "completed") {
-      return NextResponse.json(
-        { error: "This booking is completed and cannot be deleted. Change its status first if needed." },
-        { status: 409 },
-      );
+      return NextResponse.json({ error: "BOOKING_COMPLETED" }, { status: 409 });
     }
 
     const totalPaid = existing.payments
@@ -381,7 +379,25 @@ export async function DELETE(
 
     if (totalPaid > 0) {
       return NextResponse.json(
-        { error: `This booking has recorded payments (€${totalPaid.toFixed(2)}). Delete or refund them before deleting the booking.` },
+        { error: "BOOKING_HAS_PAYMENTS", amount: Number(totalPaid.toFixed(2)) },
+        { status: 409 },
+      );
+    }
+
+    // Same rule for voucher redemptions as for cash and card: the money has to be dealt with
+    // before the booking can go. Releasing it automatically would move a client's balance
+    // without anyone deciding to, and would skip the reason the release endpoint requires.
+    // Queried separately: voucher_uses has no Prisma relation to bookings, only a booking_id
+    // column. Same aggregate the booking payment route uses to compute what is already paid.
+    const voucherAgg = await prisma.voucher_uses.aggregate({
+      where: { booking_id: id, deleted_at: null },
+      _sum: { amount: true },
+    });
+    const voucherUsed = Number(voucherAgg._sum.amount ?? 0);
+
+    if (voucherUsed > 0) {
+      return NextResponse.json(
+        { error: "BOOKING_HAS_VOUCHER_USES", amount: Number(voucherUsed.toFixed(2)) },
         { status: 409 },
       );
     }

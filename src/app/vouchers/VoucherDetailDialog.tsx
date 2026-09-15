@@ -146,6 +146,8 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [pendingDeleteUse, setPendingDeleteUse] = useState<VoucherUse | null>(null);
+  const [deleteUseNote, setDeleteUseNote] = useState("");
+  const [deleteUseNoteError, setDeleteUseNoteError] = useState(false);
   const [bookingToView, setBookingToView] = useState<string | null>(null);
   const [confirmDeleteVoucherOpen, setConfirmDeleteVoucherOpen] = useState(false);
   const { submitting: deletingVoucher, guard: deleteGuard } = useSubmitGuard();
@@ -278,11 +280,23 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
 
   const confirmDeleteUse = async () => {
     if (!pendingDeleteUse) return;
+    // The endpoint requires a reason: removing a redemption puts spendable balance back on the
+    // voucher. Validate here so the dialog stays open to collect it, rather than closing and
+    // surfacing a server error the receptionist has no way to answer.
+    if (!deleteUseNote.trim()) {
+      setDeleteUseNoteError(true);
+      return;
+    }
     const use = pendingDeleteUse;
+    const notes = deleteUseNote.trim();
     setPendingDeleteUse(null);
     setDeletingId(use.id);
     try {
-      const res = await fetch(`/api/voucher-uses/${use.id}/delete`, { method: "POST" });
+      const res = await fetch(`/api/voucher-uses/${use.id}/delete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes }),
+      });
       const result = await res.json();
       if (!res.ok) {
         toast.error(result?.error || "Error deleting voucher use");
@@ -708,7 +722,7 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                             <IconButton
                               size="small"
                               color="error"
-                              onClick={() => setPendingDeleteUse(vu)}
+                              onClick={() => { setPendingDeleteUse(vu); setDeleteUseNote(""); setDeleteUseNoteError(false); }}
                               disabled={deletingId === vu.id}
                             >
                               <DeleteIcon fontSize="small" />
@@ -778,17 +792,38 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={!!pendingDeleteUse} onClose={() => setPendingDeleteUse(null)} maxWidth="xs" fullWidth>
+      <Dialog
+        open={!!pendingDeleteUse}
+        onClose={() => { setPendingDeleteUse(null); setDeleteUseNote(""); setDeleteUseNoteError(false); }}
+        maxWidth="xs"
+        fullWidth
+      >
         <DialogTitle>{t("deleteUseTitle")}</DialogTitle>
         <DialogContent>
-          <DialogContentText>
+          <DialogContentText sx={{ mb: 2 }}>
             {pendingDeleteUse
               ? t("deleteUseMessage", { amount: formatMoney(Math.abs(Number(pendingDeleteUse.amount))) })
               : ""}
           </DialogContentText>
+          <TextField
+            size="small"
+            required
+            fullWidth
+            autoFocus
+            label={t("deleteUseReasonLabel")}
+            value={deleteUseNote}
+            onChange={(e) => {
+              setDeleteUseNote(e.target.value);
+              if (e.target.value.trim()) setDeleteUseNoteError(false);
+            }}
+            error={deleteUseNoteError}
+            helperText={deleteUseNoteError ? t("deleteUseReasonRequired") : undefined}
+          />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPendingDeleteUse(null)}>{tCommon("cancel")}</Button>
+          <Button onClick={() => { setPendingDeleteUse(null); setDeleteUseNote(""); setDeleteUseNoteError(false); }}>
+            {tCommon("cancel")}
+          </Button>
           <Button color="error" variant="contained" startIcon={<DeleteIcon />} onClick={confirmDeleteUse}>
             {tCommon("delete")}
           </Button>

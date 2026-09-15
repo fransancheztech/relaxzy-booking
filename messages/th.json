@@ -203,7 +203,12 @@
     "sameClientAsPrimary": "ใช้ข้อมูลของลูกค้าหลักซ้ำ",
     "sameClientAsPrimaryHelper": "จะไม่สร้างข้อมูลลูกค้าแยกสำหรับผู้ร่วมเดินทางคนนี้",
     "conflictContactTakenEmail": "บันทึกไม่ได้: อีเมลนี้เป็นของ {name} อยู่แล้ว",
-    "conflictContactTakenPhone": "บันทึกไม่ได้: เบอร์โทรนี้เป็นของ {name} อยู่แล้ว"
+    "conflictContactTakenPhone": "บันทึกไม่ได้: เบอร์โทรนี้เป็นของ {name} อยู่แล้ว",
+    "deleteSuccess": "ลบการจองแล้ว",
+    "deleteError": "ไม่สามารถลบการจองได้",
+    "deleteBlockedCompleted": "การจองนี้เสร็จสมบูรณ์แล้วและไม่สามารถลบได้ หากจำเป็นให้เปลี่ยนสถานะก่อน",
+    "deleteBlockedPayments": "การจองนี้มีการชำระเงินที่บันทึกไว้ ({amount}) กรุณาลบหรือคืนเงินก่อนลบการจอง",
+    "deleteBlockedVoucher": "การจองนี้มีการใช้บัตรกำนัล ({amount}) กรุณาลบออกจากบัตรกำนัลก่อนลบการจอง มิฉะนั้นยอดเงินจะยังคงถูกใช้ไป"
   },
   "ManagePayments": {
     "title": "จัดการการชำระเงิน",
@@ -476,7 +481,9 @@
     "refundReasonLabel": "เหตุผลการคืนเงิน (จำเป็น)",
     "refundReasonRequired": "ต้องระบุเหตุผล",
     "contactTakenEmail": "อีเมลนี้เป็นของ {name} อยู่แล้ว",
-    "contactTakenPhone": "เบอร์โทรนี้เป็นของ {name} อยู่แล้ว"
+    "contactTakenPhone": "เบอร์โทรนี้เป็นของ {name} อยู่แล้ว",
+    "deleteUseReasonLabel": "เหตุผลในการลบการใช้บัตรกำนัล (จำเป็น)",
+    "deleteUseReasonRequired": "ต้องระบุเหตุผล"
   },
   "Stats": {
     "totalRevenue": "รายได้รวม",

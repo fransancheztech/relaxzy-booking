@@ -29,6 +29,7 @@ import PayBookingDialog from "./PayBookingDialogForm";
 import ManagePaymentsDialog from "@/components/ManagePaymentsDialog";
 import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
+import { formatMoney } from "@/utils/formatMoney";
 import { useRole } from "@/hooks/useRole";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
@@ -248,8 +249,27 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId, readOnly = false }:
     onClose();
   };
 
-  const handleDelete = () => {
-    handleDeleteBooking(bookingId);
+  const handleDelete = async () => {
+    const result = await handleDeleteBooking(bookingId);
+
+    if (result.status !== "ok") {
+      // Previously this closed the booking dialog regardless of the outcome, so a blocked
+      // deletion looked like it had worked until the red toast appeared. Keep the booking open
+      // so the receptionist can act on the reason without reopening it.
+      toast.error(
+        result.status === "completed"
+          ? t("deleteBlockedCompleted")
+          : result.status === "has_payments"
+            ? t("deleteBlockedPayments", { amount: formatMoney(result.amount) })
+            : result.status === "has_voucher_uses"
+              ? t("deleteBlockedVoucher", { amount: formatMoney(result.amount) })
+              : t("deleteError"),
+      );
+      setIsConfirmDeleteDialogOpen(false);
+      return;
+    }
+
+    toast.success(t("deleteSuccess"));
     methods.reset();
     setIsConfirmDeleteDialogOpen(false);
     onClose();

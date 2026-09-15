@@ -203,7 +203,12 @@
     "sameClientAsPrimary": "Re-use the primary client's info",
     "sameClientAsPrimaryHelper": "No separate client record will be created for this companion",
     "conflictContactTakenEmail": "Couldn't save: that email already belongs to {name}.",
-    "conflictContactTakenPhone": "Couldn't save: that phone already belongs to {name}."
+    "conflictContactTakenPhone": "Couldn't save: that phone already belongs to {name}.",
+    "deleteSuccess": "The booking has been deleted.",
+    "deleteError": "Could not delete the booking.",
+    "deleteBlockedCompleted": "This booking is completed and cannot be deleted. Change its status first if needed.",
+    "deleteBlockedPayments": "This booking has recorded payments ({amount}). Delete or refund them before deleting the booking.",
+    "deleteBlockedVoucher": "This booking has a voucher redemption ({amount}). Remove it from the voucher before deleting the booking, or the balance stays used."
   },
   "ManagePayments": {
     "title": "Manage Payments",
@@ -476,7 +481,9 @@
     "refundReasonLabel": "Reason for the refund (required)",
     "refundReasonRequired": "A reason is required",
     "contactTakenEmail": "That email already belongs to {name}.",
-    "contactTakenPhone": "That phone already belongs to {name}."
+    "contactTakenPhone": "That phone already belongs to {name}.",
+    "deleteUseReasonLabel": "Reason for removing the redemption (required)",
+    "deleteUseReasonRequired": "A reason is required"
   },
   "Stats": {
     "totalRevenue": "Total revenue",

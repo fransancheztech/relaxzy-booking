@@ -203,7 +203,12 @@
     "sameClientAsPrimary": "Re-utilizar los datos del cliente principal",
     "sameClientAsPrimaryHelper": "No se creará un registro de cliente separado para este acompañante",
     "conflictContactTakenEmail": "No se pudo guardar: ese correo ya pertenece a {name}.",
-    "conflictContactTakenPhone": "No se pudo guardar: ese teléfono ya pertenece a {name}."
+    "conflictContactTakenPhone": "No se pudo guardar: ese teléfono ya pertenece a {name}.",
+    "deleteSuccess": "La reserva se ha eliminado.",
+    "deleteError": "No se pudo eliminar la reserva.",
+    "deleteBlockedCompleted": "Esta reserva está completada y no se puede eliminar. Cambia antes su estado si es necesario.",
+    "deleteBlockedPayments": "Esta reserva tiene pagos registrados ({amount}). Elimínalos o reembólsalos antes de eliminar la reserva.",
+    "deleteBlockedVoucher": "Esta reserva tiene un canje de bono ({amount}). Elimínalo desde el bono antes de eliminar la reserva, o el saldo seguirá consumido."
   },
   "ManagePayments": {
     "title": "Gestionar pagos",
@@ -476,7 +481,9 @@
     "refundReasonLabel": "Motivo del reembolso (obligatorio)",
     "refundReasonRequired": "El motivo es obligatorio",
     "contactTakenEmail": "Ese correo ya pertenece a {name}.",
-    "contactTakenPhone": "Ese teléfono ya pertenece a {name}."
+    "contactTakenPhone": "Ese teléfono ya pertenece a {name}.",
+    "deleteUseReasonLabel": "Motivo para eliminar el canje (obligatorio)",
+    "deleteUseReasonRequired": "El motivo es obligatorio"
   },
   "Stats": {
     "totalRevenue": "Ingresos totales",
