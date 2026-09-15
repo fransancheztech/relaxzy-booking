@@ -378,6 +378,21 @@ model guidelines {
   @@index([created_at(sort: Desc)], map: "guidelines_active_idx", where: raw("(deleted_at IS NULL)"))
 }
 
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model agenda_notes {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  note_date    DateTime  @db.Date
+  content      String
+  target_roles String[]  @default([])
+  author_id    String    @db.Uuid
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at   DateTime? @db.Timestamptz(6)
+
+  @@index([note_date], map: "agenda_notes_date_idx", where: raw("(deleted_at IS NULL)"))
+}
+
 view bookings_with_details {
   booking_id                  String?          @db.Uuid
   booking_start_time          DateTime?        @db.Timestamptz(6)

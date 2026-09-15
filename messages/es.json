@@ -47,7 +47,8 @@
     "guidelines": "Pautas",
     "logout": "Cerrar sesión",
     "collapseSidebar": "Contraer menú",
-    "expandSidebar": "Expandir menú"
+    "expandSidebar": "Expandir menú",
+    "agenda": "Agenda"
   },
   "Language": {
     "label": "Idioma",
@@ -835,5 +836,32 @@
     "deleteError": "Error al eliminar la pauta",
     "confirmDelete": "¿Eliminar la pauta \"{label}\"? Esta acción no se puede deshacer.",
     "navContents": "Índice"
+  },
+  "Agenda": {
+    "title": "Agenda",
+    "newNote": "Nueva nota",
+    "addNote": "Añadir nota",
+    "editNote": "Editar nota",
+    "content": "Nota",
+    "contentRequired": "Escribe primero la nota",
+    "audienceRequired": "Elige al menos un destinatario",
+    "dayTitle": "Notas del {date}",
+    "noNotes": "Aún no hay notas para este día.",
+    "created": "Nota añadida",
+    "updated": "Nota actualizada",
+    "deleted": "Nota eliminada",
+    "saveError": "No se pudo guardar la nota",
+    "deleteError": "No se pudo eliminar la nota",
+    "loadError": "No se pudo cargar la agenda",
+    "role_admin": "Administración",
+    "role_receptionist": "Recepción",
+    "role_therapist": "Terapeutas",
+    "barLabel": "Agenda",
+    "hideBar": "Ocultar barra de notas",
+    "today": "Hoy",
+    "tomorrow": "Mañana",
+    "tomorrowPrefix": "[Mañana]",
+    "openAgendaHint": "Abrir la Agenda",
+    "hideBarHelp": "Oculta la barra en este dispositivo durante el resto del día. No afecta a otros dispositivos, y volverá a aparecer mañana si hay notas que mostrar."
   }
 }

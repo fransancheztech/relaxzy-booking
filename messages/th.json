@@ -47,7 +47,8 @@
     "guidelines": "แนวทาง",
     "logout": "ออกจากระบบ",
     "collapseSidebar": "ย่อเมนู",
-    "expandSidebar": "ขยายเมนู"
+    "expandSidebar": "ขยายเมนู",
+    "agenda": "วาระงาน"
   },
   "Language": {
     "label": "ภาษา",
@@ -835,5 +836,32 @@
     "deleteError": "ไม่สามารถลบแนวทาง",
     "confirmDelete": "ลบแนวทาง \"{label}\" ใช่หรือไม่? ไม่สามารถยกเลิกได้",
     "navContents": "สารบัญ"
+  },
+  "Agenda": {
+    "title": "วาระงาน",
+    "newNote": "บันทึกใหม่",
+    "addNote": "เพิ่มบันทึก",
+    "editNote": "แก้ไขบันทึก",
+    "content": "บันทึก",
+    "contentRequired": "กรุณาเขียนบันทึกก่อน",
+    "audienceRequired": "เลือกผู้รับอย่างน้อยหนึ่งกลุ่ม",
+    "dayTitle": "บันทึกของวันที่ {date}",
+    "noNotes": "ยังไม่มีบันทึกสำหรับวันนี้",
+    "created": "เพิ่มบันทึกแล้ว",
+    "updated": "อัปเดตบันทึกแล้ว",
+    "deleted": "ลบบันทึกแล้ว",
+    "saveError": "ไม่สามารถบันทึกได้",
+    "deleteError": "ไม่สามารถลบได้",
+    "loadError": "ไม่สามารถโหลดวาระงานได้",
+    "role_admin": "ผู้ดูแลระบบ",
+    "role_receptionist": "แผนกต้อนรับ",
+    "role_therapist": "นักบำบัด",
+    "barLabel": "วาระงาน",
+    "hideBar": "ซ่อนแถบบันทึก",
+    "today": "วันนี้",
+    "tomorrow": "พรุ่งนี้",
+    "tomorrowPrefix": "[พรุ่งนี้]",
+    "openAgendaHint": "เปิดวาระงาน",
+    "hideBarHelp": "ซ่อนแถบนี้บนอุปกรณ์นี้ตลอดวันนี้ ไม่มีผลกับอุปกรณ์อื่น และจะกลับมาแสดงในวันพรุ่งนี้หากมีบันทึกที่ต้องแสดง"
   }
 }

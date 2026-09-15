@@ -27,6 +27,7 @@ import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { useLayout } from "@/app/context/LayoutContext";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import PaymentsIcon from "@mui/icons-material/Payments";
@@ -43,6 +44,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import HelpButton from "./HelpButton";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { useTranslations } from "next-intl";
+import AgendaBar, { AGENDA_BAR_HEIGHT } from "./AgendaBar";
 
 const COLLAPSED_WIDTH = 64;
 const SIDEBAR_COOKIE = "sidebarCollapsed";
@@ -51,8 +53,10 @@ const TRANSITION_MS = 200;
 
 const supabase = createClient();
 
+
 const PAGE_ICONS: Record<string, React.ReactNode> = {
   "/calendar":   <CalendarMonthIcon sx={{ fontSize: 18 }} />,
+  "/agenda":     <StickyNote2Icon sx={{ fontSize: 18 }} />,
   "/bookings":   <EventNoteIcon sx={{ fontSize: 18 }} />,
   "/clients":    <PeopleAltIcon sx={{ fontSize: 18 }} />,
   "/payments":   <PaymentsIcon sx={{ fontSize: 18 }} />,
@@ -116,17 +120,20 @@ export default function LayoutContent({
     });
   };
 
+  const [agendaBarVisible, setAgendaBarVisible] = useState(false);
   const isAdmin = user?.app_metadata?.role === "admin";
   const isTherapist = user?.app_metadata?.role === "therapist";
   const adminOnlyPaths = new Set<string>();
-  const therapistOnlyPaths = new Set(["/calendar", "/guidelines", "/stats", "/tips"]);
+  const therapistOnlyPaths = new Set(["/agenda", "/calendar", "/guidelines", "/stats", "/tips"]);
   const visiblePages = menuPages.filter((page) => {
     if (adminOnlyPaths.has(page.href) && !isAdmin) return false;
     if (isTherapist && !therapistOnlyPaths.has(page.href)) return false;
     return true;
   });
 
-  const appBarHeight = 64;
+  // Grows when the agenda ticker is showing, so the content offset, the sidebar and the
+  // loading spinner all shift with it instead of being overlapped.
+  const appBarHeight = 64 + (agendaBarVisible ? AGENDA_BAR_HEIGHT : 0);
   const currentWidth = collapsed ? COLLAPSED_WIDTH : drawerWidth;
   const currentPageHref = menuPages.find((p) => p.href === pathname)?.href;
   const currentPage = currentPageHref ? t(currentPageHref.slice(1) as Parameters<typeof t>[0]) : "";
@@ -175,6 +182,9 @@ export default function LayoutContent({
           </Box>
           {!isTherapist && <HeaderButton />}
         </Toolbar>
+        {/* Day notes ticker, inside the fixed AppBar so it cannot be hidden behind it.
+            Renders nothing when empty or dismissed, and appBarHeight below follows it. */}
+        <AgendaBar onVisibilityChange={setAgendaBarVisible} />
       </AppBar>
 
       {/* Sidebar + Main */}
@@ -203,7 +213,11 @@ export default function LayoutContent({
               }}
             >
               {/* Nav items */}
-              <Box sx={{ flexGrow: 1, overflow: "hidden" }}>
+              {/* Scrolls vertically: the item list can outgrow a short viewport (it already
+                  does at 11 entries on a laptop), and hiding the overflow made the last
+                  entries unreachable. X stays hidden so the collapse transition cannot
+                  produce a horizontal scrollbar. */}
+              <Box sx={{ flexGrow: 1, overflowY: "auto", overflowX: "hidden" }}>
                 <List dense sx={{ px: collapsed ? 0.5 : 1 }}>
                   {userLoaded && visiblePages.map((page) => {
                     const isActive = pathname === page.href;

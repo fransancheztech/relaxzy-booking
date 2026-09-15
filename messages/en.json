@@ -47,7 +47,8 @@
     "guidelines": "Guidelines",
     "logout": "Log out",
     "collapseSidebar": "Collapse sidebar",
-    "expandSidebar": "Expand sidebar"
+    "expandSidebar": "Expand sidebar",
+    "agenda": "Agenda"
   },
   "Language": {
     "label": "Language",
@@ -835,5 +836,32 @@
     "deleteError": "Failed to delete guideline",
     "confirmDelete": "Delete guideline \"{label}\"? This cannot be undone.",
     "navContents": "Contents"
+  },
+  "Agenda": {
+    "title": "Agenda",
+    "newNote": "New note",
+    "addNote": "Add note",
+    "editNote": "Edit note",
+    "content": "Note",
+    "contentRequired": "Write the note first",
+    "audienceRequired": "Choose at least one audience",
+    "dayTitle": "Notes for {date}",
+    "noNotes": "No notes for this day yet.",
+    "created": "Note added",
+    "updated": "Note updated",
+    "deleted": "Note deleted",
+    "saveError": "Could not save the note",
+    "deleteError": "Could not delete the note",
+    "loadError": "Could not load the agenda",
+    "role_admin": "Admins",
+    "role_receptionist": "Reception",
+    "role_therapist": "Therapists",
+    "barLabel": "Agenda",
+    "hideBar": "Hide notes bar",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "tomorrowPrefix": "[Tomorrow]",
+    "openAgendaHint": "Open the Agenda",
+    "hideBarHelp": "Hides the bar on this device for the rest of today. Other devices are unaffected, and it comes back tomorrow if there are notes to show."
   }
 }
