@@ -20,6 +20,11 @@ interface Props {
   onPresetChange: (preset: Preset) => void;
   onFromChange: (d: Date) => void;
   onToChange: (d: Date) => void;
+  /** Restrict which presets are offered, in this order. Defaults to all of them. Used by
+   *  the Hours page, where a therapist's lookback floor makes the long ranges identical. */
+  presets?: Preset[];
+  /** Earliest selectable day; the pickers refuse anything before it. */
+  minDate?: Date;
 }
 
 // Inclusive, date-only display range for each preset, computed in the business timezone so
@@ -47,17 +52,21 @@ export function resolvePreset(preset: Preset): { from: Date; to: Date } {
   }
 }
 
-const DateRangeFilter = ({ preset, from, to, onPresetChange, onFromChange, onToChange }: Props) => {
+const DateRangeFilter = ({ preset, from, to, onPresetChange, onFromChange, onToChange, presets, minDate }: Props) => {
   const t = useTranslations("Stats");
 
-  const PRESETS: { value: Preset; label: string }[] = [
-    { value: "today", label: t("today") },
-    { value: "week", label: t("thisWeek") },
-    { value: "month", label: t("thisMonth") },
-    { value: "year", label: t("thisYear") },
-    { value: "12months", label: t("last12Months") },
-    { value: "all", label: t("all") },
-  ];
+  const PRESET_LABELS: Record<Exclude<Preset, "custom">, string> = {
+    today: t("today"),
+    week: t("thisWeek"),
+    month: t("thisMonth"),
+    year: t("thisYear"),
+    "12months": t("last12Months"),
+    all: t("all"),
+  };
+  const ALL_PRESETS: Preset[] = ["today", "week", "month", "year", "12months", "all"];
+  const PRESETS = (presets ?? ALL_PRESETS)
+    .filter((v): v is Exclude<Preset, "custom"> => v !== "custom")
+    .map((value) => ({ value, label: PRESET_LABELS[value] }));
 
   return (
     <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ sm: "center" }} flexWrap="wrap">
@@ -79,6 +88,7 @@ const DateRangeFilter = ({ preset, from, to, onPresetChange, onFromChange, onToC
         <BusinessDatePicker
           label={t("from")}
           value={from}
+          minDate={minDate}
           onChange={(d) => { if (d) onFromChange(d); }}
           slotProps={{ textField: { size: "small", sx: { width: 150 } } }}
         />
@@ -86,6 +96,7 @@ const DateRangeFilter = ({ preset, from, to, onPresetChange, onFromChange, onToC
         <BusinessDatePicker
           label={t("to")}
           value={to}
+          minDate={minDate}
           onChange={(d) => { if (d) onToChange(d); }}
           slotProps={{ textField: { size: "small", sx: { width: 150 } } }}
         />

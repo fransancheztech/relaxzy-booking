@@ -1,6 +1,6 @@
 TO-DO
+- En la página Therapists, añadir toggle para mostrar o no Inactivas, y otro toogle para mostrar o no eliminadas
 - Añadir top clients a los Stats
-- Añadir 
 - Añadir fecha creación del voucher al tooltip del buscador de vouchers
 - Añadir propina de las reservas antiguas.
 - Añadir regalos de las reservas antiguas.

@@ -44,6 +44,7 @@
     "vouchers": "บัตรกำนัล",
     "stats": "สถิติ",
     "tips": "ทิปส์",
+    "hours": "ชั่วโมง",
     "guidelines": "แนวทาง",
     "logout": "ออกจากระบบ",
     "collapseSidebar": "ย่อเมนู",
@@ -595,11 +596,12 @@
     "net": "หลังหัก",
     "therapistHoursTitle": "ชั่วโมงของนักบำบัด",
     "therapistHoursSubtitle": "การจองที่เสร็จสิ้นต่อนักบำบัด",
+    "hoursLookbackNotice": "ข้อมูลชั่วโมงมีให้ดูตั้งแต่วันที่ {date} เป็นต้นไป",
     "allTherapists": "นักบำบัดทั้งหมด",
     "therapistCol": "นักบำบัด",
     "bookingsCol": "การจอง",
     "hoursCol": "ชั่วโมง",
-    "noHoursData": "ไม่มีการจองที่เสร็จสิ้นในเดือนนี้",
+    "noHoursData": "ไม่มีการจองที่เสร็จสิ้นในช่วงเวลาที่เลือก",
     "totalRow": "รวม"
   },
   "TipsPage": {

@@ -44,6 +44,7 @@
     "vouchers": "Vouchers",
     "stats": "Stats",
     "tips": "Tips",
+    "hours": "Hours",
     "guidelines": "Guidelines",
     "logout": "Log out",
     "collapseSidebar": "Collapse sidebar",
@@ -595,11 +596,12 @@
     "net": "Net",
     "therapistHoursTitle": "Therapist Hours",
     "therapistHoursSubtitle": "Completed bookings per therapist",
+    "hoursLookbackNotice": "Hours are available from {date} onwards.",
     "allTherapists": "All therapists",
     "therapistCol": "Therapist",
     "bookingsCol": "Bookings",
     "hoursCol": "Hours",
-    "noHoursData": "No completed bookings for this month.",
+    "noHoursData": "No completed bookings in the selected period.",
     "totalRow": "Total"
   },
   "TipsPage": {

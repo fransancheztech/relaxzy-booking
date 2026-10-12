@@ -36,6 +36,7 @@ import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import SavingsIcon from "@mui/icons-material/Savings";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
@@ -65,6 +66,7 @@ const PAGE_ICONS: Record<string, React.ReactNode> = {
   "/vouchers":   <CardGiftcardIcon sx={{ fontSize: 18 }} />,
   "/stats":      <BarChartIcon sx={{ fontSize: 18 }} />,
   "/tips":       <SavingsIcon sx={{ fontSize: 18 }} />,
+  "/hours":      <AccessTimeIcon sx={{ fontSize: 18 }} />,
   "/guidelines": <MenuBookIcon sx={{ fontSize: 18 }} />,
 };
 
@@ -123,10 +125,15 @@ export default function LayoutContent({
   const [agendaBarVisible, setAgendaBarVisible] = useState(false);
   const isAdmin = user?.app_metadata?.role === "admin";
   const isTherapist = user?.app_metadata?.role === "therapist";
-  const adminOnlyPaths = new Set<string>();
-  const therapistOnlyPaths = new Set(["/agenda", "/calendar", "/guidelines", "/stats", "/tips"]);
+  // Stats holds admin-only figures. Hours is for admins and therapists, so it is the one
+  // page a receptionist (neither admin nor therapist) must not see.
+  const adminOnlyPaths = new Set(["/stats"]);
+  const therapistOnlyPaths = new Set(["/agenda", "/calendar", "/guidelines", "/hours", "/tips"]);
+  const receptionistHiddenPaths = new Set(["/hours"]);
+  const isReceptionist = !isAdmin && !isTherapist;
   const visiblePages = menuPages.filter((page) => {
     if (adminOnlyPaths.has(page.href) && !isAdmin) return false;
+    if (isReceptionist && receptionistHiddenPaths.has(page.href)) return false;
     if (isTherapist && !therapistOnlyPaths.has(page.href)) return false;
     return true;
   });

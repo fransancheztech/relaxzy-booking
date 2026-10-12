@@ -21,6 +21,11 @@ const toBusinessValue = (value: Date | null) =>
 const fromPickerValue = (dt: unknown): Date | null =>
   dt instanceof DateTime && dt.isValid ? dt.toJSDate() : null;
 
+// Bounds must stay `undefined` when unset (not null): MUI falls back to its own default
+// bounds only for undefined, and feeds the value straight into month-navigation maths.
+const toBusinessBound = (value: Date | undefined) =>
+  value ? DateTime.fromJSDate(value).setZone(BUSINESS_TIMEZONE) : undefined;
+
 type CommonProps = {
   value: Date | null;
   onChange: (value: Date | null) => void;
@@ -28,6 +33,10 @@ type CommonProps = {
   format?: string;
   disabled?: boolean;
   disableFuture?: boolean;
+  // Bounds are declared in plain `Date` like `value`, and converted to the adapter's
+  // Luxon DateTime below — passing a JS Date straight through would be silently ignored.
+  minDate?: Date;
+  maxDate?: Date;
 };
 
 export function BusinessDateTimePicker({
@@ -37,6 +46,8 @@ export function BusinessDateTimePicker({
   format = "dd/MM/yyyy HH:mm",
   slotProps,
   views,
+  minDate,
+  maxDate,
   ...rest
 }: CommonProps & {
   ampm?: boolean;
@@ -57,6 +68,8 @@ export function BusinessDateTimePicker({
         format={format}
         views={views}
         slotProps={slotProps}
+        minDate={toBusinessBound(minDate) as never}
+        maxDate={toBusinessBound(maxDate) as never}
         value={toBusinessValue(value) as never}
         onChange={(dt) => onChange(fromPickerValue(dt))}
       />
@@ -69,6 +82,8 @@ export function BusinessDatePicker({
   onChange,
   format = "dd/MM/yyyy",
   slotProps,
+  minDate,
+  maxDate,
   ...rest
 }: CommonProps & { slotProps?: DateSlotProps }) {
   const locale = useLocale();
@@ -79,6 +94,8 @@ export function BusinessDatePicker({
         timezone={BUSINESS_TIMEZONE}
         format={format}
         slotProps={slotProps}
+        minDate={toBusinessBound(minDate) as never}
+        maxDate={toBusinessBound(maxDate) as never}
         value={toBusinessValue(value) as never}
         onChange={(dt) => onChange(fromPickerValue(dt))}
       />

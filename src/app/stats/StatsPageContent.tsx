@@ -21,16 +21,10 @@ import BookingsSection from "./components/BookingsSection";
 import ClientSection from "./components/ClientSection";
 import VoucherSection from "./components/VoucherSection";
 import TipsSection from "./components/TipsSection";
-import TherapistHoursSection from "./components/TherapistHoursSection";
 
-interface Props {
-  role: string;
-}
-
-const StatsPageContent = ({ role }: Props) => {
+const StatsPageContent = () => {
   const t = useTranslations("Stats");
   const { setButtonLabel, setOnButtonClick } = useLayout();
-  const isAdmin = role === "admin";
 
   const [preset, setPreset] = useState<Preset>("month");
   // pickFrom/pickTo are the inclusive, date-only values shown in the pickers.
@@ -113,12 +107,9 @@ const StatsPageContent = ({ role }: Props) => {
     }
   }, [basis]);
 
-  // Only admins hit /api/stats (it 403s for other roles). Therapists get just the
-  // Therapist Hours section, which fetches separately.
   useEffect(() => {
-    if (!isAdmin) return;
     fetchStats(from, to);
-  }, [from, to, fetchStats, isAdmin]);
+  }, [from, to, fetchStats]);
 
   const handlePresetChange = (newPreset: Preset) => {
     const { from: f, to: t2 } = resolvePreset(newPreset);
@@ -137,7 +128,7 @@ const StatsPageContent = ({ role }: Props) => {
 
   return (
     <Box sx={{ px: 3, py: 3, position: "relative" }}>
-      {/* Date range filter — visible to all roles; drives every section below */}
+      {/* Date range filter — drives every section below */}
       <Box sx={{ mb: 3 }}>
         <DateRangeFilter
           preset={preset}
@@ -148,29 +139,27 @@ const StatsPageContent = ({ role }: Props) => {
           onToChange={handleToChange}
         />
 
-        {/* Revenue basis — admin only; re-dates booking-payment revenue figures. */}
-        {isAdmin && (
-          <Box sx={{ mt: 1.5, display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-            <Typography variant="caption" color="text.secondary">{t("revenueBasis")}</Typography>
-            <ToggleButtonGroup
-              value={basis}
-              exclusive
-              size="small"
-              onChange={(_, v: "payment" | "service" | null) => { if (v) setBasis(v); }}
-              sx={{ "& .MuiToggleButton-root": { py: 0.25, px: 1, fontSize: "0.7rem" } }}
-            >
-              <ToggleButton value="payment">{t("basisPayment")}</ToggleButton>
-              <ToggleButton value="service">{t("basisService")}</ToggleButton>
-            </ToggleButtonGroup>
-            <Tooltip title={t("basisTooltip")} arrow enterTouchDelay={0}>
-              <InfoOutlinedIcon sx={{ fontSize: 15, color: "text.disabled", cursor: "help" }} />
-            </Tooltip>
-          </Box>
-        )}
+        {/* Revenue basis — re-dates booking-payment revenue figures. */}
+        <Box sx={{ mt: 1.5, display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+          <Typography variant="caption" color="text.secondary">{t("revenueBasis")}</Typography>
+          <ToggleButtonGroup
+            value={basis}
+            exclusive
+            size="small"
+            onChange={(_, v: "payment" | "service" | null) => { if (v) setBasis(v); }}
+            sx={{ "& .MuiToggleButton-root": { py: 0.25, px: 1, fontSize: "0.7rem" } }}
+          >
+            <ToggleButton value="payment">{t("basisPayment")}</ToggleButton>
+            <ToggleButton value="service">{t("basisService")}</ToggleButton>
+          </ToggleButtonGroup>
+          <Tooltip title={t("basisTooltip")} arrow enterTouchDelay={0}>
+            <InfoOutlinedIcon sx={{ fontSize: 15, color: "text.disabled", cursor: "help" }} />
+          </Tooltip>
+        </Box>
       </Box>
 
-      {/* Loading overlay — admin only */}
-      {isAdmin && loading && (
+      {/* Loading overlay */}
+      {loading && (
         <Box
           sx={{
             position: "absolute", inset: 0, zIndex: 10,
@@ -182,11 +171,11 @@ const StatsPageContent = ({ role }: Props) => {
         </Box>
       )}
 
-      {isAdmin && error && (
+      {error && (
         <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>
       )}
 
-      {isAdmin && data && (
+      {data && (
         <Box sx={{ opacity: loading ? 0.4 : 1, transition: "opacity 0.2s" }}>
           {/* KPI Cards */}
           <Grid container spacing={2} sx={{ mb: 4 }}>
@@ -289,11 +278,6 @@ const StatsPageContent = ({ role }: Props) => {
           <Divider sx={{ mb: 4 }} />
         </Box>
       )}
-
-      {/* Therapist hours — visible to all roles, driven by the shared date range */}
-      <Box sx={{ opacity: 1 }}>
-        <TherapistHoursSection isTherapist={role === "therapist"} from={from} to={to} />
-      </Box>
     </Box>
   );
 };

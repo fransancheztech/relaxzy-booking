@@ -12,6 +12,7 @@ export const menuPages: menuPageModel[] = [
   { text: 'Therapists', href: '/therapists' },
   { text: 'Vouchers', href: '/vouchers' },
   { text: 'Tips', href: '/tips' },
+  { text: 'Hours', href: '/hours' },
   { text: 'Stats', href: '/stats' },
   { text: 'Agenda', href: '/agenda' },
   { text: 'Guidelines', href: '/guidelines' },

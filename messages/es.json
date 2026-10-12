@@ -44,6 +44,7 @@
     "vouchers": "Bonos",
     "stats": "Estadísticas",
     "tips": "Propinas",
+    "hours": "Horas",
     "guidelines": "Pautas",
     "logout": "Cerrar sesión",
     "collapseSidebar": "Contraer menú",
@@ -595,11 +596,12 @@
     "net": "Neto",
     "therapistHoursTitle": "Horas por terapeuta",
     "therapistHoursSubtitle": "Reservas completadas por terapeuta",
+    "hoursLookbackNotice": "Las horas están disponibles desde el {date}.",
     "allTherapists": "Todos los terapeutas",
     "therapistCol": "Terapeuta",
     "bookingsCol": "Reservas",
     "hoursCol": "Horas",
-    "noHoursData": "No hay reservas completadas este mes.",
+    "noHoursData": "No hay reservas completadas en el periodo seleccionado.",
     "totalRow": "Total"
   },
   "TipsPage": {
