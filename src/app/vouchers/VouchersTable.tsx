@@ -12,6 +12,7 @@ import { formatMoney } from "@/utils/formatMoney";
 import { formatNullable } from "@/utils/formatNullable";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { formatBusinessDate } from "@/utils/businessTime";
+import { isVoucherExpired } from "@/lib/vouchers/expiry";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
 import { useTranslations } from "next-intl";
@@ -38,8 +39,7 @@ type VoucherRow = {
 // "Breakage": the voucher has expired but the client still has unused balance.
 // Flag these so reception can spot them and raise the alert with the client.
 const isExpiredWithBalance = (row: VoucherRow): boolean =>
-  !!row.expiration_date &&
-  new Date(row.expiration_date) < new Date() &&
+  isVoucherExpired(row.expiration_date) &&
   row.balance != null &&
   Number(row.balance) > 0;
 

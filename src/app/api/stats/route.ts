@@ -5,6 +5,7 @@ import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
 import { StatsResponse, StatsRevenuePeriodPoint, StatsTipsPeriodPoint } from "@/types/stats";
 import { therapistDisplayName } from "@/utils/therapistName";
 import { BUSINESS_TIMEZONE } from "@/constants";
+import { voucherExpiredSql, voucherNotExpiredSql } from "@/lib/vouchers/expirySql";
 
 const toNum = (v: unknown): number => Number(v ?? 0);
 
@@ -341,15 +342,18 @@ export async function GET(request: Request) {
         AND COALESCE(b.start_time, vu.created_at) < ${to}
     `;
     // Outstanding balance is a snapshot of all active vouchers, independent of the period.
+    // The expiry day counts in full, so a voucher expiring today is still outstanding.
+    const notExpired = voucherNotExpiredSql(Prisma.sql`expiration_date`);
+    const expired = voucherExpiredSql(Prisma.sql`expiration_date`);
     const voucherOutstandingRows = await prisma.$queryRaw<{
       outstanding_balance: number; active_count: number;
       expired_balance: number; expired_count: number;
     }[]>`
       SELECT
-        COALESCE(SUM(balance) FILTER (WHERE balance > 0 AND expiration_date >= now()), 0)::float AS outstanding_balance,
-        COUNT(*) FILTER (WHERE balance > 0 AND expiration_date >= now())::int AS active_count,
-        COALESCE(SUM(balance) FILTER (WHERE balance > 0 AND expiration_date < now()), 0)::float AS expired_balance,
-        COUNT(*) FILTER (WHERE balance > 0 AND expiration_date < now())::int AS expired_count
+        COALESCE(SUM(balance) FILTER (WHERE balance > 0 AND ${notExpired}), 0)::float AS outstanding_balance,
+        COUNT(*) FILTER (WHERE balance > 0 AND ${notExpired})::int AS active_count,
+        COALESCE(SUM(balance) FILTER (WHERE balance > 0 AND ${expired}), 0)::float AS expired_balance,
+        COUNT(*) FILTER (WHERE balance > 0 AND ${expired})::int AS expired_count
       FROM vouchers WHERE deleted_at IS NULL
     `;
     const voucherSoldOverTimeRows = await prisma.$queryRaw<{ period: Date; value: number }[]>`

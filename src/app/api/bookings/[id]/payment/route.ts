@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
+import { isVoucherExpired } from "@/lib/vouchers/expiry";
 
 export async function POST(
   req: Request,
@@ -97,7 +98,7 @@ export async function POST(
         );
       }
 
-      if (voucher.expiration_date < new Date()) {
+      if (isVoucherExpired(voucher.expiration_date)) {
         return NextResponse.json(
           { error: "Voucher has expired" },
           { status: 400 }
