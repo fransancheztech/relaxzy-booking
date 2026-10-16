@@ -1,6 +1,7 @@
 {
   "Common": {
     "cancel": "Cancel",
+    "cashTipsProhibited": "Only card tips are recorded here. Cash tips are handed directly to the therapist — never record them.",
     "save": "Save",
     "saveChanges": "Save Changes",
     "delete": "Delete",
@@ -609,6 +610,7 @@
     "filterPending": "Pending",
     "filterReleased": "Released",
     "allTherapists": "All therapists",
+    "formerStaff": "former",
     "filterPeriod": "Period",
     "periodAll": "All time",
     "periodThisMonth": "This month",

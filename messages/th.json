@@ -1,6 +1,7 @@
 {
   "Common": {
     "cancel": "ยกเลิก",
+    "cashTipsProhibited": "ที่นี่บันทึกเฉพาะทิปที่จ่ายด้วยบัตรเท่านั้น ทิปเงินสดมอบให้นักบำบัดโดยตรง — ห้ามบันทึกในระบบ",
     "save": "บันทึก",
     "saveChanges": "บันทึกการเปลี่ยนแปลง",
     "delete": "ลบ",
@@ -609,6 +610,7 @@
     "filterPending": "รอดำเนินการ",
     "filterReleased": "จ่ายแล้ว",
     "allTherapists": "นักบำบัดทั้งหมด",
+    "formerStaff": "อดีต",
     "filterPeriod": "ช่วงเวลา",
     "periodAll": "ตลอดเวลา",
     "periodThisMonth": "เดือนนี้",

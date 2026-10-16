@@ -24,6 +24,15 @@ export async function PATCH(
     if (body.therapist_id !== undefined) data.therapist_id = body.therapist_id;
     if (body.payment_method !== undefined) {
       if (!VALID_METHODS.includes(body.payment_method)) return NextResponse.json({ error: "Invalid payment_method" }, { status: 400 });
+      // A tip may never be switched TO cash. Rows recorded as cash before this rule stay
+      // editable — re-sending their own current method is not a change — so their notes
+      // and therapist can still be corrected, and they can be moved to card.
+      if (body.payment_method === "cash" && tip.payment_method !== "cash") {
+        return NextResponse.json(
+          { error: "Cash tips must not be recorded. Only card tips are recorded here." },
+          { status: 422 },
+        );
+      }
       data.payment_method = body.payment_method;
       // iva_applies is always derived from the method, never set by the client.
       data.iva_applies = ivaAppliesForTipMethod(body.payment_method);

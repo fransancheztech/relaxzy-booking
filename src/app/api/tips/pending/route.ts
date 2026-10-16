@@ -7,7 +7,9 @@ const IVA_RATE = 0.21;
 export async function GET() {
   try {
     const tips = await prisma.tips.findMany({
-      where: { deleted_at: null, payout_id: null },
+      // Cash tips are handed over in person, so they must never be paid out again. This
+      // also covers the rows recorded before cash was prohibited.
+      where: { deleted_at: null, payout_id: null, payment_method: { not: "cash" } },
       include: {
         therapists: { select: { id: true, nickname: true, name: true, surname: true } },
         bookings: { select: { start_time: true } },

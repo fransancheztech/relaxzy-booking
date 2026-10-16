@@ -17,12 +17,20 @@ export async function GET(request: Request) {
   // Non-admins may never see released tips regardless of query params
   const status = isAdmin ? (searchParams.get("status") ?? "all") : "pending";
 
+  // Which therapists' tips this role may see. Former staff (active = false) are part of
+  // the admin's monthly reconciliation, so admins see them; receptionists and therapists
+  // must not see tips of people who have left. Soft-deleted therapist records are hidden
+  // from everyone. Enforced here, not in the UI, so passing a former therapist's id as
+  // `therapist_id` still returns nothing for a non-admin.
+  const rosterScope = isAdmin
+    ? { deleted_at: null }
+    : { active: true, deleted_at: null };
+
   try {
     const tips = await prisma.tips.findMany({
       where: {
         deleted_at: null,
-        // Only tips of current-roster therapists (exclude inactive and soft-deleted).
-        therapists: { active: true, deleted_at: null },
+        therapists: rosterScope,
         ...(status === "pending" ? { payout_id: null } : {}),
         ...(status === "released" ? { payout_id: { not: null } } : {}),
         ...(therapist_id ? { therapist_id } : {}),
@@ -55,7 +63,19 @@ export async function GET(request: Request) {
       take: 500,
     });
 
+    // Options for the page's therapist filter: everyone in scope who has at least one
+    // tip. Deliberately independent of the therapist_id and date filters, so the dropdown
+    // does not collapse to the current selection when one is applied.
+    const optionRows = await prisma.therapists.findMany({
+      where: { ...rosterScope, tips: { some: { deleted_at: null } } },
+      select: { id: true, nickname: true, name: true, surname: true, active: true },
+    });
+    const therapistOptions = optionRows
+      .map((th) => ({ id: th.id, full_name: therapistDisplayName(th), active: th.active }))
+      .sort((a, b) => a.full_name.localeCompare(b.full_name));
+
     return NextResponse.json({
+      therapists: therapistOptions,
       tips: tips.map((tip) => {
         const gross = Number(tip.amount);
         const iva = tip.iva_applies ? Math.round(gross * IVA_RATE * 100) / 100 : 0;

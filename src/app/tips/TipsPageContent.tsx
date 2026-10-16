@@ -26,7 +26,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
 import { useLayout } from "@/app/context/LayoutContext";
-import { useTherapists } from "@/hooks/useTherapists";
 import { useRole } from "@/hooks/useRole";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 import { formatMoney } from "@/utils/formatMoney";
@@ -55,16 +54,20 @@ interface TipRow {
   } | null;
 }
 
+type TherapistOption = { id: string; full_name: string; active: boolean };
+
 const TipsPageContent = () => {
   const t = useTranslations("TipsPage");
   const tCommon = useTranslations("Common");
   const { setButtonLabel, setOnButtonClick } = useLayout();
-  const therapists = useTherapists();
   const { isAdmin, isTherapist } = useRole();
   // Admins and receptionists can edit individual tips; therapists are view-only.
   const canEdit = !isTherapist;
 
   const [tips, setTips] = useState<TipRow[]>([]);
+  // Filter options come from the tips API, not from the active-therapist roster: the API
+  // decides which therapists this role may see at all (former staff are admin-only).
+  const [therapistOptions, setTherapistOptions] = useState<TherapistOption[]>([]);
   const [loading, setLoading] = useState(false);
   const { submitting: releasing, guard: releaseGuard } = useSubmitGuard();
   const [selectedIds, setSelectedIds] = useState<Set<GridRowId>>(new Set());
@@ -112,6 +115,7 @@ const TipsPageContent = () => {
       if (!res.ok) throw new Error();
       const data = await res.json();
       setTips(data.tips ?? []);
+      setTherapistOptions(data.therapists ?? []);
     } catch {
       toast.error(t("failedLoadTips"));
     } finally {
@@ -298,8 +302,10 @@ const TipsPageContent = () => {
             onChange={(e) => setTherapistId(e.target.value)}
           >
             <MenuItem value=""><em>{t("allTherapists")}</em></MenuItem>
-            {therapists.map((th) => (
-              <MenuItem key={th.id} value={th.id}>{th.full_name}</MenuItem>
+            {therapistOptions.map((th) => (
+              <MenuItem key={th.id} value={th.id}>
+                {th.active ? th.full_name : `${th.full_name} (${t("formerStaff")})`}
+              </MenuItem>
             ))}
           </Select>
         </FormControl>

@@ -1,6 +1,7 @@
 {
   "Common": {
     "cancel": "Cancelar",
+    "cashTipsProhibited": "Aquí solo se registran las propinas con tarjeta. Las propinas en efectivo se entregan directamente a la terapeuta; no las registres nunca.",
     "save": "Guardar",
     "saveChanges": "Guardar cambios",
     "delete": "Eliminar",
@@ -609,6 +610,7 @@
     "filterPending": "Pendientes",
     "filterReleased": "Liberadas",
     "allTherapists": "Todos los terapeutas",
+    "formerStaff": "antigua",
     "filterPeriod": "Período",
     "periodAll": "Todo el tiempo",
     "periodThisMonth": "Este mes",

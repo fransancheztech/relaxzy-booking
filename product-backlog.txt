@@ -1,5 +1,4 @@
 TO-DO
-- Prohibir añadir propinas en efectivo
 - Explicar que el botón Add Payments es para añadir solamente los pagos del servicio. Las propinas no se incluyen en dichos pagos, se ponen a parte en el botón de abajo de Add Tip.
 - En la página Therapists, añadir toggle para mostrar o no Inactivas, y otro toogle para mostrar o no eliminadas
 - Añadir top clients a los Stats

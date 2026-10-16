@@ -48,6 +48,15 @@ export async function POST(request: Request) {
     if (!validMethods.includes(payment_method)) {
       return NextResponse.json({ error: "Invalid payment_method" }, { status: 400 });
     }
+    // Cash tips go straight to the therapist in person and must never be recorded: a
+    // recorded cash tip would be taxed and paid out a second time. The form disables the
+    // option, and this is the guard that actually enforces it.
+    if (payment_method === "cash") {
+      return NextResponse.json(
+        { error: "Cash tips must not be recorded. Only card tips are recorded here." },
+        { status: 422 },
+      );
+    }
 
     const tip = await prisma.tips.create({
       data: {

@@ -270,18 +270,35 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
               />
             </Grid>
 
-            {/* Payment method */}
+            {/* Payment method — cash is shown but permanently disabled. Kept visible
+                rather than removed so the rule reads as "closed", not "missing": a
+                receptionist who cannot find cash at all is liable to record a cash tip as
+                a card tip, which is worse than not recording it. The notice below is the
+                primary channel; the tooltip needs the <span> because a disabled MUI
+                control has pointer-events: none and would never fire it. */}
             <Grid size={12}>
               <Controller
                 name="payment_method"
                 control={methods.control}
                 render={({ field }) => (
                   <RadioGroup row {...field}>
-                    <FormControlLabel value="cash" control={<Radio size="small" />} label={t("cash")} />
+                    <Tooltip title={tCommon("cashTipsProhibited")} arrow enterTouchDelay={0}>
+                      <span>
+                        <FormControlLabel
+                          value="cash"
+                          disabled
+                          control={<Radio size="small" />}
+                          label={t("cash")}
+                        />
+                      </span>
+                    </Tooltip>
                     <FormControlLabel value="credit_card" control={<Radio size="small" />} label={t("creditCard")} />
                   </RadioGroup>
                 )}
               />
+              <Typography variant="caption" color="warning.main" sx={{ display: "block", mt: -0.5 }}>
+                {tCommon("cashTipsProhibited")}
+              </Typography>
             </Grid>
 
             {/* IVA is derived from the payment method — shown read-only */}

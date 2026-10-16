@@ -17,7 +17,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import { useTherapists } from "@/hooks/useTherapists";
@@ -92,6 +92,15 @@ const TipDetailDialog = ({ tip, readOnly = false, onClose, onSaved }: Props) => 
       }
     });
 
+  // The roster hook lists current therapists only, but an admin can open a tip belonging
+  // to former staff. Without the tip's own therapist in the options the Select would
+  // render blank and a save could silently reassign the tip.
+  const therapistOptions = useMemo(() => {
+    if (!tip) return therapists;
+    if (therapists.some((th) => th.id === tip.therapist_id)) return therapists;
+    return [...therapists, { id: tip.therapist_id, full_name: tip.therapist_name }];
+  }, [therapists, tip]);
+
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => prev && ({ ...prev, [key]: value }));
 
@@ -119,12 +128,15 @@ const TipDetailDialog = ({ tip, readOnly = false, onClose, onSaved }: Props) => 
                 label={t("colTherapist")}
                 onChange={(e) => set("therapist_id", e.target.value)}
               >
-                {therapists.map((th) => (
+                {therapistOptions.map((th) => (
                   <MenuItem key={th.id} value={th.id}>{th.full_name}</MenuItem>
                 ))}
               </Select>
             </FormControl>
 
+            {/* Cash stays in the list, disabled: tips recorded as cash before the rule
+                must still render their own value (a missing option blanks the Select),
+                and no tip may be switched to cash. */}
             <FormControl size="small" fullWidth disabled={locked}>
               <InputLabel>{t("colMethod")}</InputLabel>
               <Select
@@ -132,10 +144,15 @@ const TipDetailDialog = ({ tip, readOnly = false, onClose, onSaved }: Props) => 
                 label={t("colMethod")}
                 onChange={(e) => set("payment_method", e.target.value as FormState["payment_method"])}
               >
-                <MenuItem value="cash">{t("methodCash")}</MenuItem>
+                <MenuItem value="cash" disabled>{t("methodCash")}</MenuItem>
                 <MenuItem value="credit_card">{t("methodCard")}</MenuItem>
               </Select>
             </FormControl>
+            {!locked && (
+              <Typography variant="caption" color="warning.main" sx={{ mt: -1.5 }}>
+                {tCommon("cashTipsProhibited")}
+              </Typography>
+            )}
 
             {/* IVA is derived from the payment method — shown read-only */}
             <FormControlLabel
