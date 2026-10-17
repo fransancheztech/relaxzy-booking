@@ -1,10 +1,18 @@
 // handlers/handleSubmitPayBooking.ts
 import { BookingPaymentFormOutput } from "@/schemas/bookingPayment.schema";
-import { toast } from "react-toastify";
 
+export type PayBookingResult =
+  | { status: "ok" }
+  | { status: "error"; code?: string };
+
+/**
+ * Registers a booking payment. Deliberately does NOT toast: the route answers with a
+ * stable error code (see src/lib/payments/paymentErrors.ts) and only a component can
+ * translate it, so the caller owns the message.
+ */
 const handleSubmitPayBooking = async (
   data: BookingPaymentFormOutput & { id: string; paymentDate?: string }
-) => {
+): Promise<PayBookingResult> => {
   try {
     const res = await fetch(`/api/bookings/${data.id}/payment`, {
       method: "POST",
@@ -18,18 +26,13 @@ const handleSubmitPayBooking = async (
       }),
     });
 
-    const result = await res.json();
+    const result = await res.json().catch(() => ({}));
 
-    if (!res.ok) {
-      toast.error(result?.error || "Error registering payment");
-      return;
-    }
-
-    toast.success("Payment registered successfully.");
-    return true;
+    if (!res.ok) return { status: "error", code: result?.error };
+    return { status: "ok" };
   } catch (error) {
-    toast.error(`Unexpected error while registering payment: ${error}`);
-    return false;
+    console.error("Error registering payment", error);
+    return { status: "error" };
   }
 };
 

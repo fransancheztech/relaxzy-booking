@@ -14,7 +14,16 @@ type PaymentData = {
   voucherCode?: string;
 };
 
-const registerPaymentForBooking = async (bookingId: string, payment: PaymentData) => {
+/** Reports a payment-registration failure by stable error code (see
+ *  src/lib/payments/paymentErrors.ts). The caller translates and shows it; this module
+ *  cannot, since only a component can reach next-intl. */
+export type PaymentErrorReporter = (code: string | undefined) => void;
+
+const registerPaymentForBooking = async (
+  bookingId: string,
+  payment: PaymentData,
+  onPaymentError?: PaymentErrorReporter,
+) => {
   try {
     const res = await fetch(`/api/bookings/${bookingId}/payment`, {
       method: "POST",
@@ -26,13 +35,13 @@ const registerPaymentForBooking = async (bookingId: string, payment: PaymentData
         voucherCode: payment.voucherCode,
       }),
     });
-    const result = await res.json();
+    const result = await res.json().catch(() => ({}));
     if (!res.ok) {
-      toast.error(result?.error || "Error registering payment");
+      onPaymentError?.(result?.error);
     }
   } catch (err) {
     console.error("Error registering payment", err);
-    toast.error("Error registering payment");
+    onPaymentError?.(undefined);
   }
 };
 
@@ -42,6 +51,7 @@ const hasPayment = (p: PaymentData) =>
 const handleSubmitCreateBooking = async (
   data: BookingSchemaType,
   clientResolutions?: Record<string, ClientResolution>,
+  onPaymentError?: PaymentErrorReporter,
 ): Promise<BookingSubmitResult> => {
   try {
     // Strip payment fields before sending to booking creation API
@@ -90,7 +100,11 @@ const handleSubmitCreateBooking = async (
 
     if (hasPayment({ cashPayment, cardPayment, voucherPayment })) {
       paymentTasks.push(
-        registerPaymentForBooking(result.booking.id, { cashPayment, cardPayment, voucherPayment, voucherCode })
+        registerPaymentForBooking(
+          result.booking.id,
+          { cashPayment, cardPayment, voucherPayment, voucherCode },
+          onPaymentError,
+        )
       );
     }
 
@@ -102,7 +116,7 @@ const handleSubmitCreateBooking = async (
             cardPayment: companion.cardPayment,
             voucherPayment: companion.voucherPayment,
             voucherCode: companion.voucherCode,
-          })
+          }, onPaymentError)
         );
       }
     });

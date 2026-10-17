@@ -3,6 +3,7 @@ import { Autocomplete, Box, CircularProgress, TextField, Typography } from "@mui
 import { Control, Controller, FieldValues, Path } from "react-hook-form";
 import { formatMoney } from "@/utils/formatMoney";
 import { useTranslations } from "next-intl";
+import { paymentErrorText } from "@/lib/payments/paymentErrors";
 import VoucherInfoTooltip, { type VoucherInfo } from "@/components/VoucherInfoTooltip";
 
 type VoucherOption = VoucherInfo & {
@@ -31,6 +32,7 @@ function VoucherPickerField<TFieldValues extends FieldValues>({
   onSetVoucherPayment,
 }: Props<TFieldValues>) {
   const t = useTranslations("BookingPayment");
+  const tErr = useTranslations("BookingPayment.errors");
   const [options, setOptions] = useState<VoucherOption[]>([]);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -132,7 +134,7 @@ function VoucherPickerField<TFieldValues extends FieldValues>({
                 size="small"
                 fullWidth
                 error={!!fieldState.error}
-                helperText={fieldState.error?.message}
+                helperText={paymentErrorText(fieldState.error?.message, (k) => tErr(k as never))}
                 slotProps={{
                   input: {
                     ...params.InputProps,

@@ -278,7 +278,28 @@
     "paymentDateTodayHint": "Por defecto es hoy. Cámbiala solo si este pago se cobró realmente en una fecha anterior.",
     "paymentDateBackdatedWarning": "Estás fechando este pago en el pasado, el {date}. Contará en los totales y los ingresos (por fecha de pago) de ese día, no de hoy.",
     "paymentDateVoucherNote": "Los importes de bono no se ven afectados por esta fecha: ese dinero ya se contabilizó cuando se vendió el bono. Esta fecha solo afecta a efectivo y tarjeta.",
-    "paymentDateArmedVoucher": "Fecha del pago fijada al {date} — solo efectivo y tarjeta; los importes de bono no se ven afectados."
+    "paymentDateArmedVoucher": "Fecha del pago fijada al {date} — solo efectivo y tarjeta; los importes de bono no se ven afectados.",
+    "paymentRegistered": "Pago registrado.",
+    "tipBanner": "Ya hay una propina de {tip} registrada para {therapists}. Cobra al cliente {total} en total: {service} del servicio más {tip} de propina. Introduce aquí abajo solo el importe del servicio.",
+    "tipBannerPaid": "Ya hay una propina de {tip} registrada para {therapists}. El servicio está totalmente pagado: la propina se registra aparte y nunca debe añadirse como pago.",
+    "errors": {
+      "INVALID_BOOKING_ID": "Reserva no válida.",
+      "INVALID_PAYMENT_DATE": "Fecha de pago no válida.",
+      "BOOKING_NOT_FOUND": "Esta reserva ya no existe.",
+      "BOOKING_CANCELLED": "Una reserva cancelada no admite pagos.",
+      "VOUCHER_ON_ANONYMOUS_BOOKING": "No se puede aplicar un bono a una reserva anónima.",
+      "VOUCHER_NOT_FOUND": "Bono no encontrado.",
+      "VOUCHER_EXPIRED": "Este bono ha caducado.",
+      "VOUCHER_INSUFFICIENT_BALANCE": "Este bono no tiene saldo suficiente.",
+      "PAYMENT_FAILED": "No se pudo registrar el pago. Inténtalo de nuevo.",
+      "NO_PAYMENT_ENTERED": "Registra al menos un pago.",
+      "EXCEEDS_PRICE": "Esto supera el precio de la reserva. Si la diferencia es una propina, regístrala con «Añadir» en la sección Propinas; nunca subas el precio para que quepa una propina.",
+      "VOUCHER_CODE_REQUIRED": "El código del bono es obligatorio.",
+      "PAYMENT_NOT_A_NUMBER": "Introduce un número.",
+      "PAYMENT_NEGATIVE": "El importe debe ser positivo.",
+      "PAYMENT_MAX_2_DECIMALS": "Máximo 2 decimales.",
+      "VOUCHER_CODE_FORMAT": "Formato no válido (ej. V-280426-1)."
+    }
   },
   "BookingDelete": {
     "title": "¿Eliminar reserva?",
@@ -304,7 +325,10 @@
     "tipAdded": "Propina añadida",
     "tipRemoved": "Propina eliminada",
     "failedAddTip": "Error al añadir la propina",
-    "failedDeleteTip": "Error al eliminar la propina"
+    "failedDeleteTip": "Error al eliminar la propina",
+    "tipChargeTotal": "Cobra al cliente {total} en total: {service} del servicio más {tip} de propina. En Añadir pago, introduce solo el importe del servicio ({service}).",
+    "tipChargeTipOnly": "El servicio ya está pagado: cobra solo {tip} de propina.",
+    "tipServiceRemaining": "Quedan {service} por cobrar del servicio. Aquí registra solo la propina; el importe del servicio va en Añadir pago."
   },
   "Clients": {
     "newClient": "Nuevo cliente",
@@ -649,178 +673,293 @@
   },
   "Help": {
     "helpLabel": "Ayuda",
+    "shared": {
+      "creatingBooking": {
+        "heading": "Crear una reserva",
+        "tips": [
+          "Haz clic en \"Nueva reserva\" en la esquina superior derecha.",
+          "Identifica al cliente con un nombre más un teléfono o correo. Para un cliente desconocido, activa el interruptor Walk-in y deja los campos vacíos — los nombres de relleno como «anon» o «walk in» se rechazan.",
+          "Selecciona el servicio, terapeuta, fecha y hora y duración — el precio se rellena desde el catálogo, y aparece un aviso si introduces un precio no estándar.",
+          "Para parejas o grupos, usa la sección Acompañantes: cada acompañante recibe su propia reserva, enlazada en un grupo de reservas.",
+          "Puedes registrar un pago (efectivo, tarjeta o bono) directamente en el formulario. Haz clic en Guardar — la reserva aparece al instante."
+        ]
+      },
+      "clientMatching": {
+        "heading": "Coincidencia de clientes",
+        "tips": [
+          "Al escribir, los clientes coincidentes aparecen en un desplegable — elegir uno rellena todos los campos.",
+          "Si el teléfono o correo que escribes pertenece a un cliente con otro nombre, un diálogo pregunta si mantener los datos guardados o actualizarlos.",
+          "Los nombres de relleno («anon», «walk in»…) se rechazan — para un cliente desconocido deja los campos vacíos.",
+          "El interruptor «Walk-in» solo aparece al crear una reserva. Al editarla, un cliente desconocido simplemente se deja con los campos vacíos."
+        ]
+      },
+      "bookingDialog": {
+        "heading": "Editar una reserva",
+        "tips": [
+          "Actualiza cualquier campo y haz clic en Guardar cambios. Los pagos y propinas se gestionan desde el mismo diálogo.",
+          "Puedes cambiar el cliente, servicio, terapeuta, fecha/hora, precio y estado.",
+          "Para cancelar una reserva, cambia el campo Estado a «Cancelada» y guarda.",
+          "La sección Grupo muestra las demás reservas de un grupo, y permite añadir la reserva al grupo de otra reserva."
+        ]
+      },
+      "payments": {
+        "heading": "Pagos",
+        "tips": [
+          "Abre una reserva y haz clic en «Añadir pago» para registrar un nuevo pago.",
+          "Puedes dividir los pagos entre efectivo, tarjeta y bono.",
+          "Nunca incluyas la propina en el importe del pago. Introduce aquí solo el precio del servicio y registra la propina con «Añadir» en la sección Propinas."
+        ]
+      },
+      "tips": {
+        "heading": "Propinas",
+        "tips": [
+          "Abre una reserva, desplázate hasta la sección Propinas y haz clic en «Añadir».",
+          "Selecciona el terapeuta, el importe y el método (efectivo o tarjeta).",
+          "El IVA se aplica automáticamente a las propinas con tarjeta; las de efectivo no llevan IVA. La fecha de una propina es la fecha de la cita de su reserva.",
+          "Una propina no es un pago: cobra al cliente el precio del servicio más la propina, pero introduce solo el precio del servicio en el diálogo de pago. Cuando hay una propina registrada, ese diálogo muestra el total a cobrar."
+        ]
+      },
+      "phoneEmail": {
+        "heading": "Formato de teléfono y correo",
+        "tips": [
+          "Los teléfonos asumen formato español por defecto (p.ej. 666123456). Para números internacionales, escribe el prefijo de país con + (p.ej. +33 609415297 para Francia).",
+          "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com)."
+        ]
+      },
+      "statuses": {
+        "heading": "Estados de reserva",
+        "tips": [
+          "Pendiente (transitorio): el cliente está interesado pero aún no ha confirmado. Úsalo para guardar sus datos y la hora deseada sin perderlos.",
+          "Confirmada (transitorio): el cliente ha confirmado que va a venir. Úsalo una vez que la cita está fijada y lo estás esperando.",
+          "Completada (final): la sesión ha terminado y el cliente se ha ido. Cámbialo a este estado una vez que la cita haya finalizado.",
+          "Cancelada (final): el cliente no se presentó o canceló. No se pueden añadir pagos ni asignar terapeuta a una reserva cancelada. Deja siempre una nota explicando el motivo."
+        ]
+      }
+    },
     "calendar": {
-      "title": "Calendario",
-      "section0heading": "Crear una reserva",
-      "section0tip0": "Haz clic en \"Nueva reserva\" en la esquina superior derecha.",
-      "section0tip1": "Identifica al cliente con un nombre más un teléfono o correo. Para un cliente desconocido, activa el interruptor Walk-in y deja los campos vacíos — los nombres de relleno como «anon» o «walk in» se rechazan.",
-      "section0tip2": "Selecciona el servicio, terapeuta, fecha y hora y duración — el precio se rellena desde el catálogo, y aparece un aviso si introduces un precio no estándar.",
-      "section0tip3": "Para parejas o grupos, usa la sección Acompañantes: cada acompañante recibe su propia reserva, enlazada en un grupo de reservas.",
-      "section0tip4": "Puedes registrar un pago (efectivo, tarjeta o bono) directamente en el formulario. Haz clic en Guardar — la reserva aparece en el calendario al instante.",
-      "section1heading": "Abrir y editar una reserva",
-      "section1tip0": "Haz clic en cualquier bloque del calendario para abrirla.",
-      "section1tip1": "Actualiza cualquier campo y haz clic en Guardar cambios. Los pagos y propinas se gestionan desde el mismo diálogo.",
-      "section1tip2": "También puedes cambiar el estado (p.ej. marcar como Completada o Cancelada).",
-      "section1tip3": "Cada bloque muestra pagado/precio y su color refleja el estado del pago; se actualiza automáticamente tras pagos y reembolsos.",
-      "section2heading": "Navegar por el calendario",
-      "section2tip0": "Usa las flechas ← → para ir al día/semana/mes anterior o siguiente.",
-      "section2tip1": "Haz clic en «Hoy» para volver a la fecha actual.",
-      "section2tip2": "Cambia entre las vistas «Por terapeuta», «Día», «Semana» y «Mes» con los botones de la derecha.",
-      "section2tip3": "«Por terapeuta» muestra los terapeutas en columnas paralelas, más una columna Sin asignar para reservas sin terapeuta.",
-      "section3heading": "Totales diarios y cierre del día",
-      "section3tip0": "«Totales diarios» abre el resumen de dinero del día visible: reservas, bonos y propinas, más los totales de fin de día (propinas incluidas).",
-      "section3tip1": "«Cerrar día» marca todas las reservas confirmadas del día como Completadas en un solo paso.",
-      "section3tip2": "Solo aplica a hoy o días pasados — si no hay nada que cerrar, un mensaje explica el motivo.",
-      "section4heading": "Formato de teléfono y correo",
-      "section4tip0": "Los teléfonos asumen formato español por defecto (p.ej. 666123456). Para números internacionales, escribe el prefijo de país con + (p.ej. +33 609415297 para Francia).",
-      "section4tip1": "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com).",
-      "section5heading": "Estados de reserva",
-      "section5tip0": "Pendiente (transitorio): el cliente está interesado pero aún no ha confirmado. Úsalo para guardar sus datos y la hora deseada sin perderlos.",
-      "section5tip1": "Confirmada (transitorio): el cliente ha confirmado que va a venir. Úsalo una vez que la cita está fijada y lo estás esperando.",
-      "section5tip2": "Completada (final): la sesión ha terminado y el cliente se ha ido. Cámbialo a este estado una vez que la cita haya finalizado.",
-      "section5tip3": "Cancelada (final): el cliente no se presentó o canceló. No se pueden añadir pagos ni asignar terapeuta a una reserva cancelada. Deja siempre una nota explicando el motivo."
+      "blocks": {
+        "heading": "Bloques del calendario",
+        "tips": [
+          "Haz clic en cualquier bloque del calendario para abrirla.",
+          "Cada bloque muestra pagado/precio y su color refleja el estado del pago; se actualiza automáticamente tras pagos y reembolsos."
+        ]
+      },
+      "navigating": {
+        "heading": "Navegar por el calendario",
+        "tips": [
+          "Usa las flechas ← → para ir al día/semana/mes anterior o siguiente.",
+          "Haz clic en «Hoy» para volver a la fecha actual.",
+          "Cambia entre las vistas «Por terapeuta», «Día», «Semana» y «Mes» con los botones de la derecha.",
+          "«Por terapeuta» muestra los terapeutas en columnas paralelas, más una columna Sin asignar para reservas sin terapeuta."
+        ]
+      },
+      "dailyTotals": {
+        "heading": "Totales diarios y cierre del día",
+        "tips": [
+          "«Totales diarios» abre el resumen de dinero del día visible: reservas, bonos y propinas, más los totales de fin de día (propinas incluidas).",
+          "«Cerrar día» marca todas las reservas confirmadas del día como Completadas en un solo paso.",
+          "Solo aplica a hoy o días pasados — si no hay nada que cerrar, un mensaje explica el motivo."
+        ]
+      },
+      "title": "Calendario"
     },
     "bookings": {
-      "title": "Reservas",
-      "section0heading": "Buscar una reserva",
-      "section0tip0": "Escribe un nombre o teléfono en la barra de búsqueda para filtrar al instante.",
-      "section0tip1": "Haz clic en cualquier cabecera de columna para ordenar ascendente o descendente.",
-      "section0tip2": "Usa las flechas de paginación en la parte inferior para ver reservas más antiguas.",
-      "section1heading": "Editar una reserva",
-      "section1tip0": "Haz clic en el icono de lápiz de cualquier fila para abrir el diálogo de edición.",
-      "section1tip1": "Puedes cambiar el cliente, servicio, terapeuta, fecha/hora, precio y estado.",
-      "section1tip2": "Para cancelar una reserva, cambia el campo Estado a «Cancelada» y guarda.",
-      "section1tip3": "La sección Grupo muestra las demás reservas de un grupo, y permite añadir la reserva al grupo de otra reserva.",
-      "section2heading": "Coincidencia de clientes",
-      "section2tip0": "Al escribir, los clientes coincidentes aparecen en un desplegable — elegir uno rellena todos los campos.",
-      "section2tip1": "Si el teléfono o correo que escribes pertenece a un cliente con otro nombre, un diálogo pregunta si mantener los datos guardados o actualizarlos.",
-      "section2tip2": "Los nombres de relleno («anon», «walk in»…) se rechazan — para un cliente desconocido deja los campos vacíos.",
-      "section3heading": "Pagos",
-      "section3tip0": "La columna Pagado muestra el importe total ya cobrado.",
-      "section3tip1": "Abre una reserva y haz clic en «Añadir pago» para registrar un nuevo pago.",
-      "section3tip2": "Puedes dividir los pagos entre efectivo, tarjeta y bono.",
-      "section4heading": "Propinas",
-      "section4tip0": "Abre una reserva, desplázate hasta la sección Propinas y haz clic en «Añadir».",
-      "section4tip1": "Selecciona el terapeuta, el importe y el método (efectivo o tarjeta).",
-      "section4tip2": "El IVA se aplica automáticamente a las propinas con tarjeta; las de efectivo no llevan IVA. La fecha de una propina es la fecha de la cita de su reserva.",
-      "section5heading": "Formato de teléfono y correo",
-      "section5tip0": "Los teléfonos asumen formato español por defecto (p.ej. 666123456). Para números internacionales, escribe el prefijo de país con + (p.ej. +33 609415297 para Francia).",
-      "section5tip1": "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com).",
-      "section6heading": "Estados de reserva",
-      "section6tip0": "Pendiente (transitorio): el cliente está interesado pero aún no ha confirmado. Úsalo para guardar sus datos y la hora deseada sin perderlos.",
-      "section6tip1": "Confirmada (transitorio): el cliente ha confirmado que va a venir. Úsalo una vez que la cita está fijada y lo estás esperando.",
-      "section6tip2": "Completada (final): la sesión ha terminado y el cliente se ha ido. Cámbialo a este estado una vez que la cita haya finalizado.",
-      "section6tip3": "Cancelada (final): el cliente no se presentó o canceló. No se pueden añadir pagos ni asignar terapeuta a una reserva cancelada."
+      "table": {
+        "heading": "La tabla de reservas",
+        "tips": [
+          "Escribe un nombre o teléfono en la barra de búsqueda para filtrar al instante.",
+          "Haz clic en cualquier cabecera de columna para ordenar ascendente o descendente.",
+          "Usa las flechas de paginación en la parte inferior para ver reservas más antiguas.",
+          "Haz clic en el icono de lápiz de cualquier fila para abrir el diálogo de edición.",
+          "La columna Pagado muestra el importe total ya cobrado."
+        ]
+      },
+      "title": "Reservas"
     },
     "clients": {
       "title": "Clientes",
-      "section0heading": "Ver un cliente",
-      "section0tip0": "Haz clic en una fila para ver el perfil completo e historial de reservas.",
-      "section0tip1": "El recuento de reservas muestra cuántas veces ha visitado.",
-      "section1heading": "Añadir un cliente",
-      "section1tip0": "Haz clic en «Nuevo cliente» en la esquina superior derecha.",
-      "section1tip1": "El nombre es obligatorio. Añade un teléfono o correo para que el cliente pueda encontrarse y enlazarse en reservas más adelante.",
-      "section2heading": "Buscar un cliente",
-      "section2tip0": "Usa la barra de búsqueda para filtrar por nombre, teléfono o correo.",
-      "section3heading": "Formato de teléfono y correo",
-      "section3tip0": "Los teléfonos asumen formato español por defecto (p.ej. 666123456). Para números internacionales, escribe el prefijo de país con + (p.ej. +33 609415297 para Francia).",
-      "section3tip1": "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com)."
+      "section0": {
+        "heading": "Ver un cliente",
+        "tips": [
+          "Haz clic en una fila para ver el perfil completo e historial de reservas.",
+          "El recuento de reservas muestra cuántas veces ha visitado."
+        ]
+      },
+      "section1": {
+        "heading": "Añadir un cliente",
+        "tips": [
+          "Haz clic en «Nuevo cliente» en la esquina superior derecha.",
+          "El nombre es obligatorio. Añade un teléfono o correo para que el cliente pueda encontrarse y enlazarse en reservas más adelante."
+        ]
+      },
+      "section2": {
+        "heading": "Buscar un cliente",
+        "tips": [
+          "Usa la barra de búsqueda para filtrar por nombre, teléfono o correo."
+        ]
+      }
     },
     "payments": {
       "title": "Pagos",
-      "section0heading": "Leer la tabla",
-      "section0tip0": "Cada fila es un evento de pago — una reserva puede tener varias filas si se paga a plazos.",
-      "section0tip1": "La columna Método muestra cómo pagó el cliente: efectivo, tarjeta o bono.",
-      "section0tip2": "Los reembolsos aparecen como importes negativos.",
-      "section1heading": "Registrar un pago",
-      "section1tip0": "Los pagos se registran dentro de la reserva — ábrela desde Calendario o Reservas y haz clic en Añadir pago.",
-      "section1tip1": "No puedes añadir un pago directamente desde esta página."
+      "section0": {
+        "heading": "Leer la tabla",
+        "tips": [
+          "Cada fila es un evento de pago — una reserva puede tener varias filas si se paga a plazos.",
+          "La columna Método muestra cómo pagó el cliente: efectivo, tarjeta o bono.",
+          "Los reembolsos aparecen como importes negativos."
+        ]
+      },
+      "section1": {
+        "heading": "Registrar un pago",
+        "tips": [
+          "Los pagos se registran dentro de la reserva — ábrela desde Calendario o Reservas y haz clic en Añadir pago.",
+          "No puedes añadir un pago directamente desde esta página."
+        ]
+      }
     },
     "services": {
       "title": "Servicios",
-      "section0heading": "Qué controlan los servicios",
-      "section0tip0": "Los servicios definen los tratamientos que ofreces y sus duraciones y precios estándar.",
-      "section0tip1": "Al crear una reserva, seleccionar un servicio + duración rellena el precio automáticamente.",
-      "section0tip2": "Si el precio de una reserva no coincide con el catálogo para ese servicio y duración, el formulario muestra un aviso suave con el precio estándar.",
-      "section1heading": "Añadir un servicio",
-      "section1tip0": "Haz clic en «Nuevo servicio» e introduce un nombre y un nombre corto.",
-      "section1tip1": "Añade una o más combinaciones de duración/precio (p.ej. 60 min → €65, 90 min → €80).",
-      "section2heading": "Editar un servicio",
-      "section2tip0": "Haz clic en el icono de lápiz en una fila de servicio para actualizar su nombre o precios.",
-      "section2tip1": "Los cambios solo se aplican a nuevas reservas — las existentes mantienen su precio original."
+      "section0": {
+        "heading": "Qué controlan los servicios",
+        "tips": [
+          "Los servicios definen los tratamientos que ofreces y sus duraciones y precios estándar.",
+          "Al crear una reserva, seleccionar un servicio + duración rellena el precio automáticamente.",
+          "Si el precio de una reserva no coincide con el catálogo para ese servicio y duración, el formulario muestra un aviso suave con el precio estándar."
+        ]
+      },
+      "section1": {
+        "heading": "Añadir un servicio",
+        "tips": [
+          "Haz clic en «Nuevo servicio» e introduce un nombre y un nombre corto.",
+          "Añade una o más combinaciones de duración/precio (p.ej. 60 min → €65, 90 min → €80)."
+        ]
+      },
+      "section2": {
+        "heading": "Editar un servicio",
+        "tips": [
+          "Haz clic en el icono de lápiz en una fila de servicio para actualizar su nombre o precios.",
+          "Los cambios solo se aplican a nuevas reservas — las existentes mantienen su precio original."
+        ]
+      }
     },
     "therapists": {
       "title": "Terapeutas",
-      "section0heading": "Gestionar terapeutas",
-      "section0tip0": "Haz clic en «Nuevo terapeuta» para añadir un miembro del equipo.",
-      "section0tip1": "Indica al menos un nombre o un apodo — la app muestra el apodo cuando existe. Teléfono, correo y notas son opcionales.",
-      "section0tip2": "Los terapeutas aparecen en el formulario de reserva y en la vista Por terapeuta del calendario.",
-      "section1heading": "Archivar un terapeuta",
-      "section1tip0": "Archiva un terapeuta cuando deje de trabajar: desaparece de los desplegables de nuevas reservas pero conserva todo su historial, y puede restaurarse en cualquier momento.",
-      "section1tip1": "Las reservas pasadas no se ven afectadas, y Estadísticas sigue mostrando a los terapeutas archivados en los períodos en que trabajaron.",
-      "section2heading": "Formato de teléfono y correo",
-      "section2tip0": "Los teléfonos asumen formato español por defecto (p.ej. 666123456). Para números internacionales, escribe el prefijo de país con + (p.ej. +33 609415297 para Francia).",
-      "section2tip1": "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com)."
+      "section0": {
+        "heading": "Gestionar terapeutas",
+        "tips": [
+          "Haz clic en «Nuevo terapeuta» para añadir un miembro del equipo.",
+          "Indica al menos un nombre o un apodo — la app muestra el apodo cuando existe. Teléfono, correo y notas son opcionales.",
+          "Los terapeutas aparecen en el formulario de reserva y en la vista Por terapeuta del calendario."
+        ]
+      },
+      "section1": {
+        "heading": "Archivar un terapeuta",
+        "tips": [
+          "Archiva un terapeuta cuando deje de trabajar: desaparece de los desplegables de nuevas reservas pero conserva todo su historial, y puede restaurarse en cualquier momento.",
+          "Las reservas pasadas no se ven afectadas, y Estadísticas sigue mostrando a los terapeutas archivados en los períodos en que trabajaron."
+        ]
+      }
     },
     "vouchers": {
       "title": "Bonos",
-      "section0heading": "Crear un bono",
-      "section0tip0": "Haz clic en «Nuevo bono»: introduce el comprador (y un destinatario opcional — por defecto el comprador), el saldo inicial, el método de pago y la fecha de vencimiento.",
-      "section0tip1": "Elige el origen: Físico u Online — los bonos online pueden llevar una referencia externa.",
-      "section0tip2": "Se genera un código único automáticamente (p.ej. V-150626-1).",
-      "section1heading": "Aplicar un bono a una reserva",
-      "section1tip0": "Abre la reserva, haz clic en Añadir pago y abre la sección Bono.",
-      "section1tip1": "Busca el bono por código, nombre del cliente, teléfono, correo, notas o referencia — pasa el ratón por una opción para ver todos sus detalles.",
-      "section1tip2": "Al elegirlo, el importe se rellena hasta el saldo restante; el saldo se descuenta al guardar.",
-      "section2heading": "Saldo y vencimiento",
-      "section2tip0": "Busca por código del bono o nombre de cliente en la tabla — la columna Saldo muestra el crédito restante.",
-      "section2tip1": "Los bonos vencidos que aún tienen saldo se resaltan para que puedas avisar al cliente.",
-      "section2tip2": "Abre un bono para añadir saldo, reembolsar un pago o revisar sus usos — cada uso enlaza con su reserva.",
-      "section3heading": "Qué significa cada campo",
-      "section3tip0": "Fecha de creación: la fecha y la hora en que el bono se compró en la vida real, es decir, cuándo se pagó. Retrasa la fecha si lo registras más tarde; la hora se rellena con el momento en que abriste el formulario, así que ajústala también siempre que conozcas la real.",
-      "section3tip1": "Saldo: el saldo inicial con el que se creó el bono.",
-      "section3tip2": "Fecha de vencimiento: se fija automáticamente a 180 días después de la fecha de creación (puedes cambiarla).",
-      "section3tip3": "Origen: Físico si se emite en el mostrador, Online si se compra en la web pública.",
-      "section3tip4": "Referencia externa: el ID del bono online que aparece en el correo de confirmación de compra — déjalo en blanco para bonos físicos.",
-      "section4heading": "Formato de teléfono y correo",
-      "section4tip0": "Los teléfonos asumen formato español por defecto (p.ej. 666123456). Para números internacionales, escribe el prefijo de país con + (p.ej. +33 609415297 para Francia).",
-      "section4tip1": "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com)."
+      "section0": {
+        "heading": "Crear un bono",
+        "tips": [
+          "Haz clic en «Nuevo bono»: introduce el comprador (y un destinatario opcional — por defecto el comprador), el saldo inicial, el método de pago y la fecha de vencimiento.",
+          "Elige el origen: Físico u Online — los bonos online pueden llevar una referencia externa.",
+          "Se genera un código único automáticamente (p.ej. V-150626-1)."
+        ]
+      },
+      "section1": {
+        "heading": "Aplicar un bono a una reserva",
+        "tips": [
+          "Abre la reserva, haz clic en Añadir pago y abre la sección Bono.",
+          "Busca el bono por código, nombre del cliente, teléfono, correo, notas o referencia — pasa el ratón por una opción para ver todos sus detalles.",
+          "Al elegirlo, el importe se rellena hasta el saldo restante; el saldo se descuenta al guardar."
+        ]
+      },
+      "section2": {
+        "heading": "Saldo y vencimiento",
+        "tips": [
+          "Busca por código del bono o nombre de cliente en la tabla — la columna Saldo muestra el crédito restante.",
+          "Los bonos vencidos que aún tienen saldo se resaltan para que puedas avisar al cliente.",
+          "Abre un bono para añadir saldo, reembolsar un pago o revisar sus usos — cada uso enlaza con su reserva."
+        ]
+      },
+      "section3": {
+        "heading": "Qué significa cada campo",
+        "tips": [
+          "Fecha de creación: la fecha y la hora en que el bono se compró en la vida real, es decir, cuándo se pagó. Retrasa la fecha si lo registras más tarde; la hora se rellena con el momento en que abriste el formulario, así que ajústala también siempre que conozcas la real.",
+          "Saldo: el saldo inicial con el que se creó el bono.",
+          "Fecha de vencimiento: se fija automáticamente a 180 días después de la fecha de creación (puedes cambiarla).",
+          "Origen: Físico si se emite en el mostrador, Online si se compra en la web pública.",
+          "Referencia externa: el ID del bono online que aparece en el correo de confirmación de compra — déjalo en blanco para bonos físicos."
+        ]
+      }
     },
     "stats": {
       "title": "Estadísticas",
-      "section0heading": "Cambiar el rango de fechas",
-      "section0tip0": "Los selectores Desde/Hasta están siempre visibles, y ambas fechas son inclusivas.",
-      "section0tip1": "Usa los botones de preajuste (Hoy, Esta semana, Este mes, etc.) para cambiar rápidamente — editar una fecha pasa a rango manual.",
-      "section0tip2": "Los gráficos se agrupan por Día/Semana/Mes — Día es el valor por defecto para rangos de hasta ~45 días; cámbialo con los botones de cada gráfico.",
-      "section1heading": "Leer el panel",
-      "section1tip0": "Las seis tarjetas superiores son los indicadores clave del período seleccionado.",
-      "section1tip1": "Los ingresos totales siguen los chips Incluir (Reservas / Bonos / Propinas) de la sección Ingresos — Propinas está desactivado por defecto porque no son ingresos reales.",
-      "section1tip2": "El chip de reembolsos junto al título de Ingresos muestra los reembolsos de los flujos seleccionados.",
-      "section1tip3": "Los gráficos de propinas se pueden filtrar por método (efectivo/tarjeta) y por terapeuta; las tarjetas por terapeuta incluyen a los archivados en los períodos en que trabajaron.",
-      "section1tip4": "Desplázate hacia abajo para ver reservas por servicio y hora, retención de clientes, bonos vendidos vs canjeados y horas de terapeutas.",
-      "section2heading": "Quién ve qué",
-      "section2tip0": "Solo los administradores ven el panel completo; las cuentas de recepción y terapeuta ven la sección Horas de terapeutas."
+      "section0": {
+        "heading": "Cambiar el rango de fechas",
+        "tips": [
+          "Los selectores Desde/Hasta están siempre visibles, y ambas fechas son inclusivas.",
+          "Usa los botones de preajuste (Hoy, Esta semana, Este mes, etc.) para cambiar rápidamente — editar una fecha pasa a rango manual.",
+          "Los gráficos se agrupan por Día/Semana/Mes — Día es el valor por defecto para rangos de hasta ~45 días; cámbialo con los botones de cada gráfico."
+        ]
+      },
+      "section1": {
+        "heading": "Leer el panel",
+        "tips": [
+          "Las seis tarjetas superiores son los indicadores clave del período seleccionado.",
+          "Los ingresos totales siguen los chips Incluir (Reservas / Bonos / Propinas) de la sección Ingresos — Propinas está desactivado por defecto porque no son ingresos reales.",
+          "El chip de reembolsos junto al título de Ingresos muestra los reembolsos de los flujos seleccionados.",
+          "Los gráficos de propinas se pueden filtrar por método (efectivo/tarjeta) y por terapeuta; las tarjetas por terapeuta incluyen a los archivados en los períodos en que trabajaron.",
+          "Desplázate hacia abajo para ver reservas por servicio y hora, retención de clientes, bonos vendidos vs canjeados y horas de terapeutas."
+        ]
+      },
+      "section2": {
+        "heading": "Quién ve qué",
+        "tips": [
+          "Solo los administradores ven el panel completo; las cuentas de recepción y terapeuta ven la sección Horas de terapeutas."
+        ]
+      }
     },
     "tips": {
       "title": "Propinas",
-      "section0heading": "Qué muestra esta página",
-      "section0tip0": "Todas las propinas del período, una fila cada una — filtra por terapeuta y rango de fechas (mismos selectores que Estadísticas).",
-      "section0tip1": "Las fechas son la fecha de la cita de la reserva, y la columna Reserva (cliente · servicio · hora) abre la reserva.",
-      "section0tip2": "Los administradores pueden alternar entre Todas / Pendientes / Liberadas; los demás roles solo ven las pendientes, y las cuentas de terapeuta son de solo lectura.",
-      "section1heading": "Liberar un pago",
-      "section1tip0": "Selecciona propinas pendientes con las casillas — una barra de resumen muestra los totales bruto, IVA y neto.",
-      "section1tip1": "Solo los administradores pueden liberar: «Liberar seleccionadas» las marca como pagadas.",
-      "section1tip2": "El importe neto (después del IVA) es lo que recibe el terapeuta. Las propinas liberadas salen de la vista de pendientes.",
-      "section2heading": "Registrar una propina",
-      "section2tip0": "Las propinas se añaden dentro de una reserva — ábrela y desplázate hasta la sección Propinas.",
-      "section2tip1": "Elige el importe y el método: las propinas con tarjeta llevan IVA automáticamente; las de efectivo no."
+      "section0": {
+        "heading": "Qué muestra esta página",
+        "tips": [
+          "Todas las propinas del período, una fila cada una — filtra por terapeuta y rango de fechas (mismos selectores que Estadísticas).",
+          "Las fechas son la fecha de la cita de la reserva, y la columna Reserva (cliente · servicio · hora) abre la reserva.",
+          "Los administradores pueden alternar entre Todas / Pendientes / Liberadas; los demás roles solo ven las pendientes, y las cuentas de terapeuta son de solo lectura."
+        ]
+      },
+      "section1": {
+        "heading": "Liberar un pago",
+        "tips": [
+          "Selecciona propinas pendientes con las casillas — una barra de resumen muestra los totales bruto, IVA y neto.",
+          "Solo los administradores pueden liberar: «Liberar seleccionadas» las marca como pagadas.",
+          "El importe neto (después del IVA) es lo que recibe el terapeuta. Las propinas liberadas salen de la vista de pendientes."
+        ]
+      },
+      "section2": {
+        "heading": "Registrar una propina",
+        "tips": [
+          "Las propinas se añaden dentro de una reserva — ábrela y desplázate hasta la sección Propinas.",
+          "Elige el importe y el método: las propinas con tarjeta llevan IVA automáticamente; las de efectivo no."
+        ]
+      }
     },
     "fallback": {
       "title": "Ayuda",
-      "section0heading": "Primeros pasos",
-      "section0tip0": "Usa la barra lateral para navegar entre páginas.",
-      "section0tip1": "Haz clic en «Nueva reserva» desde Calendario o Reservas para crear una reserva.",
-      "section0tip2": "Cada página tiene su propia ayuda — navega allí y vuelve a abrir este panel."
+      "section0": {
+        "heading": "Primeros pasos",
+        "tips": [
+          "Usa la barra lateral para navegar entre páginas.",
+          "Haz clic en «Nueva reserva» desde Calendario o Reservas para crear una reserva.",
+          "Cada página tiene su propia ayuda — navega allí y vuelve a abrir este panel."
+        ]
+      }
     }
   },
   "Errors": {

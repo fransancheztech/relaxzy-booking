@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 import { isVoucherExpired } from "@/lib/vouchers/expiry";
+// Errors are returned as stable codes (see src/lib/payments/paymentErrors.ts); the
+// client translates them. Never put a user-facing sentence in this route.
 
 export async function POST(
   req: Request,
@@ -12,7 +14,7 @@ export async function POST(
 
     if (!id || typeof id !== "string") {
       return NextResponse.json(
-        { error: "Invalid booking ID" },
+        { error: "INVALID_BOOKING_ID" },
         { status: 400 }
       );
     }
@@ -27,7 +29,7 @@ export async function POST(
 
     if (cashPayment <= 0 && cardPayment <= 0 && voucherPayment <= 0) {
       return NextResponse.json(
-        { error: "At least one payment must be greater than zero" },
+        { error: "NO_PAYMENT_ENTERED" },
         { status: 400 }
       );
     }
@@ -37,7 +39,7 @@ export async function POST(
     if (paymentDate != null && paymentDate !== "") {
       const d = new Date(paymentDate);
       if (Number.isNaN(d.getTime())) {
-        return NextResponse.json({ error: "Invalid payment date" }, { status: 400 });
+        return NextResponse.json({ error: "INVALID_PAYMENT_DATE" }, { status: 400 });
       }
       paymentCreatedAt = d.toISOString();
     }
@@ -54,14 +56,14 @@ export async function POST(
 
     if (!booking) {
       return NextResponse.json(
-        { error: "Booking not found or already deleted" },
+        { error: "BOOKING_NOT_FOUND" },
         { status: 404 }
       );
     }
 
     if (booking.status === "cancelled") {
       return NextResponse.json(
-        { error: "Cannot add payments to a cancelled booking" },
+        { error: "BOOKING_CANCELLED" },
         { status: 409 }
       );
     }
@@ -74,14 +76,14 @@ export async function POST(
     if (voucherPayment > 0) {
       if (!voucherCode?.trim()) {
         return NextResponse.json(
-          { error: "Voucher code is required" },
+          { error: "VOUCHER_CODE_REQUIRED" },
           { status: 400 }
         );
       }
 
       if (!booking.client_id) {
         return NextResponse.json(
-          { error: "Cannot apply a voucher to an anonymous booking" },
+          { error: "VOUCHER_ON_ANONYMOUS_BOOKING" },
           { status: 400 }
         );
       }
@@ -93,21 +95,21 @@ export async function POST(
 
       if (!voucher) {
         return NextResponse.json(
-          { error: "Voucher not found" },
+          { error: "VOUCHER_NOT_FOUND" },
           { status: 404 }
         );
       }
 
       if (isVoucherExpired(voucher.expiration_date)) {
         return NextResponse.json(
-          { error: "Voucher has expired" },
+          { error: "VOUCHER_EXPIRED" },
           { status: 400 }
         );
       }
 
       if (Number(voucher.balance ?? 0) < voucherPayment) {
         return NextResponse.json(
-          { error: "Insufficient voucher balance" },
+          { error: "VOUCHER_INSUFFICIENT_BALANCE" },
           { status: 400 }
         );
       }
@@ -142,7 +144,7 @@ export async function POST(
       toCents(alreadyPaid + incomingTotal) > toCents(Number(booking.price))
     ) {
       return NextResponse.json(
-        { error: "Total payment exceeds booking price" },
+        { error: "EXCEEDS_PRICE" },
         { status: 400 }
       );
     }
@@ -209,7 +211,7 @@ export async function POST(
     console.error("POST /bookings/[id]/payment error:", error);
 
     return NextResponse.json(
-      { error: "Failed to register payment" },
+      { error: "PAYMENT_FAILED" },
       { status: 500 }
     );
   }

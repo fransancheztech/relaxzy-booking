@@ -41,17 +41,46 @@ const PAGE_KEYS: Record<string, PageKey> = {
   "/tips":       "tips",
 };
 
-const SECTION_COUNTS: Record<PageKey, number[]> = {
-  calendar:    [5, 4, 4, 3, 2, 4],
-  bookings:    [3, 4, 3, 3, 3, 2, 4],
-  clients:     [2, 2, 1, 2],
-  payments:    [3, 2],
-  services:    [3, 2, 2],
-  therapists:  [3, 2, 2],
-  vouchers:    [3, 3, 3, 5, 2],
-  stats:       [3, 5, 1],
-  tips:        [3, 3, 2],
-  fallback:    [3],
+// Each page is composed from an ordered list of section ids under the Help namespace.
+// `shared.*` sections are the ones that describe the New Booking and Edit Booking dialogs
+// (both pages open the very same components) or facts that hold everywhere, so they are
+// written once and listed by every page that needs them — Phone & email alone used to be
+// copy-pasted across five pages, and the Booking statuses copies had already drifted
+// apart. Sections are ordered by how often a receptionist needs them, not by origin.
+//
+// Tips live in the message files as arrays, so adding or removing a bullet is a
+// translation-only change: nothing here needs to be kept in sync with a count.
+const PAGE_SECTIONS: Record<PageKey, string[]> = {
+  calendar: [
+    "shared.creatingBooking",
+    "shared.clientMatching",
+    "calendar.blocks",
+    "shared.bookingDialog",
+    "shared.payments",
+    "shared.tips",
+    "calendar.navigating",
+    "calendar.dailyTotals",
+    "shared.phoneEmail",
+    "shared.statuses",
+  ],
+  bookings: [
+    "bookings.table",
+    "shared.creatingBooking",
+    "shared.clientMatching",
+    "shared.bookingDialog",
+    "shared.payments",
+    "shared.tips",
+    "shared.phoneEmail",
+    "shared.statuses",
+  ],
+  clients:    ["clients.section0", "clients.section1", "clients.section2", "shared.phoneEmail"],
+  payments:   ["payments.section0", "payments.section1"],
+  services:   ["services.section0", "services.section1", "services.section2"],
+  therapists: ["therapists.section0", "therapists.section1", "shared.phoneEmail"],
+  vouchers:   ["vouchers.section0", "vouchers.section1", "vouchers.section2", "vouchers.section3", "shared.phoneEmail"],
+  stats:      ["stats.section0", "stats.section1", "stats.section2"],
+  tips:       ["tips.section0", "tips.section1", "tips.section2"],
+  fallback:   ["fallback.section0"],
 };
 
 export default function HelpButton() {
@@ -62,7 +91,7 @@ export default function HelpButton() {
   if (pathname === "/login") return null;
 
   const pageKey: PageKey = PAGE_KEYS[pathname] ?? "fallback";
-  const sections = SECTION_COUNTS[pageKey];
+  const sections = PAGE_SECTIONS[pageKey];
   const title = t(`${pageKey}.title` as Parameters<typeof t>[0]);
 
   return (
@@ -116,14 +145,14 @@ export default function HelpButton() {
 
           {/* Content */}
           <Box sx={{ flex: 1, overflowY: "auto", px: 2.5, py: 2 }}>
-            {sections.map((tipCount, si) => {
-              const headingKey = `${pageKey}.section${si}heading` as Parameters<typeof t>[0];
-              const heading = t(headingKey);
-              const tips: string[] = Array.from({ length: tipCount }, (_, ti) =>
-                t(`${pageKey}.section${si}tip${ti}` as Parameters<typeof t>[0])
-              );
+            {sections.map((sectionId, si) => {
+              const heading = t(`${sectionId}.heading` as Parameters<typeof t>[0]);
+              // t.raw returns the tips array as authored; guard so a malformed or missing
+              // entry renders an empty section instead of throwing the drawer away.
+              const raw = t.raw(`${sectionId}.tips` as Parameters<typeof t>[0]);
+              const tips: string[] = Array.isArray(raw) ? raw : [];
               return (
-                <Box key={si} sx={{ mb: 3 }}>
+                <Box key={sectionId} sx={{ mb: 3 }}>
                   <Typography
                     variant="subtitle2"
                     fontWeight={700}

@@ -401,7 +401,12 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
       </Grid>
 
       <Grid size={12}>
-        <TipSection bookingId={bookingId} defaultTherapistId={therapistId ?? undefined} readOnly={readOnly} />
+        <TipSection
+          bookingId={bookingId}
+          defaultTherapistId={therapistId ?? undefined}
+          readOnly={readOnly}
+          serviceRemaining={paymentSummary.remainingBalance}
+        />
       </Grid>
 
       {(errors as any).form?.message && (

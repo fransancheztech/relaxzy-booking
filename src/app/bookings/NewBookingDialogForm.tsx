@@ -24,6 +24,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
+import { paymentErrorText } from "@/lib/payments/paymentErrors";
 
 type Props = {
   open: boolean;
@@ -33,6 +34,14 @@ type Props = {
 const NewBookingDialogForm = ({ open, onClose }: Props) => {
   const t = useTranslations("BookingForm");
   const tCommon = useTranslations("Common");
+  const tPayErr = useTranslations("BookingPayment.errors");
+
+  // The booking is already created by the time a payment fails, so this surfaces the
+  // route's error code in the receptionist's language rather than swallowing it.
+  const reportPaymentError = (code: string | undefined) =>
+    toast.error(
+      paymentErrorText(code, (k) => tPayErr(k as never)) ?? tPayErr("PAYMENT_FAILED"),
+    );
 
   const defaultValues = {
     client_name: "",
@@ -68,7 +77,11 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
       ...data,
       client_email: data.client_email?.trim() || undefined,
     };
-    const result = await handleSubmitCreateBooking(normalizedData, clientResolutions);
+    const result = await handleSubmitCreateBooking(
+      normalizedData,
+      clientResolutions,
+      reportPaymentError,
+    );
 
     if (result.status === "ok") {
       setConflicts([]);

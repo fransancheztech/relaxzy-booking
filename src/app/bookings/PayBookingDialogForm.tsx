@@ -39,11 +39,21 @@ import { BusinessDatePicker } from "@/components/BusinessDatePickers";
 import { BUSINESS_TIMEZONE } from "@/constants";
 import { DateTime } from "luxon";
 import { useTranslations } from "next-intl";
+import { toast } from "react-toastify";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
+import { paymentErrorText } from "@/lib/payments/paymentErrors";
+import { therapistDisplayName } from "@/utils/therapistName";
 
 // Today's calendar day in the business timezone, as a plain JS Date (midnight Madrid).
 const todayBusiness = () =>
   DateTime.now().setZone(BUSINESS_TIMEZONE).startOf("day").toJSDate();
+
+// Shape returned by GET /api/tips?bookingId= (the same endpoint TipSection uses).
+interface BookingTip {
+  id: string;
+  amount: string | number;
+  therapists: { id: string; nickname: string | null; name: string | null; surname: string | null };
+}
 
 interface DialogFormProps {
   open: boolean;
@@ -68,6 +78,12 @@ const PayBookingDialogForm = ({
 }: DialogFormProps) => {
   const t = useTranslations("BookingPayment");
   const tCommon = useTranslations("Common");
+  const tErr = useTranslations("BookingPayment.errors");
+
+  // The schema and the route both emit stable codes; this is the single place they become
+  // readable text. Unknown values pass through rather than render blank.
+  const errText = (message?: string) =>
+    paymentErrorText(message, (k) => tErr(k as never));
 
   const defaultValues = {
     cashPayment: "0",
@@ -79,6 +95,12 @@ const PayBookingDialogForm = ({
     paidCard,
   };
   const [voucherOpen, setVoucherOpen] = useState(false);
+  // Tips already recorded on this booking. The receptionist charges the client the service
+  // amount PLUS the tip in one card transaction, but tips are stored separately (they are
+  // per-therapist and carry their own IVA treatment), so this dialog must state the real
+  // total. Without it the only number on screen is the one that EXCLUDES the tip, and the
+  // tip ends up either added to the payment or folded into the booking price.
+  const [bookingTips, setBookingTips] = useState<BookingTip[]>([]);
   // Payment date (payment_events.created_at). Defaults to today; a receptionist may back-date
   // a payment collected earlier but entered late. Kept tucked behind a small icon (rarely used,
   // delicate). New Booking / companions never touch this.
@@ -101,6 +123,20 @@ const PayBookingDialogForm = ({
     setPaymentDate(todayBusiness());
     setDateOpen(false);
   }, [price, open]);
+
+  // Re-read on every open: a tip may have been added in the Tips section moments ago.
+  useEffect(() => {
+    if (!open || !bookingId) {
+      setBookingTips([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/tips?bookingId=${bookingId}`)
+      .then((r) => (r.ok ? r.json() : { tips: [] }))
+      .then((d) => { if (!cancelled) setBookingTips(d.tips ?? []); })
+      .catch(() => { if (!cancelled) setBookingTips([]); });
+    return () => { cancelled = true; };
+  }, [open, bookingId]);
 
   // Is the picked day before today (Madrid)? Drives the escalated back-dating warning.
   const pickedDay = paymentDate
@@ -127,6 +163,13 @@ const PayBookingDialogForm = ({
   const cardN    = parseAmount(watchedCard);
   const voucherN = parseAmount(watchedVoucher);
 
+  // Still owed on the service alone. Also feeds the voucher picker below.
+  const remaining = Math.max(0, price - paidCash - paidCard - paidVoucher);
+  const tipTotal = bookingTips.reduce((sum, tip) => sum + Number(tip.amount), 0);
+  const tipTherapists = Array.from(
+    new Set(bookingTips.map((tip) => therapistDisplayName(tip.therapists))),
+  ).join(", ");
+
   const methodSegments: { color: string; text: string; key: string }[] = [];
   if (cashN > 0)    methodSegments.push({ color: METHOD_COLORS.cash,    text: `${formatMoney(cashN)} ${t("cash")}`,       key: "cash" });
   if (cardN > 0)    methodSegments.push({ color: METHOD_COLORS.card,    text: `${formatMoney(cardN)} ${t("card")}`,       key: "card" });
@@ -151,15 +194,18 @@ const PayBookingDialogForm = ({
             })
             .toISO() ?? undefined;
       }
-      const success = await handleSubmitPayBooking({
+      const result = await handleSubmitPayBooking({
         ...data,
         id: bookingId,
         paymentDate: paymentDateIso,
       });
-      if (success) {
+      if (result.status === "ok") {
+        toast.success(t("paymentRegistered"));
         onPaymentSuccess();
         onClose();
+        return;
       }
+      toast.error(errText(result.code) ?? tErr("PAYMENT_FAILED"));
     });
 
   const onCancel = () => {
@@ -177,6 +223,28 @@ const PayBookingDialogForm = ({
               container
               spacing={{ xs: 1, xl: 2 }}
             >
+              {/* A tip is recorded on this booking: name the single amount to charge, and
+                  say plainly that only the service part belongs in this form. */}
+              {tipTotal > 0 && (
+                <Grid size={12}>
+                  <Alert
+                    severity="info"
+                    sx={{ py: 0, fontSize: "0.75rem", "& .MuiAlert-message": { py: 0.75 } }}
+                  >
+                    {remaining > 0
+                      ? t("tipBanner", {
+                          tip: formatMoney(tipTotal),
+                          therapists: tipTherapists,
+                          total: formatMoney(remaining + tipTotal),
+                          service: formatMoney(remaining),
+                        })
+                      : t("tipBannerPaid", {
+                          tip: formatMoney(tipTotal),
+                          therapists: tipTherapists,
+                        })}
+                  </Alert>
+                </Grid>
+              )}
               <Grid size={12}>
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
                   <Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
@@ -270,7 +338,7 @@ const PayBookingDialogForm = ({
                       fullWidth
                       size="small"
                       error={!!methods.formState.errors.cashPayment}
-                      helperText={methods.formState.errors.cashPayment?.message}
+                      helperText={errText(methods.formState.errors.cashPayment?.message)}
                       slotProps={{ htmlInput: { inputMode: "decimal" } }}
                       onChange={(e) => {
                         field.onChange(normalizeMoneyInput(e.target.value));
@@ -292,7 +360,7 @@ const PayBookingDialogForm = ({
                       fullWidth
                       size="small"
                       error={!!methods.formState.errors.cardPayment}
-                      helperText={methods.formState.errors.cardPayment?.message}
+                      helperText={errText(methods.formState.errors.cardPayment?.message)}
                       slotProps={{ htmlInput: { inputMode: "decimal" } }}
                       onChange={(e) => {
                         field.onChange(normalizeMoneyInput(e.target.value));
@@ -330,7 +398,7 @@ const PayBookingDialogForm = ({
                         key={String(open) + String(voucherOpen)}
                         control={methods.control}
                         voucherCodeName="voucherCode"
-                        remainingAmount={Math.max(0, price - paidCash - paidCard - paidVoucher)}
+                        remainingAmount={remaining}
                         onSetVoucherPayment={(val) => methods.setValue("voucherPayment", val)}
                       />
                     </Grid>
@@ -347,7 +415,7 @@ const PayBookingDialogForm = ({
                             fullWidth
                             size="small"
                             error={!!methods.formState.errors.voucherPayment}
-                            helperText={methods.formState.errors.voucherPayment?.message}
+                            helperText={errText(methods.formState.errors.voucherPayment?.message)}
                             slotProps={{ htmlInput: { inputMode: "decimal" } }}
                             onChange={(e) => {
                               field.onChange(normalizeMoneyInput(e.target.value));
@@ -366,7 +434,7 @@ const PayBookingDialogForm = ({
               {(methods.formState.errors as any).payment_form?.message && (
                 <Container sx={{ marginBottom: 2 }}>
                   <Alert severity="error" variant="standard">
-                    {(methods.formState.errors as any).payment_form.message}
+                    {errText((methods.formState.errors as any).payment_form.message)}
                   </Alert>
                 </Container>
               )}

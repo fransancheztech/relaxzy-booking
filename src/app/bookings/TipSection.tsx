@@ -49,6 +49,11 @@ interface Props {
   bookingId: string;
   defaultTherapistId?: string;
   readOnly?: boolean;
+  // Still owed on the service itself, so this form can name the ONE amount to charge the
+  // client (service + tip). The mirror of the tip banner in the Pay Booking dialog: the
+  // receptionist may do these two steps in either order, and whichever she opens first
+  // has to tell her the real total. Computed by the parent, which already tracks it.
+  serviceRemaining?: number;
 }
 
 function isToday(iso: string): boolean {
@@ -61,7 +66,7 @@ function formatShortDate(iso: string): string {
   return formatBusinessDate(iso);
 }
 
-const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
+const TipSection = ({ bookingId, defaultTherapistId, readOnly, serviceRemaining }: Props) => {
   const t = useTranslations("Tips");
   const tCommon = useTranslations("Common");
   const therapists = useTherapists();
@@ -80,6 +85,14 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
   });
 
   const paymentMethod = methods.watch("payment_method");
+  // Live with the typed amount, so the total updates as she types.
+  const typedTipAmount = (() => {
+    const raw = methods.watch("amount");
+    if (raw == null || raw === "") return 0;
+    const n = Number(String(raw).replace(",", "."));
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  })();
+  const owed = serviceRemaining ?? 0;
 
   const fetchTips = useCallback(async () => {
     if (!bookingId) return;
@@ -300,6 +313,25 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly }: Props) => {
                 {tCommon("cashTipsProhibited")}
               </Typography>
             </Grid>
+
+            {/* The single amount to charge. Three states, because the arithmetic differs:
+                the service may still be owed, or already collected, and she may not have
+                typed a tip amount yet. */}
+            {serviceRemaining !== undefined && (typedTipAmount > 0 || owed > 0) && (
+              <Grid size={12}>
+                <Typography variant="caption" color="info.main" sx={{ display: "block" }}>
+                  {typedTipAmount > 0 && owed > 0
+                    ? t("tipChargeTotal", {
+                        total: formatMoney(owed + typedTipAmount),
+                        service: formatMoney(owed),
+                        tip: formatMoney(typedTipAmount),
+                      })
+                    : typedTipAmount > 0
+                      ? t("tipChargeTipOnly", { tip: formatMoney(typedTipAmount) })
+                      : t("tipServiceRemaining", { service: formatMoney(owed) })}
+                </Typography>
+              </Grid>
+            )}
 
             {/* IVA is derived from the payment method — shown read-only */}
             <Grid size={12}>

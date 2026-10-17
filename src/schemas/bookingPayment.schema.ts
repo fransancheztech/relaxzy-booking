@@ -1,6 +1,10 @@
 // schemas/bookingPayment.schema.ts
 import { z } from "zod";
 
+// Messages are stable CODES, not sentences: the dialog maps them through
+// paymentErrorText() to BookingPayment.errors.<code> so the receptionist reads them in
+// her own language. See src/lib/payments/paymentErrors.ts.
+
 const moneyPreprocess = (v: unknown) => {
   if (v === "" || v === null || v === undefined) return 0;
 
@@ -14,11 +18,11 @@ const moneyPreprocess = (v: unknown) => {
 };
 
 const moneySchema = z
-  .number({ message: "Payment must be a number" })
-  .nonnegative({ message: "Payment must be a positive number" })
+  .number({ message: "PAYMENT_NOT_A_NUMBER" })
+  .nonnegative({ message: "PAYMENT_NEGATIVE" })
   .refine(
     (val) => Number.isInteger(Math.round(val * 100)),
-    { message: "Max 2 decimal places allowed" }
+    { message: "PAYMENT_MAX_2_DECIMALS" }
   );
 
 export const BookingPaymentSchema = z
@@ -33,7 +37,7 @@ export const BookingPaymentSchema = z
       .optional()
       .refine(
         (val) => !val?.trim() || /^V-\d{6}-\d+$/i.test(val.trim()),
-        { message: "Invalid format (e.g. V-280426-1)" }
+        { message: "VOUCHER_CODE_FORMAT" }
       ),
     price: z.number().nonnegative().optional(),
   })
@@ -44,7 +48,7 @@ export const BookingPaymentSchema = z
     if (totalPayment <= 0) {
       ctx.addIssue({
         code: "custom",
-        message: "You must register at least one payment",
+        message: "NO_PAYMENT_ENTERED",
         path: ["payment_form"],
       });
     }
@@ -52,7 +56,7 @@ export const BookingPaymentSchema = z
     if (data.price !== undefined && totalPayment > data.price - totalPaid) {
       ctx.addIssue({
         code: "custom",
-        message: "This payment would bring the total paid above the booking price",
+        message: "EXCEEDS_PRICE",
         path: ["payment_form"],
       });
     }
@@ -60,7 +64,7 @@ export const BookingPaymentSchema = z
     if (data.voucherPayment > 0 && !data.voucherCode?.trim()) {
       ctx.addIssue({
         code: "custom",
-        message: "Voucher code is required",
+        message: "VOUCHER_CODE_REQUIRED",
         path: ["voucherCode"],
       });
     }
