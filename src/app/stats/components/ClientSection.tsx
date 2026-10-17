@@ -7,6 +7,7 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import { StatsResponse } from "@/types/stats";
 import { formatBusinessBucketLabel } from "@/utils/businessTime";
+import TopClientsTable from "./TopClientsTable";
 
 interface Props {
   clients: StatsResponse["clients"];
@@ -104,6 +105,12 @@ const ClientSection = ({ clients, bucket }: Props) => {
                 );
               })}
             </Box>
+          </Paper>
+        </Grid>
+
+        <Grid size={12}>
+          <Paper elevation={1} sx={{ p: 2, borderRadius: 2 }}>
+            <TopClientsTable clients={clients.top} />
           </Paper>
         </Grid>
       </Grid>

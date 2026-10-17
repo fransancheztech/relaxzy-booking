@@ -9,6 +9,10 @@ import { voucherExpiredSql, voucherNotExpiredSql } from "@/lib/vouchers/expirySq
 
 const toNum = (v: unknown): number => Number(v ?? 0);
 
+// Deepest "top N" the clients card offers. Every ranking is cut at this depth and the
+// union of them is sent once, so the card's selectors never trigger another request.
+const TOP_CLIENTS_LIMIT = 100;
+
 type DateBucket = "day" | "week" | "month";
 
 function getBucket(from: Date, to: Date): DateBucket {
@@ -266,6 +270,106 @@ export async function GET(request: Request) {
         HAVING COUNT(*) > 1
       ) sub
     `;
+    // Top clients - one row per identified client, carrying BOTH booking-count rules and
+    // the money split by method, so the N selector and every toggle on the card work
+    // without refetching. Walk-ins (client_id IS NULL) cannot appear here at all; they are
+    // roughly a third of all bookings, which is why the card says so on screen.
+    //
+    // Spend is purchase-side, matching the rest of this route: booking payment events net
+    // of refunds, plus the VOUCHER PURCHASE - never the redemption, since that money was
+    // already counted when the voucher was sold. A gift voucher is credited to the buyer
+    // AND to the recipient (once each, so a self-bought voucher counts once), because both
+    // are involved in the purchase decision. That makes this column an influence measure
+    // rather than an accounting total: it exceeds revenue by the value of gifted vouchers,
+    // and the card states that explicitly.
+    const topClientRows = await prisma.$queryRaw<{
+      client_id: string; client_name: string | null; client_surname: string | null;
+      client_phone: string | null; client_email: string | null;
+      bookings_individual: number; bookings_grouped: number;
+      spend_all: number; spend_cash: number; spend_card: number;
+    }[]>`
+      WITH visits AS (
+        SELECT b.client_id,
+          COUNT(*)::int AS bookings_individual,
+          -- A group counts once; a booking with no group counts as itself.
+          COUNT(DISTINCT COALESCE(b.booking_group_id::text, b.id::text))::int AS bookings_grouped
+        FROM bookings b
+        WHERE b.deleted_at IS NULL AND b.client_id IS NOT NULL
+          AND b.start_time >= ${from} AND b.start_time < ${to}
+        GROUP BY b.client_id
+      ),
+      booking_money AS (
+        SELECT b.client_id,
+          SUM(CASE WHEN pe.type = 'CHARGE' THEN pe.amount ELSE -pe.amount END) AS all_m,
+          SUM(CASE WHEN pe.method = 'cash' THEN (CASE WHEN pe.type = 'CHARGE' THEN pe.amount ELSE -pe.amount END) ELSE 0 END) AS cash_m,
+          SUM(CASE WHEN pe.method = 'credit_card' THEN (CASE WHEN pe.type = 'CHARGE' THEN pe.amount ELSE -pe.amount END) ELSE 0 END) AS card_m
+        FROM bookings b
+        JOIN payments p ON p.booking_id = b.id AND p.deleted_at IS NULL
+        JOIN payment_events pe ON pe.payment_id = p.id AND pe.deleted_at IS NULL
+        WHERE b.deleted_at IS NULL AND b.client_id IS NOT NULL
+          AND ${bookingDateCol} >= ${from} AND ${bookingDateCol} < ${to}
+        GROUP BY b.client_id
+      ),
+      voucher_net AS (
+        SELECT v.id, v.buyer_id, v.recipient_id,
+          SUM(CASE WHEN pe.type = 'CHARGE' THEN pe.amount ELSE -pe.amount END) AS all_m,
+          SUM(CASE WHEN pe.method = 'cash' THEN (CASE WHEN pe.type = 'CHARGE' THEN pe.amount ELSE -pe.amount END) ELSE 0 END) AS cash_m,
+          SUM(CASE WHEN pe.method = 'credit_card' THEN (CASE WHEN pe.type = 'CHARGE' THEN pe.amount ELSE -pe.amount END) ELSE 0 END) AS card_m
+        FROM vouchers v
+        JOIN payments p ON p.voucher_id = v.id AND p.deleted_at IS NULL
+        JOIN payment_events pe ON pe.payment_id = p.id AND pe.deleted_at IS NULL
+        WHERE v.deleted_at IS NULL
+          AND v.created_at >= ${from} AND v.created_at < ${to}
+        GROUP BY v.id, v.buyer_id, v.recipient_id
+      ),
+      voucher_credit AS (
+        SELECT client_id, SUM(all_m) AS all_m, SUM(cash_m) AS cash_m, SUM(card_m) AS card_m
+        FROM (
+          SELECT buyer_id AS client_id, all_m, cash_m, card_m FROM voucher_net
+          UNION ALL
+          -- The recipient too, but never the same client twice for one voucher.
+          SELECT recipient_id, all_m, cash_m, card_m FROM voucher_net
+            WHERE recipient_id IS NOT NULL AND recipient_id <> buyer_id
+        ) parties
+        GROUP BY client_id
+      ),
+      agg AS (
+        SELECT
+          u.client_id,
+          COALESCE(vi.bookings_individual, 0)::int AS bookings_individual,
+          COALESCE(vi.bookings_grouped, 0)::int    AS bookings_grouped,
+          (COALESCE(bm.all_m, 0)  + COALESCE(vc.all_m, 0))::float  AS spend_all,
+          (COALESCE(bm.cash_m, 0) + COALESCE(vc.cash_m, 0))::float AS spend_cash,
+          (COALESCE(bm.card_m, 0) + COALESCE(vc.card_m, 0))::float AS spend_card
+        FROM (
+          SELECT client_id FROM visits
+          UNION SELECT client_id FROM booking_money
+          UNION SELECT client_id FROM voucher_credit
+        ) u
+        LEFT JOIN visits         vi ON vi.client_id = u.client_id
+        LEFT JOIN booking_money  bm ON bm.client_id = u.client_id
+        LEFT JOIN voucher_credit vc ON vc.client_id = u.client_id
+      ),
+      shortlist AS (
+                SELECT client_id FROM (SELECT client_id FROM agg ORDER BY spend_all           DESC LIMIT ${TOP_CLIENTS_LIMIT}) s1
+        UNION   SELECT client_id FROM (SELECT client_id FROM agg ORDER BY spend_cash          DESC LIMIT ${TOP_CLIENTS_LIMIT}) s2
+        UNION   SELECT client_id FROM (SELECT client_id FROM agg ORDER BY spend_card          DESC LIMIT ${TOP_CLIENTS_LIMIT}) s3
+        UNION   SELECT client_id FROM (SELECT client_id FROM agg ORDER BY bookings_individual DESC LIMIT ${TOP_CLIENTS_LIMIT}) s4
+        UNION   SELECT client_id FROM (SELECT client_id FROM agg ORDER BY bookings_grouped    DESC LIMIT ${TOP_CLIENTS_LIMIT}) s5
+      )
+      SELECT
+        a.client_id::text AS client_id,
+        c.client_name, c.client_surname, c.client_phone, c.client_email,
+        a.bookings_individual, a.bookings_grouped,
+        ROUND(a.spend_all::numeric, 2)::float  AS spend_all,
+        ROUND(a.spend_cash::numeric, 2)::float AS spend_cash,
+        ROUND(a.spend_card::numeric, 2)::float AS spend_card
+      FROM agg a
+      JOIN shortlist sl ON sl.client_id = a.client_id
+      JOIN clients c ON c.id = a.client_id AND c.deleted_at IS NULL
+      ORDER BY a.spend_all DESC
+    `;
+
     const newOverTimeRows = await prisma.$queryRaw<{ period: Date; count: number }[]>`
       SELECT ${truncBusiness(Prisma.sql`first_booking`)} AS period, COUNT(*)::int AS count
       FROM (
@@ -603,6 +707,18 @@ export async function GET(request: Request) {
         new_over_time: newOverTimeRows.map((r) => ({
           period: new Date(r.period).toISOString(),
           count: toNum(r.count),
+        })),
+        top: topClientRows.map((r) => ({
+          client_id: r.client_id,
+          client_name: r.client_name,
+          client_surname: r.client_surname,
+          client_phone: r.client_phone,
+          client_email: r.client_email,
+          bookings_individual: toNum(r.bookings_individual),
+          bookings_grouped: toNum(r.bookings_grouped),
+          spend_all: toNum(r.spend_all),
+          spend_cash: toNum(r.spend_cash),
+          spend_card: toNum(r.spend_card),
         })),
       },
 

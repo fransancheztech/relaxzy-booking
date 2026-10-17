@@ -629,7 +629,18 @@
     "bookingsCol": "Bookings",
     "hoursCol": "Hours",
     "noHoursData": "No completed bookings in the selected period.",
-    "totalRow": "Total"
+    "totalRow": "Total",
+    "topClientsTitle": "Top clients",
+    "topBySpending": "By spending",
+    "topByBookings": "By bookings",
+    "groupAsOneVisit": "Count a group booking as one visit",
+    "topNLabel": "Show",
+    "topColClient": "Client",
+    "topColVisits": "Visits",
+    "topColSpend": "Spend",
+    "topColAvg": "Avg. / visit",
+    "topClientsAttribution": "Spending counts money taken in: booking payments net of refunds, plus vouchers purchased. A voucher is credited to both the buyer and the recipient, because both are involved in the purchase decision — so this column measures influence, not revenue, and adds up to more than total revenue by the value of gifted vouchers. A voucher being redeemed adds nothing, as it was already counted when sold. The payment-method filter narrows the Spend column only; Visits always counts every visit.",
+    "topClientsFootnote": "Walk-ins are excluded — only bookings with an identified client can be ranked. Limited to the top {limit} of each ranking."
   },
   "TipsPage": {
     "filterAll": "All",

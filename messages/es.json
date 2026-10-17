@@ -629,7 +629,18 @@
     "bookingsCol": "Reservas",
     "hoursCol": "Horas",
     "noHoursData": "No hay reservas completadas en el periodo seleccionado.",
-    "totalRow": "Total"
+    "totalRow": "Total",
+    "topClientsTitle": "Mejores clientes",
+    "topBySpending": "Por gasto",
+    "topByBookings": "Por reservas",
+    "groupAsOneVisit": "Contar una reserva de grupo como una visita",
+    "topNLabel": "Mostrar",
+    "topColClient": "Cliente",
+    "topColVisits": "Visitas",
+    "topColSpend": "Gasto",
+    "topColAvg": "Media / visita",
+    "topClientsAttribution": "El gasto cuenta el dinero ingresado: los pagos de reservas menos las devoluciones, más los bonos comprados. Un bono se atribuye tanto a quien lo compra como a quien lo recibe, porque ambos participan en la decisión de compra; por eso esta columna mide influencia, no ingresos, y suma más que los ingresos totales por el valor de los bonos regalados. Canjear un bono no suma nada, ya que se contó al venderlo. El filtro de método de pago solo afecta a la columna Gasto; Visitas cuenta siempre todas las visitas.",
+    "topClientsFootnote": "Los clientes sin identificar quedan excluidos: solo se pueden clasificar las reservas con cliente identificado. Limitado a los {limit} primeros de cada clasificación."
   },
   "TipsPage": {
     "filterAll": "Todas",

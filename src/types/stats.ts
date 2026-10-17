@@ -81,6 +81,23 @@ export interface StatsVoucherPeriodPoint {
   redeemed: number;
 }
 
+export interface StatsTopClient {
+  client_id: string;
+  client_name: string | null;
+  client_surname: string | null;
+  client_phone: string | null;
+  client_email: string | null;
+  /** Every booking row, so a couples visit booked under one client counts twice. */
+  bookings_individual: number;
+  /** A booking group counts once, which is the number of actual visits. */
+  bookings_grouped: number;
+  /** Purchase-side spend: booking payments net of refunds + voucher purchases. A gift
+   *  voucher is credited to both buyer and recipient, so these do not sum to revenue. */
+  spend_all: number;
+  spend_cash: number;
+  spend_card: number;
+}
+
 export interface StatsResponse {
   meta: {
     from: string;
@@ -132,6 +149,7 @@ export interface StatsResponse {
     avg_bookings_per_client: number;
     repeat_frequency_days: number;
     new_over_time: { period: string; count: number }[];
+    top: StatsTopClient[];
   };
 
   tips: {
