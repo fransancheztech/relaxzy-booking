@@ -26,6 +26,7 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { UpdateTherapistSchema, UpdateTherapistSchemaType } from "@/schemas/therapist.schema";
 import { useTranslations } from "next-intl";
+import { useRole } from "@/hooks/useRole";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 import { therapistDisplayName } from "@/utils/therapistName";
 
@@ -64,6 +65,9 @@ export default function UpdateTherapistDialogForm({
 }: Props) {
   const t = useTranslations("Therapists");
   const tCommon = useTranslations("Common");
+  // Archiving is admin-only (the API enforces it), and only admins can see or restore the
+  // archived list, so the button is hidden rather than left to fail with a 403.
+  const { isAdmin } = useRole();
 
   const methods = useForm<UpdateTherapistSchemaType>({
     resolver: zodResolver(UpdateTherapistSchema),
@@ -330,15 +334,20 @@ export default function UpdateTherapistDialogForm({
             </DialogContent>
 
             <DialogActions sx={{ justifyContent: "space-between" }}>
-              <Button
-                startIcon={<DeleteIcon />}
-                color="error"
-                variant="contained"
-                onClick={() => setConfirmDeleteOpen(true)}
-                disabled={submitting}
-              >
-                {tCommon("delete")}
-              </Button>
+              {isAdmin ? (
+                <Button
+                  startIcon={<DeleteIcon />}
+                  color="error"
+                  variant="contained"
+                  onClick={() => setConfirmDeleteOpen(true)}
+                  disabled={submitting}
+                >
+                  {tCommon("delete")}
+                </Button>
+              ) : (
+                // Keeps Cancel/Save pinned right, where they already were.
+                <span />
+              )}
 
               <div>
                 <Button startIcon={<CloseIcon />} onClick={onCancel} disabled={submitting}>

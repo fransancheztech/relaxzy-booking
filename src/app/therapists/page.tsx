@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { Box, Button, Container, FormControlLabel, Switch } from "@mui/material";
+import { Box, Button, Container, FormControlLabel, Stack, Switch, Tooltip } from "@mui/material";
 import { toast } from "react-toastify";
 import CalendarViewWeekIcon from "@mui/icons-material/CalendarViewWeek";
 import AddTherapistDialog from "./AddTherapistDialogForm";
@@ -11,10 +11,13 @@ import { useLayout } from "../context/LayoutContext";
 import TherapistsTable from "./TherapistsTable";
 import TherapistsWeeklySchedule from "./TherapistsWeeklySchedule";
 import { therapists } from "generated/prisma/client";
+import { useRole } from "@/hooks/useRole";
 
 export default function TherapistsPage() {
   const { setButtonLabel, setOnButtonClick } = useLayout();
   const t = useTranslations("Therapists");
+  // Archived therapists are admin-only; the API refuses `archived: true` for anyone else.
+  const { isAdmin } = useRole();
 
   const [therapists, setTherapists] = useState<therapists[]>([]);
   const [loading, setLoading] = useState(false);
@@ -23,6 +26,7 @@ export default function TherapistsPage() {
   const [pageSize, setPageSize] = useState(10);
   const [rowCount, setRowCount] = useState(0);
   const [archived, setArchived] = useState(false);
+  const [showInactive, setShowInactive] = useState(false);
 
   const [addOpen, setAddOpen] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
@@ -44,7 +48,9 @@ export default function TherapistsPage() {
       pageToLoad: number,
       sort?: { field: string; sort: "asc" | "desc" },
       limit?: number,
-      archivedOverride?: boolean,
+      // The callback closes over the toggles' previous values, so a toggle handler passes
+      // its new value here instead of waiting for the re-render.
+      overrides?: { archived?: boolean; includeInactive?: boolean },
     ) => {
       setLoading(true);
       setFetchError(null);
@@ -58,7 +64,8 @@ export default function TherapistsPage() {
             page: pageToLoad,
             limit: actualLimit,
             sort,
-            archived: archivedOverride ?? archived,
+            archived: overrides?.archived ?? archived,
+            includeInactive: overrides?.includeInactive ?? showInactive,
           }),
         });
         const data = await res.json();
@@ -73,7 +80,7 @@ export default function TherapistsPage() {
         setLoading(false);
       }
     },
-    [pageSize, archived]
+    [pageSize, archived, showInactive]
   );
 
   useEffect(() => {
@@ -82,7 +89,12 @@ export default function TherapistsPage() {
 
   const handleToggleArchived = (next: boolean) => {
     setArchived(next);
-    loadTherapists(0, undefined, undefined, next);
+    loadTherapists(0, undefined, undefined, { archived: next });
+  };
+
+  const handleToggleInactive = (next: boolean) => {
+    setShowInactive(next);
+    loadTherapists(0, undefined, undefined, { includeInactive: next });
   };
 
   const handleEdit = (id: string) => {
@@ -106,17 +118,40 @@ export default function TherapistsPage() {
   return (
     <Container sx={{ py: 3 }} disableGutters>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
-        <FormControlLabel
-          control={
-            <Switch
-              size="small"
-              checked={archived}
-              onChange={(e) => handleToggleArchived(e.target.checked)}
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+          {/* Inactive = former staff still on the roster. Inert while the archived list is
+              showing, so it is disabled rather than silently ignored; the tooltip needs the
+              <span> because a disabled MUI control has pointer-events: none. */}
+          <Tooltip title={archived ? t("showInactiveArchivedHint") : ""} arrow enterTouchDelay={0}>
+            <span>
+              <FormControlLabel
+                control={
+                  <Switch
+                    size="small"
+                    checked={showInactive}
+                    disabled={archived}
+                    onChange={(e) => handleToggleInactive(e.target.checked)}
+                  />
+                }
+                label={t("showInactive")}
+                sx={{ "& .MuiFormControlLabel-label": { fontSize: "0.85rem", color: "text.secondary" } }}
+              />
+            </span>
+          </Tooltip>
+          {isAdmin && (
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  checked={archived}
+                  onChange={(e) => handleToggleArchived(e.target.checked)}
+                />
+              }
+              label={t("showArchived")}
+              sx={{ "& .MuiFormControlLabel-label": { fontSize: "0.85rem", color: "text.secondary" } }}
             />
-          }
-          label={t("showArchived")}
-          sx={{ "& .MuiFormControlLabel-label": { fontSize: "0.85rem", color: "text.secondary" } }}
-        />
+          )}
+        </Stack>
         <Button
           variant="outlined"
           size="small"

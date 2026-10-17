@@ -434,7 +434,9 @@
     "dowThu": "Jue",
     "dowFri": "Vie",
     "dowSat": "Sáb",
-    "dowSun": "Dom"
+    "dowSun": "Dom",
+    "showInactive": "Mostrar inactivos",
+    "showInactiveArchivedHint": "La lista de archivados muestra siempre todos los terapeutas archivados, activos o no."
   },
   "Vouchers": {
     "code": "Código",
