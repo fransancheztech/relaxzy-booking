@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "generated/prisma";
+import { phoneSearchTerms } from "@/utils/phone";
 
 const SORTABLE_FIELDS = new Set([
   "client_name", "client_surname", "client_email", "client_phone", "client_notes", "created_at",
@@ -34,7 +35,11 @@ function buildFilterCondition(
     case "client_email":
       return { client_email: { contains: value, mode: "insensitive" } };
     case "client_phone":
-      return { client_phone: { contains: value, mode: "insensitive" } };
+      // Digits as well as the typed text: stored numbers are E.164, so "689 59" must match
+      // "+34689590123".
+      return {
+        OR: phoneSearchTerms(value).map((term) => ({ client_phone: { contains: term, mode: "insensitive" } })),
+      };
     case "client_notes":
       return { client_notes: { contains: value, mode: "insensitive" } };
     case "created_at": {

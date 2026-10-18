@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { BookingListItem } from "@/types/bookings";
 import { Prisma, booking_status } from "generated/prisma";
 import { therapistDisplayName } from "@/utils/therapistName";
+import { phoneSearchTerms } from "@/utils/phone";
 
 const VALID_STATUSES: booking_status[] = ["pending", "confirmed", "completed", "cancelled"];
 
@@ -61,7 +62,13 @@ function buildFilterCondition(
     }
     case "customer_phone":
       if (typeof value !== "string") return null;
-      return { clients: { client_phone: { contains: value, mode: "insensitive" } } };
+      // Digits as well as the typed text: stored numbers are E.164, so "689 59" must match
+      // "+34689590123".
+      return {
+        clients: {
+          OR: phoneSearchTerms(value).map((term) => ({ client_phone: { contains: term, mode: "insensitive" } })),
+        },
+      };
     case "service":
       if (typeof value !== "string") return null;
       return { services_names: { short_name: { contains: value, mode: "insensitive" } } };
@@ -149,7 +156,11 @@ export async function POST(req: NextRequest) {
               { client_name: { contains: searchTerm, mode: "insensitive" } },
               { client_surname: { contains: searchTerm, mode: "insensitive" } },
               { client_email: { contains: searchTerm, mode: "insensitive" } },
-              { client_phone: { contains: searchTerm, mode: "insensitive" } },
+              // Free text, so digits only count from three onwards ("Room 2" must not match
+              // every number containing a 2).
+              ...phoneSearchTerms(searchTerm, 3).map((term) => ({
+                client_phone: { contains: term, mode: "insensitive" as const },
+              })),
             ],
           },
         },

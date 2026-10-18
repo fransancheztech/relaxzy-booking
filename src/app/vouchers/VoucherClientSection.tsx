@@ -2,6 +2,7 @@
 
 import { useClientSearch, FocusedClientField } from "@/hooks/useClientSearch";
 import { ClientRow } from "@/hooks/useSimilarClients";
+import { formatPhone, phoneDigitRange } from "@/utils/phone";
 import { VoucherSchemaInput } from "@/schemas/voucher.schema";
 import { Avatar, Box, Chip, Divider, Grid, Paper, TextField, Typography } from "@mui/material";
 import { useRef, useState } from "react";
@@ -52,18 +53,23 @@ function initials(name?: string | null, surname?: string | null): string {
     .slice(0, 2);
 }
 
-function HighlightedText({ text, query }: { text?: string | null; query?: string }) {
+function HighlightedText({ text, query, phone }: { text?: string | null; query?: string; phone?: boolean }) {
   if (!text) return null;
   if (!query) return <>{text}</>;
   const idx = text.toLowerCase().indexOf(query.toLowerCase());
-  if (idx === -1) return <>{text}</>;
+  // A phone is shown formatted ("+34 689 59 01 23") but may be typed as "68959" or "689 59",
+  // so when the plain substring misses, match on digits and highlight across the spaces.
+  const range: [number, number] | null =
+    idx !== -1 ? [idx, idx + query.length] : phone ? phoneDigitRange(text, query) : null;
+  if (!range) return <>{text}</>;
+  const [start, end] = range;
   return (
     <>
-      {text.slice(0, idx)}
+      {text.slice(0, start)}
       <Box component="span" sx={{ color: "warning.main", fontWeight: 700 }}>
-        {text.slice(idx, idx + query.length)}
+        {text.slice(start, end)}
       </Box>
-      {text.slice(idx + query.length)}
+      {text.slice(end)}
     </>
   );
 }
@@ -122,11 +128,14 @@ function ClientDropdown({
                 <HighlightedText text={fullName} query={query} />
               </Typography>
               <Typography variant="caption" color="text.secondary" noWrap>
-                {[c.client_email, c.client_phone]
-                  .filter(Boolean)
-                  .map((text, idx, arr) => (
+                {[
+                  { text: c.client_email, phone: false },
+                  { text: formatPhone(c.client_phone), phone: true },
+                ]
+                  .filter((part) => !!part.text)
+                  .map((part, idx, arr) => (
                     <Box component="span" key={idx}>
-                      <HighlightedText text={text} query={query} />
+                      <HighlightedText text={part.text} query={query} phone={part.phone} />
                       {idx < arr.length - 1 && " · "}
                     </Box>
                   ))}

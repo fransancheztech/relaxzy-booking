@@ -511,7 +511,8 @@
     "contactTakenEmail": "Ese correo ya pertenece a {name}.",
     "contactTakenPhone": "Ese teléfono ya pertenece a {name}.",
     "deleteUseReasonLabel": "Motivo para eliminar el canje (obligatorio)",
-    "deleteUseReasonRequired": "El motivo es obligatorio"
+    "deleteUseReasonRequired": "El motivo es obligatorio",
+    "invalidPhone": "Teléfono no válido. Para un número no español, añade el prefijo internacional (p. ej. +33 para Francia)."
   },
   "Stats": {
     "totalRevenue": "Ingresos totales",
@@ -736,6 +737,7 @@
         "heading": "Formato de teléfono y correo",
         "tips": [
           "Los teléfonos asumen formato español por defecto (p.ej. 666123456). Para números internacionales, escribe el prefijo de país con + (p.ej. +33 609415297 para Francia).",
+          "Escribe el número como prefieras: con o sin espacios, con o sin +34. Se guarda en formato internacional, así que escribirlo de otra forma nunca crea un duplicado.",
           "Los correos deben tener formato estándar (p.ej. nombre@ejemplo.com)."
         ]
       },

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "generated/prisma";
+import { phoneDigits, phoneSearchTerms, samePhone } from "@/utils/phone";
 
 const FIELDS = ["client_name", "client_surname", "client_email", "client_phone"] as const;
 type FieldKey = (typeof FIELDS)[number];
@@ -34,11 +35,18 @@ async function handlePerField(body: {
 
   const others = body.others ?? {};
 
+  // A phone is matched on its digits: numbers are stored as E.164 ("+34689590123"), while she
+  // may type "689 59 01" or "+34 689", which a plain substring match would miss.
+  const isPhone = field === "client_phone";
+  const focusedFilter: Prisma.clientsWhereInput = isPhone
+    ? { OR: phoneSearchTerms(value).map((term) => ({ client_phone: { contains: term, mode: "insensitive" } })) }
+    : { [field]: { contains: value, mode: "insensitive" } };
+
   try {
     const rows = await prisma.clients.findMany({
       where: {
         deleted_at: null,
-        [field]: { contains: value, mode: "insensitive" },
+        ...focusedFilter,
       },
       select: {
         id: true,
@@ -57,6 +65,9 @@ async function handlePerField(body: {
     const valLc = value.toLowerCase();
 
     const focusedScore = (row: (typeof rows)[number]) => {
+      // For a phone, "exact" means the same number in any spelling; every row returned already
+      // contains the typed digits, so the rest tie and fall through to the overlap score.
+      if (isPhone) return samePhone(row.client_phone, value) ? 2 : 0;
       const f = lc(row[field]);
       if (f === valLc) return 2;
       if (f.startsWith(valLc)) return 1;
@@ -68,7 +79,13 @@ async function handlePerField(body: {
       for (const k of FIELDS) {
         if (k === field) continue;
         const v = (others[k] ?? "").trim().toLowerCase();
-        if (v && lc(row[k]).includes(v)) s += 1;
+        if (!v) continue;
+        if (k === "client_phone") {
+          const digits = phoneDigits(v);
+          if (digits && phoneDigits(row.client_phone).includes(digits)) s += 1;
+        } else if (lc(row[k]).includes(v)) {
+          s += 1;
+        }
       }
       return s;
     };

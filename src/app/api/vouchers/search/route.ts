@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "generated/prisma";
 import { voucherNotExpiredSql } from "@/lib/vouchers/expirySql";
+import { phoneDigits } from "@/utils/phone";
 
 type VoucherRow = {
   id: string;
@@ -30,6 +31,11 @@ export async function GET(request: Request) {
     // Relevance tiers for the ORDER BY: exact code, then code-prefix, then code-contains.
     const exact = q; // ILIKE with no wildcards = case-insensitive exact match
     const prefix = q ? `${q}%` : "%";
+    // Phones are stored as E.164, so a number typed with spaces ("689 59 01") is also matched on
+    // its digits. Only for queries with no letters: voucher codes ("V-280426-1") are the usual
+    // search and are full of digits that must not start matching phone numbers.
+    const qDigits = phoneDigits(q);
+    const phonePattern = !/[a-z]/i.test(q) && qDigits.length >= 3 ? `%${qDigits}%` : pattern;
 
     const rows = await prisma.$queryRaw<VoucherRow[]>`
       SELECT
@@ -62,11 +68,13 @@ export async function GET(request: Request) {
           OR cr.client_name    ILIKE ${pattern}
           OR cr.client_surname ILIKE ${pattern}
           OR cr.client_phone   ILIKE ${pattern}
+          OR cr.client_phone   ILIKE ${phonePattern}
           OR cr.client_email   ILIKE ${pattern}
           OR cr.client_notes   ILIKE ${pattern}
           OR cb.client_name    ILIKE ${pattern}
           OR cb.client_surname ILIKE ${pattern}
           OR cb.client_phone   ILIKE ${pattern}
+          OR cb.client_phone   ILIKE ${phonePattern}
           OR cb.client_email   ILIKE ${pattern}
           OR cb.client_notes   ILIKE ${pattern}
           OR EXISTS (

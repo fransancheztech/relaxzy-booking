@@ -13,6 +13,7 @@ import { formatMoney } from "@/utils/formatMoney";
 import { formatNullable } from "@/utils/formatNullable";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { formatBusinessDate, formatBusinessTime } from "@/utils/businessTime";
+import { formatPhone } from "@/utils/phone";
 import { useTranslations } from "next-intl";
 
 interface Props {
@@ -69,8 +70,7 @@ export const BookingsTable = ({
       field: "customer_phone",
       headerName: t("phone"),
       flex: 1,
-      valueGetter: (_, row) =>
-        row.client ? `${row.client.phone ?? ""}`.trim() : "",
+      valueGetter: (_, row) => (row.client ? formatPhone(row.client.phone) : ""),
     },
     {
       field: "service",

@@ -19,6 +19,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { formatNullable } from "@/utils/formatNullable";
+import { formatPhone } from "@/utils/phone";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { therapists } from "generated/prisma/client";
 import { useTranslations } from "next-intl";
@@ -83,7 +84,7 @@ const TherapistsTable = ({
     { field: "name", headerName: t("name"), flex: 1, valueFormatter: formatNullable },
     { field: "surname", headerName: t("surname"), flex: 1, valueFormatter: formatNullable },
     { field: "email", headerName: tCommon("email"), flex: 1, valueFormatter: formatNullable },
-    { field: "phone", headerName: tCommon("phone"), flex: 1, valueFormatter: formatNullable },
+    { field: "phone", headerName: tCommon("phone"), flex: 1, valueFormatter: (v: string | null) => formatNullable(formatPhone(v)) },
     { field: "notes", headerName: tCommon("notes"), flex: 1, valueFormatter: formatNullable },
     {
       field: "off_days",

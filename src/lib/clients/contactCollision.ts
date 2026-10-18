@@ -1,5 +1,6 @@
 import { Prisma } from "generated/prisma";
 import { CLIENT_CONTACT_TAKEN } from "@/types/clientConflict";
+import { phoneLookupValues } from "@/utils/phone";
 
 // One canonical answer to the question every client-writing surface needs to ask:
 // "this phone/email collided — WHICH field, and WHOSE is it?"
@@ -35,6 +36,12 @@ export class ContactTakenError extends Error {
 
 export type ContactCheck = {
   email?: string | null;
+  /**
+   * The phone as typed. Matched in any format: it is looked up both as typed and in its canonical
+   * E.164 form, so "689 59 01 23" collides with a client stored as "+34689590123". On an update,
+   * pass it only when the number actually changed (see resolvePhoneUpdate) — otherwise a client
+   * that already shares its number with an unmerged duplicate could never be saved again.
+   */
   phone?: string | null;
   /** The client being updated, excluded from the search. Omit when creating. */
   excludeClientId?: string;
@@ -61,9 +68,10 @@ export async function assertContactFree(
     });
     if (other) throw new ContactTakenError("email", clientFullName(other), party);
   }
-  if (phone) {
+  const phoneValues = phoneLookupValues(phone);
+  if (phoneValues.length > 0) {
     const other = await db.clients.findFirst({
-      where: { client_phone: phone, deleted_at: null, ...exclude },
+      where: { client_phone: { in: phoneValues }, deleted_at: null, ...exclude },
       select: { client_name: true, client_surname: true },
     });
     if (other) throw new ContactTakenError("phone", clientFullName(other), party);

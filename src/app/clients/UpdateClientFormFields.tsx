@@ -4,6 +4,7 @@ import { TextField, Grid, Typography } from "@mui/material";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { ClientUpdateSchemaType } from "@/schemas/client.schema";
 import { useTranslations } from "next-intl";
+import { formatPhone } from "@/utils/phone";
 
 // No similar-client dropdown here, deliberately. The booking and voucher forms have one
 // because their client fields answer "WHICH client is this for?", so picking a match and
@@ -46,7 +47,7 @@ const UpdateClientFormFields = ({ readOnly = false }: { readOnly?: boolean }) =>
         <Grid size={6}><ReadOnlyField label={t("name")} value={values.client_name} /></Grid>
         <Grid size={6}><ReadOnlyField label={t("surname")} value={values.client_surname} /></Grid>
         <Grid size={6}><ReadOnlyField label={t("email")} value={values.client_email} /></Grid>
-        <Grid size={6}><ReadOnlyField label={t("phone")} value={values.client_phone} /></Grid>
+        <Grid size={6}><ReadOnlyField label={t("phone")} value={formatPhone(values.client_phone)} /></Grid>
         <Grid size={12}><ReadOnlyField label={t("notes")} value={values.client_notes} /></Grid>
       </Grid>
     );

@@ -24,6 +24,7 @@ import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { StatsTopClient } from "@/types/stats";
 import { formatMoney } from "@/utils/formatMoney";
+import { formatPhone } from "@/utils/phone";
 
 type Metric = "spend" | "bookings";
 type Method = "all" | "cash" | "card";
@@ -73,7 +74,7 @@ const TopClientsTable = ({ clients }: Props) => {
     [c.client_name, c.client_surname].filter(Boolean).join(" ").trim() || "—";
   // Two different clients can share a first name with no surname recorded, so always show
   // a contact detail next to the name.
-  const contact = (c: StatsTopClient) => c.client_phone || c.client_email || null;
+  const contact = (c: StatsTopClient) => formatPhone(c.client_phone) || c.client_email || null;
 
   return (
     <Box>

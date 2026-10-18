@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
 import { UpdateTherapistSchema } from "@/schemas/therapist.schema";
 import { formatZodError } from "@/utils/zodApiError";
+import { canonicalPhone } from "@/utils/phone";
 
 export async function GET(
   req: NextRequest,
@@ -40,7 +41,9 @@ export async function PUT(
       name: norm(name),
       surname: norm(surname),
       email: norm(email),
-      phone: norm(phone),
+      // Stored as E.164, the same rule as client phones. No unique index here, so there is
+      // no duplicate-sibling case to protect and the value is always rewritten canonically.
+      phone: canonicalPhone(phone),
       notes: norm(notes),
       ...(active !== undefined && { active }),
       ...(off_days !== undefined && { off_days }),

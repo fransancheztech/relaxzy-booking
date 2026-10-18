@@ -511,7 +511,8 @@
     "contactTakenEmail": "That email already belongs to {name}.",
     "contactTakenPhone": "That phone already belongs to {name}.",
     "deleteUseReasonLabel": "Reason for removing the redemption (required)",
-    "deleteUseReasonRequired": "A reason is required"
+    "deleteUseReasonRequired": "A reason is required",
+    "invalidPhone": "Invalid phone. For a non-Spanish number, add the international prefix (e.g. +33 for France)."
   },
   "Stats": {
     "totalRevenue": "Total revenue",
@@ -736,6 +737,7 @@
         "heading": "Phone & email format",
         "tips": [
           "Phone numbers default to Spanish format (e.g. 666123456). For international numbers, type the country code with a + prefix (e.g. +33 609415297 for France).",
+          "Type the number any way you like — with or without spaces, with or without +34. It is saved in international format, so different spacing never creates a duplicate.",
           "Emails must follow the standard format (e.g. name@example.com)."
         ]
       },

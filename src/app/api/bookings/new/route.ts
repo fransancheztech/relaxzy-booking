@@ -65,6 +65,17 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+    // Companions write their own client rows too, but only the primary used to be validated
+    // here — the form checked them, a direct API call did not.
+    for (const [i, companion] of (body.companions ?? []).entries()) {
+      const companionCheck = ClientContactSchema.safeParse(companion);
+      if (!companionCheck.success) {
+        return NextResponse.json(
+          { error: `companions.${i}: ${formatZodError(companionCheck.error)}` },
+          { status: 400 }
+        );
+      }
+    }
 
     // ------------------------------------------------------
     // 1) VALIDATE REQUIRED FIELDS

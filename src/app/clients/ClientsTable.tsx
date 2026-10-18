@@ -12,6 +12,7 @@ import { clients as ClientType } from "generated/prisma/client";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { formatNullable } from "@/utils/formatNullable";
+import { formatPhone } from "@/utils/phone";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { GridFilterItem } from "@mui/x-data-grid";
 import { useTranslations } from "next-intl";
@@ -50,7 +51,7 @@ export const ClientsTable = ({
     { field: "client_name", headerName: t("name"), flex: 1, valueFormatter: formatNullable },
     { field: "client_surname", headerName: t("surname"), flex: 1, valueFormatter: formatNullable },
     { field: "client_email", headerName: t("email"), flex: 1, valueFormatter: formatNullable },
-    { field: "client_phone", headerName: t("phone"), flex: 1, valueFormatter: formatNullable },
+    { field: "client_phone", headerName: t("phone"), flex: 1, valueFormatter: (v: string | null) => formatNullable(formatPhone(v)) },
     { field: "client_notes", headerName: t("notes"), flex: 1, valueFormatter: formatNullable },
     {
       field: "created_at",

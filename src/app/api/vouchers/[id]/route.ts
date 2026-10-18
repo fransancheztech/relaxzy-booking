@@ -8,6 +8,9 @@ import {
   contactTakenBody,
   isUniqueViolation,
 } from "@/lib/clients/contactCollision";
+import { VoucherContactSchema } from "@/schemas/clientContact.schema";
+import { formatZodError } from "@/utils/zodApiError";
+import { resolvePhoneUpdate } from "@/utils/phone";
 
 const norm = (v?: string | null) => (v && v.trim() !== "" ? v.trim() : null);
 
@@ -22,6 +25,13 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json();
+
+    // This route writes buyer/recipient phone and email straight onto client rows, yet it used
+    // to validate neither — the dialog did, a direct call did not. Same schema as voucher create.
+    const contactCheck = VoucherContactSchema.safeParse(body);
+    if (!contactCheck.success) {
+      return NextResponse.json({ error: formatZodError(contactCheck.error) }, { status: 400 });
+    }
 
     const voucher = await prisma.vouchers.findFirst({ where: { id, deleted_at: null } });
     if (!voucher) {
@@ -59,17 +69,30 @@ export async function PATCH(
         await tx.vouchers.update({ where: { id }, data: voucherData });
       }
 
+      // The dialog sends both parties on every save, even when only the voucher's notes changed.
+      // So the phone is only checked and rewritten when it is a different number from the one
+      // stored — otherwise editing a voucher whose buyer shares a number with an unmerged
+      // duplicate client would fail with "phone already taken".
+      const currentPhone = async (clientId: string) =>
+        (await tx.clients.findUnique({ where: { id: clientId }, select: { client_phone: true } }))
+          ?.client_phone ?? null;
+
       // Buyer client
       if (body.buyer_name !== undefined) {
         const email = norm(body.buyer_email);
-        const phone = norm(body.buyer_phone);
-        await assertContactFree(tx, { email, phone, excludeClientId: voucher.buyer_id, party: "buyer" });
+        const phoneWrite = resolvePhoneUpdate(body.buyer_phone, await currentPhone(voucher.buyer_id));
+        await assertContactFree(tx, {
+          email,
+          phone: phoneWrite.changed ? norm(body.buyer_phone) : null,
+          excludeClientId: voucher.buyer_id,
+          party: "buyer",
+        });
         await tx.clients.update({
           where: { id: voucher.buyer_id },
           data: {
             client_name: norm(body.buyer_name),
             client_surname: norm(body.buyer_surname),
-            client_phone: phone,
+            client_phone: phoneWrite.value,
             client_email: email,
           },
         });
@@ -79,14 +102,19 @@ export async function PATCH(
       const recipientId = voucher.recipient_id;
       if (body.recipient_name !== undefined && recipientId && recipientId !== voucher.buyer_id) {
         const email = norm(body.recipient_email);
-        const phone = norm(body.recipient_phone);
-        await assertContactFree(tx, { email, phone, excludeClientId: recipientId, party: "recipient" });
+        const phoneWrite = resolvePhoneUpdate(body.recipient_phone, await currentPhone(recipientId));
+        await assertContactFree(tx, {
+          email,
+          phone: phoneWrite.changed ? norm(body.recipient_phone) : null,
+          excludeClientId: recipientId,
+          party: "recipient",
+        });
         await tx.clients.update({
           where: { id: recipientId },
           data: {
             client_name: norm(body.recipient_name),
             client_surname: norm(body.recipient_surname),
-            client_phone: phone,
+            client_phone: phoneWrite.value,
             client_email: email,
           },
         });

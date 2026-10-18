@@ -10,6 +10,7 @@ import {
   describeContactCollision,
   isUniqueViolation,
 } from "@/lib/clients/contactCollision";
+import { canonicalPhone } from "@/utils/phone";
 
 const norm = (v?: string | null) => (v && v.trim() !== "" ? v.trim() : null);
 
@@ -32,7 +33,8 @@ export async function POST(request: Request) {
 
     // Pre-check so the 409 can name the field and the owner. Previously this returned a
     // hardcoded English "Client already exists", which bypassed i18n entirely and told the
-    // receptionist nothing about which value clashed or whose it was.
+    // receptionist nothing about which value clashed or whose it was. The phone is matched in
+    // any format, so the same number typed with spaces still collides.
     await assertContactFree(prisma, { email, phone });
 
     const client = await prisma.clients.create({
@@ -40,7 +42,7 @@ export async function POST(request: Request) {
         client_name: body.client_name,
         client_surname: norm(body.client_surname),
         client_email: email,
-        client_phone: phone,
+        client_phone: canonicalPhone(phone),
       },
     });
 

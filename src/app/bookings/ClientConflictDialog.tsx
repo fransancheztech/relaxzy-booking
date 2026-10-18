@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { formatPhone } from "@/utils/phone";
 import type {
   ClientConflict,
   ClientConflictParty,
@@ -62,7 +63,7 @@ const ClientConflictDialog = ({ open, conflicts, submitting, onCancel, onResolve
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {conflicts.map((c, i) => {
-            const matchValue = c.matchedBy === "email" ? c.existing.email : c.existing.phone;
+            const matchValue = c.matchedBy === "email" ? c.existing.email : formatPhone(c.existing.phone);
             return (
               <Box key={c.slot}>
                 {i > 0 && <Divider sx={{ mb: 2 }} />}

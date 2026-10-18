@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
 import { UpdateTherapistSchema } from "@/schemas/therapist.schema";
 import { formatZodError } from "@/utils/zodApiError";
+import { canonicalPhone } from "@/utils/phone";
 
 const normalize = (v?: string) => (v && v.trim() !== "" ? v.trim() : null);
 
@@ -28,7 +29,8 @@ export async function POST(req: Request) {
         name: normalize(name),
         surname: normalize(surname),
         email: normalize(email),
-        phone: normalize(phone),
+        // Stored as E.164, the same rule as client phones.
+        phone: canonicalPhone(phone),
         notes: normalize(notes),
         active: true,
         ...(off_days !== undefined && { off_days }),

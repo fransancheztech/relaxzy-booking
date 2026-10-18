@@ -3,13 +3,14 @@ import { prisma } from "@/lib/prisma";
 import { ClientUpdateSchema } from "@/schemas/client.schema";
 import { formatZodError } from "@/utils/zodApiError";
 import { CLIENT_CONTACT_TAKEN } from "@/types/clientConflict";
-
-const fullName = (c: { client_name: string | null; client_surname: string | null }) =>
-  [c.client_name, c.client_surname].filter(Boolean).join(" ").trim() || null;
-
-type Params = {
-  params: { clientId: string };
-};
+import {
+  ContactTakenError,
+  assertContactFree,
+  contactTakenBody,
+  describeContactCollision,
+  isUniqueViolation,
+} from "@/lib/clients/contactCollision";
+import { resolvePhoneUpdate } from "@/utils/phone";
 
 export async function GET(
   _: Request,
@@ -42,8 +43,13 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ clientId: string }> }
 ) {
+  // Hoisted so the P2002 backstop can still name the colliding value; the body can't be re-read.
+  let clientId = "";
+  let normalizedEmail: string | null = null;
+  let checkedPhone: string | null = null;
+
   try {
-    const { clientId } = await params;
+    ({ clientId } = await params);
     const raw = await request.json();
     const parsed = ClientUpdateSchema.safeParse(raw);
     if (!parsed.success) {
@@ -51,15 +57,23 @@ export async function PUT(
     }
     const body = parsed.data;
 
-    const normalizedEmail =
+    const current = await prisma.clients.findFirst({
+      where: { id: clientId, deleted_at: null },
+      select: { client_phone: true },
+    });
+    if (!current) {
+      return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    }
+
+    normalizedEmail =
       body.client_email?.trim() === ""
         ? null
         : body.client_email?.trim().toLowerCase() ?? null;
 
-    const normalizedPhone =
-      body.client_phone?.trim() === ""
-        ? null
-        : body.client_phone?.trim() ?? null;
+    // Same number in another spelling keeps the stored value and skips the collision check;
+    // a genuinely new number is stored as E.164 and checked in any format.
+    const phoneWrite = resolvePhoneUpdate(body.client_phone, current.client_phone);
+    checkedPhone = phoneWrite.changed ? body.client_phone?.trim() || null : null;
 
     const normalizedNotes =
       body.client_notes === undefined
@@ -68,32 +82,13 @@ export async function PUT(
           ? null
           : body.client_notes.trim();
 
-    // Contact collision: the new email/phone already belongs to a *different*
-    // active client. Surface whose it is instead of a bare unique-constraint error.
-    if (normalizedEmail) {
-      const other = await prisma.clients.findFirst({
-        where: { client_email: normalizedEmail, deleted_at: null, NOT: { id: clientId } },
-        select: { client_name: true, client_surname: true },
-      });
-      if (other) {
-        return NextResponse.json(
-          { error: CLIENT_CONTACT_TAKEN, conflict: { field: "email", name: fullName(other) } },
-          { status: 409 },
-        );
-      }
-    }
-    if (normalizedPhone) {
-      const other = await prisma.clients.findFirst({
-        where: { client_phone: normalizedPhone, deleted_at: null, NOT: { id: clientId } },
-        select: { client_name: true, client_surname: true },
-      });
-      if (other) {
-        return NextResponse.json(
-          { error: CLIENT_CONTACT_TAKEN, conflict: { field: "phone", name: fullName(other) } },
-          { status: 409 },
-        );
-      }
-    }
+    // Contact collision: the new email/phone already belongs to a *different* active client.
+    // Uses the shared check, so this surface no longer keeps its own copy of the lookup.
+    await assertContactFree(prisma, {
+      email: normalizedEmail,
+      phone: checkedPhone,
+      excludeClientId: clientId,
+    });
 
     const updatedClient = await prisma.clients.update({
       where: { id: clientId },
@@ -101,7 +96,7 @@ export async function PUT(
         client_name: body.client_name,
         client_surname: body.client_surname,
         client_email: normalizedEmail,
-        client_phone: normalizedPhone,
+        client_phone: phoneWrite.value,
         client_notes: normalizedNotes,
         updated_at: new Date(),
       },
@@ -109,8 +104,21 @@ export async function PUT(
 
     return NextResponse.json(updatedClient);
   } catch (err: any) {
-    if (err.code === "P2002") {
-      return NextResponse.json({ error: CLIENT_CONTACT_TAKEN }, { status: 409 });
+    if (err instanceof ContactTakenError) {
+      return NextResponse.json(contactTakenBody(err), { status: 409 });
+    }
+    // Backstop for the race the pre-check can't cover: the colliding row exists now, so the
+    // owner can still be named.
+    if (isUniqueViolation(err)) {
+      const described = await describeContactCollision(prisma, {
+        email: normalizedEmail,
+        phone: checkedPhone,
+        excludeClientId: clientId || undefined,
+      });
+      return NextResponse.json(
+        described ? contactTakenBody(described) : { error: CLIENT_CONTACT_TAKEN },
+        { status: 409 },
+      );
     }
 
     console.error("Update client error:", err);

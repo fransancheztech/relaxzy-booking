@@ -45,6 +45,8 @@ import ClientDropdown from "@/app/bookings/ClientDropdown";
 import { useClientSearch, type FocusedClientField } from "@/hooks/useClientSearch";
 import type { ClientRow } from "@/hooks/useSimilarClients";
 import { CLIENT_CONTACT_TAKEN } from "@/types/clientConflict";
+import { phoneValidator } from "@/utils/phoneValidator";
+import { formatPhone } from "@/utils/phone";
 import { useTranslations } from "next-intl";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 
@@ -129,7 +131,7 @@ const formatDateTime = (value: string | null) => formatBusinessDateTime(value);
 const clientLabel = (c: Client | null) => {
   if (!c) return "—";
   const name = [c.client_name, c.client_surname].filter(Boolean).join(" ");
-  const contact = [c.client_phone, c.client_email].filter(Boolean).join(" · ");
+  const contact = [formatPhone(c.client_phone), c.client_email].filter(Boolean).join(" · ");
   return [name, contact].filter(Boolean).join("  ·  ");
 };
 
@@ -315,6 +317,16 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
   const handleSave = () =>
     saveGuard(async () => {
       if (!editData) return;
+      // The route now validates phones (it used to store anything), and this dialog has no
+      // per-field validation — so check here and say what's wrong, rather than surfacing the
+      // route's 400 as a generic "couldn't save".
+      const badPhone = [editData.buyer_phone, editData.recipient_phone].some(
+        (p) => !!p?.trim() && !phoneValidator(p),
+      );
+      if (badPhone) {
+        toast.error(t("invalidPhone"));
+        return;
+      }
       try {
         const res = await fetch(`/api/vouchers/${voucherId}`, {
           method: "PATCH",

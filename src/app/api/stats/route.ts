@@ -4,7 +4,7 @@ import { Prisma } from "generated/prisma";
 import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
 import { StatsResponse, StatsRevenuePeriodPoint, StatsTipsPeriodPoint } from "@/types/stats";
 import { therapistDisplayName } from "@/utils/therapistName";
-import { BUSINESS_TIMEZONE } from "@/constants";
+import { BUSINESS_TIMEZONE, PLACEHOLDER_CLIENT_NAMES } from "@/constants";
 import { voucherExpiredSql, voucherNotExpiredSql } from "@/lib/vouchers/expirySql";
 
 const toNum = (v: unknown): number => Number(v ?? 0);
@@ -12,6 +12,21 @@ const toNum = (v: unknown): number => Number(v ?? 0);
 // Deepest "top N" the clients card offers. Every ranking is cut at this depth and the
 // union of them is sent once, so the card's selectors never trigger another request.
 const TOP_CLIENTS_LIMIT = 100;
+
+// Placeholder "clients" must never be ranked. The forms reject these names now, but rows
+// created before that guard still exist, and one of them ("Walk in", a bucket many
+// anonymous customers were filed under) ranked among the top clients. The data fix is
+// 2026-10-18-retire-walkin-placeholder-clients.sql; this keeps any survivor or future
+// stray out of the ranking regardless.
+//
+// Shares PLACEHOLDER_CLIENT_NAMES with the forms so there is one list, and compares the
+// WHOLE normalised name exactly as isPlaceholderClientName() does — a substring match
+// would hide real clients, e.g. "Manon" contains "anon".
+const PLACEHOLDER_NAMES = Array.from(PLACEHOLDER_CLIENT_NAMES);
+// Accents are folded with translate(): the unaccent extension is NOT installed on this
+// database, and folding must happen BEFORE the regex or "anonimo" written with an
+// accent collapses to "an nimo" and slips past the filter.
+const normalizedClientName = Prisma.sql`btrim(regexp_replace(translate(lower(coalesce(c.client_name, '')), 'áàäâãéèëêíìïîóòöôõúùüûñç', 'aaaaaeeeeiiiiooooouuuunc'), '[^a-z0-9]+', ' ', 'g'))`;
 
 type DateBucket = "day" | "week" | "month";
 
@@ -346,6 +361,11 @@ export async function GET(request: Request) {
           UNION SELECT client_id FROM booking_money
           UNION SELECT client_id FROM voucher_credit
         ) u
+        -- Filtered here rather than at the end so a placeholder row cannot occupy one of
+        -- the TOP_CLIENTS_LIMIT slots and push a real client out of the list.
+        JOIN clients c ON c.id = u.client_id
+          AND c.deleted_at IS NULL
+          AND NOT (${normalizedClientName} = ANY(${PLACEHOLDER_NAMES}::text[]))
         LEFT JOIN visits         vi ON vi.client_id = u.client_id
         LEFT JOIN booking_money  bm ON bm.client_id = u.client_id
         LEFT JOIN voucher_credit vc ON vc.client_id = u.client_id

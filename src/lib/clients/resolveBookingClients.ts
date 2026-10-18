@@ -2,6 +2,7 @@ import { Prisma } from "generated/prisma";
 import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
 import { isPlaceholderClientName } from "@/utils/placeholderName";
 import { assertContactFree } from "@/lib/clients/contactCollision";
+import { canonicalPhone, resolvePhoneUpdate } from "@/utils/phone";
 
 export type ClientInput = {
   client_name?: string | null;
@@ -66,8 +67,20 @@ async function findClientMatch(
     if (client) return { client, matchedBy: "email" };
   }
   if (phone) {
-    const client = await tx.clients.findFirst({ where: { client_phone: phone, deleted_at: null } });
-    if (client) return { client, matchedBy: "phone" };
+    // Exact stored string FIRST. Editing a booking re-runs this match and re-links
+    // bookings.client_id, and the form sends the phone back exactly as stored — so this keeps
+    // the booking on the same client row, including a legacy-format row that shares its
+    // number with a duplicate sibling still awaiting the merge.
+    const exact = await tx.clients.findFirst({ where: { client_phone: phone, deleted_at: null } });
+    if (exact) return { client: exact, matchedBy: "phone" };
+    // Then the same number typed in any other format. Without this tier, normalising writes
+    // would have CREATED duplicates: a client stored as "689 59 01 23" would stop matching
+    // "+34689590123", and a new client would be made on every save.
+    const canonical = canonicalPhone(phone);
+    if (canonical && canonical !== phone) {
+      const client = await tx.clients.findFirst({ where: { client_phone: canonical, deleted_at: null } });
+      if (client) return { client, matchedBy: "phone" };
+    }
   }
   if (!email && !phone && name) {
     const client = await tx.clients.findFirst({
@@ -123,7 +136,9 @@ export async function detectClientConflict(
       name: normalize(input.client_name),
       surname: normalize(input.client_surname),
       email: normalize(input.client_email),
-      phone: normalize(input.client_phone),
+      // Canonical, so the dialog doesn't present the same number in two spellings as if
+      // they were different values.
+      phone: canonicalPhone(input.client_phone),
     },
   };
 }
@@ -156,7 +171,7 @@ export async function applyClientSlot(
         client_name: input.client_name,
         client_surname: normalize(input.client_surname),
         client_email: normalize(input.client_email),
-        client_phone: normalize(input.client_phone),
+        client_phone: canonicalPhone(input.client_phone),
       },
     });
     return created.id;
@@ -170,9 +185,13 @@ export async function applyClientSlot(
     //
     // It has to be a pre-check, not a catch: Postgres aborts the whole transaction on a failed
     // statement, so no lookup is possible after the fact from inside `tx`.
+    //
+    // The phone is only checked — and only rewritten — when it is a different number from the
+    // one stored. Re-saving the same number in another spelling keeps the stored value.
+    const phoneWrite = resolvePhoneUpdate(input.client_phone, match.client.client_phone);
     await assertContactFree(tx, {
       email: normalize(input.client_email),
-      phone: normalize(input.client_phone),
+      phone: phoneWrite.changed ? input.client_phone : null,
       excludeClientId: match.client.id,
       party,
     });
@@ -183,7 +202,7 @@ export async function applyClientSlot(
         client_name: input.client_name,
         client_surname: normalize(input.client_surname),
         client_email: normalize(input.client_email),
-        client_phone: normalize(input.client_phone),
+        client_phone: phoneWrite.value,
         updated_at: new Date(),
       },
     });

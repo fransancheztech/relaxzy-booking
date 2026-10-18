@@ -4,6 +4,7 @@ import { ReactElement } from "react";
 import { Box, Tooltip } from "@mui/material";
 import { useTranslations } from "next-intl";
 import { formatBusinessDate } from "@/utils/businessTime";
+import { formatPhone } from "@/utils/phone";
 
 export type VoucherInfo = {
   buyer_name?: string | null;
@@ -32,7 +33,7 @@ function partyLine(
   phone?: string | null,
   email?: string | null,
 ): string {
-  return [fullName(first, last), phone, email].filter(Boolean).join(" · ");
+  return [fullName(first, last), formatPhone(phone), email].filter(Boolean).join(" · ");
 }
 
 type Props = {
