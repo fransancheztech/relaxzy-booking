@@ -72,6 +72,18 @@ export function resolvePhoneUpdate(
   return { value: next, changed: true };
 }
 
+/**
+ * The national significant number ("689590123" for "+34689590123"): the digits every spelling of
+ * that number ends with — "689 59 01 23", "0034689590123", and even a trunk-zero "+44 07…" form.
+ * A digits LIKE '%' || this query is a cheap superset to narrow candidates before canonicalising.
+ */
+export function nationalDigits(raw: string | null | undefined): string | null {
+  const trimmed = raw?.trim();
+  if (!trimmed) return null;
+  const parsed = parse(trimmed);
+  return parsed?.isValid() ? String(parsed.nationalNumber) : null;
+}
+
 /** Digits only — for substring search, so typing "689 59 01" finds "+34689590123". */
 export function phoneDigits(raw: string | null | undefined): string {
   return (raw ?? "").replace(/\D/g, "");

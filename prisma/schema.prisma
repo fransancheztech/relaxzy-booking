@@ -56,16 +56,19 @@ model bookings_history {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model clients {
-  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  client_name    String?    @default("Unknown")
-  client_email   String?    @unique(map: "clients_email_active_unique", where: raw("(deleted_at IS NULL)"))
-  client_phone   String?    @unique(map: "clients_phone_active_unique", where: raw("(deleted_at IS NULL)"))
-  client_notes   String?
-  created_at     DateTime   @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
-  updated_at     DateTime?  @db.Timestamptz(6)
-  client_surname String?
-  deleted_at     DateTime?  @db.Timestamptz(6)
-  bookings       bookings[]
+  id                                                                        String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_name                                                               String?                       @default("Unknown")
+  client_email                                                              String?                       @unique(map: "clients_email_active_unique", where: raw("(deleted_at IS NULL)"))
+  client_phone                                                              String?                       @unique(map: "clients_phone_active_unique", where: raw("(deleted_at IS NULL)"))
+  client_notes                                                              String?
+  created_at                                                                DateTime                      @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  updated_at                                                                DateTime?                     @db.Timestamptz(6)
+  client_surname                                                            String?
+  deleted_at                                                                DateTime?                     @db.Timestamptz(6)
+  bookings                                                                  bookings[]
+  client_duplicate_dismissals_client_duplicate_dismissals_client_aToclients client_duplicate_dismissals[] @relation("client_duplicate_dismissals_client_aToclients")
+  client_duplicate_dismissals_client_duplicate_dismissals_client_bToclients client_duplicate_dismissals[] @relation("client_duplicate_dismissals_client_bToclients")
+  client_merges                                                             client_merges[]
 
   @@index([client_email(ops: raw("gin_trgm_ops"))], map: "clients_email_idx", type: Gin)
   @@index([client_name(ops: raw("gin_trgm_ops"))], map: "clients_full_name_idx", type: Gin)
@@ -391,6 +394,40 @@ model agenda_notes {
   deleted_at   DateTime? @db.Timestamptz(6)
 
   @@index([note_date], map: "agenda_notes_date_idx", where: raw("(deleted_at IS NULL)"))
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model client_merges {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  survivor_id     String    @db.Uuid
+  loser_ids       String[]  @db.Uuid
+  moved           Json
+  survivor_before Json
+  survivor_after  Json
+  losers_before   Json
+  merged_by       String?   @db.Uuid
+  merged_at       DateTime  @default(now()) @db.Timestamptz(6)
+  undone_by       String?   @db.Uuid
+  undone_at       DateTime? @db.Timestamptz(6)
+  clients         clients   @relation(fields: [survivor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([loser_ids], type: Gin)
+  @@index([survivor_id], map: "client_merges_survivor_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model client_duplicate_dismissals {
+  id                                                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_a                                              String   @db.Uuid
+  client_b                                              String   @db.Uuid
+  dismissed_by                                          String?  @db.Uuid
+  dismissed_at                                          DateTime @default(now()) @db.Timestamptz(6)
+  clients_client_duplicate_dismissals_client_aToclients clients  @relation("client_duplicate_dismissals_client_aToclients", fields: [client_a], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  clients_client_duplicate_dismissals_client_bToclients clients  @relation("client_duplicate_dismissals_client_bToclients", fields: [client_b], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([client_a, client_b], map: "client_duplicate_dismissals_pair_unique")
+  @@index([client_b])
 }
 
 view bookings_with_details {

@@ -34,18 +34,26 @@ type Props = {
 const fullName = (p: ClientConflictParty) =>
   [p.name, p.surname].filter(Boolean).join(" ").trim() || "—";
 
+// "different" is not a resolution the server knows: a phone or email belongs to exactly one client
+// (unique index), so a different person can't be saved with it at all. Choosing it explains what to
+// do instead and keeps Continue disabled — so neither wrong outcome happens: booking the visit under
+// the other person ("use existing"), or renaming them ("update existing").
+type Choice = ClientResolution | "different";
+
 const ClientConflictDialog = ({ open, conflicts, submitting, onCancel, onResolve }: Props) => {
   const t = useTranslations("BookingForm");
 
-  // Default every conflict to the safe "use existing" choice.
-  const [choices, setChoices] = useState<Record<string, ClientResolution>>({});
+  // No pre-selected choice. "Use existing" used to be the default, which meant pressing Continue
+  // without reading booked the visit under the OTHER person (Ruth's visit on Adam's record) — the
+  // likely outcome at a busy desk once a phone shared by two people belongs to only one of them.
+  const [choices, setChoices] = useState<Record<string, Choice>>({});
 
   useEffect(() => {
-    if (!open) return;
-    const initial: Record<string, ClientResolution> = {};
-    for (const c of conflicts) initial[c.slot] = "use_existing";
-    setChoices(initial);
+    if (open) setChoices({});
   }, [open, conflicts]);
+
+  const allChosen = conflicts.every((c) => choices[c.slot] !== undefined);
+  const anyDifferent = conflicts.some((c) => choices[c.slot] === "different");
 
   const slotLabel = (slot: string) => {
     if (slot === "primary") return t("conflictPrimaryLabel");
@@ -84,10 +92,11 @@ const ClientConflictDialog = ({ open, conflicts, submitting, onCancel, onResolve
                 <ToggleButtonGroup
                   exclusive
                   size="small"
-                  value={choices[c.slot] ?? "use_existing"}
-                  onChange={(_, v: ClientResolution | null) => {
+                  value={choices[c.slot] ?? null}
+                  onChange={(_, v: Choice | null) => {
                     if (v) setChoices((prev) => ({ ...prev, [c.slot]: v }));
                   }}
+                  sx={{ flexWrap: "wrap" }}
                 >
                   <ToggleButton value="use_existing">
                     {t("conflictUseExisting", { name: fullName(c.existing) })}
@@ -95,11 +104,22 @@ const ClientConflictDialog = ({ open, conflicts, submitting, onCancel, onResolve
                   <ToggleButton value="update_existing" color="warning">
                     {t("conflictModify", { name: fullName(c.typed) })}
                   </ToggleButton>
+                  <ToggleButton value="different" color="info">
+                    {t("conflictDifferentPerson", { name: fullName(c.typed) })}
+                  </ToggleButton>
                 </ToggleButtonGroup>
 
                 {choices[c.slot] === "update_existing" && (
                   <Alert severity="warning" sx={{ mt: 1, py: 0 }}>
-                    {t("conflictModifyWarning")}
+                    {t("conflictModifyWarning", { name: fullName(c.existing) })}
+                  </Alert>
+                )}
+                {choices[c.slot] === "different" && (
+                  <Alert severity="info" sx={{ mt: 1, py: 0 }}>
+                    {t(c.matchedBy === "email" ? "conflictDifferentPersonHelpEmail" : "conflictDifferentPersonHelp", {
+                      existing: fullName(c.existing),
+                      typed: fullName(c.typed),
+                    })}
                   </Alert>
                 )}
               </Box>
@@ -111,11 +131,16 @@ const ClientConflictDialog = ({ open, conflicts, submitting, onCancel, onResolve
         <Button onClick={onCancel} disabled={submitting}>
           {t("conflictCancel")}
         </Button>
+        {!allChosen && (
+          <Typography variant="caption" color="text.secondary" sx={{ mr: "auto", pl: 1 }}>
+            {t("conflictChooseAll")}
+          </Typography>
+        )}
         <Button
           variant="contained"
           color="primary"
-          disabled={submitting}
-          onClick={() => onResolve(choices)}
+          disabled={submitting || !allChosen || anyDifferent}
+          onClick={() => onResolve(choices as Record<string, ClientResolution>)}
         >
           {t("conflictConfirm")}
         </Button>

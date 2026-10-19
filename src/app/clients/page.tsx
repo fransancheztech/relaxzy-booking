@@ -10,6 +10,10 @@ import { useLayout } from "../context/LayoutContext";
 import { ClientsTable } from "./ClientsTable";
 import { FETCH_LIMIT } from "@/constants";
 import { GridFilterItem, GridFilterModel } from "@mui/x-data-grid";
+import { Box, Button } from "@mui/material";
+import MergeTypeIcon from "@mui/icons-material/MergeType";
+import { useRouter } from "next/navigation";
+import { useRole } from "@/hooks/useRole";
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<ClientType[]>([]);
@@ -29,6 +33,10 @@ export default function ClientsPage() {
 
   const { setButtonLabel, setOnButtonClick } = useLayout();
   const t = useTranslations("Clients");
+  const router = useRouter();
+  // Resolving duplicates rewrites which client bookings belong to, so it is admin-only (the page
+  // and its API enforce that too; this only decides whether to show the way in).
+  const { isAdmin } = useRole();
 
   // -------------------------------
   // Load clients
@@ -169,6 +177,18 @@ export default function ClientsPage() {
 
   return (
     <main className="p-4">
+      {isAdmin && (
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1.5 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<MergeTypeIcon />}
+            onClick={() => router.push("/clients/duplicates")}
+          >
+            {t("reviewDuplicates")}
+          </Button>
+        </Box>
+      )}
       <ClientsTable
         clients={clients}
         rowCount={rowCount}
