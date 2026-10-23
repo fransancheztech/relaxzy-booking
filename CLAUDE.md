@@ -71,6 +71,11 @@ SUPABASE_URL
 SUPABASE_SERVICE_ROLE_KEY
 ```
 
+## Database Changes
+
+- The user applies every database change. Write schema changes and data fixes as SQL files in `prisma/manual-migrations/YYYY-MM-DD-<description>.sql`; never write to the database yourself. Read-only queries are fine.
+- When a task changes the schema (new tables, columns, types, enums, functions), write the migration and then **stop**. Don't edit `schema.prisma`, routes or UI that depend on it in the same turn. Tell the user: "go ahead and run db pull + prisma generate, then tell me to continue", and wait. The generated client must come from the real database, or downstream code references types that don't match.
+
 ## Planning Conventions
    When generating a plan, save it to `plans/YYYY-MM-DD-<short-description>.md`
    instead of overwriting any existing plan file.

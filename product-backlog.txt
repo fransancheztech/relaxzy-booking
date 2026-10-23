@@ -5,11 +5,27 @@ TO-DO
 - Añadir regalos de las reservas antiguas.
 - Crear vouchers automaticamente cuando compren vouchers online
 - Consultar si UEBEA tiene endpoints para conectar tarjetas regalos y reservas online
+- Restricción en BD para que client_phone solo acepte formato E.164 (+34689590123). Ya se puede: duplicados revisados. Arreglar antes la fila activa con teléfono "" (cliente sin nombre, creado 10/01/2026). Contra: los merges anteriores dejarán de poder deshacerse.
+- Filtro de la tabla Clients: todos los operadores de texto (equals, starts with...) funcionan como "contains"; "is empty"/"is not empty" no hacen nada; "is any of" se ignora. Causa: /api/clients/search solo usa el operador en created_at. Revisar si bookings, vouchers y payments tienen el mismo problema.
+
+CALIDAD DE DATOS DE CLIENTES (acordado 19/10/2026: los nombres se guardan CON acentos, tal como se escriben; es la comparación la que debe ignorarlos)
+- Normalizar nombre y apellido a Unicode NFC al guardar, en los mismos puntos donde ya se normaliza el teléfono.
+- Búsqueda y detección insensible a acentos y letras extranjeras: "Rocio" debe encontrar "Rocío"; también ç→c, ñ→n, ü→u, ß→ss, ø→o, æ→ae. Necesita instalar la extensión unaccent en la BD. Solo para buscar, sugerir y detectar duplicados; nunca reescribir nombres guardados ni fusionar automáticamente por esto (Peña y Pena son apellidos distintos).
+- Ordenación alfabética en español, para que "Ángela" vaya con las A y no después de la Z.
+- Mayúscula inicial en nombres y apellidos, al guardar y con backfill. Acordar antes la regla: partículas ("María de los Ángeles", "Juan del Río"), nombres compuestos ("José María", "Ana-Belén") y casos como McDonald, O'Brien.
+- Lista para revisar nombres sin la tilde que deberían llevar ("Dario" → "Darío", "Maria" → "María"). Solo sugerencias: hay gente que lo escribe sin tilde y clientes extranjeros correctos así.
+- Clientes sin actividad: 23 clientes activos sin reservas, sin vouchers y sin usos de voucher. Revisar historial antes de retirarlos; vouchers.buyer_id/recipient_id y voucher_uses.recipient_id no tienen foreign key.
+- Clientes cuya fecha de creación y primera visita no cuadran (confirmar el sentido: probablemente creados DESPUÉS de su primera reserva). Decidir si solo informar o corregir created_at.
+- Lista para revisar clientes con el apellido escrito en el campo nombre ("Rocío Sotomayor" en nombre, apellido vacío). 559 activos tienen nombre de varias palabras sin apellido, incluidos nombres compuestos reales, así que cada separación se confirma a mano.
 
 STILL DELIBERATING
 - 5 Creación de facturas, descarga y almacenamiento en Drive automático de las mismas
 - Implementar fuzzy search para clients y vouchers
 - Añadir selector de país o código de país en fields de teléfono
+- Seguridad: la clave pública (anon) de Supabase puede leer todos los clientes y reservas (políticas "Allow all in ..." en clients, bookings, bookings_history, therapists) y ejecutar register_payment_event / register_voucher_use. También permite escribir saltándose las validaciones de la app.
+- Emails en minúsculas al guardar en reservas y vouchers (hoy solo lo hace la edición de cliente). La búsqueda y el índice único distinguen mayúsculas, así que "Ana@Gmail.com" y "ana@gmail.com" acaban siendo dos clientes.
+- Clientes sin contacto que se duplican (caso Carina): si se crea un cliente con teléfono y ya existe uno con el mismo nombre sin teléfono ni email, preguntar "¿Es la misma persona?" y añadirle el teléfono en vez de crear otro. 357 clientes activos sin contacto; 137 comparten nombre con uno que sí tiene.
+- Acción "Fusionar con otro cliente..." en la página Clients, para duplicados que la revisión por teléfono no detecta.
 
 
 DONE
