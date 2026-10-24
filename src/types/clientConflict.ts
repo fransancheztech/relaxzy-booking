@@ -66,8 +66,11 @@ export type ClientPreview =
   | {
       kind: "existing";
       client: ClientConflictParty & { id: string; bookings: number };
-      /** Empty fields of that client the save will fill in (nothing is ever overwritten). */
-      fill: { phone: string | null; email: string | null; surname: string | null };
+      /**
+       * What the save changes on that client: empty phone / email / surname filled in, or a name /
+       * surname whose typed spelling only adds accents ("Jesus" → "Jesús"). Nothing is overwritten.
+       */
+      fill: { phone: string | null; email: string | null; surname: string | null; name: string | null };
     }
   | { kind: "contact_conflict"; matchedBy: "email" | "phone"; existing: ClientConflictParty }
   | { kind: "contactless_conflict"; candidates: ContactlessCandidate[] }

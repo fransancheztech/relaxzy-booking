@@ -1186,6 +1186,7 @@
     "contactConflictEmail": "Este email pertenece a {name}.",
     "willAsk": "Al guardar, elegirás qué hacer.",
     "contactlessConflict": "{count, plural, one {Ya existe un cliente llamado {name} sin teléfono ni email.} other {Hay # clientes llamados {name} sin teléfono ni email.}}",
-    "willAskSamePerson": "Al guardar, se te preguntará si es la misma persona."
+    "willAskSamePerson": "Al guardar, se te preguntará si es la misma persona.",
+    "spellingFix": "El nombre se guardará con sus tildes: {name}."
   }
 }

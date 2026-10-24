@@ -1186,6 +1186,7 @@
     "contactConflictEmail": "This email belongs to {name}.",
     "willAsk": "When you save, you'll choose what to do.",
     "contactlessConflict": "{count, plural, one {There's already a client called {name} with no phone or email.} other {There are # clients called {name} with no phone or email.}}",
-    "willAskSamePerson": "When you save, you'll be asked if it's the same person."
+    "willAskSamePerson": "When you save, you'll be asked if it's the same person.",
+    "spellingFix": "The name will be saved with its accents: {name}."
   }
 }

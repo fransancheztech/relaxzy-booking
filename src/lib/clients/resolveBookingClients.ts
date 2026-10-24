@@ -68,9 +68,34 @@ const CLIENT_SELECT = {
 
 type MatchedClient = Prisma.clientsGetPayload<{ select: typeof CLIENT_SELECT }>;
 
-/** Empty fields of an existing client that saving fills in. Nothing is ever overwritten. */
-type ClientFill = { phone: string | null; email: string | null; surname: string | null };
-const NO_FILL: ClientFill = { phone: null, email: null, surname: null };
+/**
+ * What saving changes on an existing client: empty phone / email / surname filled in, or a name or
+ * surname whose typed spelling only ADDS accents ("Jesus" → "Jesús"). Nothing else is overwritten.
+ */
+type ClientFill = { phone: string | null; email: string | null; surname: string | null; name: string | null };
+const NO_FILL: ClientFill = { phone: null, email: null, surname: null, name: null };
+
+const stripAccents = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+/**
+ * The typed spelling when it is the stored one with accents ADDED and nothing else changed —
+ * "Jesus" → "Jesús", "Pena" → "Peña" — otherwise null. Never removes an accent ("Jesús" typed as
+ * "Jesus" changes nothing), never changes letters or capitals, so a quick unaccented typing can't
+ * undo a correct spelling, and only a deliberate correction is saved.
+ */
+export function accentUpgrade(stored: string | null | undefined, typed: string | null | undefined): string | null {
+  const a = stored?.normalize("NFC") ?? "";
+  const b = typed?.normalize("NFC") ?? "";
+  if (!a || !b || a === b || a.length !== b.length) return null;
+  let added = false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] === b[i]) continue;
+    // Only an unaccented stored letter may gain an accent, and it must stay the same letter.
+    if (stripAccents(a[i]) !== a[i] || stripAccents(b[i]) !== a[i]) return null;
+    added = true;
+  }
+  return added ? b : null;
+}
 
 /**
  * What saving one client slot will do. The single decision point for saving (applyClientSlot),
@@ -120,20 +145,28 @@ async function findContactMatch(
 
 // True when the typed name/surname (whichever is provided) differs from the matched client.
 // Accent-sensitive on purpose: typing "Darío" with Dario's phone offers to fix the spelling.
+// Accents alone never make it a different name: typing "Jesús" for a stored "Jesus" saves the
+// correction (see accentUpgrade), and typing "Jesus" for a stored "Jesús" keeps the stored spelling.
+// Neither asks.
+const sameNameButAccents = (stored: string | null, typed: string) =>
+  sameText(typed, stored) || !!accentUpgrade(stored, typed) || !!accentUpgrade(typed, stored);
+
 function nameDiffers(input: ClientInput, match: MatchedClient): boolean {
-  const typedName = normalize(input.client_name);
-  const typedSurname = normalize(input.client_surname);
-  if (typedName && !sameText(typedName, match.client_name)) return true;
-  if (typedSurname && !sameText(typedSurname, match.client_surname)) return true;
+  const typedName = normalizeClientName(input.client_name);
+  const typedSurname = normalizeClientSurname(input.client_surname);
+  if (typedName && !sameNameButAccents(match.client_name, typedName)) return true;
+  if (typedSurname && !sameNameButAccents(match.client_surname, typedSurname)) return true;
   return false;
 }
 
-/** The typed contact/surname that would fill EMPTY fields of `client`. */
+/** What the typed fields would change on `client`: empty contact/surname filled, accents added. */
 function fillFor(client: MatchedClient, input: ClientInput): ClientFill {
+  const typedSurname = normalizeClientSurname(input.client_surname);
   return {
     phone: client.client_phone ? null : canonicalPhone(input.client_phone),
     email: client.client_email ? null : canonicalEmail(input.client_email),
-    surname: normalize(client.client_surname) ? null : normalizeClientSurname(input.client_surname),
+    surname: normalize(client.client_surname) ? accentUpgrade(client.client_surname, typedSurname) : typedSurname,
+    name: accentUpgrade(client.client_name, normalizeClientName(input.client_name)),
   };
 }
 
@@ -454,7 +487,7 @@ export async function applyClientSlot(
 
     case "existing": {
       const { fill } = plan;
-      if (fill.phone || fill.email || fill.surname) {
+      if (fill.phone || fill.email || fill.surname || fill.name) {
         await assertContactFree(tx, {
           email: fill.email,
           phone: fill.phone,
@@ -467,6 +500,7 @@ export async function applyClientSlot(
             ...(fill.phone ? { client_phone: fill.phone } : {}),
             ...(fill.email ? { client_email: fill.email } : {}),
             ...(fill.surname ? { client_surname: fill.surname } : {}),
+            ...(fill.name ? { client_name: fill.name } : {}),
             updated_at: new Date(),
           },
         });

@@ -6,7 +6,6 @@ TO-DO
 - Añadir pequeña línea coloreada, donde cada color es un método de pago (verde efectivo, azul tarjeta de créidto, morado voucher) a la derecha del pago en cada tarjeta en el calendario, para poder ver de un vistazo mediante qué método de pago ha sido pagada cada reserva.
 
 CALIDAD DE DATOS DE CLIENTES (acordado 19/10/2026: los nombres se guardan CON acentos, tal como se escriben; es la comparación la que debe ignorarlos)
-- Ordenación alfabética en español, para que "Ángela" vaya con las A y no después de la Z.
 - Lista para revisar nombres sin la tilde que deberían llevar ("Dario" → "Darío", "Maria" → "María"). Solo sugerencias: hay gente que lo escribe sin tilde y clientes extranjeros correctos así.
 - Clientes sin actividad: 23 clientes activos sin reservas, sin vouchers y sin usos de voucher. Revisar historial antes de retirarlos; vouchers.buyer_id/recipient_id y voucher_uses.recipient_id no tienen foreign key.
 - Clientes cuya fecha de creación y primera visita no cuadran (confirmar el sentido: probablemente creados DESPUÉS de su primera reserva). Decidir si solo informar o corregir created_at.
@@ -102,3 +101,4 @@ DONE
 - Seguridad (24/10/2026): la clave pública de Supabase ya no da acceso a datos. Eliminadas las políticas "Allow all", sin permisos de tablas ni de funciones para anon/authenticated, y los objetos nuevos se crean cerrados. La app (Prisma) y los streams en tiempo real siguen funcionando.
 - Filtros de las tablas Clients, Bookings, Vouchers y Payments: todos los operadores funcionan (equals, starts with, ends with, does not contain, is empty, is any of...), nombres sin distinguir acentos, teléfonos por dígitos, fechas por día con selector de fecha.
 - Nombres y apellidos ordenados al guardar (24/10/2026): Unicode NFC, sin espacios de más, mayúscula inicial solo en palabras escritas todo en minúscula, partículas (de, del, y...) en minúscula, nunca se añaden ni quitan tildes. Backfill aplicado a 343 clientes (25/10/2026).
+- Tildes: escribir "Jesús" para un cliente guardado como "Jesus" guarda la corrección (solo añade tildes, nunca las quita); escribir "Jesus" para "Jesús" ya no abre el diálogo de conflicto.

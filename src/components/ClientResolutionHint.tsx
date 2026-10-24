@@ -39,12 +39,22 @@ const ClientResolutionHint = ({ preview }: { preview: ClientPreview | null }) =>
       const p = preview as Extract<ClientPreview, { kind: "existing" }>;
       color = "success";
       main = t("existing", { name: fullName(p.client), count: p.client.bookings });
+      // A surname is "missing" when the client has none; otherwise a filled surname is an accent fix.
+      const hadSurname = !!p.client.surname?.trim();
       const items = [
         p.fill.phone && t("fillPhone", { value: formatPhone(p.fill.phone) }),
         p.fill.email && t("fillEmail", { value: p.fill.email }),
-        p.fill.surname && t("fillSurname", { value: p.fill.surname }),
+        p.fill.surname && !hadSurname && t("fillSurname", { value: p.fill.surname }),
       ].filter(Boolean);
-      if (items.length) detail = t("fill", { items: items.join(", ") });
+      const spellingFixed = !!p.fill.name || (hadSurname && !!p.fill.surname);
+      detail = [
+        items.length ? t("fill", { items: items.join(", ") }) : null,
+        spellingFixed
+          ? t("spellingFix", {
+              name: fullName({ name: p.fill.name ?? p.client.name, surname: (hadSurname && p.fill.surname) || p.client.surname }),
+            })
+          : null,
+      ].filter(Boolean).join(" ") || null;
       break;
     }
     case "new":
