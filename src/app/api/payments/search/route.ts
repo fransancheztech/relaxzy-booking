@@ -1,60 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "generated/prisma";
+import { dateFilter, numberFilter, type FilterItem } from "@/lib/gridFilters";
 
 const SORTABLE_FIELDS = new Set(["booking_id", "voucher_id", "amount", "created_at"]);
 
-function getMadridDateRange(dateStr: string): { gte: Date; lt: Date } | null {
-  const m = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!m) return null;
-  const day = parseInt(m[1]), month = parseInt(m[2]), year = parseInt(m[3]);
-  if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
-
-  const probe = new Date(Date.UTC(year, month - 1, day, 12));
-  const localStr = probe.toLocaleString("sv", { timeZone: "Europe/Madrid" });
-  const offsetMs = probe.getTime() - new Date(localStr.replace(" ", "T") + "Z").getTime();
-
-  const gte = new Date(Date.UTC(year, month - 1, day, 0, 0, 0) + offsetMs);
-  const lt  = new Date(gte.getTime() + 24 * 60 * 60 * 1000);
-  return { gte, lt };
-}
-
-function buildFilterCondition(
-  field: string,
-  operator: string,
-  value: string | number,
-): Prisma.paymentsWhereInput | null {
-  switch (field) {
-    case "amount": {
-      const num = typeof value === "number" ? value : parseFloat(value);
-      if (isNaN(num)) return null;
-      switch (operator) {
-        case "!=":  return { NOT: { amount: num } };
-        case ">":   return { amount: { gt: num } };
-        case ">=":  return { amount: { gte: num } };
-        case "<":   return { amount: { lt: num } };
-        case "<=":  return { amount: { lte: num } };
-        default:    return { amount: num };
-      }
-    }
-    case "created_at": {
-      if (typeof value !== "string") return null;
-      const parsed = new Date(value);
-      if (isNaN(parsed.getTime())) return null;
-      const dateStr = parsed.toLocaleDateString("es-ES", { timeZone: "Europe/Madrid" });
-      const range = getMadridDateRange(dateStr);
-      if (!range) return null;
-      switch (operator) {
-        case "not":        return { NOT: { created_at: { gte: range.gte, lt: range.lt } } };
-        case "after":      return { created_at: { gte: range.lt } };
-        case "onOrAfter":  return { created_at: { gte: range.gte } };
-        case "before":     return { created_at: { lt: range.gte } };
-        case "onOrBefore": return { created_at: { lt: range.lt } };
-        default:           return { created_at: { gte: range.gte, lt: range.lt } };
-      }
-    }
-    default:
-      return null;
+// Each column with every operator the grid offers for it (see lib/gridFilters).
+function buildFilterCondition(item: FilterItem): Prisma.paymentsWhereInput | null {
+  const op = item.operator ?? "=";
+  switch (item.field) {
+    case "amount":     return numberFilter("amount", op, item.value);
+    case "created_at": return dateFilter("created_at", op, item.value, { required: true });
+    default:           return null;
   }
 }
 
@@ -66,11 +23,9 @@ export async function POST(req: NextRequest) {
 
     if (Array.isArray(filterItems)) {
       const conditions: Prisma.paymentsWhereInput[] = [];
-      for (const item of filterItems) {
-        if (item.field && item.value !== undefined && item.value !== null && item.value !== "") {
-          const cond = buildFilterCondition(item.field, item.operator ?? "contains", item.value as string | number);
-          if (cond) conditions.push(cond);
-        }
+      for (const item of filterItems as FilterItem[]) {
+        const cond = buildFilterCondition(item);
+        if (cond) conditions.push(cond);
       }
       if (conditions.length > 0) where.AND = conditions;
     }

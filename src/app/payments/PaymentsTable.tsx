@@ -12,6 +12,7 @@ import { formatNullable } from "@/utils/formatNullable";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { GridFilterItem } from "@mui/x-data-grid";
 import { useTranslations } from "next-intl";
+import { DAY_FILTER_OPERATORS } from "@/utils/gridFilterItems";
 
 interface Props {
   setSelectedPaymentId: (id: string) => void;
@@ -59,6 +60,7 @@ export const PaymentsTable = ({
       field: "created_at",
       headerName: tCommon("created"),
       type: "dateTime",
+      filterOperators: DAY_FILTER_OPERATORS,
       flex: 1,
       valueGetter: (_, row) =>
         row.created_at ? new Date(row.created_at) : null,

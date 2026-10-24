@@ -5,23 +5,18 @@ import { Prisma, booking_status } from "generated/prisma";
 import { therapistDisplayName } from "@/utils/therapistName";
 import { phoneSearchTerms } from "@/utils/phone";
 import { foldText } from "@/utils/text";
+import {
+  dateFilter,
+  numberFilter,
+  phoneFilter,
+  selectFilter,
+  textFilter,
+  textFilterAny,
+  viaRelation,
+  type FilterItem,
+} from "@/lib/gridFilters";
 
 const VALID_STATUSES: booking_status[] = ["pending", "confirmed", "completed", "cancelled"];
-
-function getMadridDateRange(dateStr: string): { gte: Date; lt: Date } | null {
-  const m = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!m) return null;
-  const day = parseInt(m[1]), month = parseInt(m[2]), year = parseInt(m[3]);
-  if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
-
-  const probe = new Date(Date.UTC(year, month - 1, day, 12));
-  const localStr = probe.toLocaleString("sv", { timeZone: "Europe/Madrid" });
-  const offsetMs = probe.getTime() - new Date(localStr.replace(" ", "T") + "Z").getTime();
-
-  const gte = new Date(Date.UTC(year, month - 1, day, 0, 0, 0) + offsetMs);
-  const lt  = new Date(gte.getTime() + 24 * 60 * 60 * 1000);
-  return { gte, lt };
-}
 
 function buildOrderBy(field: string, direction: "asc" | "desc"): Prisma.bookingsOrderByWithRelationInput {
   switch (field) {
@@ -39,81 +34,34 @@ function buildOrderBy(field: string, direction: "asc" | "desc"): Prisma.bookings
   }
 }
 
-function buildFilterCondition(
-  field: string,
-  operator: string,
-  value: string | number,
-): Prisma.bookingsWhereInput | null {
-  switch (field) {
-    case "start_time": {
-      if (typeof value !== "string") return null;
-      const range = getMadridDateRange(value);
-      return range ? { start_time: { gte: range.gte, lt: range.lt } } : null;
-    }
-    case "customer_name": {
-      if (typeof value !== "string") return null;
+// Each column with every operator the grid offers for it (see lib/gridFilters). Columns shown from
+// a related record go through viaRelation, so "customer is empty" also finds anonymous bookings.
+function buildFilterCondition(item: FilterItem): Prisma.bookingsWhereInput | null {
+  const op = item.operator ?? "contains";
+  const v = item.value;
+  switch (item.field) {
+    case "start_time":
+      return dateFilter("start_time", op, v);
+    case "customer_name":
       // Full name, accent-insensitive: "rocio soto" finds Rocío (name) Sotomayor (surname).
-      return { clients: { client_full_name_folded: { contains: foldText(value) } } };
-    }
+      return viaRelation("clients", "client_id", op,
+        textFilter("client_full_name_folded", op, v, { normalize: foldText }));
     case "customer_phone":
-      if (typeof value !== "string") return null;
-      // Digits as well as the typed text: stored numbers are E.164, so "689 59" must match
-      // "+34689590123".
-      return {
-        clients: {
-          OR: phoneSearchTerms(value).map((term) => ({ client_phone: { contains: term, mode: "insensitive" } })),
-        },
-      };
+      return viaRelation("clients", "client_id", op, phoneFilter("client_phone", op, v));
     case "service":
-      if (typeof value !== "string") return null;
-      return { services_names: { short_name: { contains: value, mode: "insensitive" } } };
+      return viaRelation("services_names", "service_id", op,
+        textFilterAny(["short_name", "name"], op, v, { insensitive: true, requiredColumns: ["name"] }));
     case "therapist":
-      if (typeof value !== "string") return null;
-      return {
-        therapists: {
-          OR: [
-            { nickname: { contains: value, mode: "insensitive" } },
-            { name: { contains: value, mode: "insensitive" } },
-            { surname: { contains: value, mode: "insensitive" } },
-          ],
-        },
-      };
+      return viaRelation("therapists", "therapist_id", op,
+        textFilterAny(["nickname", "name", "surname"], op, v, { insensitive: true }));
     case "status":
-      if (typeof value !== "string") return null;
-      return VALID_STATUSES.includes(value as booking_status)
-        ? { status: value as booking_status }
-        : null;
-    case "price": {
-      const num = typeof value === "number" ? value : parseFloat(value);
-      if (isNaN(num)) return null;
-      switch (operator) {
-        case "!=":  return { NOT: { price: num } };
-        case ">":   return { price: { gt: num } };
-        case ">=":  return { price: { gte: num } };
-        case "<":   return { price: { lt: num } };
-        case "<=":  return { price: { lte: num } };
-        default:    return { price: num };
-      }
-    }
+      return selectFilter("status", op, v, VALID_STATUSES);
+    case "price":
+      return numberFilter("price", op, v);
     case "notes":
-      if (typeof value !== "string") return null;
-      return { notes: { contains: value, mode: "insensitive" } };
-    case "created_at": {
-      if (typeof value !== "string") return null;
-      const parsed = new Date(value);
-      if (isNaN(parsed.getTime())) return null;
-      const dateStr = parsed.toLocaleDateString("es-ES", { timeZone: "Europe/Madrid" });
-      const range = getMadridDateRange(dateStr);
-      if (!range) return null;
-      switch (operator) {
-        case "not":        return { NOT: { created_at: { gte: range.gte, lt: range.lt } } };
-        case "after":      return { created_at: { gte: range.lt } };
-        case "onOrAfter":  return { created_at: { gte: range.gte } };
-        case "before":     return { created_at: { lt: range.gte } };
-        case "onOrBefore": return { created_at: { lt: range.lt } };
-        default:           return { created_at: { gte: range.gte, lt: range.lt } };
-      }
-    }
+      return textFilter("notes", op, v, { insensitive: true });
+    case "created_at":
+      return dateFilter("created_at", op, v, { required: true });
     default:
       return null;
   }
@@ -131,11 +79,9 @@ export async function POST(req: NextRequest) {
 
     if (Array.isArray(filterItems)) {
       const conditions: Prisma.bookingsWhereInput[] = [];
-      for (const item of filterItems) {
-        if (item.field && item.value !== undefined && item.value !== null && item.value !== "") {
-          const cond = buildFilterCondition(item.field, item.operator ?? "contains", item.value as string | number);
-          if (cond) conditions.push(cond);
-        }
+      for (const item of filterItems as FilterItem[]) {
+        const cond = buildFilterCondition(item);
+        if (cond) conditions.push(cond);
       }
       if (conditions.length > 0) {
         where.AND = conditions;

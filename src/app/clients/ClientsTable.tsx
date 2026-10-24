@@ -16,6 +16,7 @@ import { formatPhone } from "@/utils/phone";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { GridFilterItem } from "@mui/x-data-grid";
 import { useTranslations } from "next-intl";
+import { DAY_FILTER_OPERATORS, PHONE_FILTER_OPERATORS } from "@/utils/gridFilterItems";
 
 interface Props {
   setSelectedClientId: (id: string) => void;
@@ -51,12 +52,13 @@ export const ClientsTable = ({
     { field: "client_name", headerName: t("name"), flex: 1, valueFormatter: formatNullable },
     { field: "client_surname", headerName: t("surname"), flex: 1, valueFormatter: formatNullable },
     { field: "client_email", headerName: t("email"), flex: 1, valueFormatter: formatNullable },
-    { field: "client_phone", headerName: t("phone"), flex: 1, valueFormatter: (v: string | null) => formatNullable(formatPhone(v)) },
+    { field: "client_phone", headerName: t("phone"), flex: 1, filterOperators: PHONE_FILTER_OPERATORS, valueFormatter: (v: string | null) => formatNullable(formatPhone(v)) },
     { field: "client_notes", headerName: t("notes"), flex: 1, valueFormatter: formatNullable },
     {
       field: "created_at",
       headerName: t("created"),
       type: "dateTime",
+      filterOperators: DAY_FILTER_OPERATORS,
       flex: 1,
       valueGetter: (_, row) =>
         row.created_at ? new Date(row.created_at) : null,

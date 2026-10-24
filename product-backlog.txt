@@ -3,7 +3,6 @@ TO-DO
 - Añadir regalos de las reservas antiguas.
 - Crear vouchers automaticamente cuando compren vouchers online
 - Consultar si UEBEA tiene endpoints para conectar tarjetas regalos y reservas online
-- Filtro de la tabla Clients: todos los operadores de texto (equals, starts with...) funcionan como "contains"; "is empty"/"is not empty" no hacen nada; "is any of" se ignora. Causa: /api/clients/search solo usa el operador en created_at. Revisar si bookings, vouchers y payments tienen el mismo problema.
 - Añadir pequeña línea coloreada, donde cada color es un método de pago (verde efectivo, azul tarjeta de créidto, morado voucher) a la derecha del pago en cada tarjeta en el calendario, para poder ver de un vistazo mediante qué método de pago ha sido pagada cada reserva.
 
 CALIDAD DE DATOS DE CLIENTES (acordado 19/10/2026: los nombres se guardan CON acentos, tal como se escriben; es la comparación la que debe ignorarlos)
@@ -103,3 +102,4 @@ DONE
 - Pestaña "Destinatarios de bonos" en Revisar duplicados y acción "Fusionar con otro cliente…" en la ficha del cliente (solo admin, con deshacer).
 - La ficha del cliente muestra sus bonos comprados y recibidos (solo lectura).
 - Seguridad (24/10/2026): la clave pública de Supabase ya no da acceso a datos. Eliminadas las políticas "Allow all", sin permisos de tablas ni de funciones para anon/authenticated, y los objetos nuevos se crean cerrados. La app (Prisma) y los streams en tiempo real siguen funcionando.
+- Filtros de las tablas Clients, Bookings, Vouchers y Payments: todos los operadores funcionan (equals, starts with, ends with, does not contain, is empty, is any of...), nombres sin distinguir acentos, teléfonos por dígitos, fechas por día con selector de fecha.

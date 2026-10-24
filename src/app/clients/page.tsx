@@ -14,6 +14,7 @@ import { Box, Button } from "@mui/material";
 import MergeTypeIcon from "@mui/icons-material/MergeType";
 import { useRouter } from "next/navigation";
 import { useRole } from "@/hooks/useRole";
+import { activeFilterItems } from "@/utils/gridFilterItems";
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<ClientType[]>([]);
@@ -105,9 +106,9 @@ export default function ClientsPage() {
   // Filter handler
   // -------------------------------
   const handleFilterModelChange = (model: GridFilterModel) => {
-    const activeItems = model.items.filter(
-      (item) => item.value !== undefined && item.value !== null && item.value !== ""
-    );
+    // Keeps "is empty" / "is not empty" (no value) and "is any of" (a list), which the old
+    // "has a value" check silently dropped.
+    const activeItems = activeFilterItems(model.items);
     setFilterItems(activeItems);
     loadClients(0, sortModel, activeItems);
   };

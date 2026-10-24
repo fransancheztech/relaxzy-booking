@@ -16,6 +16,7 @@ import { isVoucherExpired } from "@/lib/vouchers/expiry";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
 import { useTranslations } from "next-intl";
+import { DAY_FILTER_OPERATORS, activeFilterItems } from "@/utils/gridFilterItems";
 
 type VoucherRow = {
   id: string;
@@ -149,6 +150,7 @@ const VouchersTable = () => {
         headerName: t("created"),
         flex: 1,
         type: "dateTime",
+        filterOperators: DAY_FILTER_OPERATORS,
         valueGetter: (_value, row) => (row.created_at ? new Date(row.created_at) : null),
         valueFormatter: formatDateTime,
       },
@@ -210,9 +212,9 @@ const VouchersTable = () => {
   );
 
   const handleFilterModelChange = (model: GridFilterModel) => {
-    const activeItems = model.items.filter(
-      (item) => item.value !== undefined && item.value !== null && item.value !== ""
-    );
+    // Keeps "is empty" / "is not empty" (no value) and "is any of" (a list), which the old
+    // "has a value" check silently dropped.
+    const activeItems = activeFilterItems(model.items);
     setFilterItems(activeItems);
     loadVouchers(0, sortModel, activeItems);
   };

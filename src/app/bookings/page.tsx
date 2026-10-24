@@ -9,6 +9,7 @@ import { BookingListItem } from "@/types/bookings";
 import UpdateBookingDialogForm from "@/app/bookings/UpdateBookingDialogForm";
 import { FETCH_LIMIT } from "@/constants";
 import { GridFilterItem, GridFilterModel } from "@mui/x-data-grid";
+import { activeFilterItems } from "@/utils/gridFilterItems";
 
 export default function BookingsPage() {
   const { setButtonLabel, setOnButtonClick } = useLayout();
@@ -105,9 +106,9 @@ export default function BookingsPage() {
   // Filter handler
   // -------------------------------
   const handleFilterModelChange = (model: GridFilterModel) => {
-    const activeItems = model.items.filter(
-      (item) => item.value !== undefined && item.value !== null && item.value !== ""
-    );
+    // Keeps "is empty" / "is not empty" (no value) and "is any of" (a list), which the old
+    // "has a value" check silently dropped.
+    const activeItems = activeFilterItems(model.items);
     setFilterItems(activeItems);
     loadBookings(0, sortModel, activeItems);
   };

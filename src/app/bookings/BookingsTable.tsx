@@ -15,6 +15,7 @@ import { formatDateTime } from "@/utils/formatDateTime";
 import { formatBusinessDate, formatBusinessTime } from "@/utils/businessTime";
 import { formatPhone } from "@/utils/phone";
 import { useTranslations } from "next-intl";
+import { DAY_FILTER_OPERATORS, PHONE_FILTER_OPERATORS } from "@/utils/gridFilterItems";
 
 interface Props {
   setSelectedBookingId: (id: string) => void;
@@ -70,6 +71,7 @@ export const BookingsTable = ({
       field: "customer_phone",
       headerName: t("phone"),
       flex: 1,
+      filterOperators: PHONE_FILTER_OPERATORS,
       valueGetter: (_, row) => (row.client ? formatPhone(row.client.phone) : ""),
     },
     {
@@ -90,7 +92,11 @@ export const BookingsTable = ({
       field: "start_time",
       headerName: t("date"),
       flex: 1,
-      valueGetter: (_, row) => (row.start_time ? formatBusinessDate(row.start_time) : ""),
+      // A date column (not text), so the filter offers a date picker with is / before / after
+      // instead of "contains", which only worked when the date was typed in full as dd/mm/yyyy.
+      type: "date",
+      valueGetter: (_, row) => (row.start_time ? new Date(row.start_time) : null),
+      valueFormatter: (value: Date | null) => (value ? formatBusinessDate(value) : ""),
     },
     {
       field: "time",
@@ -176,6 +182,7 @@ export const BookingsTable = ({
       field: "created_at",
       headerName: t("created"),
       type: "dateTime",
+      filterOperators: DAY_FILTER_OPERATORS,
       flex: 1,
       valueGetter: (_, row) =>
         row.created_at ? new Date(row.created_at) : null,
