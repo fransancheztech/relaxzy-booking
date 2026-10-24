@@ -97,7 +97,11 @@
     "closeDayFuture": "You can't close a day that hasn't happened yet.",
     "dailyTotalsButton": "Daily totals",
     "therapistRequestedTooltip": "Therapist requested by client",
-    "groupTooltip": "Part of a group booking"
+    "groupTooltip": "Part of a group booking",
+    "method_cash": "Cash",
+    "method_card": "Card",
+    "method_voucher": "Voucher",
+    "paidWithLegend": "Paid with:"
   },
   "DailyTotals": {
     "title": "Daily totals",

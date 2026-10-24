@@ -33,18 +33,25 @@ export async function GET(req: NextRequest) {
 
     const bookingIds = bookings.map((b) => b.id);
     const paidMap = new Map<string, number>();
+    // What was paid with each method (net of refunds), for the coloured bar on each calendar card.
+    const byMethod = new Map<string, { cash: number; card: number; voucher: number }>();
+    const methodsOf = (id: string) => {
+      let m = byMethod.get(id);
+      if (!m) byMethod.set(id, (m = { cash: 0, card: 0, voucher: 0 }));
+      return m;
+    };
 
     if (bookingIds.length > 0) {
       const [cashCardRows, voucherRows] = await Promise.all([
-        prisma.$queryRaw<{ booking_id: string; total: number }[]>`
-          SELECT p.booking_id::text,
+        prisma.$queryRaw<{ booking_id: string; method: string | null; total: number }[]>`
+          SELECT p.booking_id::text, pe.method::text AS method,
             (COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE'), 0) -
              COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0))::float AS total
           FROM payment_events pe
           JOIN payments p ON p.id = pe.payment_id
           WHERE p.booking_id::text = ANY(${bookingIds})
             AND p.deleted_at IS NULL AND pe.deleted_at IS NULL
-          GROUP BY p.booking_id
+          GROUP BY p.booking_id, pe.method
         `,
         prisma.$queryRaw<{ booking_id: string; total: number }[]>`
           SELECT booking_id::text, COALESCE(SUM(amount), 0)::float AS total
@@ -54,8 +61,15 @@ export async function GET(req: NextRequest) {
           GROUP BY booking_id
         `,
       ]);
-      for (const row of cashCardRows) paidMap.set(row.booking_id, (paidMap.get(row.booking_id) ?? 0) + Number(row.total));
-      for (const row of voucherRows) paidMap.set(row.booking_id, (paidMap.get(row.booking_id) ?? 0) + Number(row.total));
+      for (const row of cashCardRows) {
+        paidMap.set(row.booking_id, (paidMap.get(row.booking_id) ?? 0) + Number(row.total));
+        if (row.method === "cash") methodsOf(row.booking_id).cash += Number(row.total);
+        else if (row.method === "credit_card") methodsOf(row.booking_id).card += Number(row.total);
+      }
+      for (const row of voucherRows) {
+        paidMap.set(row.booking_id, (paidMap.get(row.booking_id) ?? 0) + Number(row.total));
+        methodsOf(row.booking_id).voucher += Number(row.total);
+      }
     }
 
     const formatted = bookings.map((b) => ({
@@ -82,6 +96,7 @@ export async function GET(req: NextRequest) {
       therapist_id: b.therapist_id ?? null,
       therapist_requested: b.therapist_requested,
       paid_total: paidMap.get(b.id) ?? 0,
+      paid_by_method: byMethod.get(b.id) ?? { cash: 0, card: 0, voucher: 0 },
       booking_group_id: b.booking_group_id,
     }));
 

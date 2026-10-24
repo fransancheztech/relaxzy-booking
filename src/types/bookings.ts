@@ -20,6 +20,8 @@ export interface BookingDTO {
     therapist_id?: string | null;
     therapist_requested?: boolean;
     paid_total?: number;
+    /** Amount paid with each method, net of refunds (calendar range only). */
+    paid_by_method?: { cash: number; card: number; voucher: number };
     booking_group_id?: string | null;
 }
 

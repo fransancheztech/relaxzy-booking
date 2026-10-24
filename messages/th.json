@@ -97,7 +97,11 @@
     "closeDayFuture": "คุณไม่สามารถปิดวันที่ยังมาไม่ถึงได้",
     "dailyTotalsButton": "ยอดรวมประจำวัน",
     "therapistRequestedTooltip": "ลูกค้าขอนักบำบัดท่านนี้",
-    "groupTooltip": "เป็นส่วนหนึ่งของการจองแบบกลุ่ม"
+    "groupTooltip": "เป็นส่วนหนึ่งของการจองแบบกลุ่ม",
+    "method_cash": "เงินสด",
+    "method_card": "บัตร",
+    "method_voucher": "บัตรกำนัล",
+    "paidWithLegend": "ชำระด้วย:"
   },
   "DailyTotals": {
     "title": "ยอดรวมประจำวัน",

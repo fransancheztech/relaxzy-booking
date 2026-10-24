@@ -97,7 +97,11 @@
     "closeDayFuture": "No puedes cerrar un día que aún no ha ocurrido.",
     "dailyTotalsButton": "Totales del día",
     "therapistRequestedTooltip": "Terapeuta solicitado por el cliente",
-    "groupTooltip": "Forma parte de una reserva de grupo"
+    "groupTooltip": "Forma parte de una reserva de grupo",
+    "method_cash": "Efectivo",
+    "method_card": "Tarjeta",
+    "method_voucher": "Bono",
+    "paidWithLegend": "Pagado con:"
   },
   "DailyTotals": {
     "title": "Totales del día",

@@ -28,6 +28,7 @@ import { BookingModel } from "@/types/bookings";
 import DailyTotalsDialog from "@/components/DailyTotalsDialog";
 import { useRole } from "@/hooks/useRole";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
+import { METHOD_COLORS, type MethodKind } from "@/components/payments/MethodAmountField";
 
 interface CalendarUIProps {
   setIsOpenBookingDialog: React.Dispatch<React.SetStateAction<boolean>>;
@@ -40,6 +41,27 @@ const DAY_END_HOUR = 22;
 const MINUTES_IN_VIEW = (DAY_END_HOUR - DAY_START_HOUR) * 60;
 
 const STATUS_KEYS = ["completed", "confirmed", "pending", "cancelled"] as const;
+const METHOD_KEYS: MethodKind[] = ["cash", "card", "voucher"];
+
+/**
+ * A small bar next to the paid amount on each card, split by payment method in the same colours as
+ * the payment fields (green cash, blue card, purple voucher) and in proportion to what each paid —
+ * so "how was this paid?" is visible without opening the booking. Nothing when nothing is paid.
+ */
+function PaymentMethodBar({ amounts, title }: { amounts: Record<MethodKind, number>; title: string }) {
+  const parts = METHOD_KEYS.filter((k) => amounts[k] > 0.004);
+  if (parts.length === 0) return null;
+  return (
+    <span
+      title={title}
+      style={{ display: "inline-flex", gap: 1, width: 22, height: 5, borderRadius: 2, overflow: "hidden", flexShrink: 0 }}
+    >
+      {parts.map((k) => (
+        <span key={k} style={{ flexGrow: amounts[k], flexBasis: 0, minWidth: 3, background: METHOD_COLORS[k] }} />
+      ))}
+    </span>
+  );
+}
 
 const OCCUPANCY_COLORS: Record<number, string> = {
   0: "transparent",
@@ -310,6 +332,10 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
 
     const fmt = (n: number) => Number.isInteger(n) ? String(n) : n.toFixed(2);
     const priceStr = price != null ? `${fmt(price)}€` : "—";
+    const byMethod = b.paid_by_method ?? { cash: 0, card: 0, voucher: 0 };
+    const methodTitle = METHOD_KEYS.filter((k) => byMethod[k] > 0.004)
+      .map((k) => `${t(`method_${k}`)} ${fmt(byMethod[k])}€`)
+      .join(" · ");
 
     return (
       <div style={{ padding: "1px 3px", overflow: "hidden", height: "100%" }}>
@@ -319,6 +345,9 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
           </span>
           <span style={{
             flexShrink: 0,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 3,
             padding: "0 3px",
             borderRadius: 3,
             fontSize: 9,
@@ -328,6 +357,8 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
             whiteSpace: "nowrap",
           }}>
             {fmt(paid)}€/{priceStr}
+            {/* Inside the white badge so the colours read on any status background. */}
+            <PaymentMethodBar amounts={byMethod} title={methodTitle} />
           </span>
           {b.therapist_requested && (
             <span
@@ -595,6 +626,15 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
                   border: `1px solid ${STATUS_COLORS[key].border}`,
                 }} />
                 <span style={{ fontSize: 11, color: "#555" }}>{t(`status_${key}`)}</span>
+              </span>
+            ))}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11, color: "#666", fontWeight: 500 }}>{t("paidWithLegend")}</span>
+            {METHOD_KEYS.map((key) => (
+              <span key={key} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{ display: "inline-block", width: 14, height: 5, background: METHOD_COLORS[key], borderRadius: 2 }} />
+                <span style={{ fontSize: 11, color: "#555" }}>{t(`method_${key}`)}</span>
               </span>
             ))}
           </div>

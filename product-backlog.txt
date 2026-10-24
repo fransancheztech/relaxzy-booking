@@ -3,7 +3,6 @@ TO-DO
 - Añadir regalos de las reservas antiguas.
 - Crear vouchers automaticamente cuando compren vouchers online
 - Consultar si UEBEA tiene endpoints para conectar tarjetas regalos y reservas online
-- Añadir pequeña línea coloreada, donde cada color es un método de pago (verde efectivo, azul tarjeta de créidto, morado voucher) a la derecha del pago en cada tarjeta en el calendario, para poder ver de un vistazo mediante qué método de pago ha sido pagada cada reserva.
 
 CALIDAD DE DATOS DE CLIENTES (acordado 19/10/2026: los nombres se guardan CON acentos, tal como se escriben; es la comparación la que debe ignorarlos)
 - Lista para revisar nombres sin la tilde que deberían llevar ("Dario" → "Darío", "Maria" → "María"). Solo sugerencias: hay gente que lo escribe sin tilde y clientes extranjeros correctos así.
@@ -102,3 +101,4 @@ DONE
 - Filtros de las tablas Clients, Bookings, Vouchers y Payments: todos los operadores funcionan (equals, starts with, ends with, does not contain, is empty, is any of...), nombres sin distinguir acentos, teléfonos por dígitos, fechas por día con selector de fecha.
 - Nombres y apellidos ordenados al guardar (24/10/2026): Unicode NFC, sin espacios de más, mayúscula inicial solo en palabras escritas todo en minúscula, partículas (de, del, y...) en minúscula, nunca se añaden ni quitan tildes. Backfill aplicado a 343 clientes (25/10/2026).
 - Tildes: escribir "Jesús" para un cliente guardado como "Jesus" guarda la corrección (solo añade tildes, nunca las quita); escribir "Jesus" para "Jesús" ya no abre el diálogo de conflicto.
+- Calendario: barra de colores junto al importe pagado en cada tarjeta (verde efectivo, azul tarjeta, morado bono), proporcional a lo pagado con cada método, con el detalle al pasar el ratón y leyenda "Pagado con".
