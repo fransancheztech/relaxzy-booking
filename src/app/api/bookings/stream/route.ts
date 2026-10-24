@@ -21,7 +21,11 @@ export async function GET(_req: NextRequest) {
       };
 
       const channel = supabase
-        .channel("public:bookings-stream")
+        // One channel PER CONNECTION. supabase.channel() returns the existing channel when the
+        // name is already in use, so a fixed name made every open tab share one channel: only the
+        // first tab ever received events (listeners added after the join never fire), and when
+        // any tab closed, removeChannel() cut live updates for all the others.
+        .channel(`public:bookings-stream:${crypto.randomUUID()}`)
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "bookings" },

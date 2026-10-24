@@ -209,6 +209,7 @@
     "deleteSuccess": "The booking has been deleted.",
     "deleteError": "Could not delete the booking.",
     "deleteBlockedCompleted": "This booking is completed and cannot be deleted. Change its status first if needed.",
+    "deleteBlockedCompletedUnsaved": "This booking is still saved as completed. Save the status change first, then delete it.",
     "deleteBlockedPayments": "This booking has recorded payments ({amount}). Delete or refund them before deleting the booking.",
     "deleteBlockedVoucher": "This booking has a voucher redemption ({amount}). Remove it from the voucher before deleting the booking, or the balance stays used.",
     "conflictDifferentPerson": "{name} is someone else",

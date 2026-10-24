@@ -209,6 +209,7 @@
     "deleteSuccess": "La reserva se ha eliminado.",
     "deleteError": "No se pudo eliminar la reserva.",
     "deleteBlockedCompleted": "Esta reserva está completada y no se puede eliminar. Cambia antes su estado si es necesario.",
+    "deleteBlockedCompletedUnsaved": "Esta reserva sigue guardada como completada. Guarda primero el cambio de estado y después elimínala.",
     "deleteBlockedPayments": "Esta reserva tiene pagos registrados ({amount}). Elimínalos o reembólsalos antes de eliminar la reserva.",
     "deleteBlockedVoucher": "Esta reserva tiene un canje de bono ({amount}). Elimínalo desde el bono antes de eliminar la reserva, o el saldo seguirá consumido.",
     "conflictDifferentPerson": "{name} es otra persona",

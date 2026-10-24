@@ -192,6 +192,14 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId, readOnly = false }:
     }
   };
 
+  // Refresh this tab's calendar and bookings list. Payment writes don't touch the bookings table,
+  // so the SSE stream doesn't fire for them; and for booking saves/deletes the tab that made the
+  // change shouldn't depend on the stream either — it refreshes itself straight away.
+  const broadcastBookingChange = () => {
+    window.dispatchEvent(new CustomEvent("refreshCalendarData"));
+    window.dispatchEvent(new CustomEvent("refreshBookingsData"));
+  };
+
   // Pending submission held while the receptionist resolves a name conflict.
   const [conflicts, setConflicts] = useState<ClientConflict[]>([]);
   const [pendingData, setPendingData] = useState<BookingUpdateSchemaType | null>(null);
@@ -214,6 +222,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId, readOnly = false }:
       setPendingData(null);
       methods.reset();
       reloadPaymentsSummary();
+      broadcastBookingChange();
       onClose();
       return;
     }
@@ -260,9 +269,13 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId, readOnly = false }:
       // Previously this closed the booking dialog regardless of the outcome, so a blocked
       // deletion looked like it had worked until the red toast appeared. Keep the booking open
       // so the receptionist can act on the reason without reopening it.
+      // Deleting checks the SAVED status. If she changed the status in the form but didn't save,
+      // "change its status first" would read as wrong — she just did. Say what's missing instead.
+      // (The server says it's completed; if the form shows another status, that change isn't saved.)
+      const unsavedStatusChange = methods.getValues("status") !== "completed";
       toast.error(
         result.status === "completed"
-          ? t("deleteBlockedCompleted")
+          ? unsavedStatusChange ? t("deleteBlockedCompletedUnsaved") : t("deleteBlockedCompleted")
           : result.status === "has_payments"
             ? t("deleteBlockedPayments", { amount: formatMoney(result.amount) })
             : result.status === "has_voucher_uses"
@@ -276,14 +289,8 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId, readOnly = false }:
     toast.success(t("deleteSuccess"));
     methods.reset();
     setIsConfirmDeleteDialogOpen(false);
+    broadcastBookingChange();
     onClose();
-  };
-
-  // Payment writes don't touch the bookings table, so the SSE stream won't fire. Broadcast
-  // explicitly so the calendar event block (paid amount/colour) and the bookings list refresh.
-  const broadcastBookingChange = () => {
-    window.dispatchEvent(new CustomEvent("refreshCalendarData"));
-    window.dispatchEvent(new CustomEvent("refreshBookingsData"));
   };
 
   const onPaymentSuccess = () => {
