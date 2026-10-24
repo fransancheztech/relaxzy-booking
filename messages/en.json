@@ -398,7 +398,14 @@
     "voucherExpires": "expires {date}",
     "voucherExpired": "Expired",
     "voucherUsedUp": "Used up",
-    "voucherBalance": "{balance} left"
+    "voucherBalance": "{balance} left",
+    "deleteSuccess": "The client has been deleted.",
+    "deleteError": "Couldn't delete the client.",
+    "deleteNoteLabel": "Reason for deleting",
+    "deleteNoteHelper": "Required. It's saved in the client's notes.",
+    "deleteBlockedHistory": "This client can't be deleted because they have {details}. Deleting would leave those pointing to a hidden client. If it's a duplicate, an admin can merge it into the right client with \"Merge into another client…\".",
+    "deleteBlockedShort": "This client has bookings or vouchers and can't be deleted.",
+    "voucherUsesCount": "{count, plural, one {# voucher redemption} other {# voucher redemptions}}"
   },
   "Payments": {
     "bookingId": "Booking ID",

@@ -398,7 +398,14 @@
     "voucherExpires": "หมดอายุ {date}",
     "voucherExpired": "หมดอายุแล้ว",
     "voucherUsedUp": "ใช้หมดแล้ว",
-    "voucherBalance": "คงเหลือ {balance}"
+    "voucherBalance": "คงเหลือ {balance}",
+    "deleteSuccess": "ลบลูกค้าแล้ว",
+    "deleteError": "ไม่สามารถลบลูกค้าได้",
+    "deleteNoteLabel": "เหตุผลในการลบ",
+    "deleteNoteHelper": "จำเป็นต้องระบุ จะถูกบันทึกไว้ในหมายเหตุของลูกค้า",
+    "deleteBlockedHistory": "ไม่สามารถลบลูกค้ารายนี้ได้ เนื่องจากมี {details} หากลบ ข้อมูลเหล่านั้นจะชี้ไปยังลูกค้าที่ถูกซ่อน หากเป็นรายการซ้ำ ผู้ดูแลระบบสามารถรวมเข้ากับลูกค้าที่ถูกต้องได้ด้วย \"รวมกับลูกค้ารายอื่น…\"",
+    "deleteBlockedShort": "ลูกค้ารายนี้มีการจองหรือบัตรกำนัล จึงไม่สามารถลบได้",
+    "voucherUsesCount": "{count, plural, other {การใช้บัตรกำนัล # ครั้ง}}"
   },
   "Payments": {
     "bookingId": "รหัสการจอง",

@@ -398,7 +398,14 @@
     "voucherExpires": "caduca el {date}",
     "voucherExpired": "Caducado",
     "voucherUsedUp": "Agotado",
-    "voucherBalance": "quedan {balance}"
+    "voucherBalance": "quedan {balance}",
+    "deleteSuccess": "El cliente se ha eliminado.",
+    "deleteError": "No se ha podido eliminar el cliente.",
+    "deleteNoteLabel": "Motivo de la eliminación",
+    "deleteNoteHelper": "Obligatorio. Se guarda en las notas del cliente.",
+    "deleteBlockedHistory": "Este cliente no se puede eliminar porque tiene {details}. Si se eliminara, quedarían apuntando a un cliente oculto. Si es un duplicado, un administrador puede fusionarlo con el cliente correcto con \"Fusionar con otro cliente…\".",
+    "deleteBlockedShort": "Este cliente tiene reservas o bonos y no se puede eliminar.",
+    "voucherUsesCount": "{count, plural, one {# canje de bono} other {# canjes de bono}}"
   },
   "Payments": {
     "bookingId": "ID de reserva",

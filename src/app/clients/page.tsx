@@ -130,38 +130,44 @@ export default function ClientsPage() {
   // -------------------------------
   // Delete client
   // -------------------------------
-  async function handleDelete(id: string) {
+  /** Soft-deletes the client. True when it worked, so the caller can close the client's dialog. */
+  async function handleDelete(id: string, note: string): Promise<boolean> {
     try {
       if (!id) {
-        toast.error("Missing client ID");
-        return;
+        toast.error(t("deleteError"));
+        return false;
       }
 
       const res = await fetch("/api/clients/delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id, notes: note }),
       });
 
       const result = await res.json();
 
       if (!res.ok) {
         console.error("Client delete error:", result);
-        toast.error(result?.error || "Error deleting client");
-        return;
+        // The confirmation already checks this; it can still happen if a booking was added since.
+        toast.error(result?.error === "CLIENT_HAS_HISTORY" ? t("deleteBlockedShort") : t("deleteError"));
+        return false;
       }
 
-      toast.success("The client has been deleted successfully.");
+      toast.success(t("deleteSuccess"));
       setTimeout(() => loadClients(page), 300);
+      return true;
     } catch (err) {
       console.error("Network or server error deleting client", err);
-      toast.error("Network or server error");
+      toast.error(t("deleteError"));
+      return false;
     }
   }
 
-  const onConfirmDelete = () => {
-    if (selectedClientId) handleDelete(selectedClientId);
-    setSelectedClientId(null);
+  // The deleted client's dialog closes with it. It used to stay open: only the selected id was
+  // cleared, leaving an empty client dialog on screen. On failure it stays open with the client.
+  const onConfirmDelete = async (note: string) => {
+    if (!selectedClientId) return;
+    if (await handleDelete(selectedClientId, note)) closeEditClientDialog();
   };
 
   const closeEditClientDialog = () => {
@@ -171,10 +177,9 @@ export default function ClientsPage() {
 
   const closeNewClientDialog = () => setIsOpenNewClientDialog(false);
 
-  const closeDeleteDialog = () => {
-    setConfirmDeleteOpen(false);
-    setSelectedClientId(null);
-  };
+  // Only the confirmation closes: the client's dialog underneath keeps its client (it's closed
+  // by onConfirmDelete when the deletion succeeds, or by the user).
+  const closeDeleteDialog = () => setConfirmDeleteOpen(false);
 
   return (
     <main className="p-4">

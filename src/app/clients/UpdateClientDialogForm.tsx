@@ -40,7 +40,7 @@ type Props = {
   onClose: () => void;
   clientId?: string | null;
   confirmDeleteOpen: boolean;
-  onConfirmDelete: () => void;
+  onConfirmDelete: (note: string) => void | Promise<void>;
   closeDeleteDialog: () => void;
   setConfirmDeleteOpen: (open: boolean) => void;
   /** After this client is merged (or the merge undone), so the list can refresh. */
@@ -240,6 +240,7 @@ const UpdateClientDialogForm = ({
       />
       <DialogConfirmDeleteClient
         open={confirmDeleteOpen}
+        clientId={clientId}
         onClose={closeDeleteDialog}
         onConfirm={onConfirmDelete}
         clientName={[methods.watch("client_name"), methods.watch("client_surname")].filter(Boolean).join(" ")}
