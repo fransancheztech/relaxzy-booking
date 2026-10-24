@@ -107,3 +107,4 @@ DONE
 - Eliminar cliente: el diálogo se cierra al eliminar, pide siempre un motivo (se guarda en las notas) y no deja eliminar clientes con reservas, bonos o canjes de bono.
 - Nombres de marcador ("-", ".", "walk in"...) rechazados también en el formulario de clientes y en bonos (crear y editar), no solo en reservas.
 - Página Pagos solo para administradores (menú, acceso directo y sus rutas); recepción sigue cobrando y devolviendo desde la reserva o el bono.
+- Limpieza (25/10/2026): los 13 clientes con nombre de marcador ("-", ".", "walk in") quedan sin nombre; conservan su teléfono y sus reservas.
