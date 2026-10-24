@@ -9,7 +9,6 @@ import {
   DialogContent,
   DialogTitle,
   Grid,
-  MenuItem,
   TextField,
 } from "@mui/material";
 import UndoIcon from "@mui/icons-material/Undo";
@@ -17,7 +16,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
-import { payment_methods } from "generated/prisma";
+import MethodPicker from "@/components/payments/MethodPicker";
 import { useTranslations } from "next-intl";
 
 import {
@@ -33,6 +32,8 @@ interface Props {
   open: boolean;
   onClose: () => void;
   paymentId: string | null;
+  /** Method of the payment being refunded; the picker starts on it. */
+  defaultMethod?: "cash" | "credit_card";
   loadPayments: (
     pageToLoad: number,
     sort?: { field: string; sort: "asc" | "desc" },
@@ -44,6 +45,7 @@ const DialogRefund = ({
   open,
   onClose,
   paymentId,
+  defaultMethod,
   loadPayments,
   loadPaymentEvents,
 }: Props) => {
@@ -57,7 +59,7 @@ const DialogRefund = ({
       resolver: zodResolver(PaymentRefundSchema),
       defaultValues: {
         amount: "0",
-        method: "cash",
+        method: defaultMethod ?? "cash",
         notes: "",
       },
     },
@@ -67,10 +69,10 @@ const DialogRefund = ({
     if (!open) return;
     methods.reset({
       amount: "0",
-      method: "cash",
+      method: defaultMethod ?? "cash",
       notes: "",
     });
-  }, [open]);
+  }, [open, defaultMethod]);
 
   const onSubmit = (data: PaymentRefundFormOutput) =>
     guard(async () => {
@@ -136,22 +138,13 @@ const DialogRefund = ({
               <Controller
                 name="method"
                 control={methods.control}
+                // Was a dropdown of raw database values ("cash", "credit_card"), untranslated.
                 render={({ field }) => (
-                  <TextField
-                    {...field}
-                    select
-                    label={tCommon("method")}
-                    required
-                    fullWidth
-                    size="small"
-                    error={!!methods.formState.errors.method}
-                  >
-                    {Object.values(payment_methods).map((method) => (
-                      <MenuItem key={method} value={method}>
-                        {method}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                  <MethodPicker
+                    label={`${tCommon("method")} *`}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
                 )}
               />
             </Grid>

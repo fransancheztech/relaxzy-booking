@@ -47,6 +47,7 @@ import type { ClientRow } from "@/hooks/useSimilarClients";
 import { CLIENT_CONTACT_TAKEN } from "@/types/clientConflict";
 import { phoneValidator } from "@/utils/phoneValidator";
 import { isPlaceholderClientName } from "@/utils/placeholderName";
+import MethodChip from "@/components/payments/MethodChip";
 import { formatPhone } from "@/utils/phone";
 import { useTranslations } from "next-intl";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
@@ -144,6 +145,7 @@ const clientLabel = (c: Client | null) => {
 const VoucherDetailDialog = ({ voucherId, open, onClose, readOnly = false }: Props) => {
   const t = useTranslations("Vouchers");
   const tCommon = useTranslations("Common");
+  const tPay = useTranslations("ManagePayments");
   const [details, setDetails] = useState<Details | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -656,18 +658,14 @@ const VoucherDetailDialog = ({ voucherId, open, onClose, readOnly = false }: Pro
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={pe.type ?? "—"}
+                          label={pe.type === "CHARGE" ? tPay("eventCharge") : pe.type === "REFUND" ? tPay("eventRefund") : "—"}
                           color={pe.type === "CHARGE" ? "success" : "warning"}
                           size="small"
                           variant="outlined"
                         />
                       </TableCell>
                       <TableCell>
-                        {pe.method === "cash"
-                          ? t("cash")
-                          : pe.method === "credit_card"
-                            ? t("creditCard")
-                            : "—"}
+                        <MethodChip method={pe.method} />
                       </TableCell>
                       <TableCell>{pe.notes ?? "—"}</TableCell>
                       <TableCell>{formatDateTime(pe.created_at)}</TableCell>

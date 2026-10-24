@@ -8,17 +8,14 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControl,
   FormHelperText,
-  InputLabel,
-  MenuItem,
-  Select,
   TextField,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 import { normalizeMoneyInput } from "@/utils/normalizeMoney";
+import MethodPicker, { type StoredMethod } from "@/components/payments/MethodPicker";
 
 type Props = {
   open: boolean;
@@ -126,17 +123,11 @@ const VoucherPaymentEventDialog = ({
           onChange={(e) => setAmount(normalizeMoneyInput(e.target.value))}
           slotProps={{ htmlInput: { inputMode: "decimal" } }}
         />
-        <FormControl fullWidth size="small" required>
-          <InputLabel>{t("paymentMethod")}</InputLabel>
-          <Select
-            value={method}
-            onChange={(e) => setMethod(e.target.value)}
-            label={t("paymentMethod")}
-          >
-            <MenuItem value="cash">{t("cash")}</MenuItem>
-            <MenuItem value="credit_card">{t("creditCard")}</MenuItem>
-          </Select>
-        </FormControl>
+        <MethodPicker
+          label={`${t("paymentMethod")} *`}
+          value={method as StoredMethod}
+          onChange={setMethod}
+        />
         <TextField
           label={mode === "refund" ? t("refundReasonLabel") : tCommon("notes")}
           required={mode === "refund"}

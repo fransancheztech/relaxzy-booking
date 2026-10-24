@@ -570,7 +570,8 @@
     "deleteUseReasonLabel": "Motivo para eliminar el canje (obligatorio)",
     "deleteUseReasonRequired": "El motivo es obligatorio",
     "invalidPhone": "Teléfono no válido. Para un número no español, añade el prefijo internacional (p. ej. +33 para Francia).",
-    "placeholderName": "Un nombre parece un marcador (\"-\", \".\", \"walk in\"…). Escribe el nombre real del cliente."
+    "placeholderName": "Un nombre parece un marcador (\"-\", \".\", \"walk in\"…). Escribe el nombre real del cliente.",
+    "paymentMethodRequired": "Elige cómo se pagó el bono: Efectivo o Tarjeta."
   },
   "Stats": {
     "totalRevenue": "Ingresos totales",
@@ -1193,5 +1194,10 @@
     "contactlessConflict": "{count, plural, one {Ya existe un cliente llamado {name} sin teléfono ni email.} other {Hay # clientes llamados {name} sin teléfono ni email.}}",
     "willAskSamePerson": "Al guardar, se te preguntará si es la misma persona.",
     "spellingFix": "El nombre se guardará con sus tildes: {name}."
+  },
+  "PaymentMethod": {
+    "cash": "Efectivo",
+    "credit_card": "Tarjeta",
+    "voucher": "Bono"
   }
 }

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
 
+// Every payment in the system (no screen calls it today): admin-only, like the Payments page.
 export async function GET(request: Request) {
+  const role = await getCurrentUserRole();
+  if (role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   try {
     const url = new URL(request.url);
     const booking_id = url.searchParams.get("booking_id");

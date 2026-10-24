@@ -125,9 +125,10 @@ export default function LayoutContent({
   const [agendaBarVisible, setAgendaBarVisible] = useState(false);
   const isAdmin = user?.app_metadata?.role === "admin";
   const isTherapist = user?.app_metadata?.role === "therapist";
-  // Stats holds admin-only figures. Hours is for admins and therapists, so it is the one
-  // page a receptionist (neither admin nor therapist) must not see.
-  const adminOnlyPaths = new Set(["/stats"]);
+  // Stats holds admin-only figures; Payments is the raw ledger of every payment (refunds there
+  // have no booking or client context — receptionists refund from the booking or voucher).
+  // Hours is for admins and therapists, so it is the one page a receptionist must not see.
+  const adminOnlyPaths = new Set(["/stats", "/payments"]);
   const therapistOnlyPaths = new Set(["/agenda", "/calendar", "/guidelines", "/hours", "/tips"]);
   const receptionistHiddenPaths = new Set(["/hours"]);
   const isReceptionist = !isAdmin && !isTherapist;

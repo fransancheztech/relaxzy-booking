@@ -12,6 +12,7 @@ import { BusinessDatePicker, BusinessDateTimePicker } from "@/components/Busines
 import { addBusinessDays } from "@/utils/businessTime";
 import { BUSINESS_TIMEZONE } from "@/constants";
 import { DateTime } from "luxon";
+import MethodPicker from "@/components/payments/MethodPicker";
 
 // "Created at" is seeded with the moment the form was opened, so its odd seconds/milliseconds
 // mark a time the receptionist never touched — on a back-dated voucher that default time is
@@ -108,21 +109,15 @@ const NewVoucherFormFields = () => {
         <Controller
           name="payment_method"
           control={control}
+          // No method is pre-selected: it used to default to card, so a voucher paid in cash was
+          // recorded as card whenever nobody changed the dropdown.
           render={({ field }) => (
-            <FormControl fullWidth size="small" required error={!!errors.payment_method}>
-              <InputLabel id="payment-method-label">{t("paymentMethod")}</InputLabel>
-              <Select
-                {...field}
-                labelId="payment-method-label"
-                label={t("paymentMethod")}
-              >
-                <MenuItem value="cash">{t("cash")}</MenuItem>
-                <MenuItem value="credit_card">{t("creditCard")}</MenuItem>
-              </Select>
-              {errors.payment_method && (
-                <FormHelperText>{errors.payment_method.message}</FormHelperText>
-              )}
-            </FormControl>
+            <MethodPicker
+              label={`${t("paymentMethod")} *`}
+              value={field.value}
+              onChange={field.onChange}
+              error={errors.payment_method ? t("paymentMethodRequired") : undefined}
+            />
           )}
         />
       </Grid>

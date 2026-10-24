@@ -102,3 +102,8 @@ DONE
 - Nombres y apellidos ordenados al guardar (24/10/2026): Unicode NFC, sin espacios de más, mayúscula inicial solo en palabras escritas todo en minúscula, partículas (de, del, y...) en minúscula, nunca se añaden ni quitan tildes. Backfill aplicado a 343 clientes (25/10/2026).
 - Tildes: escribir "Jesús" para un cliente guardado como "Jesus" guarda la corrección (solo añade tildes, nunca las quita); escribir "Jesus" para "Jesús" ya no abre el diálogo de conflicto.
 - Calendario: barra de colores junto al importe pagado en cada tarjeta (verde efectivo, azul tarjeta, morado bono), proporcional a lo pagado con cada método, con el detalle al pasar el ratón y leyenda "Pagado con".
+- Método de pago con colores en todas las pantallas de pago: botones grandes Efectivo/Tarjeta en Nuevo bono (sin método preseleccionado; antes salía Tarjeta), devoluciones (reserva, bono y página Pagos) y chips de color en las listas de pagos. La página Pagos ya no muestra "cash"/"credit_card"/"CHARGE" sin traducir.
+- Actualizaciones en tiempo real para todas las pestañas abiertas (antes solo la primera recibía cambios y cerrar una pestaña los cortaba para todas); la pestaña que guarda o elimina una reserva se refresca al momento; mensaje claro al eliminar una reserva cuyo estado completado aún no se ha guardado.
+- Eliminar cliente: el diálogo se cierra al eliminar, pide siempre un motivo (se guarda en las notas) y no deja eliminar clientes con reservas, bonos o canjes de bono.
+- Nombres de marcador ("-", ".", "walk in"...) rechazados también en el formulario de clientes y en bonos (crear y editar), no solo en reservas.
+- Página Pagos solo para administradores (menú, acceso directo y sus rutas); recepción sigue cobrando y devolviendo desde la reserva o el bono.

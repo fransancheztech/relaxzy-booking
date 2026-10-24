@@ -24,6 +24,8 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditCalendarIcon from "@mui/icons-material/EditCalendar";
 import { BusinessDatePicker } from "@/components/BusinessDatePickers";
 import { useEffect, useState } from "react";
+import MethodChip from "@/components/payments/MethodChip";
+import MethodPicker, { type StoredMethod } from "@/components/payments/MethodPicker";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
 import { formatMoney } from "@/utils/formatMoney";
@@ -247,9 +249,6 @@ export default function ManagePaymentsDialog({
   const formatDate = (iso: string) => formatBusinessDate(iso);
   const formatDateTime = (iso: string) => formatBusinessDateTime(iso);
 
-  const methodLabel = (method: string) =>
-    method === "credit_card" ? t("card") : t("cash");
-
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pb: 1 }}>
@@ -285,8 +284,8 @@ export default function ManagePaymentsDialog({
                           </Typography>
                         )}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {methodLabel(p.method)} · {formatDate(p.created_at)}
+                      <Typography variant="caption" color="text.secondary" component="div" sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                        <MethodChip method={p.method} /> {formatDate(p.created_at)}
                       </Typography>
                     </Box>
                     {p.net > 0 && (
@@ -330,8 +329,9 @@ export default function ManagePaymentsDialog({
                               <Typography variant="caption" fontWeight={600}>
                                 {isCharge ? "+" : "−"}{formatMoney(Math.abs(e.amount))}
                               </Typography>
+                              <MethodChip method={e.method} />
                               <Typography variant="caption" color="text.secondary">
-                                {methodLabel(e.method)} · {formatDateTime(e.created_at)}
+                                {formatDateTime(e.created_at)}
                               </Typography>
                               <IconButton
                                 size="small"
@@ -477,27 +477,19 @@ export default function ManagePaymentsDialog({
                       <Alert severity="info" sx={{ py: 0, fontSize: "0.72rem", "& .MuiAlert-message": { py: 0.75 } }}>
                         {t("refundGuidance")}
                       </Alert>
-                      <Box sx={{ display: "flex", gap: 1 }}>
-                        <TextField
-                          size="small"
-                          label={t("refundAmountLabel")}
-                          value={refundAmount}
-                          onChange={(e) => setRefundAmount(normalizeMoneyInput(e.target.value))}
-                          slotProps={{ htmlInput: { inputMode: "decimal" } }}
-                          sx={{ flex: 1 }}
-                        />
-                        <FormControl size="small" sx={{ minWidth: 120 }}>
-                          <InputLabel>{t("refundMethodLabel")}</InputLabel>
-                          <Select
-                            value={refundMethod}
-                            label={t("refundMethodLabel")}
-                            onChange={(e) => setRefundMethod(e.target.value)}
-                          >
-                            <MenuItem value="cash">{t("cash")}</MenuItem>
-                            <MenuItem value="credit_card">{t("card")}</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </Box>
+                      <TextField
+                        size="small"
+                        label={t("refundAmountLabel")}
+                        value={refundAmount}
+                        onChange={(e) => setRefundAmount(normalizeMoneyInput(e.target.value))}
+                        slotProps={{ htmlInput: { inputMode: "decimal" } }}
+                      />
+                      {/* Pre-set to the method being refunded — refunds usually go back the same way. */}
+                      <MethodPicker
+                        label={t("refundMethodLabel")}
+                        value={refundMethod as StoredMethod}
+                        onChange={setRefundMethod}
+                      />
                       <TextField
                         size="small"
                         required

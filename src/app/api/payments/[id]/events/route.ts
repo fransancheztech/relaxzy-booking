@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
 import { NextResponse } from "next/server";
 
 /* ======================================================
@@ -8,6 +9,11 @@ export async function GET(
   _req: Request,
   context: { params: Promise<{ id: string }> }
 ) {
+  const role = await getCurrentUserRole();
+  if (role !== "admin") {
+    // Only the admin-only Payments page uses this; receptionists work from the booking/voucher.
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   try {
     const { id } = await context.params;
 

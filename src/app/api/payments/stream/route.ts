@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { NextResponse } from "next/server";
+import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,6 +10,12 @@ const supabase = createClient(
 );
 
 export async function GET(req: NextRequest) {
+  const role = await getCurrentUserRole();
+  if (role !== "admin") {
+    // Only the admin-only Payments page uses this; receptionists work from the booking/voucher.
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const stream = new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder();

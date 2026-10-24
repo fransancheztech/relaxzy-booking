@@ -15,6 +15,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import DialogRefund from "./DialogRefund";
 import { useEffect, useState } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Chip } from "@mui/material";
+import MethodChip from "@/components/payments/MethodChip";
 import { payment_events as PaymentEventType } from "generated/prisma";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import NoRowsOverlay from "@/components/NoRowsOverlay";
@@ -45,6 +47,7 @@ const DialogPayment = ({
 }: Props) => {
   const t = useTranslations("Payments");
   const tCommon = useTranslations("Common");
+  const tPay = useTranslations("ManagePayments");
 
   const [isOpenRefundPaymentDialog, setIsOpenRefundPaymentDialog] =
     useState(false);
@@ -88,8 +91,21 @@ const DialogPayment = ({
   // Columns for DataGrid
   // -------------------------------
   const columns: GridColDef[] = [
-    { field: "type", headerName: tCommon("type"), flex: 1 },
-    { field: "method", headerName: tCommon("method"), flex: 1 },
+    // Translated, instead of the raw database values ("CHARGE", "credit_card") shown before.
+    {
+      field: "type",
+      headerName: tCommon("type"),
+      flex: 1,
+      renderCell: ({ value }) => (
+        <Chip
+          size="small"
+          variant="outlined"
+          color={value === "CHARGE" ? "success" : "warning"}
+          label={value === "CHARGE" ? tPay("eventCharge") : value === "REFUND" ? tPay("eventRefund") : "—"}
+        />
+      ),
+    },
+    { field: "method", headerName: tCommon("method"), flex: 1, renderCell: ({ value }) => <MethodChip method={value} /> },
     {
       field: "amount",
       headerName: tCommon("amount"),
@@ -221,6 +237,8 @@ const DialogPayment = ({
         open={isOpenRefundPaymentDialog}
         onClose={closeRefundPaymentDialog}
         paymentId={paymentId}
+        // Refunds usually go back the way the payment came in.
+        defaultMethod={paymentEvents.find((e) => e.type === "CHARGE")?.method ?? undefined}
         loadPayments={loadPayments}
         loadPaymentEvents={loadPaymentEvents}
       />

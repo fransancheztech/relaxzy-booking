@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
 import { Prisma } from "generated/prisma";
 import { dateFilter, numberFilter, type FilterItem } from "@/lib/gridFilters";
 
@@ -16,6 +17,11 @@ function buildFilterCondition(item: FilterItem): Prisma.paymentsWhereInput | nul
 }
 
 export async function POST(req: NextRequest) {
+  const role = await getCurrentUserRole();
+  if (role !== "admin") {
+    // Only the admin-only Payments page uses this; receptionists work from the booking/voucher.
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   try {
     const { page, limit, sort, filterItems } = await req.json();
 

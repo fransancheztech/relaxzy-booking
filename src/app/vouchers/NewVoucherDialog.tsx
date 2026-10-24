@@ -52,7 +52,8 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
         buyer_phone: "",
         buyer_email: "",
         initial_balance: "",
-        payment_method: "credit_card",
+        // Deliberately empty: the receptionist picks Cash or Card (the form requires it).
+        payment_method: undefined as unknown as VoucherSchemaInput["payment_method"],
         notes: "",
         source: "physical",
         external_reference: "",
