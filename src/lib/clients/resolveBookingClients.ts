@@ -11,6 +11,7 @@ import { assertContactFree } from "@/lib/clients/contactCollision";
 import { canonicalPhone, resolvePhoneUpdate, samePhone } from "@/utils/phone";
 import { canonicalEmail } from "@/utils/email";
 import { foldFullName, foldText } from "@/utils/text";
+import { normalizeClientName, normalizeClientSurname } from "@/utils/names";
 
 export type ClientInput = {
   client_name?: string | null;
@@ -132,7 +133,7 @@ function fillFor(client: MatchedClient, input: ClientInput): ClientFill {
   return {
     phone: client.client_phone ? null : canonicalPhone(input.client_phone),
     email: client.client_email ? null : canonicalEmail(input.client_email),
-    surname: normalize(client.client_surname) ? null : normalize(input.client_surname),
+    surname: normalize(client.client_surname) ? null : normalizeClientSurname(input.client_surname),
   };
 }
 
@@ -170,9 +171,9 @@ async function loadPicked(
 // with exactly this name + surname, so a name-only client isn't duplicated on every booking. Scoped
 // to contactless clients, so it never folds a name-only entry into a contactable client.
 async function findExactNameOnly(db: Prisma.TransactionClient, input: ClientInput) {
-  const name = normalize(input.client_name);
+  const name = normalizeClientName(input.client_name);
   if (!name) return null;
-  const surname = normalize(input.client_surname);
+  const surname = normalizeClientSurname(input.client_surname);
   return db.clients.findFirst({
     where: {
       deleted_at: null,
@@ -416,8 +417,8 @@ export async function applyClientSlot(
     case "new": {
       const created = await tx.clients.create({
         data: {
-          client_name: input.client_name,
-          client_surname: normalize(input.client_surname),
+          client_name: normalizeClientName(input.client_name),
+          client_surname: normalizeClientSurname(input.client_surname),
           client_email: canonicalEmail(input.client_email),
           client_phone: canonicalPhone(input.client_phone),
         },
@@ -441,8 +442,8 @@ export async function applyClientSlot(
       await tx.clients.update({
         where: { id: plan.client.id },
         data: {
-          client_name: input.client_name,
-          client_surname: normalize(input.client_surname),
+          client_name: normalizeClientName(input.client_name),
+          client_surname: normalizeClientSurname(input.client_surname),
           client_email: canonicalEmail(input.client_email),
           client_phone: phoneWrite.value,
           updated_at: new Date(),

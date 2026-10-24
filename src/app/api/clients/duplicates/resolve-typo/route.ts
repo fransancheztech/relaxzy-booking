@@ -5,6 +5,7 @@ import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 import { canonicalPhone, nationalDigits } from "@/utils/phone";
 import { isPlaceholderClientName } from "@/utils/placeholderName";
 import { canonicalEmail } from "@/utils/email";
+import { normalizeClientName, normalizeClientSurname } from "@/utils/names";
 import { isUniqueViolation } from "@/lib/clients/contactCollision";
 import { isRawUniqueViolation, mergeErrorCode, oneDigitApart } from "@/lib/clients/duplicates";
 
@@ -94,9 +95,9 @@ export async function POST(request: Request) {
 
     const actor = await getCurrentUserId();
     const details = {
-      client_name: name,
+      client_name: normalizeClientName(name),
       client_phone: phone,
-      client_surname: firstFilled("client_surname"),
+      client_surname: normalizeClientSurname(firstFilled("client_surname")),
       client_email: canonicalEmail(firstFilled("client_email")),
       client_notes: notes || null,
     };

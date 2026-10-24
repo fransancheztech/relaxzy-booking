@@ -5,6 +5,7 @@ import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 import { canonicalPhone, nationalDigits } from "@/utils/phone";
 import { isPlaceholderClientName } from "@/utils/placeholderName";
 import { canonicalEmail } from "@/utils/email";
+import { normalizeClientName, normalizeClientSurname } from "@/utils/names";
 import { isUniqueViolation } from "@/lib/clients/contactCollision";
 import { isRawUniqueViolation, mergeErrorCode } from "@/lib/clients/duplicates";
 
@@ -119,15 +120,15 @@ export async function POST(request: Request) {
         // Nobody to fold in: just leave the keeper holding the number canonically.
         await tx.clients.update({
           where: { id: keeperId },
-          data: { client_name: name, client_phone: number, updated_at: new Date() },
+          data: { client_name: normalizeClientName(name), client_phone: number, updated_at: new Date() },
         });
         return null;
       }
 
       const details = {
-        client_name: name,
+        client_name: normalizeClientName(name),
         client_phone: number,
-        client_surname: firstFilled("client_surname"),
+        client_surname: normalizeClientSurname(firstFilled("client_surname")),
         client_email: canonicalEmail(firstFilled("client_email")),
         client_notes: notes || null,
       };

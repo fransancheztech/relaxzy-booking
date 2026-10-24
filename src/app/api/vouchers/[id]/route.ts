@@ -12,6 +12,7 @@ import { VoucherContactSchema } from "@/schemas/clientContact.schema";
 import { formatZodError } from "@/utils/zodApiError";
 import { resolvePhoneUpdate } from "@/utils/phone";
 import { canonicalEmail } from "@/utils/email";
+import { normalizeClientName, normalizeClientSurname } from "@/utils/names";
 
 const norm = (v?: string | null) => (v && v.trim() !== "" ? v.trim() : null);
 
@@ -91,8 +92,8 @@ export async function PATCH(
         await tx.clients.update({
           where: { id: voucher.buyer_id },
           data: {
-            client_name: norm(body.buyer_name),
-            client_surname: norm(body.buyer_surname),
+            client_name: normalizeClientName(body.buyer_name),
+            client_surname: normalizeClientSurname(body.buyer_surname),
             client_phone: phoneWrite.value,
             client_email: email,
           },
@@ -113,8 +114,8 @@ export async function PATCH(
         await tx.clients.update({
           where: { id: recipientId },
           data: {
-            client_name: norm(body.recipient_name),
-            client_surname: norm(body.recipient_surname),
+            client_name: normalizeClientName(body.recipient_name),
+            client_surname: normalizeClientSurname(body.recipient_surname),
             client_phone: phoneWrite.value,
             client_email: email,
           },

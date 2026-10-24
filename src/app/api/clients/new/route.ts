@@ -12,6 +12,7 @@ import {
 } from "@/lib/clients/contactCollision";
 import { canonicalPhone } from "@/utils/phone";
 import { canonicalEmail } from "@/utils/email";
+import { normalizeClientName, normalizeClientSurname } from "@/utils/names";
 
 const norm = (v?: string | null) => (v && v.trim() !== "" ? v.trim() : null);
 
@@ -40,8 +41,8 @@ export async function POST(request: Request) {
 
     const client = await prisma.clients.create({
       data: {
-        client_name: body.client_name,
-        client_surname: norm(body.client_surname),
+        client_name: normalizeClientName(body.client_name),
+        client_surname: normalizeClientSurname(body.client_surname),
         client_email: email,
         client_phone: canonicalPhone(phone),
       },

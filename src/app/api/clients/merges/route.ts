@@ -4,6 +4,7 @@ import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
 import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 import { canonicalPhone } from "@/utils/phone";
 import { canonicalEmail } from "@/utils/email";
+import { normalizeClientName, normalizeClientSurname } from "@/utils/names";
 import { isPlaceholderClientName } from "@/utils/placeholderName";
 import { isUniqueViolation } from "@/lib/clients/contactCollision";
 import { isRawCheckViolation, isRawUniqueViolation, mergeErrorCode } from "@/lib/clients/duplicates";
@@ -76,8 +77,8 @@ export async function POST(request: Request) {
 
     const actor = await getCurrentUserId();
     const details = {
-      client_name: name,
-      client_surname: surname,
+      client_name: normalizeClientName(name),
+      client_surname: normalizeClientSurname(surname),
       client_phone: phone,
       client_email: email,
       client_notes: notes || null,

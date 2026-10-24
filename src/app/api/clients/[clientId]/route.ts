@@ -12,6 +12,7 @@ import {
 } from "@/lib/clients/contactCollision";
 import { resolvePhoneUpdate } from "@/utils/phone";
 import { canonicalEmail } from "@/utils/email";
+import { normalizeClientName, normalizeClientSurname } from "@/utils/names";
 
 export async function GET(
   _: Request,
@@ -91,8 +92,8 @@ export async function PUT(
     const updatedClient = await prisma.clients.update({
       where: { id: clientId },
       data: {
-        client_name: body.client_name,
-        client_surname: body.client_surname,
+        client_name: normalizeClientName(body.client_name),
+        client_surname: normalizeClientSurname(body.client_surname),
         client_email: normalizedEmail,
         client_phone: phoneWrite.value,
         client_notes: normalizedNotes,
