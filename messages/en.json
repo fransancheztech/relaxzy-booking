@@ -565,7 +565,8 @@
     "contactTakenPhone": "That phone already belongs to {name}.",
     "deleteUseReasonLabel": "Reason for removing the redemption (required)",
     "deleteUseReasonRequired": "A reason is required",
-    "invalidPhone": "Invalid phone. For a non-Spanish number, add the international prefix (e.g. +33 for France)."
+    "invalidPhone": "Invalid phone. For a non-Spanish number, add the international prefix (e.g. +33 for France).",
+    "placeholderName": "A name looks like a placeholder (\"-\", \".\", \"walk in\"…). Enter the client's real name."
   },
   "Stats": {
     "totalRevenue": "Total revenue",

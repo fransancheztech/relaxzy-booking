@@ -1,4 +1,5 @@
 import { phoneValidator } from "@/utils/phoneValidator";
+import { isPlaceholderClientName, PLACEHOLDER_NAME_ERROR } from "@/utils/placeholderName";
 import { z } from "zod";
 
 export const ClientUpdateSchema = z
@@ -39,6 +40,8 @@ export const ClientUpdateSchema = z
           message: "Client name is required if identifying a client",
           path: ["client_name"],
         });
+      } else if (isPlaceholderClientName(data.client_name)) {
+        ctx.addIssue({ code: "custom", message: PLACEHOLDER_NAME_ERROR, path: ["client_name"] });
       }
       if (!data.client_email && !data.client_phone) {
         // Surface on rendered fields so the error is actually visible in the dialog.

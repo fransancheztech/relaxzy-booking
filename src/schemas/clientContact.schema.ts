@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { phoneValidator } from "@/utils/phoneValidator";
+import { isPlaceholderClientName, PLACEHOLDER_NAME_ERROR } from "@/utils/placeholderName";
 
 const optionalEmail = z
   .string()
@@ -24,12 +25,17 @@ export const ClientContactSchema = z.object({
   client_email: optionalEmail,
 });
 
+const notPlaceholder = z
+  .string()
+  .optional()
+  .refine((val) => !isPlaceholderClientName(val), { message: PLACEHOLDER_NAME_ERROR });
+
 export const VoucherContactSchema = z.object({
-  buyer_name: z.string().optional(),
+  buyer_name: notPlaceholder,
   buyer_surname: z.string().optional(),
   buyer_phone: optionalPhone,
   buyer_email: optionalEmail,
-  recipient_name: z.string().optional(),
+  recipient_name: notPlaceholder,
   recipient_surname: z.string().optional(),
   recipient_phone: optionalPhone,
   recipient_email: optionalEmail,

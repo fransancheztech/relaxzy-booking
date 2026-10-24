@@ -10,6 +10,10 @@ export function normalizeNameForCompare(raw: string): string {
     .trim();
 }
 
+/** Form error for a placeholder name in the client and voucher forms (bookings have their own). */
+export const PLACEHOLDER_NAME_ERROR =
+  "This looks like a placeholder (\"-\", \".\", \"walk in\"…), not a name. Enter the client's real name.";
+
 // True when a name is a placeholder for an unknown client: a known placeholder token,
 // or a value made up entirely of punctuation/symbols (e.g. "-", "...", "??") that
 // normalizes to nothing. An empty/whitespace name is NOT a placeholder (no name typed).

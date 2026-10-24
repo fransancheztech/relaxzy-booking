@@ -565,7 +565,8 @@
     "contactTakenPhone": "Ese teléfono ya pertenece a {name}.",
     "deleteUseReasonLabel": "Motivo para eliminar el canje (obligatorio)",
     "deleteUseReasonRequired": "El motivo es obligatorio",
-    "invalidPhone": "Teléfono no válido. Para un número no español, añade el prefijo internacional (p. ej. +33 para Francia)."
+    "invalidPhone": "Teléfono no válido. Para un número no español, añade el prefijo internacional (p. ej. +33 para Francia).",
+    "placeholderName": "Un nombre parece un marcador (\"-\", \".\", \"walk in\"…). Escribe el nombre real del cliente."
   },
   "Stats": {
     "totalRevenue": "Ingresos totales",

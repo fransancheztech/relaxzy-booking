@@ -46,6 +46,7 @@ import { useClientSearch, type FocusedClientField } from "@/hooks/useClientSearc
 import type { ClientRow } from "@/hooks/useSimilarClients";
 import { CLIENT_CONTACT_TAKEN } from "@/types/clientConflict";
 import { phoneValidator } from "@/utils/phoneValidator";
+import { isPlaceholderClientName } from "@/utils/placeholderName";
 import { formatPhone } from "@/utils/phone";
 import { useTranslations } from "next-intl";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
@@ -330,6 +331,10 @@ const VoucherDetailDialog = ({ voucherId, open, onClose, readOnly = false }: Pro
       );
       if (badPhone) {
         toast.error(t("invalidPhone"));
+        return;
+      }
+      if (isPlaceholderClientName(editData.buyer_name) || isPlaceholderClientName(editData.recipient_name)) {
+        toast.error(t("placeholderName"));
         return;
       }
       try {

@@ -1,4 +1,5 @@
 import { phoneValidator } from "@/utils/phoneValidator";
+import { isPlaceholderClientName, PLACEHOLDER_NAME_ERROR } from "@/utils/placeholderName";
 import * as z from "zod";
 
 export const VoucherSchema = z.object({
@@ -49,6 +50,12 @@ export const VoucherSchema = z.object({
             message: "Recipient name is required",
             path: ["recipient_name"],
         });
+    }
+    if (isPlaceholderClientName(data.buyer_name)) {
+        ctx.addIssue({ code: "custom", message: PLACEHOLDER_NAME_ERROR, path: ["buyer_name"] });
+    }
+    if (isPlaceholderClientName(data.recipient_name)) {
+        ctx.addIssue({ code: "custom", message: PLACEHOLDER_NAME_ERROR, path: ["recipient_name"] });
     }
 });
 
