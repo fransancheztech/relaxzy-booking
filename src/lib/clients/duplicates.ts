@@ -288,3 +288,12 @@ export function isRawUniqueViolation(err: unknown): boolean {
   const message = String((err as { message?: unknown })?.message ?? "");
   return message.includes("23505") || /unique/i.test(message);
 }
+
+/**
+ * A raw-SQL CHECK violation, e.g. undoing a merge made before clients_phone_e164 /
+ * clients_email_canonical existed: it would bring back a phone or email in the old format.
+ */
+export function isRawCheckViolation(err: unknown): boolean {
+  const message = String((err as { message?: unknown })?.message ?? "");
+  return message.includes("23514") || /check constraint/i.test(message);
+}

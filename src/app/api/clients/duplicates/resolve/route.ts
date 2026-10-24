@@ -4,6 +4,7 @@ import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
 import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 import { canonicalPhone, nationalDigits } from "@/utils/phone";
 import { isPlaceholderClientName } from "@/utils/placeholderName";
+import { canonicalEmail } from "@/utils/email";
 import { isUniqueViolation } from "@/lib/clients/contactCollision";
 import { isRawUniqueViolation, mergeErrorCode } from "@/lib/clients/duplicates";
 
@@ -127,7 +128,7 @@ export async function POST(request: Request) {
         client_name: name,
         client_phone: number,
         client_surname: firstFilled("client_surname"),
-        client_email: firstFilled("client_email"),
+        client_email: canonicalEmail(firstFilled("client_email")),
         client_notes: notes || null,
       };
       const result = await tx.$queryRaw<{ id: string }[]>`

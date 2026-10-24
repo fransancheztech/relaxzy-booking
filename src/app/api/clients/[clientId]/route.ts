@@ -11,6 +11,7 @@ import {
   isUniqueViolation,
 } from "@/lib/clients/contactCollision";
 import { resolvePhoneUpdate } from "@/utils/phone";
+import { canonicalEmail } from "@/utils/email";
 
 export async function GET(
   _: Request,
@@ -65,10 +66,7 @@ export async function PUT(
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
 
-    normalizedEmail =
-      body.client_email?.trim() === ""
-        ? null
-        : body.client_email?.trim().toLowerCase() ?? null;
+    normalizedEmail = canonicalEmail(body.client_email);
 
     // Same number in another spelling keeps the stored value and skips the collision check;
     // a genuinely new number is stored as E.164 and checked in any format.

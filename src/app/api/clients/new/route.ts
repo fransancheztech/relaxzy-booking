@@ -11,6 +11,7 @@ import {
   isUniqueViolation,
 } from "@/lib/clients/contactCollision";
 import { canonicalPhone } from "@/utils/phone";
+import { canonicalEmail } from "@/utils/email";
 
 const norm = (v?: string | null) => (v && v.trim() !== "" ? v.trim() : null);
 
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
     }
     const body = parsed.data;
 
-    email = norm(body.client_email);
+    email = canonicalEmail(body.client_email);
     phone = norm(body.client_phone);
 
     // Pre-check so the 409 can name the field and the owner. Previously this returned a

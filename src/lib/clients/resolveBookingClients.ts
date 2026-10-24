@@ -3,6 +3,7 @@ import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
 import { isPlaceholderClientName } from "@/utils/placeholderName";
 import { assertContactFree } from "@/lib/clients/contactCollision";
 import { canonicalPhone, resolvePhoneUpdate } from "@/utils/phone";
+import { canonicalEmail } from "@/utils/email";
 
 export type ClientInput = {
   client_name?: string | null;
@@ -57,13 +58,16 @@ async function findClientMatch(
   tx: Prisma.TransactionClient,
   input: ClientInput,
 ): Promise<{ client: MatchedClient; matchedBy: "email" | "phone" | "name" } | null> {
-  const email = normalize(input.client_email);
+  const email = canonicalEmail(input.client_email);
   const phone = normalize(input.client_phone);
   const name = normalize(input.client_name);
   const surname = normalize(input.client_surname);
 
   if (email) {
-    const client = await tx.clients.findFirst({ where: { client_email: email, deleted_at: null } });
+    // Case-insensitive: emails are stored lower-cased now, but rows written before that may not be.
+    const client = await tx.clients.findFirst({
+      where: { client_email: { equals: email, mode: "insensitive" }, deleted_at: null },
+    });
     if (client) return { client, matchedBy: "email" };
   }
   if (phone) {
@@ -135,7 +139,7 @@ export async function detectClientConflict(
     typed: {
       name: normalize(input.client_name),
       surname: normalize(input.client_surname),
-      email: normalize(input.client_email),
+      email: canonicalEmail(input.client_email),
       // Canonical, so the dialog doesn't present the same number in two spellings as if
       // they were different values.
       phone: canonicalPhone(input.client_phone),
@@ -170,7 +174,7 @@ export async function applyClientSlot(
       data: {
         client_name: input.client_name,
         client_surname: normalize(input.client_surname),
-        client_email: normalize(input.client_email),
+        client_email: canonicalEmail(input.client_email),
         client_phone: canonicalPhone(input.client_phone),
       },
     });
@@ -190,7 +194,7 @@ export async function applyClientSlot(
     // one stored. Re-saving the same number in another spelling keeps the stored value.
     const phoneWrite = resolvePhoneUpdate(input.client_phone, match.client.client_phone);
     await assertContactFree(tx, {
-      email: normalize(input.client_email),
+      email: canonicalEmail(input.client_email),
       phone: phoneWrite.changed ? input.client_phone : null,
       excludeClientId: match.client.id,
       party,
@@ -201,7 +205,7 @@ export async function applyClientSlot(
       data: {
         client_name: input.client_name,
         client_surname: normalize(input.client_surname),
-        client_email: normalize(input.client_email),
+        client_email: canonicalEmail(input.client_email),
         client_phone: phoneWrite.value,
         updated_at: new Date(),
       },

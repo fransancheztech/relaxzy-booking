@@ -130,6 +130,7 @@ const DuplicatesPageContent = () => {
           UNMERGE_ALREADY_UNDONE: t("alreadyUndone"),
           UNMERGE_SURVIVOR_MERGED_AWAY: t("survivorMergedAway"),
           CONTACT_TAKEN: t("undoContactTaken"),
+          UNMERGE_OLD_FORMAT: t("undoOldFormat"),
         };
         toast.error(messages[body.error] ?? t("undoFailed"));
       }

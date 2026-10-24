@@ -1082,6 +1082,7 @@
     "alreadyUndone": "This merge was already undone.",
     "survivorMergedAway": "The kept client was merged into another one since. Undo that merge first.",
     "undoContactTaken": "Can't undo: the phone or email of one of these clients now belongs to another client.",
+    "undoOldFormat": "Can't undo: this merge was made before phones and emails had to follow the standard format, and undoing it would bring back the old format. Fix the clients by hand instead.",
     "bulkButton": "Merge all {count} same-name groups",
     "bulkTitle": "Merge {count} groups?",
     "bulkBody": "In each of these groups every record has the same name and phone. Each group is merged into its most-booked record, and every merge can be undone individually from the list at the bottom.",

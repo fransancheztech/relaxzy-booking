@@ -11,6 +11,7 @@ import {
 import { VoucherContactSchema } from "@/schemas/clientContact.schema";
 import { formatZodError } from "@/utils/zodApiError";
 import { resolvePhoneUpdate } from "@/utils/phone";
+import { canonicalEmail } from "@/utils/email";
 
 const norm = (v?: string | null) => (v && v.trim() !== "" ? v.trim() : null);
 
@@ -79,7 +80,7 @@ export async function PATCH(
 
       // Buyer client
       if (body.buyer_name !== undefined) {
-        const email = norm(body.buyer_email);
+        const email = canonicalEmail(body.buyer_email);
         const phoneWrite = resolvePhoneUpdate(body.buyer_phone, await currentPhone(voucher.buyer_id));
         await assertContactFree(tx, {
           email,
@@ -101,7 +102,7 @@ export async function PATCH(
       // Recipient client (only when they are a different person from the buyer)
       const recipientId = voucher.recipient_id;
       if (body.recipient_name !== undefined && recipientId && recipientId !== voucher.buyer_id) {
-        const email = norm(body.recipient_email);
+        const email = canonicalEmail(body.recipient_email);
         const phoneWrite = resolvePhoneUpdate(body.recipient_phone, await currentPhone(recipientId));
         await assertContactFree(tx, {
           email,

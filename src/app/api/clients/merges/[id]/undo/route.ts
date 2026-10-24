@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
 import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
-import { isRawUniqueViolation, mergeErrorCode } from "@/lib/clients/duplicates";
+import { isRawCheckViolation, isRawUniqueViolation, mergeErrorCode } from "@/lib/clients/duplicates";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -28,6 +28,8 @@ export async function POST(
     if (code) return NextResponse.json({ error: code }, { status: 409 });
     // A number or email a returning client needs is held by someone created since the merge.
     if (isRawUniqueViolation(err)) return NextResponse.json({ error: "CONTACT_TAKEN" }, { status: 409 });
+    // The merge predates the phone/email format rules and would restore an old-format value.
+    if (isRawCheckViolation(err)) return NextResponse.json({ error: "UNMERGE_OLD_FORMAT" }, { status: 409 });
     console.error("POST /api/clients/merges/[id]/undo error", err);
     return NextResponse.json({ error: "UNDO_FAILED" }, { status: 500 });
   }

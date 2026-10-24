@@ -1,6 +1,7 @@
 import { Prisma } from "generated/prisma";
 import { CLIENT_CONTACT_TAKEN } from "@/types/clientConflict";
 import { phoneLookupValues } from "@/utils/phone";
+import { canonicalEmail } from "@/utils/email";
 
 // One canonical answer to the question every client-writing surface needs to ask:
 // "this phone/email collided — WHICH field, and WHOSE is it?"
@@ -61,9 +62,11 @@ export async function assertContactFree(
 ): Promise<void> {
   const exclude = excludeClientId ? { NOT: { id: excludeClientId } } : {};
 
-  if (email) {
+  const emailValue = canonicalEmail(email);
+  if (emailValue) {
+    // Case-insensitive: "Ana@Gmail.com" is the same address as "ana@gmail.com".
     const other = await db.clients.findFirst({
-      where: { client_email: email, deleted_at: null, ...exclude },
+      where: { client_email: { equals: emailValue, mode: "insensitive" }, deleted_at: null, ...exclude },
       select: { client_name: true, client_surname: true },
     });
     if (other) throw new ContactTakenError("email", clientFullName(other), party);

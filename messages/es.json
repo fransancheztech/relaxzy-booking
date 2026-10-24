@@ -1082,6 +1082,7 @@
     "alreadyUndone": "Esta fusión ya estaba deshecha.",
     "survivorMergedAway": "El cliente conservado se fusionó después en otro. Deshaz primero esa fusión.",
     "undoContactTaken": "No se puede deshacer: el teléfono o el email de uno de estos clientes pertenece ahora a otro cliente.",
+    "undoOldFormat": "No se puede deshacer: esta fusión se hizo antes de que teléfonos y emails tuvieran que seguir el formato estándar, y deshacerla recuperaría el formato antiguo. Corrige los clientes a mano.",
     "bulkButton": "Fusionar los {count} grupos con el mismo nombre",
     "bulkTitle": "¿Fusionar {count} grupos?",
     "bulkBody": "En cada uno de estos grupos todos los registros tienen el mismo nombre y teléfono. Cada grupo se fusiona en su registro con más reservas, y cada fusión se puede deshacer por separado desde la lista del final.",
