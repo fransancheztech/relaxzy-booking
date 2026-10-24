@@ -4,6 +4,7 @@ import { BookingListItem } from "@/types/bookings";
 import { Prisma, booking_status } from "generated/prisma";
 import { therapistDisplayName } from "@/utils/therapistName";
 import { phoneSearchTerms } from "@/utils/phone";
+import { foldText } from "@/utils/text";
 
 const VALID_STATUSES: booking_status[] = ["pending", "confirmed", "completed", "cancelled"];
 
@@ -51,14 +52,8 @@ function buildFilterCondition(
     }
     case "customer_name": {
       if (typeof value !== "string") return null;
-      return {
-        clients: {
-          OR: [
-            { client_name: { contains: value, mode: "insensitive" } },
-            { client_surname: { contains: value, mode: "insensitive" } },
-          ],
-        },
-      };
+      // Full name, accent-insensitive: "rocio soto" finds Rocío (name) Sotomayor (surname).
+      return { clients: { client_full_name_folded: { contains: foldText(value) } } };
     }
     case "customer_phone":
       if (typeof value !== "string") return null;
@@ -153,8 +148,7 @@ export async function POST(req: NextRequest) {
         {
           clients: {
             OR: [
-              { client_name: { contains: searchTerm, mode: "insensitive" } },
-              { client_surname: { contains: searchTerm, mode: "insensitive" } },
+              { client_full_name_folded: { contains: foldText(searchTerm) } },
               { client_email: { contains: searchTerm, mode: "insensitive" } },
               // Free text, so digits only count from three onwards ("Room 2" must not match
               // every number containing a 2).

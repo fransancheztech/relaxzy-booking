@@ -21,6 +21,7 @@ import {
 import { useEffect, useState } from "react";
 import UpdateClientFormFields from "./UpdateClientFormFields";
 import ClientHistorySection from "./ClientHistorySection";
+import ClientVouchersSection from "./ClientVouchersSection";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
 import EditIcon from "@mui/icons-material/Edit";
@@ -30,6 +31,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
+import { useRole } from "@/hooks/useRole";
+import MergeTypeIcon from "@mui/icons-material/MergeType";
+import MergeIntoDialog from "./MergeIntoDialog";
 
 type Props = {
   open: boolean;
@@ -39,6 +43,8 @@ type Props = {
   onConfirmDelete: () => void;
   closeDeleteDialog: () => void;
   setConfirmDeleteOpen: (open: boolean) => void;
+  /** After this client is merged (or the merge undone), so the list can refresh. */
+  onMerged?: () => void;
 };
 
 export const defaultValuesClientForm: Partial<ClientUpdateSchemaType> = {
@@ -57,6 +63,7 @@ const UpdateClientDialogForm = ({
   onConfirmDelete,
   closeDeleteDialog,
   setConfirmDeleteOpen,
+  onMerged,
 }: Props) => {
   const t = useTranslations("Clients");
   const tCommon = useTranslations("Common");
@@ -64,6 +71,8 @@ const UpdateClientDialogForm = ({
   // The dialog opens in view mode; the pencil switches to edit.
   const [editMode, setEditMode] = useState(false);
   const { submitting, guard } = useSubmitGuard();
+  const { isAdmin } = useRole();
+  const [mergeOpen, setMergeOpen] = useState(false);
 
   const methods = useForm<ClientUpdateSchemaType>({
     resolver: zodResolver(ClientUpdateSchema),
@@ -161,6 +170,7 @@ const UpdateClientDialogForm = ({
             >
               <UpdateClientFormFields readOnly={!editMode} />
               <ClientHistorySection clientId={clientId} open={open} />
+              <ClientVouchersSection clientId={clientId} open={open} />
             </DialogContent>
             <DialogActions
               sx={{ display: "flex", justifyContent: "space-between" }}
@@ -191,6 +201,12 @@ const UpdateClientDialogForm = ({
                 </>
               ) : (
                 <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%" }}>
+                  {/* Admin-only: duplicates the review screen can't detect (e.g. no phone). */}
+                  {isAdmin && clientId && (
+                    <Button startIcon={<MergeTypeIcon />} onClick={() => setMergeOpen(true)} sx={{ mr: "auto" }}>
+                      {t("mergeInto")}
+                    </Button>
+                  )}
                   <Button startIcon={<CloseIcon />} onClick={handleClose}>
                     {tCommon("close")}
                   </Button>
@@ -210,6 +226,18 @@ const UpdateClientDialogForm = ({
           />
         )}
       </Dialog>
+      <MergeIntoDialog
+        open={mergeOpen}
+        sourceId={clientId}
+        sourceName={[methods.watch("client_name"), methods.watch("client_surname")].filter(Boolean).join(" ")}
+        onClose={() => setMergeOpen(false)}
+        onChanged={() => {
+          // Whichever record was kept, this dialog's data is stale now: close it, refresh the list.
+          setMergeOpen(false);
+          handleClose();
+          onMerged?.();
+        }}
+      />
       <DialogConfirmDeleteClient
         open={confirmDeleteOpen}
         onClose={closeDeleteDialog}

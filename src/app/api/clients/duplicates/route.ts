@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
-import { loadDuplicateGroups, loadTypoPairs, memberFullName } from "@/lib/clients/duplicates";
+import {
+  loadDuplicateGroups,
+  loadTypoPairs,
+  loadVoucherRecipientPairs,
+  memberFullName,
+} from "@/lib/clients/duplicates";
 
 // Duplicate groups awaiting review, plus the recent merges (so any of them can be undone).
 // Admin-only: merging rewrites which client hundreds of bookings belong to.
@@ -12,9 +17,10 @@ export async function GET() {
   }
 
   try {
-    const [groups, typos, merges] = await Promise.all([
+    const [groups, typos, voucherPairs, merges] = await Promise.all([
       loadDuplicateGroups(),
       loadTypoPairs(),
+      loadVoucherRecipientPairs(),
       prisma.client_merges.findMany({
         orderBy: { merged_at: "desc" },
         take: 30,
@@ -25,6 +31,7 @@ export async function GET() {
     return NextResponse.json({
       groups,
       typos,
+      voucherPairs,
       merges: merges.map((m) => {
         const losers = Array.isArray(m.losers_before) ? (m.losers_before as Record<string, string | null>[]) : [];
         const moved = (m.moved ?? {}) as Record<string, unknown[]>;

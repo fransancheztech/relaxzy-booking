@@ -27,6 +27,8 @@ type Body = {
   notes?: string;
   price?: string | number;
   totalPaid?: string | number;
+  /** The booking's current client, or the one picked from the suggestions dropdown. */
+  client_picked_id?: string;
   clientResolution?: ClientResolution;
 };
 
@@ -257,8 +259,9 @@ export async function PUT(
       } else if (hasClientInfo) {
         const conflict = await detectClientConflict(tx, "primary", body, body.clientResolution);
         if (conflict) throw new ClientConflictError([conflict]);
-        // A booking's client may be name-only (no contact). findClientMatch reuses an
-        // existing contactless client by name, so this won't duplicate on every save.
+        // A booking's client may be name-only (no contact). The form sends the booking's current
+        // client as client_picked_id, so re-saving keeps the booking on it (and a phone added
+        // here fills that client's empty phone) instead of creating a duplicate.
         clientId = await applyClientSlot(tx, body, body.clientResolution, {
           requireContact: false,
         });

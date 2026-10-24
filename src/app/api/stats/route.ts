@@ -23,10 +23,10 @@ const TOP_CLIENTS_LIMIT = 100;
 // WHOLE normalised name exactly as isPlaceholderClientName() does — a substring match
 // would hide real clients, e.g. "Manon" contains "anon".
 const PLACEHOLDER_NAMES = Array.from(PLACEHOLDER_CLIENT_NAMES);
-// Accents are folded with translate(): the unaccent extension is NOT installed on this
-// database, and folding must happen BEFORE the regex or "anonimo" written with an
-// accent collapses to "an nimo" and slips past the filter.
-const normalizedClientName = Prisma.sql`btrim(regexp_replace(translate(lower(coalesce(c.client_name, '')), 'áàäâãéèëêíìïîóòöôõúùüûñç', 'aaaaaeeeeiiiiooooouuuunc'), '[^a-z0-9]+', ' ', 'g'))`;
+// Starts from the database-folded name (accents and foreign letters, see fold_text / foldText):
+// folding must happen BEFORE the regex or "anonimo" written with an accent collapses to
+// "an nimo" and slips past the filter. Same rule as normalizeNameForCompare().
+const normalizedClientName = Prisma.sql`btrim(regexp_replace(coalesce(c.client_name_folded, ''), '[^a-z0-9]+', ' ', 'g'))`;
 
 type DateBucket = "day" | "week" | "month";
 

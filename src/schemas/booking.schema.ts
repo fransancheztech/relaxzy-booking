@@ -24,6 +24,8 @@ export const CompanionSchema = z
     voucherPayment: z.number().nonnegative().optional(),
     voucherCode: z.string().optional(),
     same_as_primary: z.boolean().optional(),
+    // Client picked from the suggestions dropdown; see ClientInput.client_picked_id.
+    client_picked_id: z.string().optional(),
     client_name: z.string().optional(),
     client_surname: z.string().optional(),
     client_phone: z
@@ -60,6 +62,9 @@ export const CompanionSchema = z
 export type CompanionSchemaType = z.infer<typeof CompanionSchema>;
 
 const BookingObject = z.object({
+  // Client picked from the suggestions dropdown (when editing: the booking's current client), so
+  // saving reuses that client instead of creating a new one; see ClientInput.client_picked_id.
+  client_picked_id: z.string().optional(),
   client_name: z.string().optional(),
   client_surname: z.string().optional(),
   client_phone: z

@@ -123,6 +123,11 @@ type Props = {
   voucherId: string;
   open: boolean;
   onClose: () => void;
+  /**
+   * View only: no add balance, refund, edit or delete, and bookings open read-only. Used when the
+   * voucher is opened from a client's page — vouchers are changed only from the Vouchers page.
+   */
+  readOnly?: boolean;
 };
 
 const formatDate = (value: string | null | undefined) => formatBusinessDate(value);
@@ -135,7 +140,7 @@ const clientLabel = (c: Client | null) => {
   return [name, contact].filter(Boolean).join("  ·  ");
 };
 
-const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
+const VoucherDetailDialog = ({ voucherId, open, onClose, readOnly = false }: Props) => {
   const t = useTranslations("Vouchers");
   const tCommon = useTranslations("Common");
   const [details, setDetails] = useState<Details | null>(null);
@@ -431,16 +436,18 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
               />
             )}
           </Box>
-          <Button
-            startIcon={<AddCircleIcon />}
-            onClick={openAddBalance}
-            variant="contained"
-            color="success"
-            size="small"
-            disabled={loading}
-          >
-            {t("addBalance")}
-          </Button>
+          {!readOnly && (
+            <Button
+              startIcon={<AddCircleIcon />}
+              onClick={openAddBalance}
+              variant="contained"
+              color="success"
+              size="small"
+              disabled={loading}
+            >
+              {t("addBalance")}
+            </Button>
+          )}
         </DialogTitle>
 
         <DialogContent>
@@ -477,11 +484,13 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                         )}
                       </Typography>
                     </Box>
-                    <Tooltip title={tCommon("edit")}>
-                      <IconButton size="small" onClick={() => setEditMode(true)}>
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+                    {!readOnly && (
+                      <Tooltip title={tCommon("edit")}>
+                        <IconButton size="small" onClick={() => setEditMode(true)}>
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
                   </Box>
                 ) : (
                   <Grid container spacing={1.5}>
@@ -658,7 +667,7 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                       <TableCell>{pe.notes ?? "—"}</TableCell>
                       <TableCell>{formatDateTime(pe.created_at)}</TableCell>
                       <TableCell align="center">
-                        {pe.type === "CHARGE" && (
+                        {pe.type === "CHARGE" && !readOnly && (
                           <Tooltip title="Refund">
                             <IconButton
                               size="small"
@@ -729,18 +738,20 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
                           falling back to the insert timestamp when there's no booking. */}
                       <TableCell>{formatDateTime(vu.booking?.start_time ?? vu.created_at)}</TableCell>
                       <TableCell align="center">
-                        <Tooltip title={tCommon("delete")}>
-                          <span>
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => { setPendingDeleteUse(vu); setDeleteUseNote(""); setDeleteUseNoteError(false); }}
-                              disabled={deletingId === vu.id}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
+                        {!readOnly && (
+                          <Tooltip title={tCommon("delete")}>
+                            <span>
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => { setPendingDeleteUse(vu); setDeleteUseNote(""); setDeleteUseNoteError(false); }}
+                                disabled={deletingId === vu.id}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -751,6 +762,7 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
         </DialogContent>
 
         <DialogActions sx={{ display: "flex", justifyContent: "space-between" }}>
+          {readOnly ? <span /> : (
           <Tooltip
             title={canDeleteVoucher ? "" : t("cannotDeleteWithBalance")}
             placement="right"
@@ -767,6 +779,7 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
               </Button>
             </span>
           </Tooltip>
+          )}
           <Button onClick={onClose} color="inherit">
             {tCommon("close")}
           </Button>
@@ -860,6 +873,7 @@ const VoucherDetailDialog = ({ voucherId, open, onClose }: Props) => {
           open={!!bookingToView}
           bookingId={bookingToView}
           onClose={() => setBookingToView(null)}
+          readOnly={readOnly}
         />
       )}
     </>

@@ -1,20 +1,37 @@
 import { Prisma } from "generated/prisma";
-import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
+import type {
+  CandidateVoucher,
+  ClientConflict,
+  ClientPreview,
+  ClientResolution,
+  ContactlessCandidate,
+} from "@/types/clientConflict";
 import { isPlaceholderClientName } from "@/utils/placeholderName";
 import { assertContactFree } from "@/lib/clients/contactCollision";
-import { canonicalPhone, resolvePhoneUpdate } from "@/utils/phone";
+import { canonicalPhone, resolvePhoneUpdate, samePhone } from "@/utils/phone";
 import { canonicalEmail } from "@/utils/email";
+import { foldFullName, foldText } from "@/utils/text";
 
 export type ClientInput = {
   client_name?: string | null;
   client_surname?: string | null;
   client_email?: string | null;
   client_phone?: string | null;
+  /**
+   * The client picked from the suggestions dropdown — or, when editing a booking, the booking's
+   * current client. Picking fills the form fields only, so without this the server couldn't tell
+   * "Carina, picked from the list, plus the phone she just gave" from a brand-new Carina.
+   */
+  client_picked_id?: string | null;
 };
 
 const normalize = (v?: string | null) => (v && v.trim() !== "" ? v.trim() : null);
 const sameText = (a?: string | null, b?: string | null) =>
   (a ?? "").trim().toLowerCase() === (b ?? "").trim().toLowerCase();
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Most contactless candidates listed in the "same person?" dialog. */
+const MAX_CANDIDATES = 5;
 
 export class ClientConflictError extends Error {
   conflicts: ClientConflict[];
@@ -38,72 +55,70 @@ export class PlaceholderNameError extends Error {
 export const hasClientInfo = (input: ClientInput) =>
   !!(input.client_name || input.client_surname || input.client_email || input.client_phone);
 
-type MatchedClient = {
-  id: string;
-  client_name: string | null;
-  client_surname: string | null;
-  client_email: string | null;
-  client_phone: string | null;
-};
+const CLIENT_SELECT = {
+  id: true,
+  client_name: true,
+  client_surname: true,
+  client_email: true,
+  client_phone: true,
+  client_name_folded: true,
+  client_full_name_folded: true,
+} as const;
 
-// Resolve an existing active client by email (priority), then phone, then — when no
-// contact was entered at all — by name. The name tier keeps name-only clients (e.g.
-// companions, walk-ins) from being duplicated on every booking: identity derives from
-// the entered data, exactly like contact matching. It is scoped to contactless clients
-// (email AND phone null) and matches name + surname, so it never folds a name-only entry
-// into a contactable client. Names aren't unique, so two genuinely distinct contactless
-// people sharing a name will resolve to the same record — acceptable, as they're already
-// indistinguishable in the data.
-async function findClientMatch(
-  tx: Prisma.TransactionClient,
-  input: ClientInput,
-): Promise<{ client: MatchedClient; matchedBy: "email" | "phone" | "name" } | null> {
-  const email = canonicalEmail(input.client_email);
-  const phone = normalize(input.client_phone);
-  const name = normalize(input.client_name);
-  const surname = normalize(input.client_surname);
+type MatchedClient = Prisma.clientsGetPayload<{ select: typeof CLIENT_SELECT }>;
 
+/** Empty fields of an existing client that saving fills in. Nothing is ever overwritten. */
+type ClientFill = { phone: string | null; email: string | null; surname: string | null };
+const NO_FILL: ClientFill = { phone: null, email: null, surname: null };
+
+/**
+ * What saving one client slot will do. The single decision point for saving (applyClientSlot),
+ * for the conflict dialog (detectClientConflict) and for the live hint under the client fields
+ * (previewClientSlot) — so the hint always says exactly what Save is about to do.
+ */
+type SlotPlan =
+  | { kind: "none" }
+  | { kind: "existing"; client: MatchedClient; fill: ClientFill }
+  | { kind: "rename"; client: MatchedClient }
+  | { kind: "conflict"; conflict: ClientConflict }
+  | { kind: "new" };
+
+// Contact tier: the typed email (first) or phone already belongs to an active client.
+async function findContactMatch(
+  db: Prisma.TransactionClient,
+  email: string | null,
+  phone: string | null,
+): Promise<{ client: MatchedClient; matchedBy: "email" | "phone" } | null> {
   if (email) {
     // Case-insensitive: emails are stored lower-cased now, but rows written before that may not be.
-    const client = await tx.clients.findFirst({
+    const client = await db.clients.findFirst({
       where: { client_email: { equals: email, mode: "insensitive" }, deleted_at: null },
+      select: CLIENT_SELECT,
     });
     if (client) return { client, matchedBy: "email" };
   }
   if (phone) {
-    // Exact stored string FIRST. Editing a booking re-runs this match and re-links
-    // bookings.client_id, and the form sends the phone back exactly as stored — so this keeps
-    // the booking on the same client row, including a legacy-format row that shares its
-    // number with a duplicate sibling still awaiting the merge.
-    const exact = await tx.clients.findFirst({ where: { client_phone: phone, deleted_at: null } });
+    // Exact stored string FIRST, then the same number typed in any other format. Editing a
+    // booking sends the phone back exactly as stored, so this keeps it on the same client row.
+    const exact = await db.clients.findFirst({
+      where: { client_phone: phone, deleted_at: null },
+      select: CLIENT_SELECT,
+    });
     if (exact) return { client: exact, matchedBy: "phone" };
-    // Then the same number typed in any other format. Without this tier, normalising writes
-    // would have CREATED duplicates: a client stored as "689 59 01 23" would stop matching
-    // "+34689590123", and a new client would be made on every save.
     const canonical = canonicalPhone(phone);
     if (canonical && canonical !== phone) {
-      const client = await tx.clients.findFirst({ where: { client_phone: canonical, deleted_at: null } });
+      const client = await db.clients.findFirst({
+        where: { client_phone: canonical, deleted_at: null },
+        select: CLIENT_SELECT,
+      });
       if (client) return { client, matchedBy: "phone" };
     }
-  }
-  if (!email && !phone && name) {
-    const client = await tx.clients.findFirst({
-      where: {
-        deleted_at: null,
-        client_email: null,
-        client_phone: null,
-        client_name: { equals: name, mode: "insensitive" },
-        client_surname: surname
-          ? { equals: surname, mode: "insensitive" }
-          : null,
-      },
-    });
-    if (client) return { client, matchedBy: "name" };
   }
   return null;
 }
 
 // True when the typed name/surname (whichever is provided) differs from the matched client.
+// Accent-sensitive on purpose: typing "Darío" with Dario's phone offers to fix the spelling.
 function nameDiffers(input: ClientInput, match: MatchedClient): boolean {
   const typedName = normalize(input.client_name);
   const typedSurname = normalize(input.client_surname);
@@ -112,44 +127,266 @@ function nameDiffers(input: ClientInput, match: MatchedClient): boolean {
   return false;
 }
 
-// Detect a conflict for one slot. Returns null when there's nothing to confirm:
-// no info, no match, name matches, or a resolution was already supplied.
+/** The typed contact/surname that would fill EMPTY fields of `client`. */
+function fillFor(client: MatchedClient, input: ClientInput): ClientFill {
+  return {
+    phone: client.client_phone ? null : canonicalPhone(input.client_phone),
+    email: client.client_email ? null : canonicalEmail(input.client_email),
+    surname: normalize(client.client_surname) ? null : normalize(input.client_surname),
+  };
+}
+
+/**
+ * The picked client, when the fields still describe them: same name (accents and case aside) — or
+ * the same first name with a surname added to a client who had none — and no typed phone/email
+ * that contradicts theirs. Otherwise the pick is stale (she picked someone, then typed somebody
+ * else) and is ignored.
+ */
+async function loadPicked(
+  db: Prisma.TransactionClient,
+  input: ClientInput,
+  phone: string | null,
+  email: string | null,
+): Promise<MatchedClient | null> {
+  const id = input.client_picked_id?.trim();
+  if (!id || !UUID.test(id)) return null;
+  const client = await db.clients.findFirst({ where: { id, deleted_at: null }, select: CLIENT_SELECT });
+  if (!client) return null;
+
+  const typedFull = foldFullName(input.client_name, input.client_surname);
+  const sameName =
+    typedFull !== "" &&
+    (typedFull === client.client_full_name_folded ||
+      (!normalize(client.client_surname) &&
+        !!normalize(input.client_surname) &&
+        foldText(input.client_name) === client.client_name_folded));
+  if (!sameName) return null;
+  if (phone && client.client_phone && !samePhone(phone, client.client_phone)) return null;
+  if (email && client.client_email && client.client_email.toLowerCase() !== email) return null;
+  return client;
+}
+
+// Name tier for a name-only entry (companions, voucher recipients): reuse a contactless client
+// with exactly this name + surname, so a name-only client isn't duplicated on every booking. Scoped
+// to contactless clients, so it never folds a name-only entry into a contactable client.
+async function findExactNameOnly(db: Prisma.TransactionClient, input: ClientInput) {
+  const name = normalize(input.client_name);
+  if (!name) return null;
+  const surname = normalize(input.client_surname);
+  return db.clients.findFirst({
+    where: {
+      deleted_at: null,
+      client_email: null,
+      client_phone: null,
+      client_name: { equals: name, mode: "insensitive" },
+      client_surname: surname ? { equals: surname, mode: "insensitive" } : null,
+    },
+    select: CLIENT_SELECT,
+  });
+}
+
+/**
+ * Contactless clients that may be the person being typed: same name ignoring accents/case, and no
+ * phone or email. When a phone/email WAS typed, only candidates worth asking about are kept — the
+ * recipient of a voucher with balance left (the gift recipient who comes in to use it) or a full
+ * name with surname. Asking about every contactless "Marta" would mean a prompt most days, mostly
+ * for different people, and receptionists would learn to dismiss it.
+ */
+async function findContactlessCandidates(
+  db: Prisma.TransactionClient,
+  input: ClientInput,
+  contactTyped: boolean,
+): Promise<{ clients: MatchedClient[]; candidates: ContactlessCandidate[] }> {
+  const full = foldFullName(input.client_name, input.client_surname);
+  if (!full) return { clients: [], candidates: [] };
+
+  const rows = await db.clients.findMany({
+    where: { deleted_at: null, client_phone: null, client_email: null, client_full_name_folded: full },
+    select: { ...CLIENT_SELECT, created_at: true },
+    take: 50,
+  });
+  if (rows.length === 0) return { clients: [], candidates: [] };
+  const ids = rows.map((r) => r.id);
+
+  const [vouchers, bookingStats] = await Promise.all([
+    db.vouchers.findMany({
+      where: { deleted_at: null, OR: [{ recipient_id: { in: ids } }, { buyer_id: { in: ids } }] },
+      select: { code: true, balance: true, recipient_id: true, buyer_id: true, created_at: true },
+      orderBy: { created_at: "desc" },
+    }),
+    db.bookings.groupBy({
+      by: ["client_id"],
+      where: { client_id: { in: ids }, deleted_at: null },
+      _count: { _all: true },
+      _max: { start_time: true },
+    }),
+  ]);
+
+  const hasGiftBalance = (id: string) =>
+    vouchers.some((v) => v.recipient_id === id && v.buyer_id !== id && Number(v.balance ?? 0) > 0);
+  const kept = contactTyped ? rows.filter((r) => full.includes(" ") || hasGiftBalance(r.id)) : rows;
+  if (kept.length === 0) return { clients: [], candidates: [] };
+
+  // Names of the other party on each voucher (vouchers.buyer_id / recipient_id carry no FK).
+  const otherIds = [...new Set(vouchers.flatMap((v) => [v.buyer_id, v.recipient_id]))].filter(
+    (id): id is string => !!id && !ids.includes(id),
+  );
+  const others = otherIds.length
+    ? await db.clients.findMany({
+        where: { id: { in: otherIds } },
+        select: { id: true, client_name: true, client_surname: true },
+      })
+    : [];
+  const nameOf = (id: string | null) => {
+    const c = others.find((o) => o.id === id);
+    return c ? [c.client_name, c.client_surname].filter(Boolean).join(" ").trim() || null : null;
+  };
+
+  const candidates: ContactlessCandidate[] = kept.map((r) => {
+    const stats = bookingStats.find((s) => s.client_id === r.id);
+    return {
+      id: r.id,
+      name: r.client_name,
+      surname: r.client_surname,
+      created_at: r.created_at.toISOString(),
+      bookings: stats?._count._all ?? 0,
+      last_visit: stats?._max.start_time?.toISOString() ?? null,
+      vouchers: vouchers
+        .filter((v) => v.recipient_id === r.id || v.buyer_id === r.id)
+        .map((v) => {
+          const role: CandidateVoucher["role"] =
+            v.recipient_id === r.id && v.buyer_id !== r.id ? "recipient" : "buyer";
+          return {
+            code: v.code,
+            balance: Number(v.balance ?? 0),
+            role,
+            otherName: role === "recipient" ? nameOf(v.buyer_id) : nameOf(v.recipient_id),
+          };
+        }),
+    };
+  });
+
+  // Gift recipients with balance first, then most recent activity.
+  const activity = (c: ContactlessCandidate) => Math.max(Date.parse(c.created_at), c.last_visit ? Date.parse(c.last_visit) : 0);
+  candidates.sort(
+    (a, b) => Number(hasGiftBalance(b.id)) - Number(hasGiftBalance(a.id)) || activity(b) - activity(a),
+  );
+  const top = candidates.slice(0, MAX_CANDIDATES);
+  return { clients: kept.filter((r) => top.some((c) => c.id === r.id)), candidates: top };
+}
+
+async function planClientSlot(
+  db: Prisma.TransactionClient,
+  slot: string,
+  input: ClientInput,
+  resolution?: ClientResolution,
+): Promise<SlotPlan> {
+  if (!hasClientInfo(input)) return { kind: "none" };
+  const email = canonicalEmail(input.client_email);
+  const phone = normalize(input.client_phone);
+  const typed = {
+    name: normalize(input.client_name),
+    surname: normalize(input.client_surname),
+    email,
+    // Canonical, so the dialog doesn't present the same number in two spellings.
+    phone: canonicalPhone(input.client_phone),
+  };
+
+  // 1. The phone/email already belongs to someone.
+  const contact = await findContactMatch(db, email, phone);
+  if (contact) {
+    if (!nameDiffers(input, contact.client)) {
+      return { kind: "existing", client: contact.client, fill: fillFor(contact.client, input) };
+    }
+    if (resolution === "use_existing") return { kind: "existing", client: contact.client, fill: NO_FILL };
+    if (resolution === "update_existing") return { kind: "rename", client: contact.client };
+    return {
+      kind: "conflict",
+      conflict: {
+        kind: "contact",
+        slot,
+        matchedBy: contact.matchedBy,
+        existing: {
+          id: contact.client.id,
+          name: contact.client.client_name,
+          surname: contact.client.client_surname,
+          email: contact.client.client_email,
+          phone: contact.client.client_phone,
+        },
+        typed,
+      },
+    };
+  }
+
+  // 2. The client she picked from the list (or the booking's current client), still matching.
+  const picked = await loadPicked(db, input, phone, email);
+  if (picked) return { kind: "existing", client: picked, fill: fillFor(picked, input) };
+
+  // 3. Name only, exactly as an existing contactless client.
+  if (!email && !phone) {
+    const exact = await findExactNameOnly(db, input);
+    if (exact) return { kind: "existing", client: exact, fill: NO_FILL };
+  }
+
+  // 4. Possibly a contactless client already on file: ask, never link silently.
+  const { clients, candidates } = await findContactlessCandidates(db, input, !!(email || phone));
+  if (candidates.length > 0) {
+    if (resolution === "create_new") return { kind: "new" };
+    const linkId = resolution?.startsWith("link:") ? resolution.slice("link:".length) : null;
+    const linked = linkId ? clients.find((c) => c.id === linkId) : undefined;
+    if (linked) return { kind: "existing", client: linked, fill: fillFor(linked, input) };
+    return { kind: "conflict", conflict: { kind: "contactless", slot, typed, candidates } };
+  }
+
+  return { kind: "new" };
+}
+
+// Detect a conflict for one slot: null when there's nothing to confirm, or when the supplied
+// resolution already answers it.
 export async function detectClientConflict(
   tx: Prisma.TransactionClient,
   slot: string,
   input: ClientInput,
   resolution?: ClientResolution,
 ): Promise<ClientConflict | null> {
-  if (!hasClientInfo(input) || resolution) return null;
-  const match = await findClientMatch(tx, input);
-  // A name-tier match can't be a name conflict (the name is the match key), so only
-  // contact-tier matches with a differing name need an explicit decision.
-  if (!match || match.matchedBy === "name" || !nameDiffers(input, match.client)) return null;
+  const plan = await planClientSlot(tx, slot, input, resolution);
+  return plan.kind === "conflict" ? plan.conflict : null;
+}
 
-  return {
-    slot,
-    matchedBy: match.matchedBy,
-    existing: {
-      id: match.client.id,
-      name: match.client.client_name,
-      surname: match.client.client_surname,
-      email: match.client.client_email,
-      phone: match.client.client_phone,
-    },
-    typed: {
-      name: normalize(input.client_name),
-      surname: normalize(input.client_surname),
-      email: canonicalEmail(input.client_email),
-      // Canonical, so the dialog doesn't present the same number in two spellings as if
-      // they were different values.
-      phone: canonicalPhone(input.client_phone),
-    },
-  };
+/** Read-only: what saving these client fields would do, for the live hint under the fields. */
+export async function previewClientSlot(db: Prisma.TransactionClient, input: ClientInput): Promise<ClientPreview> {
+  const plan = await planClientSlot(db, "primary", input);
+  switch (plan.kind) {
+    case "none":
+      return { kind: "none" };
+    case "new":
+      return { kind: "new" };
+    case "rename": // only reachable with a resolution, which a preview never passes
+    case "existing": {
+      const bookings = await db.bookings.count({ where: { client_id: plan.client.id, deleted_at: null } });
+      return {
+        kind: "existing",
+        client: {
+          id: plan.client.id,
+          name: plan.client.client_name,
+          surname: plan.client.client_surname,
+          email: plan.client.client_email,
+          phone: plan.client.client_phone,
+          bookings,
+        },
+        fill: plan.kind === "existing" ? plan.fill : NO_FILL,
+      };
+    }
+    case "conflict":
+      return plan.conflict.kind === "contact"
+        ? { kind: "contact_conflict", matchedBy: plan.conflict.matchedBy, existing: plan.conflict.existing }
+        : { kind: "contactless_conflict", candidates: plan.conflict.candidates };
+  }
 }
 
 // Apply one slot, returning the resolved client id (or null for no client info).
-// May throw P2002 if "update_existing" collides with the unique phone/email index —
-// callers run inside a transaction so the whole booking write rolls back.
+// May throw P2002 if a write collides with the unique phone/email index — callers run inside a
+// transaction so the whole booking write rolls back.
 export async function applyClientSlot(
   tx: Prisma.TransactionClient,
   input: ClientInput,
@@ -166,52 +403,74 @@ export async function applyClientSlot(
   if (requireContact && !input.client_email && !input.client_phone)
     throw new Error("Provide at least a phone or email for the client");
 
-  const match = await findClientMatch(tx, input);
+  const plan = await planClientSlot(tx, party ?? "primary", input, resolution);
 
-  if (!match) {
-    // No existing client matches the entered contact/name — create a new one.
-    const created = await tx.clients.create({
-      data: {
-        client_name: input.client_name,
-        client_surname: normalize(input.client_surname),
-        client_email: canonicalEmail(input.client_email),
-        client_phone: canonicalPhone(input.client_phone),
-      },
-    });
-    return created.id;
+  switch (plan.kind) {
+    case "none":
+      return null;
+
+    // Callers detect conflicts first; this only fires if the data changed in between.
+    case "conflict":
+      throw new ClientConflictError([plan.conflict]);
+
+    case "new": {
+      const created = await tx.clients.create({
+        data: {
+          client_name: input.client_name,
+          client_surname: normalize(input.client_surname),
+          client_email: canonicalEmail(input.client_email),
+          client_phone: canonicalPhone(input.client_phone),
+        },
+      });
+      return created.id;
+    }
+
+    case "rename": {
+      // The receptionist confirmed the typed name is a correction of the matched client's.
+      // findContactMatch returns on the FIRST tier that hits, so a match found by email never
+      // looked at the phone — yet this update writes both. Pre-checking here lets the dialog say
+      // WHICH field and WHOSE; it has to be a pre-check because Postgres aborts the transaction
+      // on a failed statement. The phone is only rewritten when it's a different number.
+      const phoneWrite = resolvePhoneUpdate(input.client_phone, plan.client.client_phone);
+      await assertContactFree(tx, {
+        email: canonicalEmail(input.client_email),
+        phone: phoneWrite.changed ? input.client_phone : null,
+        excludeClientId: plan.client.id,
+        party,
+      });
+      await tx.clients.update({
+        where: { id: plan.client.id },
+        data: {
+          client_name: input.client_name,
+          client_surname: normalize(input.client_surname),
+          client_email: canonicalEmail(input.client_email),
+          client_phone: phoneWrite.value,
+          updated_at: new Date(),
+        },
+      });
+      return plan.client.id;
+    }
+
+    case "existing": {
+      const { fill } = plan;
+      if (fill.phone || fill.email || fill.surname) {
+        await assertContactFree(tx, {
+          email: fill.email,
+          phone: fill.phone,
+          excludeClientId: plan.client.id,
+          party,
+        });
+        await tx.clients.update({
+          where: { id: plan.client.id },
+          data: {
+            ...(fill.phone ? { client_phone: fill.phone } : {}),
+            ...(fill.email ? { client_email: fill.email } : {}),
+            ...(fill.surname ? { client_surname: fill.surname } : {}),
+            updated_at: new Date(),
+          },
+        });
+      }
+      return plan.client.id;
+    }
   }
-
-  if (resolution === "update_existing") {
-    // findClientMatch returns on the FIRST tier that hits, so a match found by email never
-    // looked at the phone — yet this update writes both. If the typed phone belongs to a third
-    // client, this is exactly where it collides. Pre-checking here is what lets the dialog say
-    // WHICH field and WHOSE, instead of a bare "phone or email already taken".
-    //
-    // It has to be a pre-check, not a catch: Postgres aborts the whole transaction on a failed
-    // statement, so no lookup is possible after the fact from inside `tx`.
-    //
-    // The phone is only checked — and only rewritten — when it is a different number from the
-    // one stored. Re-saving the same number in another spelling keeps the stored value.
-    const phoneWrite = resolvePhoneUpdate(input.client_phone, match.client.client_phone);
-    await assertContactFree(tx, {
-      email: canonicalEmail(input.client_email),
-      phone: phoneWrite.changed ? input.client_phone : null,
-      excludeClientId: match.client.id,
-      party,
-    });
-
-    await tx.clients.update({
-      where: { id: match.client.id },
-      data: {
-        client_name: input.client_name,
-        client_surname: normalize(input.client_surname),
-        client_email: canonicalEmail(input.client_email),
-        client_phone: phoneWrite.value,
-        updated_at: new Date(),
-      },
-    });
-  }
-
-  // "use_existing" (or a name-matching link) keeps the stored record untouched.
-  return match.client.id;
 }

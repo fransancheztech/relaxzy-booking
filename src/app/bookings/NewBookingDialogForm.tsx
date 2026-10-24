@@ -44,6 +44,7 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
     );
 
   const defaultValues = {
+    client_picked_id: "",
     client_name: "",
     client_surname: "",
     client_phone: "",

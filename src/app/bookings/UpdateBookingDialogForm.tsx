@@ -46,6 +46,7 @@ type Props = {
 
 export const defaultValuesUpdateBookingForm: Partial<BookingUpdateSchemaType> =
   {
+    client_picked_id: "",
     client_name: "",
     client_surname: "",
     client_phone: "",
@@ -145,6 +146,9 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId, readOnly = false }:
         const end = data.end_time ? DateTime.fromISO(data.end_time) : null;
 
         methods.reset({
+          // The booking's current client: re-saving (or adding a phone/email she lacked) keeps
+          // the booking on it instead of creating a duplicate.
+          client_picked_id: data.client?.id ?? "",
           client_name: data.client?.name ?? "",
           client_surname: data.client?.surname ?? "",
           client_email: data.client?.email ?? "",

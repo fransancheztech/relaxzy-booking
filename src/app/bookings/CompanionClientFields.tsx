@@ -8,6 +8,8 @@ import { BookingSchemaType } from "@/schemas/booking.schema";
 import { useClientSearch, FocusedClientField } from "@/hooks/useClientSearch";
 import { ClientRow } from "@/hooks/useSimilarClients";
 import ClientDropdown from "./ClientDropdown";
+import ClientResolutionHint from "@/components/ClientResolutionHint";
+import { useClientPreview } from "@/hooks/useClientPreview";
 
 type FocusedField = "name" | "surname" | "phone" | "email" | null;
 
@@ -30,10 +32,19 @@ const CompanionClientFields = ({ index }: Props) => {
   const surnameField = `companions.${index}.client_surname` as const;
   const phoneField = `companions.${index}.client_phone` as const;
   const emailField = `companions.${index}.client_email` as const;
+  const pickedField = `companions.${index}.client_picked_id` as const;
 
-  const [nameVal, surnameVal, phoneVal, emailVal] = useWatch({
+  const [nameVal, surnameVal, phoneVal, emailVal, pickedId] = useWatch({
     control,
-    name: [nameField, surnameField, phoneField, emailField],
+    name: [nameField, surnameField, phoneField, emailField, pickedField],
+  });
+
+  const preview = useClientPreview({
+    name: nameVal,
+    surname: surnameVal,
+    phone: phoneVal,
+    email: emailVal,
+    pickedId,
   });
 
   const [focusedField, setFocusedField] = useState<FocusedField>(null);
@@ -58,6 +69,7 @@ const CompanionClientFields = ({ index }: Props) => {
   };
 
   const handleSelect = (c: ClientRow) => {
+    setValue(pickedField, c.id);
     setValue(nameField, c.client_name ?? "");
     setValue(surnameField, c.client_surname ?? "");
     setValue(phoneField, c.client_phone ?? "");
@@ -168,6 +180,10 @@ const CompanionClientFields = ({ index }: Props) => {
             <ClientDropdown clients={clients} onSelect={handleSelect} query={emailVal} />
           )}
         </Box>
+      </Grid>
+      {/* Always rendered (fixed height) so its text changing never moves the form. */}
+      <Grid size={12}>
+        <ClientResolutionHint preview={preview} />
       </Grid>
     </Grid>
   );

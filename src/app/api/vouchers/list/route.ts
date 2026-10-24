@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "generated/prisma";
+import { foldText } from "@/utils/text";
 
 const SORTABLE_FIELDS = new Set([
   "created_at",
@@ -55,10 +56,8 @@ export async function POST(request: Request) {
       const matches = await prisma.clients.findMany({
         where: {
           deleted_at: null,
-          OR: [
-            { client_name: { contains: buyerFilter.value as string, mode: "insensitive" } },
-            { client_surname: { contains: buyerFilter.value as string, mode: "insensitive" } },
-          ],
+          // Full name, accent-insensitive: "rocio soto" finds Rocío Sotomayor.
+          client_full_name_folded: { contains: foldText(buyerFilter.value as string) },
         },
         select: { id: true },
       });
@@ -69,10 +68,7 @@ export async function POST(request: Request) {
       const matches = await prisma.clients.findMany({
         where: {
           deleted_at: null,
-          OR: [
-            { client_name: { contains: recipientFilter.value as string, mode: "insensitive" } },
-            { client_surname: { contains: recipientFilter.value as string, mode: "insensitive" } },
-          ],
+          client_full_name_folded: { contains: foldText(recipientFilter.value as string) },
         },
         select: { id: true },
       });

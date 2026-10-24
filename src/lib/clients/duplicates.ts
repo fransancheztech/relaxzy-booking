@@ -277,6 +277,147 @@ export async function loadTypoPairs(): Promise<{ pairs: TypoPair[]; waiting: num
   return { pairs, waiting };
 }
 
+// ─── Client summaries (for any two-client merge screen) ──────────────────────────────────────
+
+/** An active client plus the activity a reviewer needs to decide which record to keep. */
+export type ClientSummary = DuplicateMember & { first_visit: string | null };
+
+/** Active clients with their booking/voucher activity, in the order of `ids` (missing ids skipped). */
+export async function loadClientSummaries(ids: string[]): Promise<ClientSummary[]> {
+  if (ids.length === 0) return [];
+  const rows = await prisma.$queryRaw<
+    {
+      id: string;
+      client_name: string | null;
+      client_surname: string | null;
+      client_phone: string | null;
+      client_email: string | null;
+      client_notes: string | null;
+      created_at: Date;
+      bookings: number;
+      first_visit: Date | null;
+      last_visit: Date | null;
+      vouchers: number;
+    }[]
+  >`
+    SELECT c.id::text AS id, c.client_name, c.client_surname, c.client_phone, c.client_email,
+           c.client_notes, c.created_at,
+           (SELECT count(*)::int FROM bookings b WHERE b.client_id = c.id AND b.deleted_at IS NULL) AS bookings,
+           (SELECT min(b.start_time) FROM bookings b WHERE b.client_id = c.id AND b.deleted_at IS NULL) AS first_visit,
+           (SELECT max(b.start_time) FROM bookings b WHERE b.client_id = c.id AND b.deleted_at IS NULL) AS last_visit,
+           (SELECT count(*)::int FROM vouchers v
+             WHERE (v.buyer_id = c.id OR v.recipient_id = c.id) AND v.deleted_at IS NULL) AS vouchers
+    FROM clients c
+    WHERE c.id = ANY (${ids}::uuid[]) AND c.deleted_at IS NULL`;
+  const iso = (d: Date | null) => (d ? new Date(d).toISOString() : null);
+  const byId = new Map(
+    rows.map((r) => [
+      r.id,
+      {
+        ...r,
+        created_at: new Date(r.created_at).toISOString(),
+        bookings: Number(r.bookings),
+        vouchers: Number(r.vouchers),
+        first_visit: iso(r.first_visit),
+        last_visit: iso(r.last_visit),
+      },
+    ]),
+  );
+  return ids.map((id) => byId.get(id)).filter((c): c is ClientSummary => !!c);
+}
+
+// ─── Voucher recipients ──────────────────────────────────────────────────────────────────────
+//
+// The third kind of duplicate, which no phone comparison can find: a gift voucher's recipient was
+// saved by name only (no phone, no email), and when that person came in to use it, the booking
+// was made under a second record WITH their phone, which then redeemed the voucher. Same name (or
+// one is the other plus a surname), and the voucher ties them together.
+
+export type VoucherPairUse = {
+  code: string;
+  /** Who bought the voucher for the recipient. */
+  buyer: string | null;
+  used_at: string | null;
+  amount: number;
+};
+
+export type VoucherPair = {
+  /** The contactless record the voucher was made out to. */
+  recipient: ClientSummary;
+  /** The record that redeemed it (usually has the phone). */
+  redeemer: ClientSummary;
+  uses: VoucherPairUse[];
+};
+
+export async function loadVoucherRecipientPairs(): Promise<VoucherPair[]> {
+  const rows = await prisma.$queryRaw<
+    { r_id: string; c_id: string; code: string; buyer_id: string | null; used_at: Date | null; amount: number }[]
+  >`
+    SELECT r.id::text AS r_id, c.id::text AS c_id, v.code, v.buyer_id::text AS buyer_id,
+           u.created_at AS used_at, u.amount::float AS amount
+    FROM voucher_uses u
+    JOIN vouchers v ON v.id = u.voucher_id AND v.deleted_at IS NULL
+    JOIN clients r ON r.id = v.recipient_id AND r.deleted_at IS NULL
+                  AND r.client_phone IS NULL AND r.client_email IS NULL
+    JOIN clients c ON c.id = u.recipient_id AND c.deleted_at IS NULL AND c.id <> r.id
+    WHERE u.deleted_at IS NULL
+      AND r.client_full_name_folded <> ''
+      AND (c.client_full_name_folded = r.client_full_name_folded
+           OR c.client_full_name_folded LIKE r.client_full_name_folded || ' %'
+           OR r.client_full_name_folded LIKE c.client_full_name_folded || ' %')
+    ORDER BY u.created_at DESC`;
+  if (rows.length === 0) return [];
+
+  const dismissed = new Set(
+    (await prisma.client_duplicate_dismissals.findMany({ select: { client_a: true, client_b: true } }))
+      .map((d) => `${d.client_a}|${d.client_b}`),
+  );
+  const pairKey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
+
+  const grouped = new Map<string, { r: string; c: string; uses: typeof rows }>();
+  for (const row of rows) {
+    const key = pairKey(row.r_id, row.c_id);
+    if (dismissed.has(key)) continue;
+    const g = grouped.get(key);
+    if (g) g.uses.push(row);
+    else grouped.set(key, { r: row.r_id, c: row.c_id, uses: [row] });
+  }
+  if (grouped.size === 0) return [];
+
+  const ids = [...new Set([...grouped.values()].flatMap((g) => [g.r, g.c]))];
+  const buyerIds = [...new Set(rows.map((r) => r.buyer_id).filter((id): id is string => !!id))];
+  const [summaries, buyers] = await Promise.all([
+    loadClientSummaries(ids),
+    prisma.clients.findMany({
+      where: { id: { in: buyerIds } },
+      select: { id: true, client_name: true, client_surname: true },
+    }),
+  ]);
+  const summaryById = new Map(summaries.map((s) => [s.id, s]));
+  const buyerName = (id: string | null) => {
+    const b = buyers.find((x) => x.id === id);
+    return b ? memberFullName(b) || null : null;
+  };
+
+  const pairs: VoucherPair[] = [];
+  for (const g of grouped.values()) {
+    const recipient = summaryById.get(g.r);
+    const redeemer = summaryById.get(g.c);
+    if (!recipient || !redeemer) continue;
+    pairs.push({
+      recipient,
+      redeemer,
+      uses: g.uses.map((u) => ({
+        code: u.code,
+        buyer: u.buyer_id === g.r ? null : buyerName(u.buyer_id),
+        used_at: u.used_at ? new Date(u.used_at).toISOString() : null,
+        amount: Number(u.amount),
+      })),
+    });
+  }
+  return pairs;
+}
+
 /** The stable code a merge_clients / unmerge_clients RAISE carries, if this error is one. */
 export function mergeErrorCode(err: unknown): string | null {
   const message = String((err as { message?: unknown })?.message ?? "");

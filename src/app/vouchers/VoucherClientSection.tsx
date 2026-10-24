@@ -8,6 +8,8 @@ import { Avatar, Box, Chip, Divider, Grid, Paper, TextField, Typography } from "
 import { useRef, useState } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { useTranslations } from "next-intl";
+import ClientResolutionHint from "@/components/ClientResolutionHint";
+import { useClientPreview } from "@/hooks/useClientPreview";
 
 type Prefix = "buyer" | "recipient";
 
@@ -15,6 +17,7 @@ type NameField    = "buyer_name"    | "recipient_name";
 type SurnameField = "buyer_surname" | "recipient_surname";
 type PhoneField   = "buyer_phone"   | "recipient_phone";
 type EmailField   = "buyer_email"   | "recipient_email";
+type PickedField  = "buyer_picked_id" | "recipient_picked_id";
 
 type FocusedKind = "name" | "surname" | "phone" | "email" | null;
 
@@ -168,10 +171,19 @@ const VoucherClientSection = ({ prefix, label, autoFocus }: Props) => {
   const surnameField = `${prefix}_surname` as SurnameField;
   const phoneField   = `${prefix}_phone`   as PhoneField;
   const emailField   = `${prefix}_email`   as EmailField;
+  const pickedField  = `${prefix}_picked_id` as PickedField;
 
-  const [nameVal, surnameVal, phoneVal, emailVal] = useWatch({
+  const [nameVal, surnameVal, phoneVal, emailVal, pickedId] = useWatch({
     control,
-    name: [nameField, surnameField, phoneField, emailField],
+    name: [nameField, surnameField, phoneField, emailField, pickedField],
+  });
+
+  const preview = useClientPreview({
+    name: nameVal,
+    surname: surnameVal,
+    phone: phoneVal,
+    email: emailVal,
+    pickedId,
   });
 
   const [focusedKind, setFocusedKind] = useState<FocusedKind>(null);
@@ -196,6 +208,7 @@ const VoucherClientSection = ({ prefix, label, autoFocus }: Props) => {
   };
 
   const handleSelect = (c: ClientRow) => {
+    setValue(pickedField,  c.id);
     setValue(nameField,    c.client_name    ?? "");
     setValue(surnameField, c.client_surname ?? "");
     setValue(phoneField,   c.client_phone   ?? "");
@@ -322,6 +335,11 @@ const VoucherClientSection = ({ prefix, label, autoFocus }: Props) => {
             <ClientDropdown clients={clients} onSelect={handleSelect} query={emailVal} />
           )}
         </Box>
+      </Grid>
+
+      {/* Always rendered (fixed height) so its text changing never moves the form. */}
+      <Grid size={12}>
+        <ClientResolutionHint preview={preview} />
       </Grid>
     </>
   );

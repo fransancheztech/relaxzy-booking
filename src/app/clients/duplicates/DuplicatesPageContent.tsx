@@ -36,6 +36,9 @@ import DuplicateGroupCard, {
   type GroupDecision,
 } from "./DuplicateGroupCard";
 import TypoPairCard, { type TypoMergeDecision, type TypoPair } from "./TypoPairCard";
+import VoucherPairCard from "./VoucherPairCard";
+import type { MergeDecision } from "./ClientMergeForm";
+import type { VoucherPair } from "@/lib/clients/duplicates";
 
 type MergeEntry = {
   id: string;
@@ -47,7 +50,7 @@ type MergeEntry = {
 };
 
 type Filter = "all" | DuplicateKind;
-type Section = "phone" | "typos";
+type Section = "phone" | "typos" | "vouchers";
 
 const postJson = async (
   url: string,
@@ -70,6 +73,7 @@ const postJson = async (
 const resolveGroup = (decision: GroupDecision) => postJson("/api/clients/duplicates/resolve", decision);
 
 const pairKey = (p: TypoPair) => `${p.a.id}|${p.b.id}`;
+const voucherPairKey = (p: VoucherPair) => `${p.recipient.id}|${p.redeemer.id}`;
 
 const DuplicatesPageContent = () => {
   const t = useTranslations("ClientDuplicates");
@@ -81,6 +85,7 @@ const DuplicatesPageContent = () => {
   const [typos, setTypos] = useState<TypoPair[]>([]);
   // Typo pairs held back until a number stops being shared (resolve its same-phone group first).
   const [typosWaiting, setTyposWaiting] = useState(0);
+  const [voucherPairs, setVoucherPairs] = useState<VoucherPair[]>([]);
   const [section, setSection] = useState<Section>("phone");
   // The typo pair currently being written, so its card can't be submitted twice.
   const [busyPair, setBusyPair] = useState<string | null>(null);
@@ -107,6 +112,7 @@ const DuplicatesPageContent = () => {
       setGroups(data.groups ?? []);
       setTypos(data.typos?.pairs ?? []);
       setTyposWaiting(data.typos?.waiting ?? 0);
+      setVoucherPairs(data.voucherPairs ?? []);
       setMerges(data.merges ?? []);
       setLoadFailed(false);
     } catch {
@@ -206,17 +212,18 @@ const DuplicatesPageContent = () => {
     load();
   };
 
-  const undoDismiss = async (pair: TypoPair, toastId: string | number) => {
+  const undoDismiss = async (aId: string, bId: string, toastId: string | number) => {
     toast.dismiss(toastId);
-    const result = await postJson("/api/clients/duplicates/dismiss", { aId: pair.a.id, bId: pair.b.id }, "DELETE");
+    const result = await postJson("/api/clients/duplicates/dismiss", { aId, bId }, "DELETE");
     if ("error" in result) toast.error(t("dismissFailed"));
     else toast.success(t("dismissUndone"));
     load();
   };
 
-  const dismissTypo = async (pair: TypoPair) => {
-    setBusyPair(pairKey(pair));
-    const result = await postJson("/api/clients/duplicates/dismiss", { aId: pair.a.id, bId: pair.b.id });
+  // "Different people" on any reviewed pair (typo or voucher): recorded so it isn't suggested again.
+  const dismissPair = async (aId: string, bId: string, key: string, removeLocal: () => void) => {
+    setBusyPair(key);
+    const result = await postJson("/api/clients/duplicates/dismiss", { aId, bId });
     setBusyPair(null);
 
     if ("error" in result) {
@@ -228,13 +235,55 @@ const DuplicatesPageContent = () => {
     const id = toast.success(
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <span>{t("dismissedToast")}</span>
-        <Button size="small" color="inherit" onClick={() => undoDismiss(pair, id)} sx={{ fontWeight: 700 }}>
+        <Button size="small" color="inherit" onClick={() => undoDismiss(aId, bId, id)} sx={{ fontWeight: 700 }}>
           {t("undo")}
         </Button>
       </Box>,
       { autoClose: 10000 },
     );
-    setTypos((prev) => prev.filter((p) => pairKey(p) !== pairKey(pair)));
+    removeLocal();
+    load();
+  };
+
+  const dismissTypo = (pair: TypoPair) =>
+    dismissPair(pair.a.id, pair.b.id, pairKey(pair), () =>
+      setTypos((prev) => prev.filter((p) => pairKey(p) !== pairKey(pair))));
+
+  const dismissVoucherPair = (pair: VoucherPair) =>
+    dismissPair(pair.recipient.id, pair.redeemer.id, voucherPairKey(pair), () =>
+      setVoucherPairs((prev) => prev.filter((p) => voucherPairKey(p) !== voucherPairKey(pair))));
+
+  const mergeVoucherPair = async (pair: VoucherPair, decision: MergeDecision) => {
+    const key = voucherPairKey(pair);
+    setBusyPair(key);
+    const result = await postJson("/api/clients/merges", decision);
+    setBusyPair(null);
+
+    if ("error" in result) {
+      toast.error(
+        result.error === "STALE_GROUP" ? t("stalePair")
+          : result.error === "INVALID_NAME" ? t("invalidName")
+          : result.error === "CONTACT_TAKEN" ? t("typoContactTaken")
+          : t("resolveFailed"),
+      );
+      load();
+      return;
+    }
+
+    const mergeId = result.mergeId;
+    const name = [decision.name, decision.surname].filter(Boolean).join(" ");
+    const id = toast.success(
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <span>{t("mergedToast", { name })}</span>
+        {mergeId && (
+          <Button size="small" color="inherit" onClick={() => undo(mergeId, id)} sx={{ fontWeight: 700 }}>
+            {t("undo")}
+          </Button>
+        )}
+      </Box>,
+      { autoClose: 10000 },
+    );
+    setVoucherPairs((prev) => prev.filter((p) => voucherPairKey(p) !== key));
     load();
   };
 
@@ -290,7 +339,28 @@ const DuplicatesPageContent = () => {
       <Tabs value={section} onChange={(_, v: Section) => setSection(v)} sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tab value="phone" label={t("sectionSamePhone", { count: groups.length })} disabled={!!bulk} />
         <Tab value="typos" label={t("sectionTypos", { count: typos.length })} disabled={!!bulk} />
+        <Tab value="vouchers" label={t("sectionVouchers", { count: voucherPairs.length })} disabled={!!bulk} />
       </Tabs>
+
+      {section === "vouchers" && (
+        <>
+          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 900 }}>
+            {t("vouchersIntro")}
+          </Typography>
+          {!loadFailed && voucherPairs.length === 0 && (
+            <Alert severity="success">{t("noVoucherPairs")}</Alert>
+          )}
+          {voucherPairs.map((p) => (
+            <VoucherPairCard
+              key={voucherPairKey(p)}
+              pair={p}
+              busy={busyPair === voucherPairKey(p)}
+              onMerge={(decision) => mergeVoucherPair(p, decision)}
+              onDismiss={() => dismissVoucherPair(p)}
+            />
+          ))}
+        </>
+      )}
 
       {section === "typos" && (
         <>

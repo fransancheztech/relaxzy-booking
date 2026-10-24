@@ -23,6 +23,8 @@ type CompanionInput = {
   client_surname?: string;
   client_phone?: string;
   client_email?: string;
+  /** Client picked from the suggestions dropdown for this companion. */
+  client_picked_id?: string;
 };
 
 type Body = {
@@ -38,6 +40,8 @@ type Body = {
   notes?: string;
   price?: string | number;
   companions?: CompanionInput[];
+  /** Client picked from the suggestions dropdown (see ClientInput.client_picked_id). */
+  client_picked_id?: string;
   // Per-slot decisions for name conflicts: "primary", "companion-0", …
   clientResolutions?: Record<string, ClientResolution>;
 };

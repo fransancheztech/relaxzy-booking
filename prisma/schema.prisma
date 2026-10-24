@@ -65,6 +65,9 @@ model clients {
   updated_at                                                                DateTime?                     @db.Timestamptz(6)
   client_surname                                                            String?
   deleted_at                                                                DateTime?                     @db.Timestamptz(6)
+  client_name_folded                                                        String?                       @default(dbgenerated("fold_text(client_name)"))
+  client_surname_folded                                                     String?                       @default(dbgenerated("fold_text(client_surname)"))
+  client_full_name_folded                                                   String?                       @default(dbgenerated("fold_text(((COALESCE(client_name, ''::text) || ' '::text) || COALESCE(client_surname, ''::text)))"))
   bookings                                                                  bookings[]
   client_duplicate_dismissals_client_duplicate_dismissals_client_aToclients client_duplicate_dismissals[] @relation("client_duplicate_dismissals_client_aToclients")
   client_duplicate_dismissals_client_duplicate_dismissals_client_bToclients client_duplicate_dismissals[] @relation("client_duplicate_dismissals_client_bToclients")
@@ -73,6 +76,7 @@ model clients {
   @@index([client_email(ops: raw("gin_trgm_ops"))], map: "clients_email_idx", type: Gin)
   @@index([client_name(ops: raw("gin_trgm_ops"))], map: "clients_full_name_idx", type: Gin)
   @@index([client_phone(ops: raw("gin_trgm_ops"))], map: "clients_phone_idx", type: Gin)
+  @@index([client_full_name_folded(ops: raw("gin_trgm_ops"))], map: "clients_full_name_folded_trgm", type: Gin)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.

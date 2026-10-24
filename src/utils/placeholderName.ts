@@ -1,13 +1,11 @@
 import { PLACEHOLDER_CLIENT_NAMES } from "@/constants";
+import { foldText } from "@/utils/text";
 
-// Normalize a name for comparison: strip diacritics, lowercase, collapse any run of
-// non-alphanumeric characters into a single space, and trim. So "Walk-In", "ANONIMO"
-// and "n/a" become "walk in", "anonimo" and "n a".
+// Normalize a name for comparison: fold it like the database does (accents and foreign letters,
+// see foldText), then collapse any run of non-alphanumeric characters into a single space. So
+// "Walk-In", "ANONIMO", "n/a" and "Straße" become "walk in", "anonimo", "n a" and "strasse".
 export function normalizeNameForCompare(raw: string): string {
-  return raw
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
+  return foldText(raw)
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 }

@@ -2,12 +2,26 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "generated/prisma";
 import { phoneDigits, phoneSearchTerms, samePhone } from "@/utils/phone";
+import { foldText } from "@/utils/text";
 
 const FIELDS = ["client_name", "client_surname", "client_email", "client_phone"] as const;
 type FieldKey = (typeof FIELDS)[number];
 
 const isFieldKey = (s: unknown): s is FieldKey =>
   typeof s === "string" && (FIELDS as readonly string[]).includes(s);
+
+/**
+ * Accent-insensitive "contains" on a name field, through the database's folded columns: "Rocio"
+ * finds "Rocío". The name field searches the full name, so "Rocío Soto" typed into it still finds
+ * Rocío (name) Sotomayor (surname). Email stays a plain case-insensitive contains.
+ */
+function foldedFilter(field: Exclude<FieldKey, "client_phone">, value: string): Prisma.clientsWhereInput {
+  if (field === "client_email") return { client_email: { contains: value.trim(), mode: "insensitive" } };
+  const folded = foldText(value);
+  return field === "client_name"
+    ? { client_full_name_folded: { contains: folded } }
+    : { client_surname_folded: { contains: folded } };
+}
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -40,7 +54,7 @@ async function handlePerField(body: {
   const isPhone = field === "client_phone";
   const focusedFilter: Prisma.clientsWhereInput = isPhone
     ? { OR: phoneSearchTerms(value).map((term) => ({ client_phone: { contains: term, mode: "insensitive" } })) }
-    : { [field]: { contains: value, mode: "insensitive" } };
+    : foldedFilter(field, value);
 
   try {
     const rows = await prisma.clients.findMany({
@@ -61,16 +75,18 @@ async function handlePerField(body: {
       take: 50,
     });
 
-    const lc = (s: string | null | undefined) => (s ?? "").toLowerCase();
-    const valLc = value.toLowerCase();
+    // Names compare folded ("rocio" ranks "Rocío" as exact); email lower-cased.
+    const norm = (k: FieldKey, s: string | null | undefined) =>
+      k === "client_email" ? (s ?? "").trim().toLowerCase() : foldText(s);
+    const valNorm = norm(field, value);
 
     const focusedScore = (row: (typeof rows)[number]) => {
       // For a phone, "exact" means the same number in any spelling; every row returned already
       // contains the typed digits, so the rest tie and fall through to the overlap score.
       if (isPhone) return samePhone(row.client_phone, value) ? 2 : 0;
-      const f = lc(row[field]);
-      if (f === valLc) return 2;
-      if (f.startsWith(valLc)) return 1;
+      const f = norm(field, row[field]);
+      if (f === valNorm) return 2;
+      if (f.startsWith(valNorm)) return 1;
       return 0;
     };
 
@@ -78,12 +94,12 @@ async function handlePerField(body: {
       let s = 0;
       for (const k of FIELDS) {
         if (k === field) continue;
-        const v = (others[k] ?? "").trim().toLowerCase();
-        if (!v) continue;
+        const raw = (others[k] ?? "").trim();
+        if (!raw) continue;
         if (k === "client_phone") {
-          const digits = phoneDigits(v);
+          const digits = phoneDigits(raw);
           if (digits && phoneDigits(row.client_phone).includes(digits)) s += 1;
-        } else if (lc(row[k]).includes(v)) {
+        } else if (norm(k, row[k]).includes(norm(k, raw))) {
           s += 1;
         }
       }
@@ -96,7 +112,7 @@ async function handlePerField(body: {
         (a, b) =>
           b.fs - a.fs ||
           b.os - a.os ||
-          lc(a.row[field]).localeCompare(lc(b.row[field])),
+          norm(field, a.row[field]).localeCompare(norm(field, b.row[field])),
       )
       .slice(0, 15)
       .map((r) => r.row);
@@ -124,8 +140,8 @@ async function handleLegacy(body: {
   }
 
   const filters: Prisma.clientsWhereInput[] = [];
-  if (client_name) filters.push({ client_name: { contains: client_name, mode: "insensitive" } });
-  if (client_surname) filters.push({ client_surname: { contains: client_surname, mode: "insensitive" } });
+  if (client_name) filters.push(foldedFilter("client_name", client_name));
+  if (client_surname) filters.push(foldedFilter("client_surname", client_surname));
   if (client_email) filters.push({ client_email: { contains: client_email, mode: "insensitive" } });
   if (client_phone) filters.push({ client_phone: { contains: client_phone, mode: "insensitive" } });
 

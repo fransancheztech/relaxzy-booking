@@ -41,6 +41,8 @@ const NewVoucherDialog = ({ open, onClose }: Props) => {
     const t = useTranslations("Vouchers");
     const tCommon = useTranslations("Common");
     const defaultValues: VoucherSchemaInput = {
+        buyer_picked_id: "",
+        recipient_picked_id: "",
         recipient_name: "",
         recipient_surname: "",
         recipient_phone: "",

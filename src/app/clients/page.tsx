@@ -212,6 +212,7 @@ export default function ClientsPage() {
         onConfirmDelete={onConfirmDelete}
         closeDeleteDialog={closeDeleteDialog}
         setConfirmDeleteOpen={setConfirmDeleteOpen}
+        onMerged={() => setTimeout(() => loadClients(page), 300)}
       />
     </main>
   );

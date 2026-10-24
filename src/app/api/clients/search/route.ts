@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "generated/prisma";
 import { phoneSearchTerms } from "@/utils/phone";
+import { foldText } from "@/utils/text";
 
 const SORTABLE_FIELDS = new Set([
   "client_name", "client_surname", "client_email", "client_phone", "client_notes", "created_at",
@@ -29,9 +30,10 @@ function buildFilterCondition(
 ): Prisma.clientsWhereInput | null {
   switch (field) {
     case "client_name":
-      return { client_name: { contains: value, mode: "insensitive" } };
+      // Accent-insensitive through the folded columns: "Rocio" finds "Rocío".
+      return { client_name_folded: { contains: foldText(value) } };
     case "client_surname":
-      return { client_surname: { contains: value, mode: "insensitive" } };
+      return { client_surname_folded: { contains: foldText(value) } };
     case "client_email":
       return { client_email: { contains: value, mode: "insensitive" } };
     case "client_phone":

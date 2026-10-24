@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "generated/prisma";
 import { voucherNotExpiredSql } from "@/lib/vouchers/expirySql";
 import { phoneDigits } from "@/utils/phone";
+import { foldText } from "@/utils/text";
 
 type VoucherRow = {
   id: string;
@@ -36,6 +37,8 @@ export async function GET(request: Request) {
     // search and are full of digits that must not start matching phone numbers.
     const qDigits = phoneDigits(q);
     const phonePattern = !/[a-z]/i.test(q) && qDigits.length >= 3 ? `%${qDigits}%` : pattern;
+    // Names match on the folded full name: accent-insensitive, and "rocio soto" spans name + surname.
+    const namePattern = q ? `%${foldText(q)}%` : "%";
 
     const rows = await prisma.$queryRaw<VoucherRow[]>`
       SELECT
@@ -65,14 +68,12 @@ export async function GET(request: Request) {
           v.code                  ILIKE ${pattern}
           OR v.notes              ILIKE ${pattern}
           OR v.external_reference ILIKE ${pattern}
-          OR cr.client_name    ILIKE ${pattern}
-          OR cr.client_surname ILIKE ${pattern}
+          OR cr.client_full_name_folded LIKE ${namePattern}
           OR cr.client_phone   ILIKE ${pattern}
           OR cr.client_phone   ILIKE ${phonePattern}
           OR cr.client_email   ILIKE ${pattern}
           OR cr.client_notes   ILIKE ${pattern}
-          OR cb.client_name    ILIKE ${pattern}
-          OR cb.client_surname ILIKE ${pattern}
+          OR cb.client_full_name_folded LIKE ${namePattern}
           OR cb.client_phone   ILIKE ${pattern}
           OR cb.client_phone   ILIKE ${phonePattern}
           OR cb.client_email   ILIKE ${pattern}

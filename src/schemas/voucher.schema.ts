@@ -2,6 +2,9 @@ import { phoneValidator } from "@/utils/phoneValidator";
 import * as z from "zod";
 
 export const VoucherSchema = z.object({
+    // Clients picked from the suggestions dropdowns; see ClientInput.client_picked_id.
+    buyer_picked_id: z.string().optional(),
+    recipient_picked_id: z.string().optional(),
     buyer_name: z.string().min(1, "Buyer name is required"),
     buyer_surname: z.string().optional(),
     buyer_phone: z.string().optional().refine((val) => !val || phoneValidator(val), {

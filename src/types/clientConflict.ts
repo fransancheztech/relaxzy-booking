@@ -2,7 +2,10 @@
 // A "slot" is a single client reference inside a booking request: the primary client
 // ("primary") or a companion ("companion-0", "companion-1", …).
 
-export type ClientResolution = "use_existing" | "update_existing";
+// "use_existing" / "update_existing" answer a contact conflict (the phone/email belongs to someone
+// with another name). "create_new" / "link:<client id>" answer a contactless conflict (a client with
+// this name exists without phone or email: is it the same person?).
+export type ClientResolution = "use_existing" | "update_existing" | "create_new" | `link:${string}`;
 
 export type ClientConflictParty = {
   name: string | null;
@@ -11,12 +14,64 @@ export type ClientConflictParty = {
   phone: string | null;
 };
 
-export type ClientConflict = {
-  slot: string; // "primary" | "companion-<index>"
+/** The typed phone/email already belongs to a client whose name is different. */
+export type ContactClientConflict = {
+  kind: "contact";
+  slot: string; // "primary" | "companion-<index>" | "buyer" | "recipient"
   matchedBy: "email" | "phone";
   existing: { id: string } & ClientConflictParty;
   typed: ClientConflictParty;
 };
+
+/** A voucher the candidate holds, shown so the receptionist can ask "did you get a gift voucher?". */
+export type CandidateVoucher = {
+  code: string;
+  balance: number;
+  role: "recipient" | "buyer";
+  /** The other party: the buyer of a voucher they received, or the recipient of one they bought. */
+  otherName: string | null;
+};
+
+export type ContactlessCandidate = {
+  id: string;
+  name: string | null;
+  surname: string | null;
+  created_at: string;
+  bookings: number;
+  last_visit: string | null;
+  vouchers: CandidateVoucher[];
+};
+
+/**
+ * Nobody has the typed phone/email, but one or more clients with the same name exist WITHOUT any
+ * contact details. Saving would create a second record for what may be the same person (e.g. a gift
+ * voucher recipient saved by first name only, now booking with her phone).
+ */
+export type ContactlessClientConflict = {
+  kind: "contactless";
+  slot: string;
+  typed: ClientConflictParty;
+  candidates: ContactlessCandidate[];
+};
+
+export type ClientConflict = ContactClientConflict | ContactlessClientConflict;
+
+/**
+ * What saving the client fields will do, computed by the same code that saves them. Drives the live
+ * hint under the client fields, so the receptionist knows before saving whether a client will be
+ * created, reused or updated.
+ */
+export type ClientPreview =
+  | { kind: "none" }
+  | {
+      kind: "existing";
+      client: ClientConflictParty & { id: string; bookings: number };
+      /** Empty fields of that client the save will fill in (nothing is ever overwritten). */
+      fill: { phone: string | null; email: string | null; surname: string | null };
+    }
+  | { kind: "contact_conflict"; matchedBy: "email" | "phone"; existing: ClientConflictParty }
+  | { kind: "contactless_conflict"; candidates: ContactlessCandidate[] }
+  | { kind: "new" };
 
 // 409 body returned when one or more slots need an explicit decision.
 export const CLIENT_NAME_CONFLICT = "CLIENT_NAME_CONFLICT";

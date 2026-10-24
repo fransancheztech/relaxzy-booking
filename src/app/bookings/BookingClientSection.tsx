@@ -8,6 +8,8 @@ import { Alert, Box, FormControlLabel, Grid, Switch, TextField, Typography } fro
 import { useRef, useState } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import ClientDropdown from "./ClientDropdown";
+import ClientResolutionHint from "@/components/ClientResolutionHint";
+import { useClientPreview } from "@/hooks/useClientPreview";
 
 type Props = {
   autoFocus?: boolean;
@@ -37,9 +39,9 @@ const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn, clientNotes, 
   const tForm = useTranslations("BookingForm");
   const { control, setValue, formState: { errors } } = useFormContext<BookingSchemaType>();
 
-  const [nameVal, surnameVal, phoneVal, emailVal] = useWatch({
+  const [nameVal, surnameVal, phoneVal, emailVal, pickedId] = useWatch({
     control,
-    name: ["client_name", "client_surname", "client_phone", "client_email"],
+    name: ["client_name", "client_surname", "client_phone", "client_email", "client_picked_id"],
   });
 
   const [focusedField, setFocusedField] = useState<FocusedField>(null);
@@ -53,6 +55,17 @@ const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn, clientNotes, 
   });
 
   const [walkIn, setWalkIn] = useState(false);
+
+  // What saving these fields will do (existing / new / will ask), shown under them.
+  const preview = useClientPreview({
+    name: nameVal,
+    surname: surnameVal,
+    phone: phoneVal,
+    email: emailVal,
+    pickedId,
+    enabled: !readOnly && !walkIn,
+  });
+
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleFocus = (field: FocusedField) => {
@@ -65,6 +78,9 @@ const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn, clientNotes, 
   };
 
   const handleSelect = (c: ClientRow) => {
+    // Remembered so saving reuses this client — e.g. adds the phone she now gives to a client
+    // who had none — instead of creating a second one with the same name.
+    setValue("client_picked_id", c.id);
     setValue("client_name",    c.client_name    ?? "");
     setValue("client_surname", c.client_surname ?? "");
     setValue("client_phone",   c.client_phone   ?? "");
@@ -79,6 +95,7 @@ const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn, clientNotes, 
     setWalkIn(checked);
     if (checked) {
       // a walk-in has no client details — clear anything already typed
+      setValue("client_picked_id", "");
       setValue("client_name", "");
       setValue("client_surname", "");
       setValue("client_phone", "");
@@ -253,6 +270,12 @@ const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn, clientNotes, 
           )}
         </Box>
       </Grid>
+      {/* Always rendered (fixed height) so its text changing never moves the form. */}
+      {!readOnly && (
+        <Grid size={12}>
+          <ClientResolutionHint preview={preview} />
+        </Grid>
+      )}
       {clientNotes?.trim() && (
         <Grid size={12}>
           <Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>

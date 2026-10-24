@@ -24,6 +24,9 @@ type Body = {
   recipient_surname?: string;
   recipient_phone?: string;
   recipient_email?: string;
+  /** Clients picked from the suggestions dropdowns (see ClientInput.client_picked_id). */
+  buyer_picked_id?: string;
+  recipient_picked_id?: string;
   initial_balance?: number | string;
   payment_method?: string;
   notes?: string;
@@ -40,6 +43,7 @@ const clientInputFor = (body: Body, prefix: "buyer" | "recipient"): ClientInput 
   client_surname: (body as Record<string, string | undefined>)[`${prefix}_surname`],
   client_email: (body as Record<string, string | undefined>)[`${prefix}_email`],
   client_phone: (body as Record<string, string | undefined>)[`${prefix}_phone`],
+  client_picked_id: (body as Record<string, string | undefined>)[`${prefix}_picked_id`],
 });
 
 const normalizeString = (v?: string | null) =>
