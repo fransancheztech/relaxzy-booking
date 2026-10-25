@@ -101,7 +101,8 @@
     "method_cash": "Cash",
     "method_card": "Card",
     "method_voucher": "Voucher",
-    "paidWithLegend": "Paid with:"
+    "paidWithLegend": "Paid with:",
+    "tooltipPaid": "Paid"
   },
   "DailyTotals": {
     "title": "Daily totals",

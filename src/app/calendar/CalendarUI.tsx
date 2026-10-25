@@ -18,6 +18,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
+import Tooltip from "@mui/material/Tooltip";
 import { toast } from "react-toastify";
 import { useCalendarData } from "@/hooks/useCalendarData";
 import { useLayout } from "../context/LayoutContext";
@@ -48,14 +49,11 @@ const METHOD_KEYS: MethodKind[] = ["cash", "card", "voucher"];
  * the payment fields (green cash, blue card, purple voucher) and in proportion to what each paid —
  * so "how was this paid?" is visible without opening the booking. Nothing when nothing is paid.
  */
-function PaymentMethodBar({ amounts, title }: { amounts: Record<MethodKind, number>; title: string }) {
+function PaymentMethodBar({ amounts }: { amounts: Record<MethodKind, number> }) {
   const parts = METHOD_KEYS.filter((k) => amounts[k] > 0.004);
   if (parts.length === 0) return null;
   return (
-    <span
-      title={title}
-      style={{ display: "inline-flex", gap: 1, width: 22, height: 5, borderRadius: 2, overflow: "hidden", flexShrink: 0 }}
-    >
+    <span style={{ display: "inline-flex", gap: 1, width: 22, height: 5, borderRadius: 2, overflow: "hidden", flexShrink: 0 }}>
       {parts.map((k) => (
         <span key={k} style={{ flexGrow: amounts[k], flexBasis: 0, minWidth: 3, background: METHOD_COLORS[k] }} />
       ))}
@@ -333,60 +331,110 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
     const fmt = (n: number) => Number.isInteger(n) ? String(n) : n.toFixed(2);
     const priceStr = price != null ? `${fmt(price)}€` : "—";
     const byMethod = b.paid_by_method ?? { cash: 0, card: 0, voucher: 0 };
-    const methodTitle = METHOD_KEYS.filter((k) => byMethod[k] > 0.004)
-      .map((k) => `${t(`method_${k}`)} ${fmt(byMethod[k])}€`)
-      .join(" · ");
 
-    return (
+    // Everything on the card, in full, on hover — a safety net for whatever a short or narrow card
+    // has to cut ("…"). MUI's tooltip rather than the browser's, so it can be laid out: name in
+    // bold, and each payment method with its colour.
+    const clientFull = [b.client_name, b.client_surname].filter(Boolean).join(" ");
+    const serviceName = b.service_name && b.service_name !== "Unknown" ? b.service_name : b.short_service_name;
+    const paidMethods = METHOD_KEYS.filter((k) => byMethod[k] > 0.004);
+    const tooltip = (
+      <div style={{ fontSize: 12, lineHeight: 1.5 }}>
+        <div style={{ fontWeight: 700, fontSize: 13 }}>{clientFull || "—"}</div>
+        {serviceName && <div>{serviceName}</div>}
+        <div style={{ opacity: 0.8 }}>{arg.timeText}</div>
+        <div style={{ marginTop: 4 }}>
+          {t("tooltipPaid")}: <strong>{fmt(paid)}€</strong> / {priceStr}
+        </div>
+        {paidMethods.map((k) => (
+          <div key={k} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ display: "inline-block", width: 12, height: 5, borderRadius: 2, background: METHOD_COLORS[k] }} />
+            {t(`method_${k}`)} {fmt(byMethod[k])}€
+          </div>
+        ))}
+        {b.therapist_requested && <div style={{ marginTop: 4 }}>★ {t("therapistRequestedTooltip")}</div>}
+        {b.booking_group_id && <div style={{ marginTop: b.therapist_requested ? 0 : 4 }}>⛓ {t("groupTooltip")}</div>}
+      </div>
+    );
+    const withTooltip = (card: React.ReactElement) => (
+      <Tooltip
+        title={tooltip}
+        arrow
+        placement="top"
+        enterDelay={350}
+        enterNextDelay={350}
+        disableInteractive
+        slotProps={{ tooltip: { sx: { maxWidth: 280, px: 1.25, py: 1 } } }}
+      >
+        {card}
+      </Tooltip>
+    );
+
+    const badge = (
+      <span style={{
+        flexShrink: 0,
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 3,
+        padding: "0 3px",
+        borderRadius: 3,
+        fontSize: 9,
+        fontWeight: 700,
+        background: "rgba(255,255,255,0.85)",
+        color: flagColor,
+        whiteSpace: "nowrap",
+      }}>
+        {fmt(paid)}€/{priceStr}
+        {/* Inside the white badge so the colours read on any status background. */}
+        <PaymentMethodBar amounts={byMethod} />
+      </span>
+    );
+    const icons = (
+      <>
+        {b.therapist_requested && (
+          <span style={{ flexShrink: 0, fontSize: 11, lineHeight: 1, color: "#ffd54f", textShadow: "0 0 2px rgba(0,0,0,0.6)" }}>
+            ★
+          </span>
+        )}
+        {b.booking_group_id && (
+          <span style={{ flexShrink: 0, fontSize: 11, lineHeight: 1, fontWeight: 700, color: "#80deea", textShadow: "0 0 2px rgba(0,0,0,0.7)" }}>
+            ⛓
+          </span>
+        )}
+      </>
+    );
+
+    // A 30-minute slot is a single line tall, so short bookings get everything on one row — start
+    // time, client · service, paid badge — instead of a second line that didn't fit and was cut.
+    const minutes = arg.event.start && arg.event.end
+      ? (arg.event.end.getTime() - arg.event.start.getTime()) / 60_000
+      : 60;
+    if (minutes <= 30) {
+      return withTooltip(
+        <div style={{ padding: "1px 3px", overflow: "hidden", height: "100%", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
+          <span style={{ flexShrink: 0, fontSize: 10, opacity: 0.9 }}>{arg.timeText}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 11, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis" }}>
+            {arg.event.title}
+          </span>
+          {badge}
+          {icons}
+        </div>,
+      );
+    }
+
+    return withTooltip(
       <div style={{ padding: "1px 3px", overflow: "hidden", height: "100%" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 10, opacity: 0.9, whiteSpace: "nowrap" }}>
             {arg.timeText}
           </span>
-          <span style={{
-            flexShrink: 0,
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 3,
-            padding: "0 3px",
-            borderRadius: 3,
-            fontSize: 9,
-            fontWeight: 700,
-            background: "rgba(255,255,255,0.85)",
-            color: flagColor,
-            whiteSpace: "nowrap",
-          }}>
-            {fmt(paid)}€/{priceStr}
-            {/* Inside the white badge so the colours read on any status background. */}
-            <PaymentMethodBar amounts={byMethod} title={methodTitle} />
-          </span>
-          {b.therapist_requested && (
-            <span
-              title={t("therapistRequestedTooltip")}
-              style={{ fontSize: 11, lineHeight: 1, color: "#ffd54f", textShadow: "0 0 2px rgba(0,0,0,0.6)" }}
-            >
-              ★
-            </span>
-          )}
-          {b.booking_group_id && (
-            <span
-              title={t("groupTooltip")}
-              style={{
-                fontSize: 11,
-                lineHeight: 1,
-                fontWeight: 700,
-                color: "#80deea",
-                textShadow: "0 0 2px rgba(0,0,0,0.7)",
-              }}
-            >
-              ⛓
-            </span>
-          )}
+          {badge}
+          {icons}
         </div>
         <div style={{ fontSize: 11, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {arg.event.title}
         </div>
-      </div>
+      </div>,
     );
   }, [t]);
 
@@ -525,7 +573,9 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
           slotMaxTime="22:00:00"
           allDaySlot={false}
           height="auto"
-          eventMinHeight={28}
+          // Must stay below a 30-minute slot's height (~25px): at 28 a 30-minute card reached into the
+          // next slot, so a back-to-back booking was treated as overlapping and squeezed to half width.
+          eventMinHeight={20}
           slotDuration="00:30:00"
           slotLabelInterval="01:00:00"
           expandRows

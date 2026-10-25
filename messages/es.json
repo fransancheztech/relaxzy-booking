@@ -101,7 +101,8 @@
     "method_cash": "Efectivo",
     "method_card": "Tarjeta",
     "method_voucher": "Bono",
-    "paidWithLegend": "Pagado con:"
+    "paidWithLegend": "Pagado con:",
+    "tooltipPaid": "Pagado"
   },
   "DailyTotals": {
     "title": "Totales del día",

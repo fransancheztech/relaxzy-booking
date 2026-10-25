@@ -101,7 +101,8 @@
     "method_cash": "เงินสด",
     "method_card": "บัตร",
     "method_voucher": "บัตรกำนัล",
-    "paidWithLegend": "ชำระด้วย:"
+    "paidWithLegend": "ชำระด้วย:",
+    "tooltipPaid": "ชำระแล้ว"
   },
   "DailyTotals": {
     "title": "ยอดรวมประจำวัน",
