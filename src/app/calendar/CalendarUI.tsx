@@ -361,8 +361,9 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
         title={tooltip}
         arrow
         placement="top"
-        enterDelay={350}
-        enterNextDelay={350}
+        // 1s: shown when someone deliberately rests on a card, not while moving towards one to click.
+        enterDelay={1000}
+        enterNextDelay={1000}
         disableInteractive
         slotProps={{ tooltip: { sx: { maxWidth: 280, px: 1.25, py: 1 } } }}
       >
