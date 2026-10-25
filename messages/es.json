@@ -354,7 +354,11 @@
     "failedDeleteTip": "Error al eliminar la propina",
     "tipChargeTotal": "Cobra al cliente {total} en total: {service} del servicio más {tip} de propina. En Añadir pago, introduce solo el importe del servicio ({service}).",
     "tipChargeTipOnly": "El servicio ya está pagado: cobra solo {tip} de propina.",
-    "tipServiceRemaining": "Quedan {service} por cobrar del servicio. Aquí registra solo la propina; el importe del servicio va en Añadir pago."
+    "tipServiceRemaining": "Quedan {service} por cobrar del servicio. Aquí registra solo la propina; el importe del servicio va en Añadir pago.",
+    "removeTipTitle": "¿Eliminar propina?",
+    "removeTipConfirm": "¿Eliminar la propina de {amount} de {therapist}? Dejará de contar en sus propinas.",
+    "removeTipReasonLabel": "Motivo de la eliminación",
+    "removeTipReasonHelper": "Obligatorio. Se guarda con la propina."
   },
   "Clients": {
     "newClient": "Nuevo cliente",

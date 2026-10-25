@@ -4,6 +4,11 @@ import {
   Box,
   Button,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Divider,
   FormControl,
   FormControlLabel,
@@ -73,6 +78,10 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly, serviceRemaining 
   const [tips, setTips] = useState<Tip[]>([]);
   const [showForm, setShowForm] = useState(false);
   const { submitting, guard } = useSubmitGuard();
+  // The tip awaiting confirmation, and the reason typed for removing it.
+  const [pendingDelete, setPendingDelete] = useState<Tip | null>(null);
+  const [deleteNote, setDeleteNote] = useState("");
+  const { submitting: deleting, guard: deleteGuard } = useSubmitGuard();
 
   const methods = useForm<TipFormInput, any, TipFormOutput>({
     resolver: zodResolver(TipSchema),
@@ -148,20 +157,33 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly, serviceRemaining 
       }
     });
 
-  const handleDelete = async (tipId: string) => {
-    try {
-      const res = await fetch(`/api/tips/${tipId}`, { method: "DELETE" });
-      if (!res.ok) {
-        const err = await res.json();
-        toast.error(err.error ?? t("failedDeleteTip"));
-        return;
-      }
-      toast.success(t("tipRemoved"));
-      fetchTips();
-    } catch {
-      toast.error(t("failedDeleteTip"));
-    }
+  // Removing a tip is confirmed and needs a reason (kept in the tip's notes): it used to vanish on
+  // a single click of the bin icon, with no record of why.
+  const openDelete = (tip: Tip) => {
+    setDeleteNote("");
+    setPendingDelete(tip);
   };
+
+  const confirmDelete = () =>
+    deleteGuard(async () => {
+      if (!pendingDelete || !deleteNote.trim()) return;
+      try {
+        const res = await fetch(`/api/tips/${pendingDelete.id}`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ notes: deleteNote.trim() }),
+        });
+        if (!res.ok) {
+          toast.error(t("failedDeleteTip"));
+          return;
+        }
+        toast.success(t("tipRemoved"));
+        setPendingDelete(null);
+        fetchTips();
+      } catch {
+        toast.error(t("failedDeleteTip"));
+      }
+    });
 
   return (
     <Box>
@@ -232,7 +254,7 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly, serviceRemaining 
           )}
           {!readOnly && (
             <Tooltip title={t("removeTip")}>
-              <IconButton size="small" color="error" onClick={() => handleDelete(tip.id)}>
+              <IconButton size="small" color="error" onClick={() => openDelete(tip)}>
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -379,6 +401,45 @@ const TipSection = ({ bookingId, defaultTherapistId, readOnly, serviceRemaining 
           </Grid>
         </Box>
       )}
+
+      <Dialog open={!!pendingDelete} onClose={() => !deleting && setPendingDelete(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>{t("removeTipTitle")}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {pendingDelete &&
+              t("removeTipConfirm", {
+                amount: formatMoney(Number(pendingDelete.amount)),
+                therapist: therapistDisplayName(pendingDelete.therapists),
+              })}
+          </DialogContentText>
+          <TextField
+            autoFocus
+            fullWidth
+            multiline
+            minRows={2}
+            size="small"
+            required
+            label={t("removeTipReasonLabel")}
+            helperText={t("removeTipReasonHelper")}
+            value={deleteNote}
+            onChange={(e) => setDeleteNote(e.target.value.slice(0, 500))}
+            disabled={deleting}
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPendingDelete(null)} disabled={deleting}>{tCommon("cancel")}</Button>
+          <Button
+            color="error"
+            variant="contained"
+            startIcon={<DeleteIcon />}
+            onClick={confirmDelete}
+            disabled={deleting || !deleteNote.trim()}
+          >
+            {t("removeTip")}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -49,11 +49,18 @@ export async function PATCH(
   }
 }
 
+// Removing a tip takes money away from a therapist, so it has to say why — same bar as removing a
+// payment or a voucher redemption. The reason is appended to the tip's notes ("Reason of delete: …").
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const { notes } = await request.json().catch(() => ({ notes: undefined }));
+  const reason = typeof notes === "string" ? notes.trim() : "";
+  if (!reason || reason.length > 500) {
+    return NextResponse.json({ error: "A reason note is required" }, { status: 400 });
+  }
 
   try {
     const tip = await prisma.tips.findUnique({ where: { id } });
@@ -69,9 +76,13 @@ export async function DELETE(
       );
     }
 
+    const reasonNote = `Reason of delete: ${reason}`;
     await prisma.tips.update({
       where: { id },
-      data: { deleted_at: new Date() },
+      data: {
+        deleted_at: new Date(),
+        notes: tip.notes?.trim() ? `${tip.notes.trim()} ${reasonNote}` : reasonNote,
+      },
     });
 
     return NextResponse.json({ ok: true });

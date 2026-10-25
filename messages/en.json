@@ -354,7 +354,11 @@
     "failedDeleteTip": "Failed to delete tip",
     "tipChargeTotal": "Charge the client {total} in total: {service} for the service plus {tip} tip. In Add Payment, enter only the {service} service amount.",
     "tipChargeTipOnly": "The service is already paid — collect {tip} for the tip only.",
-    "tipServiceRemaining": "{service} is still to be collected for the service. Record only the tip here; the service amount goes in Add Payment."
+    "tipServiceRemaining": "{service} is still to be collected for the service. Record only the tip here; the service amount goes in Add Payment.",
+    "removeTipTitle": "Remove tip?",
+    "removeTipConfirm": "Remove {therapist}'s {amount} tip? It will no longer count towards their tips.",
+    "removeTipReasonLabel": "Reason for removing",
+    "removeTipReasonHelper": "Required. It's saved with the tip."
   },
   "Clients": {
     "newClient": "New Client",
