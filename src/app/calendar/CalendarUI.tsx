@@ -19,6 +19,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import Tooltip from "@mui/material/Tooltip";
+import NotesIcon from "@mui/icons-material/StickyNote2";
 import { toast } from "react-toastify";
 import { useCalendarData } from "@/hooks/useCalendarData";
 import { useLayout } from "../context/LayoutContext";
@@ -338,6 +339,7 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
     const clientFull = [b.client_name, b.client_surname].filter(Boolean).join(" ");
     const serviceName = b.service_name && b.service_name !== "Unknown" ? b.service_name : b.short_service_name;
     const paidMethods = METHOD_KEYS.filter((k) => byMethod[k] > 0.004);
+    const notes = b.notes?.trim() ?? "";
     const tooltip = (
       <div style={{ fontSize: 12, lineHeight: 1.5 }}>
         <div style={{ fontWeight: 700, fontSize: 13 }}>{clientFull || "—"}</div>
@@ -354,6 +356,13 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
         ))}
         {b.therapist_requested && <div style={{ marginTop: 4 }}>★ {t("therapistRequestedTooltip")}</div>}
         {b.booking_group_id && <div style={{ marginTop: b.therapist_requested ? 0 : 4 }}>⛓ {t("groupTooltip")}</div>}
+        {notes && (
+          <div style={{ marginTop: 6, paddingTop: 6, borderTop: "1px solid rgba(255,255,255,0.25)" }}>
+            <div style={{ fontWeight: 700 }}>{t("tooltipNotes")}</div>
+            {/* Line breaks kept as typed; long notes wrap inside the tooltip's width. */}
+            <div style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{notes}</div>
+          </div>
+        )}
       </div>
     );
     const withTooltip = (card: React.ReactElement) => (
@@ -401,6 +410,10 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
           <span style={{ flexShrink: 0, fontSize: 11, lineHeight: 1, fontWeight: 700, color: "#80deea", textShadow: "0 0 2px rgba(0,0,0,0.7)" }}>
             ⛓
           </span>
+        )}
+        {/* The booking has notes: hover the card to read them. */}
+        {notes && (
+          <NotesIcon sx={{ flexShrink: 0, fontSize: 12, color: "#fff59d", filter: "drop-shadow(0 0 1px rgba(0,0,0,0.7))" }} />
         )}
       </>
     );
