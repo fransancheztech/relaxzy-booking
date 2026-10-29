@@ -6,6 +6,16 @@ import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeSanitize from "rehype-sanitize";
 import rehypeSlug from "rehype-slug";
+import { isValidElement, type ReactNode } from "react";
+import MermaidDiagram from "./MermaidDiagram";
+
+/** The text of a ```mermaid code block, or null for any other block. */
+function mermaidSource(children: ReactNode): string | null {
+  if (!isValidElement<{ className?: string; children?: ReactNode }>(children)) return null;
+  const { className, children: code } = children.props;
+  if (!className?.split(" ").includes("language-mermaid")) return null;
+  return (Array.isArray(code) ? code.join("") : String(code ?? "")).trim();
+}
 
 /**
  * The single markdown renderer. Every call site goes through here so content looks identical
@@ -20,6 +30,8 @@ import rehypeSlug from "rehype-slug";
  *                    reflow every existing guideline into run-on paragraphs.
  *  - rehypeSanitize  MANDATORY. Content is user-authored and rendered as HTML; without this it
  *                    is stored XSS against our own staff.
+ *  - ```mermaid       Code blocks tagged mermaid are drawn as diagrams (see MermaidDiagram),
+ *                    after sanitising, from the block's plain text.
  *  - rehypeSlug      Gives every heading an id so the table of contents can link to it.
  *                    Runs AFTER the sanitiser on purpose: the default sanitize schema
  *                    rewrites incoming ids with a "user-content-" prefix to prevent DOM
@@ -100,6 +112,11 @@ export default function Markdown({ children, sx }: { children: string; sx?: SxPr
         remarkPlugins={[remarkGfm, remarkBreaks]}
         rehypePlugins={[rehypeSanitize, rehypeSlug]}
         components={{
+          // ```mermaid blocks become diagrams; every other code block renders as before.
+          pre: ({ children: c }) => {
+            const chart = mermaidSource(c);
+            return chart ? <MermaidDiagram chart={chart} /> : <pre>{c}</pre>;
+          },
           // Tables get their own scroll container so a wide one cannot stretch the layout.
           table: ({ children: c }) => <div className="md-table-wrap"><table>{c}</table></div>,
           // Links leave the app, so open them safely in a new tab.
