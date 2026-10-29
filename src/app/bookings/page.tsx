@@ -10,6 +10,7 @@ import UpdateBookingDialogForm from "@/app/bookings/UpdateBookingDialogForm";
 import { FETCH_LIMIT } from "@/constants";
 import { GridFilterItem, GridFilterModel } from "@mui/x-data-grid";
 import { activeFilterItems } from "@/utils/gridFilterItems";
+import { useLiveUpdates } from "@/hooks/useLiveUpdates";
 
 export default function BookingsPage() {
   const { setButtonLabel, setOnButtonClick } = useLayout();
@@ -86,20 +87,17 @@ export default function BookingsPage() {
   const filterItemsRef = useRef(filterItems);
   filterItemsRef.current = filterItems;
 
+  useLiveUpdates("/api/bookings/stream", () =>
+    loadBookingsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current),
+  );
+
   useEffect(() => {
-    const eventSource = new EventSource("/api/bookings/stream");
-    eventSource.onmessage = () => {
-      loadBookingsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current);
-    };
     // Payment/group writes don't touch the bookings table, so the SSE stream won't fire.
     // A `refreshBookingsData` window event (dispatched by those flows) refetches the list.
     const onRefresh = () =>
       loadBookingsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current);
     window.addEventListener("refreshBookingsData", onRefresh);
-    return () => {
-      eventSource.close();
-      window.removeEventListener("refreshBookingsData", onRefresh);
-    };
+    return () => window.removeEventListener("refreshBookingsData", onRefresh);
   }, []);
 
   // -------------------------------

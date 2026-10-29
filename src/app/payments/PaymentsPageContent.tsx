@@ -7,6 +7,7 @@ import { PaymentsTable } from "./PaymentsTable";
 import { FETCH_LIMIT } from "@/constants";
 import { GridFilterItem, GridFilterModel } from "@mui/x-data-grid";
 import { activeFilterItems } from "@/utils/gridFilterItems";
+import { useLiveUpdates } from "@/hooks/useLiveUpdates";
 
 export default function PaymentsPageContent() {
   const [payments, setPayments] = useState<PaymentsType[]>([]);
@@ -75,13 +76,9 @@ export default function PaymentsPageContent() {
   const filterItemsRef = useRef(filterItems);
   filterItemsRef.current = filterItems;
 
-  useEffect(() => {
-    const eventSource = new EventSource("/api/payments/stream");
-    eventSource.onmessage = () => {
-      loadPaymentsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current);
-    };
-    return () => eventSource.close();
-  }, []);
+  useLiveUpdates("/api/payments/stream", () =>
+    loadPaymentsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current),
+  );
 
   // -------------------------------
   // Filter handler

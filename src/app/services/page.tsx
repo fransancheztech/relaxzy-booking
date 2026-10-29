@@ -11,6 +11,7 @@ import UpdateServiceDialogForm from "./UpdateServiceDialogForm";
 import ConfirmDeleteServiceDialog from "./ConfirmDeleteServiceDialog";
 import handleDeleteService from "@/handlers/handleDeleteService";
 import { useLayout } from "../context/LayoutContext";
+import { useLiveUpdates } from "@/hooks/useLiveUpdates";
 
 const ServicesPage = () => {
   const { setButtonLabel, setOnButtonClick } = useLayout();
@@ -94,15 +95,9 @@ const ServicesPage = () => {
     }, 300),
   ).current;
 
-  useEffect(() => {
-    const eventSource = new EventSource("/api/services/stream");
-
-    eventSource.onmessage = () => {
-      loadServices(page, sortModel, searchTerm);
-    };
-
-    return () => eventSource.close();
-  }, [page, sortModel, searchTerm, loadServices]);
+  // One connection for the page's lifetime (it used to reconnect on every page, sort or search
+  // change); the callback always sees the current page, sort and search.
+  useLiveUpdates("/api/services/stream", () => loadServices(page, sortModel, searchTerm));
 
   useEffect(() => {
     loadServices(0);

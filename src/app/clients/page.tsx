@@ -15,6 +15,7 @@ import MergeTypeIcon from "@mui/icons-material/MergeType";
 import { useRouter } from "next/navigation";
 import { useRole } from "@/hooks/useRole";
 import { activeFilterItems } from "@/utils/gridFilterItems";
+import { useLiveUpdates } from "@/hooks/useLiveUpdates";
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<ClientType[]>([]);
@@ -94,13 +95,9 @@ export default function ClientsPage() {
   const filterItemsRef = useRef(filterItems);
   filterItemsRef.current = filterItems;
 
-  useEffect(() => {
-    const eventSource = new EventSource("/api/clients/stream");
-    eventSource.onmessage = () => {
-      loadClientsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current);
-    };
-    return () => eventSource.close();
-  }, []);
+  useLiveUpdates("/api/clients/stream", () =>
+    loadClientsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current),
+  );
 
   // -------------------------------
   // Filter handler

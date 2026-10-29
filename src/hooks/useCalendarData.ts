@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { BookingModel } from "@/types/bookings";
+import { useLiveUpdates } from "@/hooks/useLiveUpdates";
 
 export function useCalendarData(
   start: Date | null,
@@ -53,42 +54,10 @@ export function useCalendarData(
     fetchBookingsRef.current = fetchBookings;
   }, [fetchBookings]);
 
-  // Realtime updates via SSE — refetch the range so joined display fields stay correct.
-  // The raw stream payload lacks client/service joins, so merging it directly would
-  // render incomplete event blocks; a debounced refetch keeps the data shape consistent.
-  useEffect(() => {
-    const evtSource = new EventSource("/api/bookings/stream");
-    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-    let opened = false;
-
-    const scheduleRefetch = () => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => fetchBookingsRef.current(true), 250);
-    };
-
-    evtSource.onmessage = scheduleRefetch;
-
-    // SSE only delivers live events — anything that happens while the connection is
-    // dropped (device asleep, screen locked, network blip) is lost. Refetch on
-    // reconnect, and on wake, to catch up on whatever was missed. Skip the first
-    // open since the initial fetch already covers it.
-    evtSource.onopen = () => {
-      if (opened) scheduleRefetch();
-      opened = true;
-    };
-    evtSource.onerror = () => console.warn("SSE connection lost, retrying...");
-
-    const onVisible = () => {
-      if (document.visibilityState === "visible") scheduleRefetch();
-    };
-    document.addEventListener("visibilitychange", onVisible);
-
-    return () => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-      document.removeEventListener("visibilitychange", onVisible);
-      evtSource.close();
-    };
-  }, []);
+  // Realtime updates (only while the calendar is visible) — refetch the range so joined display
+  // fields stay correct. The raw stream payload lacks client/service joins, so merging it
+  // directly would render incomplete event blocks. Reconnects and returning to the tab refetch too.
+  useLiveUpdates("/api/bookings/stream", () => fetchBookingsRef.current(true));
 
   return { bookings, loading, fetchError };
 }
