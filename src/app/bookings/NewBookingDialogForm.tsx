@@ -25,6 +25,8 @@ import { toast } from "react-toastify";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
 import { paymentErrorText } from "@/lib/payments/paymentErrors";
+import EarlyVoucherConfirmDialog from "@/components/EarlyVoucherConfirmDialog";
+import { findEarlyVoucherUses, type EarlyVoucherUse } from "@/lib/vouchers/firstUsableDay";
 
 type Props = {
   open: boolean;
@@ -111,7 +113,37 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
     // "error" — already surfaced by the handler; keep the form open.
   };
 
-  const onSubmit = (data: BookingSchemaType) => guard(() => submit(data));
+  // A voucher used before its first permitted day (7-day rule): hold the booking until she confirms.
+  const [earlyUses, setEarlyUses] = useState<EarlyVoucherUse[]>([]);
+  const [pendingEarly, setPendingEarly] = useState<BookingSchemaType | null>(null);
+
+  const onSubmit = (data: BookingSchemaType) =>
+    guard(async () => {
+      const appointment = data.start_time ?? null;
+      const entries = [
+        ...(Number(data.voucherPayment ?? 0) > 0 ? [{ code: data.voucherCode, appointment }] : []),
+        ...(data.companions ?? [])
+          .filter((c) => Number(c.voucherPayment ?? 0) > 0)
+          .map((c) => ({ code: c.voucherCode, appointment })),
+      ];
+      if (entries.length > 0) {
+        const early = await findEarlyVoucherUses(entries);
+        if (early.length > 0) {
+          setPendingEarly(data);
+          setEarlyUses(early);
+          return;
+        }
+      }
+      await submit(data);
+    });
+
+  const confirmEarly = () =>
+    guard(async () => {
+      const data = pendingEarly;
+      setEarlyUses([]);
+      setPendingEarly(null);
+      if (data) await submit(data);
+    });
 
   const onResolveConflict = (resolutions: Record<string, ClientResolution>) =>
     guard(() => pendingData ? submit(pendingData, resolutions) : Promise.resolve());
@@ -165,6 +197,13 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
           </DialogActions>
         </form>
       </FormProvider>
+
+      <EarlyVoucherConfirmDialog
+        uses={earlyUses}
+        submitting={submitting}
+        onGoBack={() => { setEarlyUses([]); setPendingEarly(null); }}
+        onProceed={confirmEarly}
+      />
 
       <ClientConflictDialog
         open={conflicts.length > 0}

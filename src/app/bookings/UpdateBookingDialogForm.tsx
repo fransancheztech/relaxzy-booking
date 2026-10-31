@@ -382,6 +382,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId, readOnly = false }:
         paidCard={paymentSummary.paidCard}
         paidVoucher={paymentSummary.paidVoucher}
         onPaymentSuccess={onPaymentSuccess}
+        appointmentDate={methods.watch("start_time")}
       />
 
       <ManagePaymentsDialog

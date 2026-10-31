@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Autocomplete, Box, CircularProgress, TextField, Typography } from "@mui/material";
+import { Alert, Autocomplete, Box, Chip, CircularProgress, TextField, Typography } from "@mui/material";
 import { Control, Controller, FieldValues, Path } from "react-hook-form";
 import { formatMoney } from "@/utils/formatMoney";
 import { useTranslations } from "next-intl";
 import { paymentErrorText } from "@/lib/payments/paymentErrors";
 import VoucherInfoTooltip, { type VoucherInfo } from "@/components/VoucherInfoTooltip";
+import { isVoucherTooEarly, voucherFirstUsableDay } from "@/lib/vouchers/firstUsableDay";
+import { formatBusinessDate } from "@/utils/businessTime";
 
 type VoucherOption = VoucherInfo & {
   id: string;
   code: string;
   balance: string | null;
+  created_at?: string | null;
 };
 
 function getClientName(v: VoucherOption): string {
@@ -23,6 +26,11 @@ type Props<TFieldValues extends FieldValues> = {
   voucherCodeName: Path<TFieldValues>;
   remainingAmount: number;
   onSetVoucherPayment: (value: string) => void;
+  /**
+   * The appointment the voucher would pay for. Vouchers can't be used until 7 days after they were
+   * sold (see firstUsableDay): too-early ones are flagged in the list and warned about once picked.
+   */
+  appointmentDate?: Date | null;
 };
 
 function VoucherPickerField<TFieldValues extends FieldValues>({
@@ -30,11 +38,14 @@ function VoucherPickerField<TFieldValues extends FieldValues>({
   voucherCodeName,
   remainingAmount,
   onSetVoucherPayment,
+  appointmentDate,
 }: Props<TFieldValues>) {
   const t = useTranslations("BookingPayment");
   const tErr = useTranslations("BookingPayment.errors");
   const [options, setOptions] = useState<VoucherOption[]>([]);
   const [loading, setLoading] = useState(false);
+  // The picked voucher, kept apart from the search results (which change as she types).
+  const [picked, setPicked] = useState<VoucherOption | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchVouchers = useCallback((q: string) => {
@@ -62,9 +73,15 @@ function VoucherPickerField<TFieldValues extends FieldValues>({
       name={voucherCodeName}
       control={control}
       render={({ field, fieldState }) => {
-        const selectedOption = options.find((o) => o.code === field.value) ?? null;
+        const selectedOption =
+          options.find((o) => o.code === field.value) ?? (picked?.code === field.value ? picked : null);
+        const tooEarly =
+          selectedOption && appointmentDate && isVoucherTooEarly(selectedOption.created_at, appointmentDate)
+            ? selectedOption
+            : null;
 
         return (
+          <Box>
           <Autocomplete
             options={options}
             value={selectedOption}
@@ -92,15 +109,18 @@ function VoucherPickerField<TFieldValues extends FieldValues>({
               } else if (reason === "clear") {
                 fetchVouchers("");
                 field.onChange("");
+                setPicked(null);
                 onSetVoucherPayment("0");
               }
             }}
             onChange={(_, selected) => {
               if (!selected) {
                 field.onChange("");
+                setPicked(null);
                 onSetVoucherPayment("0");
               } else {
                 field.onChange(selected.code);
+                setPicked(selected);
                 if (selected.balance != null) {
                   const auto = Math.min(Number(selected.balance), remainingAmount);
                   onSetVoucherPayment(auto > 0 ? String(auto) : "0");
@@ -121,6 +141,14 @@ function VoucherPickerField<TFieldValues extends FieldValues>({
                         {[balance, name].filter(Boolean).join(" · ")}
                       </Typography>
                     </Box>
+                    {appointmentDate && isVoucherTooEarly(option.created_at, appointmentDate) && (
+                      <Chip
+                        size="small"
+                        color="warning"
+                        label={t("voucherUsableFrom", { date: formatBusinessDate(voucherFirstUsableDay(option.created_at)) })}
+                        sx={{ ml: "auto", height: 20, fontSize: "0.68rem", fontWeight: 600 }}
+                      />
+                    )}
                   </Box>
                 </VoucherInfoTooltip>
               );
@@ -149,6 +177,16 @@ function VoucherPickerField<TFieldValues extends FieldValues>({
               />
             )}
           />
+          {tooEarly && (
+            <Alert severity="warning" sx={{ mt: 1, py: 0, "& .MuiAlert-message": { fontSize: "0.78rem" } }}>
+              {t("voucherTooEarly", {
+                sold: formatBusinessDate(tooEarly.created_at),
+                from: formatBusinessDate(voucherFirstUsableDay(tooEarly.created_at)),
+                appointment: formatBusinessDate(appointmentDate),
+              })}
+            </Alert>
+          )}
+          </Box>
         );
       }}
     />

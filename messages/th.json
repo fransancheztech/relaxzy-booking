@@ -326,7 +326,15 @@
       "PAYMENT_NEGATIVE": "จำนวนเงินต้องเป็นค่าบวก",
       "PAYMENT_MAX_2_DECIMALS": "ทศนิยมไม่เกิน 2 ตำแหน่ง",
       "VOUCHER_CODE_FORMAT": "รูปแบบไม่ถูกต้อง (เช่น V-280426-1)"
-    }
+    },
+    "voucherUsableFrom": "ใช้ได้ตั้งแต่ {date}",
+    "voucherTooEarly": "ขายเมื่อ {sold} ตามกฎ 7 วัน ยังใช้ไม่ได้จนถึง {from} และนัดนี้คือวันที่ {appointment}",
+    "earlyConfirmTitle": "ใช้บัตรกำนัลก่อนกำหนด",
+    "earlyConfirmIntro": "ตามกฎ 7 วัน บัตรกำนัลจะใช้ได้หลังจากขายไปแล้ว 7 วัน:",
+    "earlyConfirmItem": "{code}: ขายเมื่อ {sold} ใช้ได้ตั้งแต่ {from} นัด: {appointment}",
+    "earlyConfirmQuestion": "ต้องการใช้ต่อหรือไม่?",
+    "earlyConfirmGoBack": "กลับ",
+    "earlyConfirmProceed": "ใช้ต่อ"
   },
   "BookingDelete": {
     "title": "ลบการจอง?",

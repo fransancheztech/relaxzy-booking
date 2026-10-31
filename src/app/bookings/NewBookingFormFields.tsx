@@ -72,9 +72,9 @@ const InlinePaymentSection = ({
   const tForm = useTranslations("BookingForm");
   const { control, setValue } = useFormContext<BookingSchemaType>();
 
-  const [watchedPrice, watchedCash, watchedCard] = useWatch({
+  const [watchedPrice, watchedCash, watchedCard, appointmentDate] = useWatch({
     control,
-    name: [priceName as any, cashName as any, cardName as any],
+    name: [priceName as any, cashName as any, cardName as any, "start_time"],
   });
   const remainingAmount = Math.max(
     0,
@@ -184,6 +184,7 @@ const InlinePaymentSection = ({
                     control={control}
                     voucherCodeName={voucherCodeName as any}
                     remainingAmount={remainingAmount}
+                    appointmentDate={appointmentDate as Date | null}
                     onSetVoucherPayment={(val) =>
                       setValue(
                         voucherAmountName as any,

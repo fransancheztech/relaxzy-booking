@@ -326,7 +326,15 @@
       "PAYMENT_NEGATIVE": "The amount must be positive.",
       "PAYMENT_MAX_2_DECIMALS": "At most 2 decimals.",
       "VOUCHER_CODE_FORMAT": "Invalid format (e.g. V-280426-1)."
-    }
+    },
+    "voucherUsableFrom": "Usable from {date}",
+    "voucherTooEarly": "Sold on {sold}. Under the 7-day rule it can't be used until {from}, and this appointment is on {appointment}.",
+    "earlyConfirmTitle": "Voucher used too early",
+    "earlyConfirmIntro": "Under the 7-day rule, a voucher can't be used until 7 days after it was sold:",
+    "earlyConfirmItem": "{code}: sold on {sold}, usable from {from}. Appointment: {appointment}.",
+    "earlyConfirmQuestion": "Use it anyway?",
+    "earlyConfirmGoBack": "Go back",
+    "earlyConfirmProceed": "Use anyway"
   },
   "BookingDelete": {
     "title": "Delete Booking?",

@@ -326,7 +326,15 @@
       "PAYMENT_NEGATIVE": "El importe debe ser positivo.",
       "PAYMENT_MAX_2_DECIMALS": "Máximo 2 decimales.",
       "VOUCHER_CODE_FORMAT": "Formato no válido (ej. V-280426-1)."
-    }
+    },
+    "voucherUsableFrom": "Válido desde {date}",
+    "voucherTooEarly": "Vendido el {sold}. Por la regla de los 7 días no se puede usar hasta el {from}, y esta cita es el {appointment}.",
+    "earlyConfirmTitle": "Bono usado antes de tiempo",
+    "earlyConfirmIntro": "Por la regla de los 7 días, un bono no se puede usar hasta 7 días después de su venta:",
+    "earlyConfirmItem": "{code}: vendido el {sold}, válido desde el {from}. Cita: {appointment}.",
+    "earlyConfirmQuestion": "¿Usarlo de todas formas?",
+    "earlyConfirmGoBack": "Volver",
+    "earlyConfirmProceed": "Usar de todas formas"
   },
   "BookingDelete": {
     "title": "¿Eliminar reserva?",

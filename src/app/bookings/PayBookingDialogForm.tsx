@@ -43,6 +43,8 @@ import { toast } from "react-toastify";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 import { paymentErrorText } from "@/lib/payments/paymentErrors";
 import { therapistDisplayName } from "@/utils/therapistName";
+import EarlyVoucherConfirmDialog from "@/components/EarlyVoucherConfirmDialog";
+import { findEarlyVoucherUses, type EarlyVoucherUse } from "@/lib/vouchers/firstUsableDay";
 
 // Today's calendar day in the business timezone, as a plain JS Date (midnight Madrid).
 const todayBusiness = () =>
@@ -64,6 +66,8 @@ interface DialogFormProps {
   paidCard: number;
   paidVoucher?: number;
   onPaymentSuccess: () => void;
+  /** The booking's appointment: a voucher can't be used before 7 days after its sale (warned, not blocked). */
+  appointmentDate?: Date | null;
 }
 
 const PayBookingDialogForm = ({
@@ -75,6 +79,7 @@ const PayBookingDialogForm = ({
   paidCard,
   paidVoucher = 0,
   onPaymentSuccess,
+  appointmentDate,
 }: DialogFormProps) => {
   const t = useTranslations("BookingPayment");
   const tCommon = useTranslations("Common");
@@ -175,8 +180,33 @@ const PayBookingDialogForm = ({
   if (cardN > 0)    methodSegments.push({ color: METHOD_COLORS.card,    text: `${formatMoney(cardN)} ${t("card")}`,       key: "card" });
   if (voucherN > 0) methodSegments.push({ color: METHOD_COLORS.voucher, text: `${formatMoney(voucherN)} ${t("voucher")}`, key: "voucher" });
 
+  // A voucher used before its first permitted day: hold the payment until she confirms.
+  const [earlyUses, setEarlyUses] = useState<EarlyVoucherUse[]>([]);
+  const [pendingPayment, setPendingPayment] = useState<BookingPaymentFormOutput | null>(null);
+
   const onSubmit = (data: BookingPaymentFormOutput) =>
     guard(async () => {
+      if (!bookingId) return;
+      if (Number(data.voucherPayment ?? 0) > 0) {
+        const early = await findEarlyVoucherUses([{ code: data.voucherCode, appointment: appointmentDate }]);
+        if (early.length > 0) {
+          setPendingPayment(data);
+          setEarlyUses(early);
+          return;
+        }
+      }
+      await savePayment(data);
+    });
+
+  const confirmEarly = () =>
+    guard(async () => {
+      const data = pendingPayment;
+      setEarlyUses([]);
+      setPendingPayment(null);
+      if (data) await savePayment(data);
+    });
+
+  const savePayment = async (data: BookingPaymentFormOutput) => {
       if (!bookingId) return;
       // Record the payment on the picked calendar day, at the current time-of-day (Madrid),
       // so a same-day entry matches now() and a back-dated one lands on that day's totals.
@@ -206,7 +236,7 @@ const PayBookingDialogForm = ({
         return;
       }
       toast.error(errText(result.code) ?? tErr("PAYMENT_FAILED"));
-    });
+  };
 
   const onCancel = () => {
     methods.reset();
@@ -400,6 +430,7 @@ const PayBookingDialogForm = ({
                         voucherCodeName="voucherCode"
                         remainingAmount={remaining}
                         onSetVoucherPayment={(val) => methods.setValue("voucherPayment", val)}
+                        appointmentDate={appointmentDate}
                       />
                     </Grid>
                     <Grid size={6}>
@@ -473,6 +504,12 @@ const PayBookingDialogForm = ({
           <CircularProgress />
         </div>
       )}
+      <EarlyVoucherConfirmDialog
+        uses={earlyUses}
+        submitting={submitting}
+        onGoBack={() => { setEarlyUses([]); setPendingPayment(null); }}
+        onProceed={confirmEarly}
+      />
     </>
   );
 };
