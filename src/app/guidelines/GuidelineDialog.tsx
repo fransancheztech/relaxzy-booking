@@ -42,7 +42,8 @@ interface Props {
   open: boolean;
   guideline: GuidelineRow | null;
   onClose: () => void;
-  onSaved: () => void;
+  /** Receives the saved guideline (its id at least), so the page can open a new one. */
+  onSaved: (saved: { id: string } | null) => void;
 }
 
 const ROLE_LABEL_KEYS: Record<GuidelineRole, string> = {
@@ -105,8 +106,9 @@ export default function GuidelineDialog({ open, guideline, onClose, onSaved }: P
         return;
       }
 
+      const saved = await res.json().catch(() => ({}));
       toast.success(guideline ? t("updatedSuccess") : t("createdSuccess"));
-      onSaved();
+      onSaved(saved.guideline ?? null);
     });
 
   return (

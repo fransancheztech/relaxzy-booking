@@ -1078,7 +1078,11 @@
     "tabPreview": "Preview",
     "previewEmpty": "Nothing to preview yet — write something in the Edit tab.",
     "markdownHint": "Formatting:  **bold**  ·  ## Heading  ·  ### Subheading  ·  - list  ·  1. numbered list  ·  > note  ·  [text](https://…)  ·  --- divider.  Leave a blank line between blocks.",
-    "onThisPage": "On this page"
+    "onThisPage": "On this page",
+    "previous": "Previous",
+    "next": "Next",
+    "notFound": "This guideline is no longer available.",
+    "backToGuidelines": "Back to guidelines"
   },
   "Agenda": {
     "title": "Agenda",

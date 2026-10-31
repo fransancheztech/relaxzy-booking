@@ -149,7 +149,9 @@ export default function LayoutContent({
     document.documentElement.style.setProperty("--app-bar-height", `${appBarHeight}px`);
   }, [appBarHeight]);
   const currentWidth = collapsed ? COLLAPSED_WIDTH : drawerWidth;
-  const currentPageHref = menuPages.find((p) => p.href === pathname)?.href;
+  // A section's subpages (/guidelines/<id>, /clients/duplicates) count as that section.
+  const inSection = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const currentPageHref = menuPages.find((p) => inSection(p.href))?.href;
   const currentPage = currentPageHref ? t(currentPageHref.slice(1) as Parameters<typeof t>[0]) : "";
   const isLoggedIn = pathname !== "/login";
 
@@ -234,7 +236,7 @@ export default function LayoutContent({
               <Box sx={{ flexGrow: 1, overflowY: "auto", overflowX: "hidden" }}>
                 <List dense sx={{ px: collapsed ? 0.5 : 1 }}>
                   {userLoaded && visiblePages.map((page) => {
-                    const isActive = pathname === page.href;
+                    const isActive = inSection(page.href);
                     const label = t(page.href.slice(1) as Parameters<typeof t>[0]);
                     return (
                       <ListItem key={page.href} disablePadding sx={{ mb: 0.5 }}>

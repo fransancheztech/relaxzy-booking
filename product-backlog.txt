@@ -108,3 +108,4 @@ DONE
 - Nombres de marcador ("-", ".", "walk in"...) rechazados también en el formulario de clientes y en bonos (crear y editar), no solo en reservas.
 - Página Pagos solo para administradores (menú, acceso directo y sus rutas); recepción sigue cobrando y devolviendo desde la reserva o el bono.
 - Limpieza (25/10/2026): los 13 clientes con nombre de marcador ("-", ".", "walk in") quedan sin nombre; conservan su teléfono y sus reservas.
+- Pautas: cada pauta en su propia página (/guidelines/<id>), con la lista a la izquierda, "En esta página" a la derecha y enlaces Anterior/Siguiente. Se acaban los saltos al hacer scroll y el menú que se desplazaba. En el móvil se elige la pauta en un desplegable.
