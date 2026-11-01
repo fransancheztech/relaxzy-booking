@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { createCustomServerClient } from "@/utils/supabase/server";
 import { GuidelineSchema } from "@/schemas/guideline.schema";
 import { formatZodError } from "@/utils/zodApiError";
+import { filledTranslations } from "@/lib/guidelines/languages";
 
 async function getViewer() {
   const supabase = await createCustomServerClient();
@@ -36,15 +37,35 @@ export async function PATCH(
     );
   }
 
+  const wanted = filledTranslations(parsed.data.translations);
+
   try {
-    const updated = await prisma.guidelines.update({
-      where: { id, deleted_at: null },
-      data: {
-        title: parsed.data.title?.trim() || null,
-        content: parsed.data.content.trim(),
-        target_roles: parsed.data.target_roles,
-        updated_at: new Date(),
-      },
+    const updated = await prisma.$transaction(async (tx) => {
+      const now = new Date();
+      const guideline = await tx.guidelines.update({
+        where: { id, deleted_at: null },
+        data: { target_roles: parsed.data.target_roles, updated_at: now },
+      });
+
+      // A language emptied in the editor loses its version.
+      await tx.guideline_translations.deleteMany({
+        where: { guideline_id: id, language: { notIn: wanted.map((w) => w.language) } },
+      });
+
+      // Only versions that actually changed get a new updated_at.
+      const existing = await tx.guideline_translations.findMany({ where: { guideline_id: id } });
+      for (const w of wanted) {
+        const current = existing.find((e) => e.language === w.language);
+        if (!current) {
+          await tx.guideline_translations.create({ data: { guideline_id: id, ...w } });
+        } else if (current.title !== w.title || current.content !== w.content) {
+          await tx.guideline_translations.update({
+            where: { id: current.id },
+            data: { title: w.title, content: w.content, updated_at: now },
+          });
+        }
+      }
+      return guideline;
     });
     return NextResponse.json({ guideline: updated });
   } catch (err: any) {

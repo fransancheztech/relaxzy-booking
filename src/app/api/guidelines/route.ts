@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { createCustomServerClient } from "@/utils/supabase/server";
 import { GuidelineSchema } from "@/schemas/guideline.schema";
 import { formatZodError } from "@/utils/zodApiError";
+import { filledTranslations } from "@/lib/guidelines/languages";
 
 async function getViewer() {
   const supabase = await createCustomServerClient();
@@ -28,10 +29,20 @@ export async function GET() {
           target_roles: { has: viewer.role ?? "" },
         };
 
-  const guidelines = await prisma.guidelines.findMany({
-    where,
+  const rows = await prisma.guidelines.findMany({
+    // A guideline is shown through its language versions; one without any has nothing to show.
+    where: { ...where, guideline_translations: { some: {} } },
     orderBy: { created_at: "desc" },
+    include: {
+      guideline_translations: { select: { language: true, title: true, content: true, updated_at: true } },
+    },
   });
+
+  // guidelines.title / content are the pre-translation backup and are no longer sent.
+  const guidelines = rows.map(({ guideline_translations, title: _title, content: _content, ...g }) => ({
+    ...g,
+    translations: guideline_translations,
+  }));
 
   return NextResponse.json({ guidelines });
 }
@@ -57,9 +68,8 @@ export async function POST(request: Request) {
   const created = await prisma.guidelines.create({
     data: {
       author_id: viewer.id,
-      title: parsed.data.title?.trim() || null,
-      content: parsed.data.content.trim(),
       target_roles: parsed.data.target_roles,
+      guideline_translations: { create: filledTranslations(parsed.data.translations) },
     },
   });
 

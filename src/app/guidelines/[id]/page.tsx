@@ -1,18 +1,35 @@
 "use client";
 
-import { Box, Chip, IconButton, Paper, Stack, Tooltip, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Chip,
+  IconButton,
+  Paper,
+  Stack,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { formatBusinessDate } from "@/utils/businessTime";
 import { useRole } from "@/hooks/useRole";
 import Markdown from "@/components/Markdown";
 import { extractToc } from "@/utils/markdownToc";
+import {
+  GUIDELINE_LANGUAGES,
+  GUIDELINE_LANGUAGE_NATIVE,
+  isGuidelineLanguage,
+  pickTranslation,
+} from "@/lib/guidelines/languages";
 import { guidelineLabel, useGuidelines, type Guideline } from "../GuidelinesShell";
 
 const ROLE_LABEL_KEYS: Record<string, string> = {
@@ -27,20 +44,41 @@ const ROLE_CHIP_COLORS: Record<string, "primary" | "secondary" | "success"> = {
   therapist: "success",
 };
 
-/** One guideline, with its own "On this page" contents and links to the previous and next. */
+/**
+ * One guideline, with its own "On this page" contents and links to the previous and next.
+ *
+ * Shown in the app's language, or the first version that exists by priority (ES, EN, TH). The
+ * language switch overrides that for this guideline only, through ?lang=, so a link can be sent
+ * in a given language; the next guideline opens in the app's language again.
+ */
 export default function GuidelinePage() {
   const t = useTranslations("Guidelines");
   const tCommon = useTranslations("Common");
   const { isAdmin } = useRole();
   const { id } = useParams<{ id: string }>();
   const { guidelines, loaded, edit, remove } = useGuidelines();
+  const locale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const requested = searchParams.get("lang");
+  const wanted = isGuidelineLanguage(requested) ? requested : locale;
 
   const index = guidelines.findIndex((g) => g.id === id);
   const guideline = index >= 0 ? guidelines[index] : null;
   const prev = index > 0 ? guidelines[index - 1] : null;
   const next = index >= 0 ? guidelines[index + 1] ?? null : null;
 
-  const toc = useMemo(() => (guideline ? extractToc(guideline.content) : []), [guideline]);
+  const version = guideline ? pickTranslation(guideline.translations, wanted) : null;
+  const available = GUIDELINE_LANGUAGES.filter((l) => guideline?.translations.some((tr) => tr.language === l));
+
+  const toc = useMemo(() => (version ? extractToc(version.content) : []), [version]);
+
+  const showLanguage = (language: string) => {
+    // The app's own language needs no parameter: it is what the page shows anyway.
+    const query = language === locale ? "" : `?lang=${language}`;
+    router.replace(`${pathname}${query}`, { scroll: false });
+  };
 
   // Each guideline opens at its top. The links pass scroll={false} and this does it instead,
   // so the result doesn't depend on how much of the old page was in view.
@@ -56,7 +94,7 @@ export default function GuidelinePage() {
 
   if (!loaded) return null;
 
-  if (!guideline) {
+  if (!guideline || !version) {
     return (
       <Paper variant="outlined" sx={{ p: 4, textAlign: "center" }}>
         <Typography color="text.secondary" sx={{ mb: 1 }}>{t("notFound")}</Typography>
@@ -71,12 +109,38 @@ export default function GuidelinePage() {
         <Paper variant="outlined" sx={{ p: 2 }}>
           <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              {guideline.title && (
-                <Typography variant="h6" sx={{ mb: 1, lineHeight: 1.25, fontSize: "1.5rem", fontWeight: 700 }}>
-                  {guideline.title}
-                </Typography>
+              {available.length >= 2 && (
+                <ToggleButtonGroup
+                  size="small"
+                  exclusive
+                  value={version.language}
+                  onChange={(_, v) => v && showLanguage(v)}
+                  sx={{ mb: 1.5, "& .MuiToggleButton-root": { px: 1.25, py: 0.25, fontSize: "0.75rem", fontWeight: 600 } }}
+                >
+                  {available.map((l) => (
+                    <ToggleButton key={l} value={l} lang={l} title={GUIDELINE_LANGUAGE_NATIVE[l]}>
+                      {l.toUpperCase()}
+                    </ToggleButton>
+                  ))}
+                </ToggleButtonGroup>
               )}
-              <Markdown sx={{ mb: 1.5 }}>{guideline.content}</Markdown>
+              {/* Say so when the wanted language has no version, so a missing translation shows. */}
+              {version.language !== wanted && (
+                <Alert severity="info" variant="outlined" sx={{ mb: 1.5, py: 0 }}>
+                  {t("notInLanguage", {
+                    wanted: t(`lang_${wanted}` as Parameters<typeof t>[0]),
+                    shown: t(`lang_${version.language}` as Parameters<typeof t>[0]),
+                  })}
+                </Alert>
+              )}
+              <Box lang={version.language}>
+                {version.title && (
+                  <Typography variant="h6" sx={{ mb: 1, lineHeight: 1.25, fontSize: "1.5rem", fontWeight: 700 }}>
+                    {version.title}
+                  </Typography>
+                )}
+                <Markdown sx={{ mb: 1.5 }}>{version.content}</Markdown>
+              </Box>
               <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", alignItems: "center" }}>
                 {guideline.target_roles.map((r) => (
                   <Chip
@@ -96,7 +160,7 @@ export default function GuidelinePage() {
             {isAdmin && (
               <Box sx={{ display: "flex", flexShrink: 0 }}>
                 <Tooltip title={tCommon("edit")}>
-                  <IconButton size="small" onClick={() => edit(guideline)}>
+                  <IconButton size="small" onClick={() => edit(guideline, version.language)}>
                     <EditIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
@@ -113,10 +177,10 @@ export default function GuidelinePage() {
         {(prev || next) && (
           <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              {prev && <PagerLink guideline={prev} caption={t("previous")} direction="prev" />}
+              {prev && <PagerLink guideline={prev} language={locale} caption={t("previous")} direction="prev" />}
             </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              {next && <PagerLink guideline={next} caption={t("next")} direction="next" />}
+              {next && <PagerLink guideline={next} language={locale} caption={t("next")} direction="next" />}
             </Box>
           </Box>
         )}
@@ -125,6 +189,7 @@ export default function GuidelinePage() {
       {toc.length >= 2 && (
         <Box
           component="nav"
+          lang={version.language}
           sx={{
             display: { xs: "none", lg: "flex" },
             flexDirection: "column",
@@ -184,10 +249,12 @@ export default function GuidelinePage() {
 
 function PagerLink({
   guideline,
+  language,
   caption,
   direction,
 }: {
   guideline: Guideline;
+  language: string;
   caption: string;
   direction: "prev" | "next";
 }) {
@@ -215,7 +282,7 @@ function PagerLink({
           {caption}
         </Typography>
         <Typography variant="body2" sx={{ fontWeight: 600, color: "text.primary" }} noWrap>
-          {guidelineLabel(guideline)}
+          {guidelineLabel(guideline, language)}
         </Typography>
       </Box>
     </Paper>

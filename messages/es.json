@@ -1082,7 +1082,12 @@
     "previous": "Anterior",
     "next": "Siguiente",
     "notFound": "Esta pauta ya no está disponible.",
-    "backToGuidelines": "Volver a las pautas"
+    "backToGuidelines": "Volver a las pautas",
+    "notInLanguage": "No está disponible en {wanted}: se muestra la versión en {shown}.",
+    "languagesHint": "Rellena los idiomas que tengas. Cada persona la ve en el idioma de la app o, si no existe, en español, inglés o tailandés, por ese orden.",
+    "lang_es": "español",
+    "lang_en": "inglés",
+    "lang_th": "tailandés"
   },
   "Agenda": {
     "title": "Agenda",

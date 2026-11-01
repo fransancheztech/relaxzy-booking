@@ -4,11 +4,12 @@ import { Box, Divider, MenuItem, Stack, TextField, Typography } from "@mui/mater
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import { useLayout } from "@/app/context/LayoutContext";
 import { useRole } from "@/hooks/useRole";
 import { stripMarkdown } from "@/utils/stripMarkdown";
+import { pickTranslation, type GuidelineLanguage } from "@/lib/guidelines/languages";
 import GuidelineDialog, { GuidelineRow } from "./GuidelineDialog";
 
 export interface Guideline extends GuidelineRow {
@@ -17,10 +18,12 @@ export interface Guideline extends GuidelineRow {
   updated_at: string;
 }
 
-/** Title, or the start of the text for an untitled guideline. */
-export function guidelineLabel(g: Guideline, max = 50) {
-  if (g.title?.trim()) return g.title.trim();
-  const flat = stripMarkdown(g.content);
+/** Title in `language` (or the fallback version), or the start of the text when untitled. */
+export function guidelineLabel(g: Guideline, language: string, max = 50) {
+  const version = pickTranslation(g.translations, language);
+  if (!version) return "";
+  if (version.title?.trim()) return version.title.trim();
+  const flat = stripMarkdown(version.content);
   return flat.length > max ? flat.slice(0, max) + "…" : flat;
 }
 
@@ -28,7 +31,8 @@ type GuidelinesContextValue = {
   guidelines: Guideline[];
   /** False until the first fetch finishes, so a page doesn't flash "not found" while loading. */
   loaded: boolean;
-  edit: (g: Guideline) => void;
+  /** Opens the editor on `language`'s tab: the version being read. */
+  edit: (g: Guideline, language: GuidelineLanguage) => void;
   remove: (g: Guideline) => Promise<void>;
 };
 
@@ -53,6 +57,7 @@ export default function GuidelinesShell({ children }: { children: ReactNode }) {
   const t = useTranslations("Guidelines");
   const { setButtonLabel, setOnButtonClick } = useLayout();
   const { isAdmin } = useRole();
+  const locale = useLocale();
   const router = useRouter();
   const params = useParams<{ id?: string }>();
   const currentId = params?.id ?? null;
@@ -61,6 +66,7 @@ export default function GuidelinesShell({ children }: { children: ReactNode }) {
   const [loaded, setLoaded] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Guideline | null>(null);
+  const [editingLanguage, setEditingLanguage] = useState<GuidelineLanguage | undefined>(undefined);
 
   const load = useCallback(async () => {
     try {
@@ -88,6 +94,7 @@ export default function GuidelinesShell({ children }: { children: ReactNode }) {
     setButtonLabel(t("newGuideline"));
     setOnButtonClick(() => () => {
       setEditing(null);
+      setEditingLanguage(undefined);
       setDialogOpen(true);
     });
     return () => {
@@ -96,14 +103,15 @@ export default function GuidelinesShell({ children }: { children: ReactNode }) {
     };
   }, [isAdmin, setButtonLabel, setOnButtonClick, t]);
 
-  const edit = useCallback((g: Guideline) => {
+  const edit = useCallback((g: Guideline, language: GuidelineLanguage) => {
     setEditing(g);
+    setEditingLanguage(language);
     setDialogOpen(true);
   }, []);
 
   const remove = useCallback(
     async (g: Guideline) => {
-      const label = g.title?.trim() || stripMarkdown(g.content).slice(0, 60);
+      const label = guidelineLabel(g, locale, 60);
       if (!window.confirm(t("confirmDelete", { label }))) return;
       try {
         const res = await fetch(`/api/guidelines/${g.id}`, { method: "DELETE" });
@@ -121,7 +129,7 @@ export default function GuidelinesShell({ children }: { children: ReactNode }) {
         toast.error(t("deleteError"));
       }
     },
-    [guidelines, currentId, router, load, t],
+    [guidelines, currentId, router, load, t, locale],
   );
 
   const value = useMemo(() => ({ guidelines, loaded, edit, remove }), [guidelines, loaded, edit, remove]);
@@ -196,7 +204,7 @@ export default function GuidelinesShell({ children }: { children: ReactNode }) {
                         color: isActive ? "text.primary" : "text.secondary",
                       }}
                     >
-                      {guidelineLabel(g)}
+                      {guidelineLabel(g, locale)}
                     </Typography>
                   </Box>
                 );
@@ -219,7 +227,7 @@ export default function GuidelinesShell({ children }: { children: ReactNode }) {
             >
               {guidelines.map((g) => (
                 <MenuItem key={g.id} value={g.id}>
-                  {guidelineLabel(g)}
+                  {guidelineLabel(g, locale)}
                 </MenuItem>
               ))}
             </TextField>
@@ -231,6 +239,7 @@ export default function GuidelinesShell({ children }: { children: ReactNode }) {
       <GuidelineDialog
         open={dialogOpen}
         guideline={editing}
+        initialLanguage={editingLanguage}
         onClose={() => setDialogOpen(false)}
         onSaved={async (saved) => {
           setDialogOpen(false);

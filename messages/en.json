@@ -1082,7 +1082,12 @@
     "previous": "Previous",
     "next": "Next",
     "notFound": "This guideline is no longer available.",
-    "backToGuidelines": "Back to guidelines"
+    "backToGuidelines": "Back to guidelines",
+    "notInLanguage": "Not available in {wanted} — showing the {shown} version.",
+    "languagesHint": "Fill in the languages you have. Each reader sees the app's language, or else Spanish, English, Thai — in that order.",
+    "lang_es": "Spanish",
+    "lang_en": "English",
+    "lang_th": "Thai"
   },
   "Agenda": {
     "title": "Agenda",
