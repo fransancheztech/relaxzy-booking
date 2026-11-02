@@ -10,6 +10,7 @@ import { ClientRow } from "@/hooks/useSimilarClients";
 import ClientDropdown from "./ClientDropdown";
 import ClientResolutionHint from "@/components/ClientResolutionHint";
 import { useClientPreview } from "@/hooks/useClientPreview";
+import ClientNotesAlert, { previewNotes } from "@/components/ClientNotesAlert";
 
 type FocusedField = "name" | "surname" | "phone" | "email" | null;
 
@@ -185,6 +186,11 @@ const CompanionClientFields = ({ index }: Props) => {
       <Grid size={12}>
         <ClientResolutionHint preview={preview} />
       </Grid>
+      {previewNotes(preview) && (
+        <Grid size={12}>
+          <ClientNotesAlert notes={previewNotes(preview)} />
+        </Grid>
+      )}
     </Grid>
   );
 };

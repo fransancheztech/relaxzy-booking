@@ -10,13 +10,14 @@ import { Controller, useFormContext, useWatch } from "react-hook-form";
 import ClientDropdown from "./ClientDropdown";
 import ClientResolutionHint from "@/components/ClientResolutionHint";
 import { useClientPreview } from "@/hooks/useClientPreview";
+import ClientNotesAlert, { previewNotes } from "@/components/ClientNotesAlert";
 
 type Props = {
   autoFocus?: boolean;
   readOnly?: boolean;
   enableWalkIn?: boolean;
-  clientNotes?: string | null;
-  onClientPicked?: (c: ClientRow) => void;
+  /** The client the booking was loaded with (editing a booking), for its notes. */
+  loadedClient?: { id: string; notes: string | null } | null;
 };
 
 type FocusedField = "name" | "surname" | "phone" | "email" | null;
@@ -28,13 +29,7 @@ const API_FIELD: Record<Exclude<FocusedField, null>, Exclude<FocusedClientField,
   email: "client_email",
 };
 
-function truncate(text: string | null | undefined, max: number): string {
-  if (!text) return "";
-  const trimmed = text.trim();
-  return trimmed.length <= max ? trimmed : trimmed.slice(0, max) + "…";
-}
-
-const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn, clientNotes, onClientPicked }: Props) => {
+const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn, loadedClient }: Props) => {
   const t = useTranslations("Common");
   const tForm = useTranslations("BookingForm");
   const { control, setValue, formState: { errors } } = useFormContext<BookingSchemaType>();
@@ -66,6 +61,17 @@ const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn, clientNotes, 
     enabled: !readOnly && !walkIn,
   });
 
+  // Notes of the client the fields resolve to, however she was found: picked from the list, or
+  // recognised by phone / email / name. Read-only forms have no preview, and while an edited
+  // booking waits for its first one, the loaded client's notes are shown so the box doesn't pop in.
+  const notes = readOnly
+    ? loadedClient?.notes
+    : preview
+      ? previewNotes(preview)
+      : loadedClient && pickedId === loadedClient.id
+        ? loadedClient.notes
+        : null;
+
   const blurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleFocus = (field: FocusedField) => {
@@ -85,7 +91,6 @@ const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn, clientNotes, 
     setValue("client_surname", c.client_surname ?? "");
     setValue("client_phone",   c.client_phone   ?? "");
     setValue("client_email",   c.client_email   ?? "");
-    onClientPicked?.(c);
     clear();
     if (blurTimerRef.current) clearTimeout(blurTimerRef.current);
     setFocusedField(null);
@@ -276,11 +281,9 @@ const BookingClientSection = ({ autoFocus, readOnly, enableWalkIn, clientNotes, 
           <ClientResolutionHint preview={preview} />
         </Grid>
       )}
-      {clientNotes?.trim() && (
+      {notes?.trim() && (
         <Grid size={12}>
-          <Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
-            <strong>{t("clientNotes")}:</strong> {truncate(clientNotes, 20)}
-          </Typography>
+          <ClientNotesAlert notes={notes} />
         </Grid>
       )}
         </>

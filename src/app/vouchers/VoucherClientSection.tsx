@@ -2,14 +2,15 @@
 
 import { useClientSearch, FocusedClientField } from "@/hooks/useClientSearch";
 import { ClientRow } from "@/hooks/useSimilarClients";
-import { formatPhone, phoneDigitRange } from "@/utils/phone";
 import { VoucherSchemaInput } from "@/schemas/voucher.schema";
-import { Avatar, Box, Chip, Divider, Grid, Paper, TextField, Typography } from "@mui/material";
+import { Box, Divider, Grid, TextField, Typography } from "@mui/material";
 import { useRef, useState } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import ClientResolutionHint from "@/components/ClientResolutionHint";
 import { useClientPreview } from "@/hooks/useClientPreview";
+import ClientNotesAlert, { previewNotes } from "@/components/ClientNotesAlert";
+import ClientDropdown from "@/app/bookings/ClientDropdown";
 
 type Prefix = "buyer" | "recipient";
 
@@ -33,135 +34,6 @@ type Props = {
   label: string;
   autoFocus?: boolean;
 };
-
-const AVATAR_COLORS = ["#4CAF50", "#2196F3", "#9C27B0", "#FF9800", "#00BCD4", "#E91E63"];
-
-function avatarColor(str: string): string {
-  let h = 0;
-  for (const c of str) h = (h * 31 + c.charCodeAt(0)) & 0x7fffffff;
-  return AVATAR_COLORS[h % AVATAR_COLORS.length];
-}
-
-function truncate(text: string | null | undefined, max: number): string {
-  if (!text) return "";
-  const trimmed = text.trim();
-  return trimmed.length <= max ? trimmed : trimmed.slice(0, max) + "…";
-}
-
-function initials(name?: string | null, surname?: string | null): string {
-  return [name, surname]
-    .filter(Boolean)
-    .map((s) => s![0].toUpperCase())
-    .join("")
-    .slice(0, 2);
-}
-
-function HighlightedText({ text, query, phone }: { text?: string | null; query?: string; phone?: boolean }) {
-  if (!text) return null;
-  if (!query) return <>{text}</>;
-  const idx = text.toLowerCase().indexOf(query.toLowerCase());
-  // A phone is shown formatted ("+34 689 59 01 23") but may be typed as "68959" or "689 59",
-  // so when the plain substring misses, match on digits and highlight across the spaces.
-  const range: [number, number] | null =
-    idx !== -1 ? [idx, idx + query.length] : phone ? phoneDigitRange(text, query) : null;
-  if (!range) return <>{text}</>;
-  const [start, end] = range;
-  return (
-    <>
-      {text.slice(0, start)}
-      <Box component="span" sx={{ color: "warning.main", fontWeight: 700 }}>
-        {text.slice(start, end)}
-      </Box>
-      {text.slice(end)}
-    </>
-  );
-}
-
-function ClientDropdown({
-  clients,
-  onSelect,
-  query,
-}: {
-  clients: ClientRow[];
-  onSelect: (c: ClientRow) => void;
-  query?: string;
-}) {
-  const tCommon = useTranslations("Common");
-  return (
-    <Paper
-      elevation={4}
-      sx={{
-        position: "absolute",
-        top: "100%",
-        left: 0,
-        right: 0,
-        zIndex: 1400,
-        borderRadius: 1,
-        overflowY: "auto",
-        overflowX: "hidden",
-        maxHeight: 240,
-        mt: 0.5,
-      }}
-      onMouseDown={(e) => e.preventDefault()}
-    >
-      {clients.map((c, i) => {
-        const ini = initials(c.client_name, c.client_surname);
-        const fullName = [c.client_name, c.client_surname].filter(Boolean).join(" ");
-        return (
-          <Box
-            key={c.id}
-            onClick={() => onSelect(c)}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              px: 1.5,
-              py: 1,
-              cursor: "pointer",
-              borderTop: i > 0 ? "1px solid" : "none",
-              borderColor: "divider",
-              "&:hover": { bgcolor: "action.hover" },
-            }}
-          >
-            <Avatar sx={{ width: 32, height: 32, fontSize: 12, bgcolor: avatarColor(ini), flexShrink: 0 }}>
-              {ini}
-            </Avatar>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="body2" fontWeight={600} noWrap>
-                <HighlightedText text={fullName} query={query} />
-              </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
-                {[
-                  { text: c.client_email, phone: false },
-                  { text: formatPhone(c.client_phone), phone: true },
-                ]
-                  .filter((part) => !!part.text)
-                  .map((part, idx, arr) => (
-                    <Box component="span" key={idx}>
-                      <HighlightedText text={part.text} query={query} phone={part.phone} />
-                      {idx < arr.length - 1 && " · "}
-                    </Box>
-                  ))}
-              </Typography>
-              {c.client_notes?.trim() && (
-                <Typography
-                  component="div"
-                  variant="caption"
-                  color="text.secondary"
-                  noWrap
-                  sx={{ fontStyle: "italic", mt: 0.5 }}
-                >
-                  <strong>{tCommon("clientNotes")}:</strong> {truncate(c.client_notes, 20)}
-                </Typography>
-              )}
-            </Box>
-            <Chip label={tCommon("existing")} size="small" sx={{ fontSize: 10, height: 20, flexShrink: 0 }} />
-          </Box>
-        );
-      })}
-    </Paper>
-  );
-}
 
 const VoucherClientSection = ({ prefix, label, autoFocus }: Props) => {
   const tCommon = useTranslations("Common");
@@ -341,6 +213,11 @@ const VoucherClientSection = ({ prefix, label, autoFocus }: Props) => {
       <Grid size={12}>
         <ClientResolutionHint preview={preview} />
       </Grid>
+      {previewNotes(preview) && (
+        <Grid size={12}>
+          <ClientNotesAlert notes={previewNotes(preview)} />
+        </Grid>
+      )}
     </>
   );
 };

@@ -397,7 +397,10 @@ export async function previewClientSlot(db: Prisma.TransactionClient, input: Cli
       return { kind: "new" };
     case "rename": // only reachable with a resolution, which a preview never passes
     case "existing": {
-      const bookings = await db.bookings.count({ where: { client_id: plan.client.id, deleted_at: null } });
+      const [bookings, notes] = await Promise.all([
+        db.bookings.count({ where: { client_id: plan.client.id, deleted_at: null } }),
+        db.clients.findUnique({ where: { id: plan.client.id }, select: { client_notes: true } }),
+      ]);
       return {
         kind: "existing",
         client: {
@@ -407,6 +410,7 @@ export async function previewClientSlot(db: Prisma.TransactionClient, input: Cli
           email: plan.client.client_email,
           phone: plan.client.client_phone,
           bookings,
+          notes: notes?.client_notes?.trim() || null,
         },
         fill: plan.kind === "existing" ? plan.fill : NO_FILL,
       };

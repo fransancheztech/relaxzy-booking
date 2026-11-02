@@ -82,7 +82,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId, readOnly = false }:
     totalPaid: 0,
     remainingBalance: 0,
   });
-  const [clientNotes, setClientNotes] = useState<string | null>(null);
+  const [loadedClient, setLoadedClient] = useState<{ id: string; notes: string | null } | null>(null);
   const [bookingGroupId, setBookingGroupId] = useState<string | null>(null);
 
   const methods = useForm<BookingUpdateSchemaType>({
@@ -162,7 +162,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId, readOnly = false }:
           price: data.price ?? undefined,
           status: data.status,
         });
-        setClientNotes(data.client?.notes ?? null);
+        setLoadedClient(data.client?.id ? { id: data.client.id, notes: data.client.notes ?? null } : null);
         setBookingGroupId(data.booking_group_id ?? null);
       } catch (err) {
         console.error(err);
@@ -327,8 +327,7 @@ const UpdateBookingDialogForm = ({ open, onClose, bookingId, readOnly = false }:
                 setIsManagePaymentsDialogOpen={setIsManagePaymentsDialogOpen}
                 paymentSummary={paymentSummary}
                 readOnly={viewOnly}
-                clientNotes={clientNotes}
-                onClientPicked={(notes) => setClientNotes(notes)}
+                loadedClient={loadedClient}
                 bookingGroupId={bookingGroupId}
                 onGroupChanged={refreshGroupId}
               />

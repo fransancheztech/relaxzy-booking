@@ -1,6 +1,7 @@
 "use client";
 
 import { Avatar, Box, Chip, Paper, Typography } from "@mui/material";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import { useTranslations } from "next-intl";
 import { ClientRow } from "@/hooks/useSimilarClients";
 import { formatPhone, phoneDigitRange } from "@/utils/phone";
@@ -11,12 +12,6 @@ function avatarColor(str: string): string {
   let h = 0;
   for (const c of str) h = (h * 31 + c.charCodeAt(0)) & 0x7fffffff;
   return AVATAR_COLORS[h % AVATAR_COLORS.length];
-}
-
-function truncate(text: string | null | undefined, max: number): string {
-  if (!text) return "";
-  const trimmed = text.trim();
-  return trimmed.length <= max ? trimmed : trimmed.slice(0, max) + "…";
 }
 
 function initials(name?: string | null, surname?: string | null): string {
@@ -114,16 +109,26 @@ const ClientDropdown = ({ clients, onSelect, query }: Props) => {
                     </Box>
                   ))}
               </Typography>
+              {/* Up to two lines; the full text shows under the fields once she's picked. */}
               {c.client_notes?.trim() && (
-                <Typography
-                  component="div"
-                  variant="caption"
-                  color="text.secondary"
-                  noWrap
-                  sx={{ fontStyle: "italic", mt: 0.5 }}
-                >
-                  <strong>{t("clientNotes")}:</strong> {truncate(c.client_notes, 20)}
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.5, mt: 0.5 }}>
+                  <WarningAmberRoundedIcon sx={{ fontSize: 14, mt: "2px", color: "warning.main", flexShrink: 0 }} />
+                  <Typography
+                    component="div"
+                    variant="caption"
+                    color="text.secondary"
+                    title={c.client_notes.trim()}
+                    sx={{
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    <strong>{t("clientNotes")}:</strong> {c.client_notes.trim()}
+                  </Typography>
+                </Box>
               )}
             </Box>
             <Chip

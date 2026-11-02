@@ -65,7 +65,7 @@ export type ClientPreview =
   | { kind: "none" }
   | {
       kind: "existing";
-      client: ClientConflictParty & { id: string; bookings: number };
+      client: ClientConflictParty & { id: string; bookings: number; notes: string | null };
       /**
        * What the save changes on that client: empty phone / email / surname filled in, or a name /
        * surname whose typed spelling only adds accents ("Jesus" → "Jesús"). Nothing is overwritten.

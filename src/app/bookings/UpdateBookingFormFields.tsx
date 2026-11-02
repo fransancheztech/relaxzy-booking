@@ -53,13 +53,12 @@ interface Props {
     remainingBalance: number;
   };
   readOnly?: boolean;
-  clientNotes?: string | null;
-  onClientPicked?: (notes: string | null) => void;
+  loadedClient?: { id: string; notes: string | null } | null;
   bookingGroupId?: string | null;
   onGroupChanged?: () => void;
 }
 
-const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManagePaymentsDialogOpen, paymentSummary, readOnly, clientNotes, onClientPicked, bookingGroupId, onGroupChanged }: Props) => {
+const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManagePaymentsDialogOpen, paymentSummary, readOnly, loadedClient, bookingGroupId, onGroupChanged }: Props) => {
   const t = useTranslations("BookingForm");
   const tCommon = useTranslations("Common");
   const tBookings = useTranslations("Bookings");
@@ -92,8 +91,7 @@ const UpdateBookingFormFields = ({ bookingId, setIsPaymentDialogOpen, setIsManag
       </Grid>
       <BookingClientSection
         readOnly={readOnly}
-        clientNotes={clientNotes}
-        onClientPicked={(c) => onClientPicked?.(c.client_notes ?? null)}
+        loadedClient={loadedClient}
       />
       <BookingGroupSection
         bookingId={bookingId}
