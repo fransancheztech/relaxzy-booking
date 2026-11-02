@@ -8,6 +8,7 @@ import { FETCH_LIMIT } from "@/constants";
 import { GridFilterItem, GridFilterModel } from "@mui/x-data-grid";
 import { activeFilterItems } from "@/utils/gridFilterItems";
 import { useLiveUpdates } from "@/hooks/useLiveUpdates";
+import { useLoadSequence } from "@/hooks/useLoadSequence";
 
 export default function PaymentsPageContent() {
   const [payments, setPayments] = useState<PaymentsType[]>([]);
@@ -17,6 +18,7 @@ export default function PaymentsPageContent() {
   const [selectedPaymentAmount, setSelectedPaymentAmount] = useState<number | null>(null);
   const [isOpenViewPaymentDialog, setIsOpenViewPaymentDialog] = useState(false);
   const [loading, setLoading] = useState(false);
+  const loads = useLoadSequence();
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [sortModel, setSortModel] = useState<{ field: string; sort: "asc" | "desc" }>({
     field: "created_at",
@@ -31,10 +33,16 @@ export default function PaymentsPageContent() {
     pageToLoad: number,
     sort = sortModel,
     filters = filterItems,
+    silent = false,
   ) => {
+    const seq = loads.start(silent);
+    if (seq === null) return;
     try {
-      setLoading(true);
-      setFetchError(null);
+      // A background refresh keeps the rows on screen: no overlay, no flash.
+      if (!silent) {
+        setLoading(true);
+        setFetchError(null);
+      }
 
       const res = await fetch("/api/payments/search", {
         method: "POST",
@@ -50,19 +58,22 @@ export default function PaymentsPageContent() {
       if (!res.ok) throw new Error("Failed to load payments");
 
       const data = await res.json();
+      if (!loads.isLatest(seq)) return;
       setPayments(data.rows);
       setRowCount(data.total);
       setPage(pageToLoad);
       setSortModel(sort);
     } catch (err) {
       console.error(err);
+      // A failed background refresh leaves the rows as they were.
+      if (silent || !loads.isLatest(seq)) return;
       setPayments([]);
       setRowCount(0);
       setFetchError("Error loading payments");
     } finally {
-      setLoading(false);
+      if (loads.finish(seq)) setLoading(false);
     }
-  }, [sortModel, filterItems]);
+  }, [sortModel, filterItems, loads]);
 
   // -------------------------------
   // Realtime subscription — stable, recreated only on mount/unmount
@@ -77,7 +88,7 @@ export default function PaymentsPageContent() {
   filterItemsRef.current = filterItems;
 
   useLiveUpdates("/api/payments/stream", () =>
-    loadPaymentsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current),
+    loadPaymentsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current, true),
   );
 
   // -------------------------------

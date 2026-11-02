@@ -12,6 +12,7 @@ import ConfirmDeleteServiceDialog from "./ConfirmDeleteServiceDialog";
 import handleDeleteService from "@/handlers/handleDeleteService";
 import { useLayout } from "../context/LayoutContext";
 import { useLiveUpdates } from "@/hooks/useLiveUpdates";
+import { useLoadSequence } from "@/hooks/useLoadSequence";
 
 const ServicesPage = () => {
   const { setButtonLabel, setOnButtonClick } = useLayout();
@@ -35,6 +36,7 @@ const ServicesPage = () => {
     sort: "desc",
   });
   const [loading, setLoading] = useState(false);
+  const loads = useLoadSequence();
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   // -------------------------------
@@ -53,10 +55,15 @@ const ServicesPage = () => {
   // Load services
   // -------------------------------
   const loadServices = useCallback(
-    async (pageToLoad: number, sort = sortModel, search = searchTerm) => {
+    async (pageToLoad: number, sort = sortModel, search = searchTerm, silent = false) => {
+      const seq = loads.start(silent);
+      if (seq === null) return;
       try {
-        setLoading(true);
-        setFetchError(null);
+        // A background refresh keeps the rows on screen: no overlay, no flash.
+        if (!silent) {
+          setLoading(true);
+          setFetchError(null);
+        }
 
         const res = await fetch("/api/services/search", {
           method: "POST",
@@ -72,6 +79,7 @@ const ServicesPage = () => {
         if (!res.ok) throw new Error("Failed to load services");
 
         const data = await res.json();
+        if (!loads.isLatest(seq)) return;
 
         setServices(data.rows);
         setRowCount(data.total);
@@ -79,14 +87,16 @@ const ServicesPage = () => {
         setSortModel(sort);
       } catch (err) {
         console.error(err);
+        // A failed background refresh leaves the rows as they were.
+        if (silent || !loads.isLatest(seq)) return;
         setServices([]);
         setRowCount(0);
         setFetchError("Error loading services");
       } finally {
-        setLoading(false);
+        if (loads.finish(seq)) setLoading(false);
       }
     },
-    [sortModel, searchTerm],
+    [sortModel, searchTerm, loads],
   );
 
   const debouncedSearch = useRef(
@@ -97,7 +107,7 @@ const ServicesPage = () => {
 
   // One connection for the page's lifetime (it used to reconnect on every page, sort or search
   // change); the callback always sees the current page, sort and search.
-  useLiveUpdates("/api/services/stream", () => loadServices(page, sortModel, searchTerm));
+  useLiveUpdates("/api/services/stream", () => loadServices(page, sortModel, searchTerm, true));
 
   useEffect(() => {
     loadServices(0);

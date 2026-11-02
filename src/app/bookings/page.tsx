@@ -11,6 +11,7 @@ import { FETCH_LIMIT } from "@/constants";
 import { GridFilterItem, GridFilterModel } from "@mui/x-data-grid";
 import { activeFilterItems } from "@/utils/gridFilterItems";
 import { useLiveUpdates } from "@/hooks/useLiveUpdates";
+import { useLoadSequence } from "@/hooks/useLoadSequence";
 
 export default function BookingsPage() {
   const { setButtonLabel, setOnButtonClick } = useLayout();
@@ -20,6 +21,7 @@ export default function BookingsPage() {
   const [page, setPage] = useState(0);
   const [rowCount, setRowCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const loads = useLoadSequence();
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
@@ -38,10 +40,16 @@ export default function BookingsPage() {
     pageToLoad: number,
     sort = sortModel,
     filters = filterItems,
+    silent = false,
   ) => {
+    const seq = loads.start(silent);
+    if (seq === null) return;
     try {
-      setLoading(true);
-      setFetchError(null);
+      // A background refresh keeps the rows on screen: no overlay, no flash.
+      if (!silent) {
+        setLoading(true);
+        setFetchError(null);
+      }
 
       const res = await fetch("/api/bookings/search", {
         method: "POST",
@@ -61,19 +69,22 @@ export default function BookingsPage() {
       }
 
       const data = await res.json();
+      if (!loads.isLatest(seq)) return;
       setBookings(data.rows);
       setRowCount(data.total);
       setPage(pageToLoad);
       setSortModel(sort);
     } catch (err) {
       console.error(err);
+      // A failed background refresh leaves the rows as they were.
+      if (silent || !loads.isLatest(seq)) return;
       setBookings([]);
       setRowCount(0);
       setFetchError("Error loading bookings");
     } finally {
-      setLoading(false);
+      if (loads.finish(seq)) setLoading(false);
     }
-  }, [sortModel, filterItems]);
+  }, [sortModel, filterItems, loads]);
 
   // -------------------------------
   // Realtime subscription — stable, recreated only on mount/unmount
@@ -88,14 +99,14 @@ export default function BookingsPage() {
   filterItemsRef.current = filterItems;
 
   useLiveUpdates("/api/bookings/stream", () =>
-    loadBookingsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current),
+    loadBookingsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current, true),
   );
 
   useEffect(() => {
     // Payment/group writes don't touch the bookings table, so the SSE stream won't fire.
     // A `refreshBookingsData` window event (dispatched by those flows) refetches the list.
     const onRefresh = () =>
-      loadBookingsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current);
+      loadBookingsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current, true);
     window.addEventListener("refreshBookingsData", onRefresh);
     return () => window.removeEventListener("refreshBookingsData", onRefresh);
   }, []);

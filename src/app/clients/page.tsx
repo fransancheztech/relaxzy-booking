@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { useRole } from "@/hooks/useRole";
 import { activeFilterItems } from "@/utils/gridFilterItems";
 import { useLiveUpdates } from "@/hooks/useLiveUpdates";
+import { useLoadSequence } from "@/hooks/useLoadSequence";
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<ClientType[]>([]);
@@ -26,6 +27,7 @@ export default function ClientsPage() {
   const [isOpenEditClientDialog, setIsOpenEditClientDialog] = useState(false);
   const [isOpenNewClientDialog, setIsOpenNewClientDialog] = useState(false);
   const [loading, setLoading] = useState(false);
+  const loads = useLoadSequence();
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [sortModel, setSortModel] = useState<{ field: string; sort: "asc" | "desc" }>({
     field: "created_at",
@@ -47,10 +49,16 @@ export default function ClientsPage() {
     pageToLoad: number,
     sort = sortModel,
     filters = filterItems,
+    silent = false,
   ) => {
+    const seq = loads.start(silent);
+    if (seq === null) return;
     try {
-      setLoading(true);
-      setFetchError(null);
+      // A background refresh keeps the rows on screen: no overlay, no flash.
+      if (!silent) {
+        setLoading(true);
+        setFetchError(null);
+      }
 
       const res = await fetch("/api/clients/search", {
         method: "POST",
@@ -69,19 +77,22 @@ export default function ClientsPage() {
       }
 
       const data = await res.json();
+      if (!loads.isLatest(seq)) return;
       setClients(data.rows);
       setRowCount(data.total);
       setPage(pageToLoad);
       setSortModel(sort);
     } catch (err) {
       console.error(err);
+      // A failed background refresh leaves the rows as they were.
+      if (silent || !loads.isLatest(seq)) return;
       setClients([]);
       setRowCount(0);
       setFetchError("Error loading clients");
     } finally {
-      setLoading(false);
+      if (loads.finish(seq)) setLoading(false);
     }
-  }, [sortModel, filterItems]);
+  }, [sortModel, filterItems, loads]);
 
   // -------------------------------
   // Realtime subscription — stable, recreated only on mount/unmount
@@ -96,7 +107,7 @@ export default function ClientsPage() {
   filterItemsRef.current = filterItems;
 
   useLiveUpdates("/api/clients/stream", () =>
-    loadClientsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current),
+    loadClientsRef.current(pageRef.current, sortModelRef.current, filterItemsRef.current, true),
   );
 
   // -------------------------------
