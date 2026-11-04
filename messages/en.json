@@ -316,7 +316,6 @@
       "BOOKING_CANCELLED": "A cancelled booking cannot take payments.",
       "VOUCHER_ON_ANONYMOUS_BOOKING": "A voucher cannot be applied to an anonymous booking.",
       "VOUCHER_NOT_FOUND": "Voucher not found.",
-      "VOUCHER_EXPIRED": "This voucher has expired.",
       "VOUCHER_INSUFFICIENT_BALANCE": "This voucher does not have enough balance.",
       "PAYMENT_FAILED": "The payment could not be registered. Please try again.",
       "NO_PAYMENT_ENTERED": "Register at least one payment.",
@@ -329,12 +328,17 @@
     },
     "voucherUsableFrom": "Usable from {date}",
     "voucherTooEarly": "Sold on {sold}. Under the 7-day rule it can't be used until {from}, and this appointment is on {appointment}.",
+    "voucherExpiredOn": "Expired: {date}",
+    "voucherUsedExpired": "Expired: valid until {expired}, and this appointment is on {appointment}.",
     "earlyConfirmTitle": "Voucher used too early",
     "earlyConfirmIntro": "Under the 7-day rule, a voucher can't be used until 7 days after it was sold:",
     "earlyConfirmItem": "{code}: sold on {sold}, usable from {from}. Appointment: {appointment}.",
     "earlyConfirmQuestion": "Use it anyway?",
     "earlyConfirmGoBack": "Go back",
-    "earlyConfirmProceed": "Use anyway"
+    "earlyConfirmProceed": "Use anyway",
+    "expiredConfirmTitle": "Expired voucher",
+    "expiredConfirmIntro": "A voucher shouldn't be used after its expiry date:",
+    "expiredConfirmItem": "{code}: valid until {expired}. Appointment: {appointment}."
   },
   "BookingDelete": {
     "title": "Delete Booking?",

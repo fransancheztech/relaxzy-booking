@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "generated/prisma";
-import { voucherNotExpiredSql } from "@/lib/vouchers/expirySql";
 import { phoneDigits } from "@/utils/phone";
 import { foldText } from "@/utils/text";
 
@@ -40,6 +38,7 @@ export async function GET(request: Request) {
     // Names match on the folded full name: accent-insensitive, and "rocio soto" spans name + surname.
     const namePattern = q ? `%${foldText(q)}%` : "%";
 
+    // Expired vouchers are included: they can still be used, after a warning (see useWarnings).
     const rows = await prisma.$queryRaw<VoucherRow[]>`
       SELECT
         v.id,
@@ -63,7 +62,6 @@ export async function GET(request: Request) {
       LEFT JOIN clients cb ON cb.id = v.buyer_id     AND cb.deleted_at IS NULL
       WHERE v.deleted_at IS NULL
         AND COALESCE(v.balance, 0) > 0
-        AND ${voucherNotExpiredSql(Prisma.sql`v.expiration_date`)}
         AND (
           v.code                  ILIKE ${pattern}
           OR v.notes              ILIKE ${pattern}

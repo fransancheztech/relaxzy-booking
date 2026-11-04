@@ -29,32 +29,3 @@ export function isVoucherTooEarly(
   const when = appointment instanceof Date ? appointment : new Date(appointment);
   return !Number.isNaN(when.getTime()) && when < firstDay;
 }
-
-export type EarlyVoucherUse = { code: string; soldAt: string; usableFrom: Date; appointment: Date };
-
-/**
- * Of the vouchers about to be applied, those used before their first permitted day. Looks each
- * code up with the same search the voucher picker uses (vouchers with balance, not expired).
- * Used right before saving, to ask for confirmation.
- */
-export async function findEarlyVoucherUses(
-  entries: { code: string | null | undefined; appointment: Date | null | undefined }[],
-): Promise<EarlyVoucherUse[]> {
-  const early: EarlyVoucherUse[] = [];
-  for (const { code, appointment } of entries) {
-    const c = code?.trim();
-    if (!c || !appointment) continue;
-    try {
-      const res = await fetch(`/api/vouchers/search?q=${encodeURIComponent(c)}`);
-      if (!res.ok) continue;
-      const data = await res.json();
-      const v = (data.vouchers ?? []).find((x: { code: string }) => x.code.toLowerCase() === c.toLowerCase());
-      if (v?.created_at && isVoucherTooEarly(v.created_at, appointment)) {
-        early.push({ code: v.code, soldAt: v.created_at, usableFrom: voucherFirstUsableDay(v.created_at)!, appointment });
-      }
-    } catch {
-      // A failed lookup must not block saving; the server applies the voucher as usual.
-    }
-  }
-  return early;
-}

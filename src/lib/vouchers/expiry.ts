@@ -2,7 +2,8 @@ import { businessDayEndExclusiveUtc } from "@/utils/businessTime";
 
 /**
  * Whether a voucher is past its expiry. THE EXPIRY DAY COUNTS IN FULL: a voucher stays
- * usable until the end of the business (Madrid) day printed on it.
+ * valid until the end of the business (Madrid) day printed on it. Expiry isn't enforced: using an
+ * expired voucher only warns the receptionist and asks for confirmation (see ./useWarnings).
  *
  * `vouchers.expiration_date` is a timestamptz whose TIME component is not significant. It
  * inherited the time of day of the sale (created_at + 180 days), so a voucher sold at

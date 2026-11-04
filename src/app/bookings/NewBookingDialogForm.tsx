@@ -25,8 +25,8 @@ import { toast } from "react-toastify";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
 import { paymentErrorText } from "@/lib/payments/paymentErrors";
-import EarlyVoucherConfirmDialog from "@/components/EarlyVoucherConfirmDialog";
-import { findEarlyVoucherUses, type EarlyVoucherUse } from "@/lib/vouchers/firstUsableDay";
+import VoucherUseConfirmDialog from "@/components/VoucherUseConfirmDialog";
+import { findVoucherUseWarnings, type VoucherUseWarning } from "@/lib/vouchers/useWarnings";
 
 type Props = {
   open: boolean;
@@ -113,9 +113,9 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
     // "error" — already surfaced by the handler; keep the form open.
   };
 
-  // A voucher used before its first permitted day (7-day rule): hold the booking until she confirms.
-  const [earlyUses, setEarlyUses] = useState<EarlyVoucherUse[]>([]);
-  const [pendingEarly, setPendingEarly] = useState<BookingSchemaType | null>(null);
+  // A voucher used before its first permitted day (7-day rule) or after its expiry: hold the booking until she confirms.
+  const [voucherWarnings, setVoucherWarnings] = useState<VoucherUseWarning[]>([]);
+  const [pendingVoucherUse, setPendingVoucherUse] = useState<BookingSchemaType | null>(null);
 
   const onSubmit = (data: BookingSchemaType) =>
     guard(async () => {
@@ -127,21 +127,21 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
           .map((c) => ({ code: c.voucherCode, appointment })),
       ];
       if (entries.length > 0) {
-        const early = await findEarlyVoucherUses(entries);
-        if (early.length > 0) {
-          setPendingEarly(data);
-          setEarlyUses(early);
+        const warnings = await findVoucherUseWarnings(entries);
+        if (warnings.length > 0) {
+          setPendingVoucherUse(data);
+          setVoucherWarnings(warnings);
           return;
         }
       }
       await submit(data);
     });
 
-  const confirmEarly = () =>
+  const confirmVoucherUse = () =>
     guard(async () => {
-      const data = pendingEarly;
-      setEarlyUses([]);
-      setPendingEarly(null);
+      const data = pendingVoucherUse;
+      setVoucherWarnings([]);
+      setPendingVoucherUse(null);
       if (data) await submit(data);
     });
 
@@ -198,11 +198,11 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
         </form>
       </FormProvider>
 
-      <EarlyVoucherConfirmDialog
-        uses={earlyUses}
+      <VoucherUseConfirmDialog
+        warnings={voucherWarnings}
         submitting={submitting}
-        onGoBack={() => { setEarlyUses([]); setPendingEarly(null); }}
-        onProceed={confirmEarly}
+        onGoBack={() => { setVoucherWarnings([]); setPendingVoucherUse(null); }}
+        onProceed={confirmVoucherUse}
       />
 
       <ClientConflictDialog

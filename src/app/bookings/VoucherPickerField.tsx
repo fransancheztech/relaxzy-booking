@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { paymentErrorText } from "@/lib/payments/paymentErrors";
 import VoucherInfoTooltip, { type VoucherInfo } from "@/components/VoucherInfoTooltip";
 import { isVoucherTooEarly, voucherFirstUsableDay } from "@/lib/vouchers/firstUsableDay";
+import { isVoucherExpired } from "@/lib/vouchers/expiry";
 import { formatBusinessDate } from "@/utils/businessTime";
 
 type VoucherOption = VoucherInfo & {
@@ -28,7 +29,8 @@ type Props<TFieldValues extends FieldValues> = {
   onSetVoucherPayment: (value: string) => void;
   /**
    * The appointment the voucher would pay for. Vouchers can't be used until 7 days after they were
-   * sold (see firstUsableDay): too-early ones are flagged in the list and warned about once picked.
+   * sold (see firstUsableDay) nor after they expire: those are flagged in the list and warned about
+   * once picked.
    */
   appointmentDate?: Date | null;
 };
@@ -77,6 +79,10 @@ function VoucherPickerField<TFieldValues extends FieldValues>({
           options.find((o) => o.code === field.value) ?? (picked?.code === field.value ? picked : null);
         const tooEarly =
           selectedOption && appointmentDate && isVoucherTooEarly(selectedOption.created_at, appointmentDate)
+            ? selectedOption
+            : null;
+        const expired =
+          selectedOption && appointmentDate && isVoucherExpired(selectedOption.expiration_date, appointmentDate)
             ? selectedOption
             : null;
 
@@ -149,6 +155,14 @@ function VoucherPickerField<TFieldValues extends FieldValues>({
                         sx={{ ml: "auto", height: 20, fontSize: "0.68rem", fontWeight: 600 }}
                       />
                     )}
+                    {appointmentDate && isVoucherExpired(option.expiration_date, appointmentDate) && (
+                      <Chip
+                        size="small"
+                        color="warning"
+                        label={t("voucherExpiredOn", { date: formatBusinessDate(option.expiration_date) })}
+                        sx={{ ml: "auto", height: 20, fontSize: "0.68rem", fontWeight: 600 }}
+                      />
+                    )}
                   </Box>
                 </VoucherInfoTooltip>
               );
@@ -182,6 +196,14 @@ function VoucherPickerField<TFieldValues extends FieldValues>({
               {t("voucherTooEarly", {
                 sold: formatBusinessDate(tooEarly.created_at),
                 from: formatBusinessDate(voucherFirstUsableDay(tooEarly.created_at)),
+                appointment: formatBusinessDate(appointmentDate),
+              })}
+            </Alert>
+          )}
+          {expired && (
+            <Alert severity="warning" sx={{ mt: 1, py: 0, "& .MuiAlert-message": { fontSize: "0.78rem" } }}>
+              {t("voucherUsedExpired", {
+                expired: formatBusinessDate(expired.expiration_date),
                 appointment: formatBusinessDate(appointmentDate),
               })}
             </Alert>

@@ -316,7 +316,6 @@
       "BOOKING_CANCELLED": "การจองที่ยกเลิกแล้วไม่สามารถรับชำระเงินได้",
       "VOUCHER_ON_ANONYMOUS_BOOKING": "ไม่สามารถใช้บัตรกำนัลกับการจองที่ไม่ระบุชื่อลูกค้า",
       "VOUCHER_NOT_FOUND": "ไม่พบบัตรกำนัล",
-      "VOUCHER_EXPIRED": "บัตรกำนัลนี้หมดอายุแล้ว",
       "VOUCHER_INSUFFICIENT_BALANCE": "บัตรกำนัลนี้มียอดเงินไม่เพียงพอ",
       "PAYMENT_FAILED": "ไม่สามารถบันทึกการชำระเงินได้ กรุณาลองอีกครั้ง",
       "NO_PAYMENT_ENTERED": "กรุณาบันทึกการชำระเงินอย่างน้อยหนึ่งรายการ",
@@ -329,12 +328,17 @@
     },
     "voucherUsableFrom": "ใช้ได้ตั้งแต่ {date}",
     "voucherTooEarly": "ขายเมื่อ {sold} ตามกฎ 7 วัน ยังใช้ไม่ได้จนถึง {from} และนัดนี้คือวันที่ {appointment}",
+    "voucherExpiredOn": "หมดอายุ: {date}",
+    "voucherUsedExpired": "หมดอายุ: ใช้ได้ถึง {expired} และนัดนี้คือวันที่ {appointment}",
     "earlyConfirmTitle": "ใช้บัตรกำนัลก่อนกำหนด",
     "earlyConfirmIntro": "ตามกฎ 7 วัน บัตรกำนัลจะใช้ได้หลังจากขายไปแล้ว 7 วัน:",
     "earlyConfirmItem": "{code}: ขายเมื่อ {sold} ใช้ได้ตั้งแต่ {from} นัด: {appointment}",
     "earlyConfirmQuestion": "ต้องการใช้ต่อหรือไม่?",
     "earlyConfirmGoBack": "กลับ",
-    "earlyConfirmProceed": "ใช้ต่อ"
+    "earlyConfirmProceed": "ใช้ต่อ",
+    "expiredConfirmTitle": "บัตรกำนัลหมดอายุ",
+    "expiredConfirmIntro": "ไม่ควรใช้บัตรกำนัลหลังวันหมดอายุ:",
+    "expiredConfirmItem": "{code}: ใช้ได้ถึง {expired} นัด: {appointment}"
   },
   "BookingDelete": {
     "title": "ลบการจอง?",

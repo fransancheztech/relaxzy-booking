@@ -43,8 +43,8 @@ import { toast } from "react-toastify";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 import { paymentErrorText } from "@/lib/payments/paymentErrors";
 import { therapistDisplayName } from "@/utils/therapistName";
-import EarlyVoucherConfirmDialog from "@/components/EarlyVoucherConfirmDialog";
-import { findEarlyVoucherUses, type EarlyVoucherUse } from "@/lib/vouchers/firstUsableDay";
+import VoucherUseConfirmDialog from "@/components/VoucherUseConfirmDialog";
+import { findVoucherUseWarnings, type VoucherUseWarning } from "@/lib/vouchers/useWarnings";
 
 // Today's calendar day in the business timezone, as a plain JS Date (midnight Madrid).
 const todayBusiness = () =>
@@ -66,7 +66,7 @@ interface DialogFormProps {
   paidCard: number;
   paidVoucher?: number;
   onPaymentSuccess: () => void;
-  /** The booking's appointment: a voucher can't be used before 7 days after its sale (warned, not blocked). */
+  /** The booking's appointment: a voucher can't be used before 7 days after its sale nor after it expires (warned, not blocked). */
   appointmentDate?: Date | null;
 }
 
@@ -180,28 +180,28 @@ const PayBookingDialogForm = ({
   if (cardN > 0)    methodSegments.push({ color: METHOD_COLORS.card,    text: `${formatMoney(cardN)} ${t("card")}`,       key: "card" });
   if (voucherN > 0) methodSegments.push({ color: METHOD_COLORS.voucher, text: `${formatMoney(voucherN)} ${t("voucher")}`, key: "voucher" });
 
-  // A voucher used before its first permitted day: hold the payment until she confirms.
-  const [earlyUses, setEarlyUses] = useState<EarlyVoucherUse[]>([]);
+  // A voucher used before its first permitted day or after its expiry: hold the payment until she confirms.
+  const [voucherWarnings, setVoucherWarnings] = useState<VoucherUseWarning[]>([]);
   const [pendingPayment, setPendingPayment] = useState<BookingPaymentFormOutput | null>(null);
 
   const onSubmit = (data: BookingPaymentFormOutput) =>
     guard(async () => {
       if (!bookingId) return;
       if (Number(data.voucherPayment ?? 0) > 0) {
-        const early = await findEarlyVoucherUses([{ code: data.voucherCode, appointment: appointmentDate }]);
-        if (early.length > 0) {
+        const warnings = await findVoucherUseWarnings([{ code: data.voucherCode, appointment: appointmentDate }]);
+        if (warnings.length > 0) {
           setPendingPayment(data);
-          setEarlyUses(early);
+          setVoucherWarnings(warnings);
           return;
         }
       }
       await savePayment(data);
     });
 
-  const confirmEarly = () =>
+  const confirmVoucherUse = () =>
     guard(async () => {
       const data = pendingPayment;
-      setEarlyUses([]);
+      setVoucherWarnings([]);
       setPendingPayment(null);
       if (data) await savePayment(data);
     });
@@ -504,11 +504,11 @@ const PayBookingDialogForm = ({
           <CircularProgress />
         </div>
       )}
-      <EarlyVoucherConfirmDialog
-        uses={earlyUses}
+      <VoucherUseConfirmDialog
+        warnings={voucherWarnings}
         submitting={submitting}
-        onGoBack={() => { setEarlyUses([]); setPendingPayment(null); }}
-        onProceed={confirmEarly}
+        onGoBack={() => { setVoucherWarnings([]); setPendingPayment(null); }}
+        onProceed={confirmVoucherUse}
       />
     </>
   );

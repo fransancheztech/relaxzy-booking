@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
-import { isVoucherExpired } from "@/lib/vouchers/expiry";
 // Errors are returned as stable codes (see src/lib/payments/paymentErrors.ts); the
 // client translates them. Never put a user-facing sentence in this route.
 
@@ -90,20 +89,13 @@ export async function POST(
 
       const voucher = await prisma.vouchers.findFirst({
         where: { code: voucherCode.trim().toUpperCase(), deleted_at: null },
-        select: { id: true, balance: true, expiration_date: true },
+        select: { id: true, balance: true },
       });
 
       if (!voucher) {
         return NextResponse.json(
           { error: "VOUCHER_NOT_FOUND" },
           { status: 404 }
-        );
-      }
-
-      if (isVoucherExpired(voucher.expiration_date)) {
-        return NextResponse.json(
-          { error: "VOUCHER_EXPIRED" },
-          { status: 400 }
         );
       }
 
