@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Noto_Sans_Thai } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import DatepickerLocaleProvider from "../components/DatePickerLocaleProvider";
 import LayoutContent from "@/components/LayoutContent";
@@ -10,20 +10,25 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { cookies } from "next/headers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// The app's fonts are kept in ./fonts (built by src/scripts/build-fonts.py), so a build never
+// downloads them. Inter has no Thai letters: Thai text comes from Noto Sans Thai, next in the
+// font list (theme.ts, globals.css).
+const inter = localFont({
+  src: "./fonts/Inter-Variable.woff2",
+  variable: "--font-inter",
+  weight: "100 900",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const notoSansThai = Noto_Sans_Thai({
+const notoSansThai = localFont({
+  src: "./fonts/NotoSansThai-Variable.woff2",
   variable: "--font-noto-sans-thai",
-  subsets: ["thai"],
-  weight: ["400", "600", "700"],
+  weight: "100 900",
+  display: "swap",
+  // Downloaded only when a page has Thai text.
+  preload: false,
+  declarations: [{ prop: "unicode-range", value: "U+0E00-0E7F, U+200B-200D, U+25CC" }],
+  adjustFontFallback: false,
 });
 
 export const metadata: Metadata = {
@@ -45,11 +50,8 @@ export default async function RootLayout({
   const initialCollapsed = cookieStore.get("sidebarCollapsed")?.value === "true";
 
   return (
-    <html lang={locale}>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${notoSansThai.variable} antialiased`}
-        suppressHydrationWarning
-      >
+    <html lang={locale} className={`${inter.variable} ${notoSansThai.variable}`}>
+      <body className="antialiased" suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AppRouterCacheProvider>
             <Providers>
