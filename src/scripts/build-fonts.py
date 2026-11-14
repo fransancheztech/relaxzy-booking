@@ -5,14 +5,16 @@ Google Fonts used to break builds). This trims each font to the characters the a
 
   * Inter-Variable.woff2: Inter, every weight, at its small-text optical size (14), for Latin
     (Spanish, English and any European client name), Greek, punctuation, currency and arrows.
-  * NotoSansThai-Variable.woff2: Noto Sans Thai, every weight, normal width, Thai only.
+  * NotoSansThaiLooped-Variable.woff2: Noto Sans Thai Looped, every weight, normal width, Thai
+    only. The looped style (small circles on the letters) is the one Thai staff find easier to
+    read; the loopless Noto Sans Thai was tried first.
 
 Characters outside these (emoji, ★, ⚠, ✔…) come from the device's own fonts.
 
 Usage (Python 3, once):
     pip install fonttools brotli
     curl -LO "https://raw.githubusercontent.com/google/fonts/main/ofl/inter/Inter%5Bopsz,wght%5D.ttf"
-    curl -LO "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansthai/NotoSansThai%5Bwdth,wght%5D.ttf"
+    curl -LO "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansthailooped/NotoSansThaiLooped%5Bwdth,wght%5D.ttf"
     python src/scripts/build-fonts.py <folder with both .ttf files> src/app/fonts
 """
 import sys
@@ -57,11 +59,11 @@ def save(font, path):
 
 def main(src, out):
     out.mkdir(parents=True, exist_ok=True)
-    # Trim before pinning an axis: the other order fails on Noto Sans Thai.
+    # Trim before pinning an axis: the other order fails on the Noto Thai fonts.
     inter = trim(TTFont(src / "Inter[opsz,wght].ttf"), INTER_RANGES)
     save(instancer.instantiateVariableFont(inter, {"opsz": 14}), out / "Inter-Variable.woff2")
-    thai = trim(TTFont(src / "NotoSansThai[wdth,wght].ttf"), THAI_RANGES)
-    save(instancer.instantiateVariableFont(thai, {"wdth": 100}), out / "NotoSansThai-Variable.woff2")
+    thai = trim(TTFont(src / "NotoSansThaiLooped[wdth,wght].ttf"), THAI_RANGES)
+    save(instancer.instantiateVariableFont(thai, {"wdth": 100}), out / "NotoSansThaiLooped-Variable.woff2")
 
 
 if __name__ == "__main__":

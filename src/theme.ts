@@ -7,8 +7,8 @@ const theme = createTheme({
     background: { default: "#f8f8f8", paper: "#ffffff" },
   },
   typography: {
-    // Loaded in app/layout.tsx. Thai letters, which Inter lacks, come from Noto Sans Thai.
-    fontFamily: ["var(--font-inter)", "var(--font-noto-sans-thai)", "sans-serif"].join(","),
+    // Loaded in app/layout.tsx. Thai letters, which Inter lacks, come from Noto Sans Thai Looped.
+    fontFamily: ["var(--font-inter)", "var(--font-noto-sans-thai-looped)", "sans-serif"].join(","),
     button: { textTransform: "none", fontWeight: 600 },
   },
   shape: {

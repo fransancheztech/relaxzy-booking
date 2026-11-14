@@ -11,8 +11,8 @@ import { getLocale, getMessages } from "next-intl/server";
 import { cookies } from "next/headers";
 
 // The app's fonts are kept in ./fonts (built by src/scripts/build-fonts.py), so a build never
-// downloads them. Inter has no Thai letters: Thai text comes from Noto Sans Thai, next in the
-// font list (theme.ts, globals.css).
+// downloads them. Inter has no Thai letters: Thai text comes from Noto Sans Thai Looped, next in
+// the font list (theme.ts, globals.css). Thai staff read the looped style more easily.
 const inter = localFont({
   src: "./fonts/Inter-Variable.woff2",
   variable: "--font-inter",
@@ -20,9 +20,9 @@ const inter = localFont({
   display: "swap",
 });
 
-const notoSansThai = localFont({
-  src: "./fonts/NotoSansThai-Variable.woff2",
-  variable: "--font-noto-sans-thai",
+const notoSansThaiLooped = localFont({
+  src: "./fonts/NotoSansThaiLooped-Variable.woff2",
+  variable: "--font-noto-sans-thai-looped",
   weight: "100 900",
   display: "swap",
   // Downloaded only when a page has Thai text.
@@ -50,7 +50,7 @@ export default async function RootLayout({
   const initialCollapsed = cookieStore.get("sidebarCollapsed")?.value === "true";
 
   return (
-    <html lang={locale} className={`${inter.variable} ${notoSansThai.variable}`}>
+    <html lang={locale} className={`${inter.variable} ${notoSansThaiLooped.variable}`}>
       <body className="antialiased" suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AppRouterCacheProvider>
