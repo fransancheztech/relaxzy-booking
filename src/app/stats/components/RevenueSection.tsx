@@ -9,6 +9,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { StatsResponse } from "@/types/stats";
 import { formatMoney } from "@/utils/formatMoney";
 import { formatBusinessBucketLabel } from "@/utils/businessTime";
+import TopDaysTable from "./TopDaysTable";
 
 export type Stream = "bookings" | "vouchers" | "tips";
 
@@ -229,6 +230,13 @@ const RevenueSection = ({ revenue, bucket, onBucketChange, streams, onStreamsCha
                 </BarChart>
               </ResponsiveContainer>
             ) : empty}
+          </Paper>
+        </Grid>
+
+        {/* Top days — counts the same streams as the charts above */}
+        <Grid size={12}>
+          <Paper elevation={1} sx={{ p: 2, borderRadius: 2 }}>
+            <TopDaysTable days={revenue.by_day} streams={streams} />
           </Paper>
         </Grid>
       </Grid>

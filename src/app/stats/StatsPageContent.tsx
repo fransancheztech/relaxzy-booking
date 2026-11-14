@@ -21,6 +21,7 @@ import BookingsSection from "./components/BookingsSection";
 import ClientSection from "./components/ClientSection";
 import VoucherSection from "./components/VoucherSection";
 import TipsSection from "./components/TipsSection";
+import TherapistsSection from "./components/TherapistsSection";
 
 const StatsPageContent = () => {
   const t = useTranslations("Stats");
@@ -249,6 +250,13 @@ const StatsPageContent = () => {
           {/* Bookings section */}
           <Box sx={{ mb: 4 }}>
             <BookingsSection bookings={data.bookings} financial={data.financial} />
+          </Box>
+
+          <Divider sx={{ mb: 4 }} />
+
+          {/* Therapists section */}
+          <Box sx={{ mb: 4 }}>
+            <TherapistsSection therapists={data.therapists} bucket={data.meta.date_bucket} />
           </Box>
 
           <Divider sx={{ mb: 4 }} />

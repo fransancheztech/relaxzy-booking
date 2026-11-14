@@ -6,6 +6,7 @@ import { StatsResponse, StatsRevenuePeriodPoint, StatsTipsPeriodPoint } from "@/
 import { therapistDisplayName } from "@/utils/therapistName";
 import { BUSINESS_TIMEZONE, PLACEHOLDER_CLIENT_NAMES } from "@/constants";
 import { voucherExpiredSql, voucherNotExpiredSql } from "@/lib/vouchers/expirySql";
+import { computeTherapistStats } from "@/lib/stats/therapistStats";
 
 const toNum = (v: unknown): number => Number(v ?? 0);
 
@@ -75,8 +76,11 @@ export async function GET(request: Request) {
   // Bucket a timestamptz column by the business calendar (Europe/Madrid), returning the
   // bucket start as a proper UTC instant: convert to Madrid wall-clock, floor, then convert
   // back to timestamptz interpreting the floored value as Madrid local.
-  const truncBusiness = (col: Prisma.Sql) =>
-    Prisma.sql`(date_trunc(${bSql}, ${col} AT TIME ZONE ${BUSINESS_TIMEZONE}) AT TIME ZONE ${BUSINESS_TIMEZONE})`;
+  const truncTo = (unit: Prisma.Sql) => (col: Prisma.Sql) =>
+    Prisma.sql`(date_trunc(${unit}, ${col} AT TIME ZONE ${BUSINESS_TIMEZONE}) AT TIME ZONE ${BUSINESS_TIMEZONE})`;
+  const truncBusiness = truncTo(bSql);
+  // Business days, whatever the chart's bucket: the Top days table ranks single days.
+  const truncDay = truncTo(bucketSql("day"));
 
   // Revenue attribution basis for BOOKING payments (default = payment/cash basis):
   //  - "payment": the payment event's own date (money counted when taken).
@@ -129,32 +133,37 @@ export async function GET(request: Request) {
       WHERE v.deleted_at IS NULL AND p.deleted_at IS NULL AND pe.deleted_at IS NULL
         AND v.created_at >= ${from} AND v.created_at < ${to}
     `;
-    const revenueOverTimeRows = await prisma.$queryRaw<{ period: Date; cash: number; credit_card: number; refunds: number }[]>`
-      SELECT
-        ${truncBusiness(bookingDateCol)} AS period,
-        COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'cash'), 0)::float AS cash,
-        COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'credit_card'), 0)::float AS credit_card,
-        COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0)::float AS refunds
-      FROM payment_events pe
-      JOIN payments p ON p.id = pe.payment_id
-      JOIN bookings b ON b.id = p.booking_id
-      WHERE b.deleted_at IS NULL AND p.deleted_at IS NULL AND pe.deleted_at IS NULL
-        AND ${bookingDateCol} >= ${from} AND ${bookingDateCol} < ${to}
-      GROUP BY period ORDER BY period
-    `;
-    const voucherOverTimeRows = await prisma.$queryRaw<{ period: Date; cash: number; credit_card: number; refunds: number }[]>`
-      SELECT
-        ${truncBusiness(Prisma.sql`v.created_at`)} AS period,
-        COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'cash'), 0)::float AS cash,
-        COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'credit_card'), 0)::float AS credit_card,
-        COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0)::float AS refunds
-      FROM payment_events pe
-      JOIN payments p ON p.id = pe.payment_id
-      JOIN vouchers v ON v.id = p.voucher_id
-      WHERE v.deleted_at IS NULL AND p.deleted_at IS NULL AND pe.deleted_at IS NULL
-        AND v.created_at >= ${from} AND v.created_at < ${to}
-      GROUP BY period ORDER BY period
-    `;
+    // Booking and voucher-sale revenue per period; `trunc` picks the period (chart bucket or day).
+    const bookingRevenueByPeriod = (trunc: (col: Prisma.Sql) => Prisma.Sql) =>
+      prisma.$queryRaw<{ period: Date; cash: number; credit_card: number; refunds: number }[]>`
+        SELECT
+          ${trunc(bookingDateCol)} AS period,
+          COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'cash'), 0)::float AS cash,
+          COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'credit_card'), 0)::float AS credit_card,
+          COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0)::float AS refunds
+        FROM payment_events pe
+        JOIN payments p ON p.id = pe.payment_id
+        JOIN bookings b ON b.id = p.booking_id
+        WHERE b.deleted_at IS NULL AND p.deleted_at IS NULL AND pe.deleted_at IS NULL
+          AND ${bookingDateCol} >= ${from} AND ${bookingDateCol} < ${to}
+        GROUP BY period ORDER BY period
+      `;
+    const voucherRevenueByPeriod = (trunc: (col: Prisma.Sql) => Prisma.Sql) =>
+      prisma.$queryRaw<{ period: Date; cash: number; credit_card: number; refunds: number }[]>`
+        SELECT
+          ${trunc(Prisma.sql`v.created_at`)} AS period,
+          COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'cash'), 0)::float AS cash,
+          COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'CHARGE' AND pe.method = 'credit_card'), 0)::float AS credit_card,
+          COALESCE(SUM(pe.amount) FILTER (WHERE pe.type = 'REFUND'), 0)::float AS refunds
+        FROM payment_events pe
+        JOIN payments p ON p.id = pe.payment_id
+        JOIN vouchers v ON v.id = p.voucher_id
+        WHERE v.deleted_at IS NULL AND p.deleted_at IS NULL AND pe.deleted_at IS NULL
+          AND v.created_at >= ${from} AND v.created_at < ${to}
+        GROUP BY period ORDER BY period
+      `;
+    const revenueOverTimeRows = await bookingRevenueByPeriod(truncBusiness);
+    const voucherOverTimeRows = await voucherRevenueByPeriod(truncBusiness);
     // Revenue per therapist — booking payments only (cash + card − refunds), attributed
     // to the booking's therapist by service date. Vouchers and unassigned bookings aren't
     // therapist-keyed, so they're excluded. Includes inactive/deleted therapists who had
@@ -511,44 +520,59 @@ export async function GET(request: Request) {
     const refundsTotal = toNum(rev.refunds) + toNum(vrev.refunds);
     const totalRevenue = cashTotal + cardTotal - refundsTotal;
 
-    // Revenue over time, kept split by stream (bookings / vouchers) so the card can
+    // Revenue per period, kept split by stream (bookings / vouchers / tips) so the card can
     // toggle each. Each stream keeps its cash/card/refunds so the bars and tooltip
     // still break down by payment method.
-    const overtimeMap = new Map<string, StatsRevenuePeriodPoint>();
-    const ensurePoint = (key: string) => {
-      let p = overtimeMap.get(key);
-      if (!p) {
-        p = {
-          period: key,
-          bookings: { cash: 0, credit_card: 0, refunds: 0 },
-          vouchers: { cash: 0, credit_card: 0, refunds: 0 },
-          tips: { cash: 0, credit_card: 0, refunds: 0 },
-        };
-        overtimeMap.set(key, p);
-      }
-      return p;
+    type PeriodRow = { period: Date; cash: number; credit_card: number; refunds?: number };
+    const revenuePeriods = (bookingRows: PeriodRow[], voucherRows: PeriodRow[], tipRows: PeriodRow[]) => {
+      const periods = new Map<string, StatsRevenuePeriodPoint>();
+      const ensurePoint = (key: string) => {
+        let p = periods.get(key);
+        if (!p) {
+          p = {
+            period: key,
+            bookings: { cash: 0, credit_card: 0, refunds: 0 },
+            vouchers: { cash: 0, credit_card: 0, refunds: 0 },
+            tips: { cash: 0, credit_card: 0, refunds: 0 },
+          };
+          periods.set(key, p);
+        }
+        return p;
+      };
+      const add = (rows: PeriodRow[], stream: "bookings" | "vouchers" | "tips") => {
+        for (const row of rows) {
+          const s = ensurePoint(new Date(row.period).toISOString())[stream];
+          s.cash += toNum(row.cash);
+          s.credit_card += toNum(row.credit_card);
+          s.refunds += toNum(row.refunds);
+        }
+      };
+      add(bookingRows, "bookings");
+      add(voucherRows, "vouchers");
+      // Tips (summed across therapists) are an opt-in stream and have no refunds.
+      add(tipRows, "tips");
+      return Array.from(periods.values()).sort((a, b) => a.period.localeCompare(b.period));
     };
-    for (const row of revenueOverTimeRows) {
-      const b = ensurePoint(new Date(row.period).toISOString()).bookings;
-      b.cash += toNum(row.cash);
-      b.credit_card += toNum(row.credit_card);
-      b.refunds += toNum(row.refunds);
-    }
-    for (const row of voucherOverTimeRows) {
-      const v = ensurePoint(new Date(row.period).toISOString()).vouchers;
-      v.cash += toNum(row.cash);
-      v.credit_card += toNum(row.credit_card);
-      v.refunds += toNum(row.refunds);
-    }
-    // Tips per period (summed across therapists); opt-in stream on the revenue chart.
-    for (const row of tipsOverTimeRows) {
-      const tp = ensurePoint(new Date(row.period).toISOString()).tips;
-      tp.cash += toNum(row.cash);
-      tp.credit_card += toNum(row.credit_card);
-    }
-    const revenueOverTime = Array.from(overtimeMap.values()).sort((a, b) =>
-      a.period.localeCompare(b.period)
-    );
+    const revenueOverTime = revenuePeriods(revenueOverTimeRows, voucherOverTimeRows, tipsOverTimeRows);
+
+    // The same figures per business day, for the Top days table. When the chart already shows
+    // days, they are the same series.
+    const revenueByDay = bucket === "day"
+      ? revenueOverTime
+      : revenuePeriods(
+          await bookingRevenueByPeriod(truncDay),
+          await voucherRevenueByPeriod(truncDay),
+          await prisma.$queryRaw<PeriodRow[]>`
+            SELECT ${truncDay(Prisma.sql`b.start_time`)} AS period,
+              COALESCE(SUM(t.amount) FILTER (WHERE t.payment_method = 'cash'), 0)::float AS cash,
+              COALESCE(SUM(t.amount) FILTER (WHERE t.payment_method = 'credit_card'), 0)::float AS credit_card
+            FROM tips t
+            JOIN bookings b ON b.id = t.booking_id
+            WHERE t.deleted_at IS NULL
+              AND b.start_time >= ${from} AND b.start_time < ${to}
+            GROUP BY period
+          `,
+        );
 
     // --- Bookings ---
     const bs = bookingSummaryRows[0] ?? {
@@ -669,6 +693,9 @@ export async function GET(request: Request) {
       a.period.localeCompare(b.period)
     );
 
+    // Workload, requests, revenue and booking-rule checks per therapist.
+    const therapistStats = await computeTherapistStats(from, to, bucket);
+
     const response: StatsResponse = {
       meta: { from: from.toISOString(), to: to.toISOString(), date_bucket: bucket, basis },
 
@@ -678,6 +705,7 @@ export async function GET(request: Request) {
         credit_card: cardTotal,
         refunds_total: refundsTotal,
         over_time: revenueOverTime,
+        by_day: revenueByDay,
         by_therapist: revenueByTherapistRows.map((r) => ({
           therapist_id: r.therapist_id,
           therapist_name: r.therapist_name,
@@ -741,6 +769,8 @@ export async function GET(request: Request) {
           spend_card: toNum(r.spend_card),
         })),
       },
+
+      therapists: therapistStats,
 
       tips: {
         tip_count: tipCount,

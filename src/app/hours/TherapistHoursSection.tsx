@@ -22,20 +22,13 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
+import { formatHours } from "@/utils/formatHours";
 
 interface HoursRow {
   therapist_id: string;
   full_name: string;
   booking_count: number;
   total_hours: number;
-}
-
-function formatHours(h: number) {
-  const totalMinutes = Math.round(h * 60);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  if (minutes === 0) return `${hours}h`;
-  return `${hours}h ${minutes}min`;
 }
 
 export default function TherapistHoursSection({
