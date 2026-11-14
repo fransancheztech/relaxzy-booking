@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 
 const IVA_RATE = 0.21;
 
@@ -31,7 +32,10 @@ export async function POST(request: Request) {
       if (tip.iva_applies) ivaTotal += amount * IVA_RATE;
     }
 
+    const performed_by = await getCurrentUserId();
     const payout = await prisma.$transaction(async (tx) => {
+      // Attribute the tips_log rows the trigger writes for the released tips.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
       const created = await tx.tip_payouts.create({
         data: {
           therapist_id,

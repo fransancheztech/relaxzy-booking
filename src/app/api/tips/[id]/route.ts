@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ivaAppliesForTipMethod } from "@/utils/tipIva";
+import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 
 const VALID_METHODS = ["cash", "credit_card"] as const;
 
@@ -41,7 +42,12 @@ export async function PATCH(
 
     if (Object.keys(data).length === 0) return NextResponse.json({ error: "No fields to update" }, { status: 400 });
 
-    await prisma.tips.update({ where: { id }, data });
+    const performed_by = await getCurrentUserId();
+    await prisma.$transaction(async (tx) => {
+      // Attribute the tips_log row the trigger writes for this edit.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
+      await tx.tips.update({ where: { id }, data });
+    });
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("PATCH /api/tips/[id] error", err);
@@ -77,12 +83,17 @@ export async function DELETE(
     }
 
     const reasonNote = `Reason of delete: ${reason}`;
-    await prisma.tips.update({
-      where: { id },
-      data: {
-        deleted_at: new Date(),
-        notes: tip.notes?.trim() ? `${tip.notes.trim()} ${reasonNote}` : reasonNote,
-      },
+    const performed_by = await getCurrentUserId();
+    await prisma.$transaction(async (tx) => {
+      // Attribute the tips_log row the trigger writes for this deletion.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
+      await tx.tips.update({
+        where: { id },
+        data: {
+          deleted_at: new Date(),
+          notes: tip.notes?.trim() ? `${tip.notes.trim()} ${reasonNote}` : reasonNote,
+        },
+      });
     });
 
     return NextResponse.json({ ok: true });

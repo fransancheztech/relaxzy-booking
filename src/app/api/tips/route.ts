@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { tip_payment_method } from "generated/prisma";
 import { ivaAppliesForTipMethod } from "@/utils/tipIva";
+import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -58,16 +59,21 @@ export async function POST(request: Request) {
       );
     }
 
-    const tip = await prisma.tips.create({
-      data: {
-        booking_id,
-        therapist_id,
-        amount: parsedAmount,
-        payment_method: payment_method as tip_payment_method,
-        iva_applies: ivaAppliesForTipMethod(payment_method),
-        notes: notes?.trim() || null,
-      },
-      include: { therapists: { select: { id: true, nickname: true, name: true, surname: true } } },
+    const performed_by = await getCurrentUserId();
+    const tip = await prisma.$transaction(async (tx) => {
+      // Attribute the tips_log row the trigger writes for this tip.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
+      return tx.tips.create({
+        data: {
+          booking_id,
+          therapist_id,
+          amount: parsedAmount,
+          payment_method: payment_method as tip_payment_method,
+          iva_applies: ivaAppliesForTipMethod(payment_method),
+          notes: notes?.trim() || null,
+        },
+        include: { therapists: { select: { id: true, nickname: true, name: true, surname: true } } },
+      });
     });
 
     return NextResponse.json({ tip });

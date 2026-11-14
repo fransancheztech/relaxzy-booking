@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
+import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 
 const IVA_RATE = 0.21;
 
@@ -36,7 +37,10 @@ export async function POST(request: Request) {
     }
 
     let tipsReleased = 0;
+    const performed_by = await getCurrentUserId();
     await prisma.$transaction(async (tx) => {
+      // Attribute the tips_log rows the trigger writes for the released tips.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
       for (const [therapist_id, bucket] of groupMap) {
         let gross = 0;
         let ivaTotal = 0;
