@@ -1,35 +1,21 @@
-// middleware.ts
-import { NextRequest, NextResponse } from "next/server";
-import { createCustomServerClient } from "@/utils/supabase/server";
+import { type NextRequest } from "next/server";
+import { updateSession } from "@/utils/supabase/middleware";
 
-export async function proxy(req: NextRequest) {
-  const res = NextResponse.next();
-
-  // Initialize Supabase server client with cookie handling
-  const supabase = await createCustomServerClient();
-
-  // Read the current user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const url = req.nextUrl.clone();
-
-  // If not authenticated and not on login page, redirect
-  if (!user && url.pathname !== "/login") {
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
-
-  // If authenticated and on login page, redirect
-  if (user && url.pathname === "/login") {
-    url.pathname = "/calendar";
-    return NextResponse.redirect(url);
-  }
-
-  return res;
+// The app's only login check, run by Next.js before every page and API route: it refreshes the
+// Supabase session, sends signed-out visitors to /login (except /login itself and the /auth email
+// links) and signed-in ones from /login to the calendar. See updateSession.
+export async function proxy(request: NextRequest) {
+  return await updateSession(request);
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    /*
+     * Every path except:
+     * - _next/static, _next/image (build files) and favicon.ico
+     * - /error (the error page must show to anyone)
+     * - images in /public, such as the logo on the login page
+     */
+    "/((?!_next/static|_next/image|favicon.ico|error|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };

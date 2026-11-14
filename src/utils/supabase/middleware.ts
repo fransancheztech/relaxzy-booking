@@ -48,6 +48,16 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Already signed in: the login page leads straight to the calendar. The redirect carries the
+  // refreshed session cookies (see the note below).
+  if (user && request.nextUrl.pathname === '/login') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/calendar'
+    const redirect = NextResponse.redirect(url)
+    supabaseResponse.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie))
+    return redirect
+  }
+
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:
   // 1. Pass the request in it, like so:
