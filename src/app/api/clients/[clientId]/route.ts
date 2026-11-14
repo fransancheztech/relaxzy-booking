@@ -13,6 +13,7 @@ import {
 import { resolvePhoneUpdate } from "@/utils/phone";
 import { canonicalEmail } from "@/utils/email";
 import { normalizeClientName, normalizeClientSurname } from "@/utils/names";
+import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 
 export async function GET(
   _: Request,
@@ -89,16 +90,21 @@ export async function PUT(
       excludeClientId: clientId,
     });
 
-    const updatedClient = await prisma.clients.update({
-      where: { id: clientId },
-      data: {
-        client_name: normalizeClientName(body.client_name),
-        client_surname: normalizeClientSurname(body.client_surname),
-        client_email: normalizedEmail,
-        client_phone: phoneWrite.value,
-        client_notes: normalizedNotes,
-        updated_at: new Date(),
-      },
+    const performed_by = await getCurrentUserId();
+    const updatedClient = await prisma.$transaction(async (tx) => {
+      // Attribute the clients_history row the trigger writes for this edit.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
+      return tx.clients.update({
+        where: { id: clientId },
+        data: {
+          client_name: normalizeClientName(body.client_name),
+          client_surname: normalizeClientSurname(body.client_surname),
+          client_email: normalizedEmail,
+          client_phone: phoneWrite.value,
+          client_notes: normalizedNotes,
+          updated_at: new Date(),
+        },
+      });
     });
 
     return NextResponse.json(updatedClient);

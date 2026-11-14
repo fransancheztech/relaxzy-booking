@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
+import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 import { UpdateTherapistSchema } from "@/schemas/therapist.schema";
 import { formatZodError } from "@/utils/zodApiError";
 import { canonicalPhone } from "@/utils/phone";
@@ -23,18 +24,23 @@ export async function POST(req: Request) {
   try {
     // Therapists are plain records (no per-therapist login under the shared-account
     // model), so the id is generated and the therapist is created active/bookable.
-    const therapist = await prisma.therapists.create({
-      data: {
-        nickname: normalize(nickname),
-        name: normalize(name),
-        surname: normalize(surname),
-        email: normalize(email),
-        // Stored as E.164, the same rule as client phones.
-        phone: canonicalPhone(phone),
-        notes: normalize(notes),
-        active: true,
-        ...(off_days !== undefined && { off_days }),
-      },
+    const performed_by = await getCurrentUserId();
+    const therapist = await prisma.$transaction(async (tx) => {
+      // Attribute the therapists_history row the trigger writes for this therapist.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
+      return tx.therapists.create({
+        data: {
+          nickname: normalize(nickname),
+          name: normalize(name),
+          surname: normalize(surname),
+          email: normalize(email),
+          // Stored as E.164, the same rule as client phones.
+          phone: canonicalPhone(phone),
+          notes: normalize(notes),
+          active: true,
+          ...(off_days !== undefined && { off_days }),
+        },
+      });
     });
     return NextResponse.json({ success: true, therapist });
   } catch (err) {

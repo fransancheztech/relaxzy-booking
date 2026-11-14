@@ -13,6 +13,7 @@ import {
 import { canonicalPhone } from "@/utils/phone";
 import { canonicalEmail } from "@/utils/email";
 import { normalizeClientName, normalizeClientSurname } from "@/utils/names";
+import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 
 const norm = (v?: string | null) => (v && v.trim() !== "" ? v.trim() : null);
 
@@ -39,13 +40,18 @@ export async function POST(request: Request) {
     // any format, so the same number typed with spaces still collides.
     await assertContactFree(prisma, { email, phone });
 
-    const client = await prisma.clients.create({
-      data: {
-        client_name: normalizeClientName(body.client_name),
-        client_surname: normalizeClientSurname(body.client_surname),
-        client_email: email,
-        client_phone: canonicalPhone(phone),
-      },
+    const performed_by = await getCurrentUserId();
+    const client = await prisma.$transaction(async (tx) => {
+      // Attribute the clients_history row the trigger writes for this client.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
+      return tx.clients.create({
+        data: {
+          client_name: normalizeClientName(body.client_name),
+          client_surname: normalizeClientSurname(body.client_surname),
+          client_email: email,
+          client_phone: canonicalPhone(phone),
+        },
+      });
     });
 
     return NextResponse.json({ client });

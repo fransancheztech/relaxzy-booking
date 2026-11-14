@@ -104,6 +104,9 @@ export async function POST(request: Request) {
     const actor = await getCurrentUserId();
 
     const mergeId = await prisma.$transaction(async (tx) => {
+      // Attribute the clients_history rows the trigger writes before merge_clients (which sets
+      // the same value itself) runs.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${actor}, true)`;
       for (const id of separateIds) {
         const row = rows.find((r) => r.id === id)!;
         await tx.clients.update({

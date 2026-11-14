@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { BaseServiceSchema } from "@/schemas/service.schema";
+import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 
 export async function GET(
   req: NextRequest,
@@ -55,7 +56,10 @@ export async function PATCH(
 
     const { name, short_name, notes, duration_prices } = parsed.data;
 
+    const performed_by = await getCurrentUserId();
     await prisma.$transaction(async (tx) => {
+      // Attribute the services history rows the triggers write in this transaction.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
       await tx.services_names.update({
         where: { id },
         data: { name, short_name, notes },
@@ -129,7 +133,10 @@ export async function DELETE(
   }
 
   try {
+    const performed_by = await getCurrentUserId();
     await prisma.$transaction(async (tx) => {
+      // Attribute the services history rows the triggers write in this transaction.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
       // Check service exists and is not already deleted
       const service = await tx.services_names.findFirst({
         where: { id, deleted_at: null },

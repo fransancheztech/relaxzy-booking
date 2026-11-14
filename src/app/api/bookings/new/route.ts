@@ -11,6 +11,7 @@ import {
 import { CLIENT_CONTACT_TAKEN, CLIENT_NAME_CONFLICT } from "@/types/clientConflict";
 import { ContactTakenError, contactTakenBody } from "@/lib/clients/contactCollision";
 import type { ClientConflict, ClientResolution } from "@/types/clientConflict";
+import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 
 type CompanionInput = {
   service_name?: string;
@@ -179,7 +180,11 @@ export async function POST(request: Request) {
     const isGroup = companions.length > 0;
     const groupId = isGroup ? crypto.randomUUID() : null;
 
+    const performed_by = await getCurrentUserId();
     const { booking, companionBookings } = await prisma.$transaction(async (tx) => {
+      // Attribute the history rows the triggers write in this transaction (bookings and clients).
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
+
       // Phase 1 — detect conflicts (primary + companions with their own client)
       const conflicts: ClientConflict[] = [];
       const primaryConflict = await detectClientConflict(tx, "primary", body, resolutions["primary"]);

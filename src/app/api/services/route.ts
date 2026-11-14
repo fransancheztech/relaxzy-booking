@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { BaseServiceSchema } from "@/schemas/service.schema";
+import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 
 // GET /api/services
 // Returns service names with their available durations and prices
@@ -68,7 +69,11 @@ export async function POST(req: NextRequest) {
 
     const { name, short_name, notes, duration_prices } = parsed;
 
+    const performed_by = await getCurrentUserId();
     const result = await prisma.$transaction(async (tx) => {
+      // Attribute the services history rows the triggers write in this transaction.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
+
       // 1️⃣ Create service name
       const service = await tx.services_names.create({
         data: {

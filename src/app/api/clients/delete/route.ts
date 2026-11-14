@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hasUsage, loadClientUsage } from "@/lib/clients/clientUsage";
+import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 
 const MAX_NOTE = 500;
 
@@ -23,7 +24,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "NOTE_REQUIRED" }, { status: 400 });
     }
 
+    const performed_by = await getCurrentUserId();
     const result = await prisma.$transaction(async (tx) => {
+      // Attribute the clients_history row the trigger writes for the deletion.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
       const client = await tx.clients.findFirst({
         where: { id, deleted_at: null },
         select: { id: true, client_notes: true },

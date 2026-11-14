@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { therapistDisplayName } from "@/utils/therapistName";
+import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 
 /* ======================================================
    GET /api/bookings/[id]/group
@@ -99,6 +100,7 @@ export async function PATCH(
     }
 
     const body = (await req.json()) as { action?: string; targetId?: string };
+    const performed_by = await getCurrentUserId();
 
     if (body.action === "add") {
       const targetId = body.targetId;
@@ -107,6 +109,8 @@ export async function PATCH(
       }
 
       const result = await prisma.$transaction(async (tx) => {
+        // Attribute the bookings_history rows the trigger writes in this transaction.
+        await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
         const current = await tx.bookings.findUnique({
           where: { id, deleted_at: null },
           select: { booking_group_id: true },
@@ -157,6 +161,8 @@ export async function PATCH(
     }
 
     const result = await prisma.$transaction(async (tx) => {
+      // Attribute the bookings_history rows the trigger writes in this transaction.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
       const current = await tx.bookings.findUnique({
         where: { id, deleted_at: null },
         select: { booking_group_id: true },

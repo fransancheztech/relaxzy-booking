@@ -228,7 +228,10 @@ export async function PUT(
     /* -----------------------------
        Update (soft-delete aware)
        ----------------------------- */
+    const performed_by = await getCurrentUserId();
     const updated = await prisma.$transaction(async (tx) => {
+      // Attribute the history rows the triggers write in this transaction (booking and client).
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by ?? ""}, true)`;
       const currentBooking = await tx.bookings.findUnique({
         where: { id, deleted_at: null },
         select: { status: true },

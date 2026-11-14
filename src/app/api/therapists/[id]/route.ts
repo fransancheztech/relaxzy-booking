@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
+import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
 import { UpdateTherapistSchema } from "@/schemas/therapist.schema";
 import { formatZodError } from "@/utils/zodApiError";
 import { canonicalPhone } from "@/utils/phone";
@@ -34,20 +35,25 @@ export async function PUT(
   }
   const { nickname, name, surname, email, phone, notes, active, off_days } = parsed.data;
   const norm = (v?: string) => (v && v.trim() !== "" ? v.trim() : null);
-  const updated = await prisma.therapists.update({
-    where: { id },
-    data: {
-      nickname: norm(nickname),
-      name: norm(name),
-      surname: norm(surname),
-      email: norm(email),
-      // Stored as E.164, the same rule as client phones. No unique index here, so there is
-      // no duplicate-sibling case to protect and the value is always rewritten canonically.
-      phone: canonicalPhone(phone),
-      notes: norm(notes),
-      ...(active !== undefined && { active }),
-      ...(off_days !== undefined && { off_days }),
-    },
+  const performed_by = await getCurrentUserId();
+  const updated = await prisma.$transaction(async (tx) => {
+    // Attribute the therapists_history row the trigger writes for this edit.
+    await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
+    return tx.therapists.update({
+      where: { id },
+      data: {
+        nickname: norm(nickname),
+        name: norm(name),
+        surname: norm(surname),
+        email: norm(email),
+        // Stored as E.164, the same rule as client phones. No unique index here, so there is
+        // no duplicate-sibling case to protect and the value is always rewritten canonically.
+        phone: canonicalPhone(phone),
+        notes: norm(notes),
+        ...(active !== undefined && { active }),
+        ...(off_days !== undefined && { off_days }),
+      },
+    });
   });
   return NextResponse.json(updated);
 }
@@ -65,9 +71,14 @@ export async function PATCH(
 
   const { id } = await context.params;
 
-  const restored = await prisma.therapists.update({
-    where: { id },
-    data: { deleted_at: null, active: true },
+  const performed_by = await getCurrentUserId();
+  const restored = await prisma.$transaction(async (tx) => {
+    // Attribute the therapists_history row the trigger writes for the restore.
+    await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
+    return tx.therapists.update({
+      where: { id },
+      data: { deleted_at: null, active: true },
+    });
   });
 
   return NextResponse.json(restored, { status: 200 });
@@ -90,9 +101,14 @@ export async function DELETE(
   // Soft delete: just set deleted_at to now()
   const now = new Date();
 
-  const softDeleted = await prisma.therapists.update({
-    where: { id },
-    data: { deleted_at: now },
+  const performed_by = await getCurrentUserId();
+  const softDeleted = await prisma.$transaction(async (tx) => {
+    // Attribute the therapists_history row the trigger writes for the archiving.
+    await tx.$queryRaw`SELECT set_config('app.user_id', ${performed_by}, true)`;
+    return tx.therapists.update({
+      where: { id },
+      data: { deleted_at: now },
+    });
   });
 
   return NextResponse.json(softDeleted, { status: 200 });
