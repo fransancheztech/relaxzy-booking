@@ -55,14 +55,18 @@ export async function PATCH(
   const existing = await findWritableNote(id, viewer.role);
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const note = await prisma.agenda_notes.update({
-    where: { id },
-    data: {
-      note_date: dateOnlyToUtcDate(parsed.data.note_date),
-      content: parsed.data.content.trim(),
-      target_roles: parsed.data.target_roles,
-      updated_at: new Date(),
-    },
+  const note = await prisma.$transaction(async (tx) => {
+    // Attribute the agenda_notes_log row the trigger writes for this edit.
+    await tx.$queryRaw`SELECT set_config('app.user_id', ${viewer.id}, true)`;
+    return tx.agenda_notes.update({
+      where: { id },
+      data: {
+        note_date: dateOnlyToUtcDate(parsed.data.note_date),
+        content: parsed.data.content.trim(),
+        target_roles: parsed.data.target_roles,
+        updated_at: new Date(),
+      },
+    });
   });
 
   return NextResponse.json({ note: { ...note, note_date: utcDateToDateOnly(note.note_date) } });
@@ -82,9 +86,13 @@ export async function DELETE(
   const existing = await findWritableNote(id, viewer.role);
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  await prisma.agenda_notes.update({
-    where: { id },
-    data: { deleted_at: new Date() },
+  await prisma.$transaction(async (tx) => {
+    // Attribute the agenda_notes_log row the trigger writes for this deletion.
+    await tx.$queryRaw`SELECT set_config('app.user_id', ${viewer.id}, true)`;
+    await tx.agenda_notes.update({
+      where: { id },
+      data: { deleted_at: new Date() },
+    });
   });
 
   return NextResponse.json({ ok: true });

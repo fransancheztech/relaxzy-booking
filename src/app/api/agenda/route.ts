@@ -88,13 +88,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Forbidden audience" }, { status: 403 });
   }
 
-  const note = await prisma.agenda_notes.create({
-    data: {
-      note_date: dateOnlyToUtcDate(parsed.data.note_date),
-      content: parsed.data.content.trim(),
-      target_roles: parsed.data.target_roles,
-      author_id: viewer.id,
-    },
+  const note = await prisma.$transaction(async (tx) => {
+    // Attribute the agenda_notes_log row the trigger writes for this note.
+    await tx.$queryRaw`SELECT set_config('app.user_id', ${viewer.id}, true)`;
+    return tx.agenda_notes.create({
+      data: {
+        note_date: dateOnlyToUtcDate(parsed.data.note_date),
+        content: parsed.data.content.trim(),
+        target_roles: parsed.data.target_roles,
+        author_id: viewer.id,
+      },
+    });
   });
 
   return NextResponse.json({ note: serialize(note) }, { status: 201 });
