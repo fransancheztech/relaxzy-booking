@@ -14,11 +14,12 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import HistoryIcon from "@mui/icons-material/History";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { formatBusinessDate } from "@/utils/businessTime";
 import { useRole } from "@/hooks/useRole";
@@ -31,6 +32,7 @@ import {
   pickTranslation,
 } from "@/lib/guidelines/languages";
 import { guidelineLabel, useGuidelines, type Guideline } from "../GuidelinesShell";
+import GuidelineVersionsDialog from "../GuidelineVersionsDialog";
 
 const ROLE_LABEL_KEYS: Record<string, string> = {
   admin: "roleAdmin",
@@ -63,6 +65,7 @@ export default function GuidelinePage() {
   const searchParams = useSearchParams();
   const requested = searchParams.get("lang");
   const wanted = isGuidelineLanguage(requested) ? requested : locale;
+  const [versionsOpen, setVersionsOpen] = useState(false);
 
   const index = guidelines.findIndex((g) => g.id === id);
   const guideline = index >= 0 ? guidelines[index] : null;
@@ -159,6 +162,11 @@ export default function GuidelinePage() {
             </Box>
             {isAdmin && (
               <Box sx={{ display: "flex", flexShrink: 0 }}>
+                <Tooltip title={t("versions")}>
+                  <IconButton size="small" onClick={() => setVersionsOpen(true)}>
+                    <HistoryIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
                 <Tooltip title={tCommon("edit")}>
                   <IconButton size="small" onClick={() => edit(guideline, version.language)}>
                     <EditIcon fontSize="small" />
@@ -173,6 +181,16 @@ export default function GuidelinePage() {
             )}
           </Box>
         </Paper>
+
+        {isAdmin && (
+          <GuidelineVersionsDialog
+            open={versionsOpen}
+            guidelineId={guideline.id}
+            label={guidelineLabel(guideline, version.language)}
+            language={version.language}
+            onClose={() => setVersionsOpen(false)}
+          />
+        )}
 
         {(prev || next) && (
           <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
