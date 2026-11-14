@@ -41,6 +41,8 @@ export async function PATCH(
 
   try {
     const updated = await prisma.$transaction(async (tx) => {
+      // Attribute the guidelines_log rows the triggers write for this save.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${viewer.id}, true)`;
       const now = new Date();
       const guideline = await tx.guidelines.update({
         where: { id, deleted_at: null },
@@ -92,9 +94,13 @@ export async function DELETE(
   const { id } = await context.params;
 
   try {
-    await prisma.guidelines.update({
-      where: { id, deleted_at: null },
-      data: { deleted_at: new Date() },
+    await prisma.$transaction(async (tx) => {
+      // Attribute the guidelines_log row the trigger writes for the deletion.
+      await tx.$queryRaw`SELECT set_config('app.user_id', ${viewer.id}, true)`;
+      await tx.guidelines.update({
+        where: { id, deleted_at: null },
+        data: { deleted_at: new Date() },
+      });
     });
     return NextResponse.json({ ok: true });
   } catch (err: any) {

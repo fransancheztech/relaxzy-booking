@@ -65,12 +65,16 @@ export async function POST(request: Request) {
     );
   }
 
-  const created = await prisma.guidelines.create({
-    data: {
-      author_id: viewer.id,
-      target_roles: parsed.data.target_roles,
-      guideline_translations: { create: filledTranslations(parsed.data.translations) },
-    },
+  const created = await prisma.$transaction(async (tx) => {
+    // Attribute the guidelines_log rows the triggers write for the guideline and its versions.
+    await tx.$queryRaw`SELECT set_config('app.user_id', ${viewer.id}, true)`;
+    return tx.guidelines.create({
+      data: {
+        author_id: viewer.id,
+        target_roles: parsed.data.target_roles,
+        guideline_translations: { create: filledTranslations(parsed.data.translations) },
+      },
+    });
   });
 
   return NextResponse.json({ guideline: created });
