@@ -25,8 +25,16 @@ import { formatMoney } from "@/utils/formatMoney";
 import type { Stream } from "./RevenueSection";
 
 type Metric = "total" | "cash" | "card";
+type Unit = "day" | "week" | "month" | "year";
 
 const LIMITS = [10, 25, 50, 100] as const;
+
+const UNIT_KEYS: Record<Unit, { toggle: string; title: string; column: string }> = {
+  day: { toggle: "periodDays", title: "topDaysTitle", column: "topDaysColDay" },
+  week: { toggle: "periodWeeks", title: "topWeeksTitle", column: "topColWeek" },
+  month: { toggle: "periodMonths", title: "topMonthsTitle", column: "topColMonth" },
+  year: { toggle: "periodYears", title: "topYearsTitle", column: "topColYear" },
+};
 
 interface Props {
   days: StatsRevenuePeriodPoint[];
@@ -34,11 +42,17 @@ interface Props {
   streams: Stream[];
 }
 
-/** The best days of the period by revenue, counting the streams selected for the section. */
+/**
+ * The best days, weeks, months or years of the period by revenue, counting the streams selected
+ * for the section. Longer periods are added up from the days, in business time (weeks start on
+ * Monday), so they only count the dates selected on the page.
+ */
 const TopDaysTable = ({ days, streams }: Props) => {
   const t = useTranslations("Stats");
+  const tk = (key: string) => t(key as Parameters<typeof t>[0]);
   const locale = useLocale();
 
+  const [unit, setUnit] = useState<Unit>("day");
   const [metric, setMetric] = useState<Metric>("total");
   const [limit, setLimit] = useState<number>(10);
 
@@ -46,22 +60,37 @@ const TopDaysTable = ({ days, streams }: Props) => {
     const has = (s: Stream) => streams.includes(s);
     const valueOf = (r: { cash: number; card: number; total: number }) =>
       metric === "cash" ? r.cash : metric === "card" ? r.card : r.total;
-    return days
-      .map((d) => {
-        const cash = (has("bookings") ? d.bookings.cash : 0) + (has("vouchers") ? d.vouchers.cash : 0) + (has("tips") ? d.tips.cash : 0);
-        const card = (has("bookings") ? d.bookings.credit_card : 0) + (has("vouchers") ? d.vouchers.credit_card : 0) + (has("tips") ? d.tips.credit_card : 0);
-        const refunds = (has("bookings") ? d.bookings.refunds : 0) + (has("vouchers") ? d.vouchers.refunds : 0);
-        return { day: d.period, cash, card, refunds, total: cash + card - refunds };
-      })
-      // A day with nothing in the selected method is not a top day by that method.
+    const periods = new Map<string, { period: string; cash: number; card: number; refunds: number }>();
+    for (const d of days) {
+      const period = unit === "day"
+        ? d.period
+        : DateTime.fromISO(d.period, { zone: BUSINESS_TIMEZONE }).startOf(unit).toISO()!;
+      const p = periods.get(period) ?? { period, cash: 0, card: 0, refunds: 0 };
+      p.cash += (has("bookings") ? d.bookings.cash : 0) + (has("vouchers") ? d.vouchers.cash : 0) + (has("tips") ? d.tips.cash : 0);
+      p.card += (has("bookings") ? d.bookings.credit_card : 0) + (has("vouchers") ? d.vouchers.credit_card : 0) + (has("tips") ? d.tips.credit_card : 0);
+      p.refunds += (has("bookings") ? d.bookings.refunds : 0) + (has("vouchers") ? d.vouchers.refunds : 0);
+      periods.set(period, p);
+    }
+    return [...periods.values()]
+      .map((p) => ({ ...p, total: p.cash + p.card - p.refunds }))
+      // A period with nothing in the selected method is not a top period by that method.
       .filter((r) => valueOf(r) > 0)
-      .sort((a, b) => valueOf(b) - valueOf(a) || a.day.localeCompare(b.day))
+      .sort((a, b) => valueOf(b) - valueOf(a) || a.period.localeCompare(b.period))
       .slice(0, limit);
-  }, [days, streams, metric, limit]);
+  }, [days, streams, unit, metric, limit]);
 
   const showRefunds = rows.some((r) => r.refunds > 0);
-  const dayLabel = (iso: string) =>
-    DateTime.fromISO(iso, { zone: BUSINESS_TIMEZONE }).setLocale(locale).toFormat("ccc dd/MM/yyyy");
+  const periodLabel = (iso: string) => {
+    const dt = DateTime.fromISO(iso, { zone: BUSINESS_TIMEZONE }).setLocale(locale);
+    if (unit === "week") {
+      const end = dt.endOf("week");
+      // A week across New Year names both years.
+      return `${dt.toFormat(dt.year === end.year ? "ccc dd/MM" : "ccc dd/MM/yyyy")} – ${end.toFormat("ccc dd/MM/yyyy")}`;
+    }
+    if (unit === "month") return dt.toFormat("LLLL yyyy");
+    if (unit === "year") return dt.toFormat("yyyy");
+    return dt.toFormat("ccc dd/MM/yyyy");
+  };
   // The ranked column is set in bold, so the order reads at a glance.
   const ranked = (m: Metric) => (metric === m ? { fontWeight: 600 } : undefined);
 
@@ -69,8 +98,19 @@ const TopDaysTable = ({ days, streams }: Props) => {
     <Box>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1.5, flexWrap: "wrap" }}>
         <Typography variant="subtitle2" color="text.secondary" sx={{ flexShrink: 0 }}>
-          {t("topDaysTitle")}
+          {tk(UNIT_KEYS[unit].title)}
         </Typography>
+        <ToggleButtonGroup
+          value={unit}
+          exclusive
+          size="small"
+          onChange={(_, v: Unit | null) => { if (v) setUnit(v); }}
+          sx={{ "& .MuiToggleButton-root": { py: 0.25, px: 1, fontSize: "0.7rem" } }}
+        >
+          {(Object.keys(UNIT_KEYS) as Unit[]).map((u) => (
+            <ToggleButton key={u} value={u}>{tk(UNIT_KEYS[u].toggle)}</ToggleButton>
+          ))}
+        </ToggleButtonGroup>
         <ToggleButtonGroup
           value={metric}
           exclusive
@@ -102,7 +142,7 @@ const TopDaysTable = ({ days, streams }: Props) => {
             <TableHead>
               <TableRow sx={{ bgcolor: "action.hover" }}>
                 <TableCell sx={{ fontWeight: 600, width: 40 }}>#</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>{t("topDaysColDay")}</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>{tk(UNIT_KEYS[unit].column)}</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 600 }}>{t("cash")}</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 600 }}>{t("card")}</TableCell>
                 {showRefunds && <TableCell align="right" sx={{ fontWeight: 600 }}>{t("topDaysColRefunds")}</TableCell>}
@@ -111,9 +151,11 @@ const TopDaysTable = ({ days, streams }: Props) => {
             </TableHead>
             <TableBody>
               {rows.map((r, i) => (
-                <TableRow key={r.day} hover>
+                <TableRow key={r.period} hover>
                   <TableCell sx={{ color: "text.disabled" }}>{i + 1}</TableCell>
-                  <TableCell sx={{ whiteSpace: "nowrap" }}>{dayLabel(r.day)}</TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap", "&::first-letter": { textTransform: "uppercase" } }}>
+                    {periodLabel(r.period)}
+                  </TableCell>
                   <TableCell align="right" sx={ranked("cash")}>{formatMoney(r.cash)}</TableCell>
                   <TableCell align="right" sx={ranked("card")}>{formatMoney(r.card)}</TableCell>
                   {showRefunds && (
@@ -131,6 +173,7 @@ const TopDaysTable = ({ days, streams }: Props) => {
 
       <Typography variant="caption" color="text.disabled" sx={{ display: "block", mt: 1 }}>
         {t("topDaysFootnote")}
+        {unit !== "day" && ` ${t("topPeriodsPartialNote")}`}
       </Typography>
     </Box>
   );
