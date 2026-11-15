@@ -41,6 +41,13 @@ export interface StatsBookingsByDuration {
   count: number;
 }
 
+/** Completed bookings of one business day, and the hours of service they add up to. */
+export interface StatsBookingsDayPoint {
+  period: string;
+  bookings: number;
+  hours: number;
+}
+
 export interface StatsTipsMethodTotals {
   count: number;
   gross: number;
@@ -211,6 +218,8 @@ export interface StatsResponse {
     by_day_of_week: StatsBookingsByDayOfWeek[];
     by_time_slot: StatsBookingsByTimeSlot[];
     by_duration: StatsBookingsByDuration[];
+    /** Per business day, whatever the chart bucket: feeds the Busiest days table. */
+    by_day: StatsBookingsDayPoint[];
   };
 
   financial: {

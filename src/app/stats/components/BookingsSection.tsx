@@ -6,6 +6,8 @@ import {
 } from "recharts";
 import { useTranslations } from "next-intl";
 import { StatsResponse } from "@/types/stats";
+import { formatHours } from "@/utils/formatHours";
+import BusiestPeriodsTable from "./BusiestPeriodsTable";
 
 interface Props {
   bookings: StatsResponse["bookings"];
@@ -53,7 +55,7 @@ const BookingsSection = ({ bookings, financial }: Props) => {
         <Chip label={t("cancelledChip", { count: bookings.cancelled })} size="small" color={bookings.cancellation_rate > 10 ? "error" : "default"} variant="outlined" />
         <Chip label={t("cancellationChip", { rate: bookings.cancellation_rate.toFixed(1) })} size="small" color={bookings.cancellation_rate > 10 ? "warning" : "default"} variant="outlined" />
         <Chip label={t("avgDurationChip", { minutes: Math.round(bookings.avg_session_minutes) })} size="small" variant="outlined" />
-        <Chip label={t("bookedHoursChip", { hours: bookings.total_booked_hours.toFixed(1) })} size="small" variant="outlined" />
+        <Chip label={t("bookedHoursChip", { hours: formatHours(bookings.total_booked_hours) })} size="small" variant="outlined" />
         <Chip label={t("avgPerDayChip", { count: bookings.avg_per_day.toFixed(1) })} size="small" variant="outlined" />
       </Stack>
 
@@ -158,6 +160,13 @@ const BookingsSection = ({ bookings, financial }: Props) => {
               </ResponsiveContainer>
             ) : empty}
           </ChartCard>
+        </Grid>
+
+        {/* Busiest days, weeks, months or years by hours of service */}
+        <Grid size={12}>
+          <Paper elevation={1} sx={{ p: 2, borderRadius: 2 }}>
+            <BusiestPeriodsTable days={bookings.by_day} />
+          </Paper>
         </Grid>
       </Grid>
     </Box>

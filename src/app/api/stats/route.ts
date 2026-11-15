@@ -234,6 +234,16 @@ export async function GET(request: Request) {
         AND end_time IS NOT NULL
       GROUP BY duration_minutes ORDER BY duration_minutes
     `;
+    // Completed bookings and their hours per business day, by the same rule as total_booked_hours,
+    // so the days add up to it: feeds the Busiest days table.
+    const bookingsByDayRows = await prisma.$queryRaw<{ period: Date; bookings: number; hours: number }[]>`
+      SELECT ${truncDay(Prisma.sql`start_time`)} AS period,
+        COUNT(*)::int AS bookings,
+        COALESCE(SUM(EXTRACT(EPOCH FROM (end_time - start_time))/3600) FILTER (WHERE end_time IS NOT NULL), 0)::float AS hours
+      FROM bookings
+      WHERE deleted_at IS NULL AND status = 'completed' AND start_time >= ${from} AND start_time < ${to}
+      GROUP BY period ORDER BY period
+    `;
     const financialRows = await prisma.$queryRaw<{ avg_ticket: number; p25: number; p75: number }[]>`
       SELECT
         ROUND(AVG(price)::numeric, 2)::float AS avg_ticket,
@@ -733,6 +743,11 @@ export async function GET(request: Request) {
         by_duration: byDurationRows.map((r) => ({
           duration_minutes: toNum(r.duration_minutes),
           count: toNum(r.count),
+        })),
+        by_day: bookingsByDayRows.map((r) => ({
+          period: new Date(r.period).toISOString(),
+          bookings: toNum(r.bookings),
+          hours: toNum(r.hours),
         })),
       },
 
