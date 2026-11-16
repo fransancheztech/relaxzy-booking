@@ -56,7 +56,7 @@ export const ClientsTable = ({
     { field: "client_notes", headerName: t("notes"), flex: 1, valueFormatter: formatNullable },
     {
       field: "created_at",
-      headerName: t("created"),
+      headerName: t("clientSince"),
       type: "dateTime",
       filterOperators: DAY_FILTER_OPERATORS,
       flex: 1,

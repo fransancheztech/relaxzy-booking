@@ -7,7 +7,7 @@ TO-DO
 CALIDAD DE DATOS DE CLIENTES (acordado 19/10/2026: los nombres se guardan CON acentos, tal como se escriben; es la comparación la que debe ignorarlos)
 - Lista para revisar nombres sin la tilde que deberían llevar ("Dario" → "Darío", "Maria" → "María"). Solo sugerencias: hay gente que lo escribe sin tilde y clientes extranjeros correctos así.
 - Clientes sin actividad: 23 clientes activos sin reservas, sin vouchers y sin usos de voucher. Revisar historial antes de retirarlos; vouchers.buyer_id/recipient_id y voucher_uses.recipient_id no tienen foreign key.
-- Clientes cuya fecha de creación y primera visita no cuadran (confirmar el sentido: probablemente creados DESPUÉS de su primera reserva). Decidir si solo informar o corregir created_at.
+- Clientes cuya fecha de creación y primera visita no cuadran: 1.373 creados después de su primera reserva por el alta en lote de los datos antiguos (03/10/2025, 03/01/2026 y semanal hasta mayo 2026). Acordado 16/11/2026: "cliente desde" = primera visita. Aplicado el 16/11/2026 (2026-11-16-client-since-first-visit.sql) y la columna "Creado" de Clientes pasa a "Cliente desde"; volver a ejecutar el SQL tras la limpieza de datos antiguos.
 - Lista para revisar clientes con el apellido escrito en el campo nombre ("Rocío Sotomayor" en nombre, apellido vacío). 559 activos tienen nombre de varias palabras sin apellido, incluidos nombres compuestos reales, así que cada separación se confirma a mano.
 
 STILL DELIBERATING

@@ -380,7 +380,7 @@
     "email": "Email",
     "phone": "Phone",
     "notes": "Notes",
-    "created": "Created",
+    "clientSince": "Client since",
     "actions": "Actions",
     "editClient": "Edit Client",
     "viewClient": "View Client",
