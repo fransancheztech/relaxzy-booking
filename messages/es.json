@@ -1334,12 +1334,16 @@
     "kind": {
       "client_missing_accent": "Nombres sin tilde",
       "client_surname_in_name": "Apellido en el nombre",
-      "client_inactive": "Clientes sin actividad"
+      "client_inactive": "Clientes sin actividad",
+      "voucher_card": "Bonos: tarjetas",
+      "voucher_online_order": "Bonos: online"
     },
     "kindIntro": {
       "client_missing_accent": "Nombres y apellidos escritos sin la tilde o la ñ que suelen llevar («Dario» → «Darío», «Munoz» → «Muñoz»). Es solo una sugerencia: hay gente que escribe su nombre sin tilde, y muchos clientes extranjeros están bien como están. Salen primero los que tienen teléfono español.",
       "client_surname_in_name": "Clientes con el nombre y el apellido juntos en el campo del nombre y el apellido vacío. La propuesta separa el apellido: corrígela si hace falta antes de aplicarla, y usa el botón de intercambiar si el apellido va primero. No salen los nombres compuestos (José María, Mari Carmen), los de varias personas («Mamá y Ana») ni los de los bonos («Tus amigas del cole»).",
-      "client_inactive": "Clientes activos sin reservas, bonos ni usos de bono. «Retirar cliente» lo elimina igual que en la página de Clientes, con el motivo en sus notas, y no se puede si mientras tanto ha tenido una reserva o un bono. Si es alguien que aún no ha venido, mantenlo."
+      "client_inactive": "Clientes activos sin reservas, bonos ni usos de bono. «Retirar cliente» lo elimina igual que en la página de Clientes, con el motivo en sus notas, y no se puede si mientras tanto ha tenido una reserva o un bono. Si es alguien que aún no ha venido, mantenlo.",
+      "voucher_card": "Cada tarjeta regalo escaneada, comparada con los bonos del sistema. Si la relación está clara (un código escrito en la tarjeta, o mismo día y mismos nombres) ya viene marcada: confírmala o corrígela. Si la tarjeta es un pedido online impreso, márcalo; si no está en el sistema, márcalo también, y se dará de alta más adelante. Aquí no se cambia nada en los datos: las decisiones se convierten después en un SQL.",
+      "voucher_online_order": "Cada pedido online de bonos, comparado con los bonos del sistema que llevan su número. Los que cuadran (mismos bonos y mismo importe) se dan por buenos solos. Quedan los que faltan en el sistema, los que solo tienen bonos borrados y los que no cuadran. Aquí no se cambia nada en los datos: las decisiones se convierten después en un SQL."
     },
     "tabLabel": "{label} ({count})",
     "viewOpen": "Pendientes ({count})",
@@ -1402,6 +1406,83 @@
     "errorClientHasHistory": "Este cliente tiene ahora reservas o bonos, así que no se retira. La lista se ha actualizado.",
     "errorChangedSince": "No se puede deshacer: el cliente se ha editado después.",
     "errorContactTaken": "No se puede deshacer: otro cliente usa ya su teléfono o su correo.",
-    "errorFailed": "No se pudo guardar. Inténtalo de nuevo."
+    "errorFailed": "No se pudo guardar. Inténtalo de nuevo.",
+    "importButton": "Importar {file}",
+    "importHint": "Está en Documentos/Relaxzy/Transcripciones Vouchers. Puedes volver a importarlo: lo ya decidido no cambia.",
+    "importFirst": "Todavía no hay nada aquí. Importa {file} para empezar.",
+    "importDone": "Importado: {imported} ({added} nuevos, {auto} dados por buenos solos).",
+    "importInvalid": "Ese archivo no es el que toca o no se puede leer.",
+    "importFailed": "No se pudo importar el archivo.",
+    "errorVoucherNotFound": "Uno de los bonos elegidos ya no existe. Busca de nuevo.",
+    "errorNoteRequired": "Escribe en la nota qué hay que corregir.",
+    "recordedToast": "Guardado: {name}",
+    "outcomeLinked": "Es {codes}",
+    "outcomeOnline": "Pedido online #{invoice}",
+    "outcomeMissing": "Falta en el sistema",
+    "autoChip": "auto",
+    "usageLabel": "¿Se usó?",
+    "usage": {
+      "recorded": "Sí, y el uso está en el sistema",
+      "unrecorded": "Sí, pero el uso no está en el sistema",
+      "unused": "No se ha usado",
+      "unknown": "No se sabe"
+    },
+    "orderOutcome": {
+      "ok": "El sistema está bien",
+      "missing": "Faltan los bonos en el sistema (darlos de alta)",
+      "fix": "Hay que corregir algo (explícalo en la nota)",
+      "test": "No es una venta real (prueba)"
+    },
+    "orderStatus": {
+      "ok": "Cuadra",
+      "missing": "No está en el sistema",
+      "only_deleted": "Solo bonos borrados",
+      "count_differs": "Distinto número de bonos",
+      "amount_differs": "Distinto importe"
+    },
+    "vUses": "{count, plural, one {# uso} other {# usos}}: {dates}",
+    "vNoUses": "sin usos",
+    "vDeleted": "borrado",
+    "vOnline": "online {ref}",
+    "vMoney": "cobrado {paid} · saldo {balance}",
+    "why": {
+      "same_day": "mismo día",
+      "days": "{days, plural, one {# día de diferencia} other {# días de diferencia}}",
+      "para_recipient": "Para ≈ destinatario",
+      "de_buyer": "De ≈ comprador",
+      "number_differs": "número distinto",
+      "code": "código en la tarjeta"
+    },
+    "cardLine": "Marcada como usada",
+    "cardNoLine": "Sin marca de uso",
+    "cardShopGift": "Regalo de la tienda",
+    "cardUnsure": "Lectura dudosa",
+    "cardTreatment": "Tratamiento",
+    "cardDuration": "Duración",
+    "cardPeople": "{count} personas",
+    "cardDates": "Fechas",
+    "cardDatesValue": "vendida {sold} · caduca {expiry}",
+    "cardCode": "Código",
+    "cardNotes": "Notas",
+    "cardFile": "Escaneo",
+    "cardWhatIsIt": "¿Qué es esta tarjeta en el sistema?",
+    "linkSystem": "Estos bonos del sistema:",
+    "linkSystemByCode": "Estos bonos del sistema (por el código escrito en la tarjeta):",
+    "noCandidates": "No hay bonos físicos del sistema de esos días.",
+    "linkOnline": "Es un pedido online impreso:",
+    "linkOnlineNone": "Es un pedido online impreso (no hay ninguno parecido)",
+    "linkMissing": "No está en el sistema (hay que darla de alta)",
+    "orderVouchers": "{count, plural, one {# bono} other {# bonos}}",
+    "cardGiftCheck": "Regalo de la tienda (no se vendió)",
+    "confirm": "Confirmar",
+    "noteRequired": "Nota (obligatoria: qué hay que corregir)",
+    "orderItems": "Productos",
+    "orderTotal": "Total",
+    "orderPaid": "pagado",
+    "orderUnpaid": "sin pagar",
+    "orderForm": "Formulario",
+    "orderFormValue": "Para {para} · De {de}",
+    "orderInSystem": "En el sistema: {live} bonos activos, {paid} cobrados (pedido: {vouchers} bonos, {total})",
+    "orderNoneInSystem": "Ningún bono del sistema lleva este número de pedido."
   }
 }

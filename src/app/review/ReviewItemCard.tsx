@@ -15,7 +15,7 @@ import type {
   ReviewItem,
 } from "@/lib/review/types";
 
-export type DecidePayload = { client_name?: string; client_surname?: string; note?: string };
+export type DecidePayload = { client_name?: string; client_surname?: string; values?: unknown; note?: string };
 
 type Props = {
   item: ReviewItem;

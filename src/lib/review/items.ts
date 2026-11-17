@@ -31,6 +31,7 @@ export function toReviewItem(row: review_items): ReviewItem {
     decision: (row.decision as Record<string, unknown> | null) ?? null,
     note: row.note,
     decided_at: row.decided_at ? row.decided_at.toISOString() : null,
+    decided_by: row.decided_by,
     applied_at: row.applied_at ? row.applied_at.toISOString() : null,
     updated_at: row.updated_at.toISOString(),
   };
@@ -92,8 +93,81 @@ export async function runReviewCheck(kind: ReviewKind) {
       const gone = existing.filter((e) => e.status !== "decided" && !found.has(e.item_key)).map((e) => e.id);
       if (gone.length) await tx.review_items.deleteMany({ where: { id: { in: gone } } });
 
-      return { added: fresh.length, updated, removed: gone.length };
+      // Open items whose proposal leaves no doubt are decided without the reviewer (decided_by
+      // stays empty, so the page can tell them apart). Deferred ones are left to the reviewer.
+      let autoDecided = 0;
+      if (check.autoDecide) {
+        for (const c of candidates) {
+          const e = byKey.get(c.item_key);
+          if (e && e.status !== "open") continue;
+          const decision = check.autoDecide(c);
+          if (!decision) continue;
+          const res = await tx.review_items.updateMany({
+            where: { kind, item_key: c.item_key, status: "open" },
+            data: {
+              status: "decided",
+              decision,
+              decided_by: null,
+              decided_at: now,
+              applied_at: check.needsFollowUp?.(decision) ? null : now,
+              updated_at: now,
+            },
+          });
+          autoDecided += res.count;
+        }
+      }
+
+      return { added: fresh.length, updated, removed: gone.length, autoDecided };
     },
     { timeout: 30_000 },
   );
+}
+
+/**
+ * Stores an uploaded file of an imported kind (voucher cards, online orders) as review items, then
+ * runs the check so each one gets its proposal. Items already decided keep their decision; open
+ * and deferred ones get the new details if the file changed them.
+ */
+export async function importReviewItems(kind: ReviewKind, raw: unknown) {
+  const check = REVIEW_CHECKS[kind];
+  if (!check.importItems) return { error: "NOT_IMPORTABLE" as const };
+  const parsed = check.importItems(raw);
+  if ("error" in parsed) return { error: "INVALID_FILE" as const, message: parsed.error };
+
+  const stored = await prisma.$transaction(
+    async (tx) => {
+      const existing = await tx.review_items.findMany({ where: { kind }, select: { id: true, item_key: true, status: true, details: true } });
+      const byKey = new Map(existing.map((e) => [e.item_key, e]));
+      const fresh = parsed.candidates.filter((c) => !byKey.has(c.item_key));
+      if (fresh.length) {
+        await tx.review_items.createMany({
+          data: fresh.map((c) => ({
+            kind,
+            item_key: c.item_key,
+            source: check.source,
+            business_date: c.business_date ?? null,
+            details: c.details,
+          })),
+          skipDuplicates: true,
+        });
+      }
+      let updated = 0;
+      for (const c of parsed.candidates) {
+        const e = byKey.get(c.item_key);
+        if (!e || e.status === "decided" || sameJson(e.details, c.details)) continue;
+        await tx.review_items.update({
+          where: { id: e.id },
+          data: { details: c.details, business_date: c.business_date ?? null, updated_at: new Date() },
+        });
+        updated++;
+      }
+      return { imported: parsed.candidates.length, added: fresh.length, updated };
+    },
+    { timeout: 30_000 },
+  );
+
+  const run = await runReviewCheck(kind);
+  // The cards offer the online order they may be a printed copy of, so new orders refresh them.
+  if (kind === "voucher_online_order") await runReviewCheck("voucher_card");
+  return { ...stored, autoDecided: run.autoDecided };
 }

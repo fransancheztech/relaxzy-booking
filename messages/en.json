@@ -1334,12 +1334,16 @@
     "kind": {
       "client_missing_accent": "Missing accents",
       "client_surname_in_name": "Surname in the name",
-      "client_inactive": "Clients with no activity"
+      "client_inactive": "Clients with no activity",
+      "voucher_card": "Vouchers: cards",
+      "voucher_online_order": "Vouchers: online"
     },
     "kindIntro": {
       "client_missing_accent": "Names and surnames written without the accent or ñ they usually have (“Dario” → “Darío”, “Munoz” → “Muñoz”). It's only a suggestion: some people write their name without the accent, and many foreign clients are right as they are. Clients with a Spanish phone come first.",
       "client_surname_in_name": "Clients whose name and surname are both in the name field, with the surname field empty. The proposal splits off the surname: correct it if needed before applying, and use the swap button if the surname comes first. Compound first names (José María, Mari Carmen), names of several people (“Mamá y Ana”) and voucher names (“Tus amigas del cole”) are left out.",
-      "client_inactive": "Active clients with no bookings, vouchers or voucher uses. “Retire client” deletes them the same way as the Clients page, with the reason in their notes, and is refused if they got a booking or voucher in the meantime. If it's someone who hasn't come yet, keep them."
+      "client_inactive": "Active clients with no bookings, vouchers or voucher uses. “Retire client” deletes them the same way as the Clients page, with the reason in their notes, and is refused if they got a booking or voucher in the meantime. If it's someone who hasn't come yet, keep them.",
+      "voucher_card": "Each scanned gift card, next to the vouchers in the system. When the match is clear (a code written on the card, or the same day and names) it comes ticked: confirm or correct it. If the card is a printed online order, mark that; if it isn't in the system, mark that too, and it will be added later. Nothing in the data changes here: the decisions become a SQL file afterwards.",
+      "voucher_online_order": "Each online voucher order, next to the system vouchers that carry its number. Those that match (same vouchers, same amount) are accepted by themselves. What's left is missing from the system, has only deleted vouchers, or doesn't match. Nothing in the data changes here: the decisions become a SQL file afterwards."
     },
     "tabLabel": "{label} ({count})",
     "viewOpen": "To do ({count})",
@@ -1402,6 +1406,83 @@
     "errorClientHasHistory": "This client now has bookings or vouchers, so it isn't retired. The list has been refreshed.",
     "errorChangedSince": "Can't undo: the client was edited afterwards.",
     "errorContactTaken": "Can't undo: another client already uses this phone or email.",
-    "errorFailed": "Couldn't save. Try again."
+    "errorFailed": "Couldn't save. Try again.",
+    "importButton": "Import {file}",
+    "importHint": "It's in Documents/Relaxzy/Transcripciones Vouchers. You can import it again: what's already decided stays.",
+    "importFirst": "Nothing here yet. Import {file} to start.",
+    "importDone": "Imported: {imported} ({added} new, {auto} accepted by themselves).",
+    "importInvalid": "That's not the right file, or it can't be read.",
+    "importFailed": "Couldn't import the file.",
+    "errorVoucherNotFound": "One of the chosen vouchers no longer exists. Search again.",
+    "errorNoteRequired": "Write in the note what needs correcting.",
+    "recordedToast": "Saved: {name}",
+    "outcomeLinked": "Is {codes}",
+    "outcomeOnline": "Online order #{invoice}",
+    "outcomeMissing": "Missing from the system",
+    "autoChip": "auto",
+    "usageLabel": "Was it used?",
+    "usage": {
+      "recorded": "Yes, and the use is in the system",
+      "unrecorded": "Yes, but the use isn't in the system",
+      "unused": "Not used",
+      "unknown": "Unknown"
+    },
+    "orderOutcome": {
+      "ok": "The system is right",
+      "missing": "The vouchers are missing from the system (add them)",
+      "fix": "Something needs correcting (explain in the note)",
+      "test": "Not a real sale (a test)"
+    },
+    "orderStatus": {
+      "ok": "Matches",
+      "missing": "Not in the system",
+      "only_deleted": "Only deleted vouchers",
+      "count_differs": "Different number of vouchers",
+      "amount_differs": "Different amount"
+    },
+    "vUses": "{count, plural, one {# use} other {# uses}}: {dates}",
+    "vNoUses": "no uses",
+    "vDeleted": "deleted",
+    "vOnline": "online {ref}",
+    "vMoney": "paid {paid} · balance {balance}",
+    "why": {
+      "same_day": "same day",
+      "days": "{days, plural, one {# day apart} other {# days apart}}",
+      "para_recipient": "To ≈ recipient",
+      "de_buyer": "From ≈ buyer",
+      "number_differs": "number differs",
+      "code": "code on the card"
+    },
+    "cardLine": "Marked as used",
+    "cardNoLine": "No used mark",
+    "cardShopGift": "Gift from the shop",
+    "cardUnsure": "Unsure reading",
+    "cardTreatment": "Treatment",
+    "cardDuration": "Duration",
+    "cardPeople": "{count} people",
+    "cardDates": "Dates",
+    "cardDatesValue": "sold {sold} · expires {expiry}",
+    "cardCode": "Code",
+    "cardNotes": "Notes",
+    "cardFile": "Scan",
+    "cardWhatIsIt": "What is this card in the system?",
+    "linkSystem": "These system vouchers:",
+    "linkSystemByCode": "These system vouchers (by the code written on the card):",
+    "noCandidates": "No physical vouchers in the system from those days.",
+    "linkOnline": "A printed online order:",
+    "linkOnlineNone": "A printed online order (none looks alike)",
+    "linkMissing": "Not in the system (it has to be added)",
+    "orderVouchers": "{count, plural, one {# voucher} other {# vouchers}}",
+    "cardGiftCheck": "Gift from the shop (not sold)",
+    "confirm": "Confirm",
+    "noteRequired": "Note (required: what needs correcting)",
+    "orderItems": "Products",
+    "orderTotal": "Total",
+    "orderPaid": "paid",
+    "orderUnpaid": "unpaid",
+    "orderForm": "Form",
+    "orderFormValue": "To {para} · From {de}",
+    "orderInSystem": "In the system: {live} active vouchers, {paid} paid (order: {vouchers} vouchers, {total})",
+    "orderNoneInSystem": "No voucher in the system carries this order number."
   }
 }

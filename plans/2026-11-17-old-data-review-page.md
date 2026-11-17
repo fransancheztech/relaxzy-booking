@@ -52,6 +52,28 @@ authenticated. Only the app, through Prisma, reads and writes it.
   16/11/2026; 125 of them only have deleted bookings). Retire or keep. Before retiring, check
   `vouchers.buyer_id`/`recipient_id` and `voucher_uses.recipient_id` (no foreign keys).
 
+## Voucher tabs (built 2026-11-17)
+
+Two imported kinds. Their source files hold client data, so they live outside the repo
+(Documents/Relaxzy/Transcripciones Vouchers) and are uploaded on the page (`/api/review/import`).
+The details of each item keep the uploaded data, and "Search again" works the proposals out again
+against the current vouchers.
+
+- **`voucher_online_order`** (`pedidos_online.json`, built by `tools/pedidos.py` from the shop
+  export and the order and form e-mails). One item per real order, compared with the system
+  vouchers whose external reference is the order number. An order that matches (count and money)
+  is decided "ok" by itself (`decided_by` empty, shown as "auto"). The others: missing, only
+  deleted vouchers, different count or amount. Outcomes: ok, missing (add the vouchers), fix
+  (note required), test.
+- **`voucher_card`** (`tarjetas.json`, the 98 transcribed cards). One item per card. Proposal: the
+  physical vouchers it most likely is (a code written on the card, else date ±3 days and names;
+  suggestions are assigned across all cards so a voucher is never suggested twice), the online
+  order it may be a printed copy of, and the usage (card line vs uses recorded). The reviewer
+  confirms: these vouchers / this online order / missing; used or not; shop gift.
+
+Both only record decisions. `needsFollowUp` keeps `applied_at` empty for decisions that still have
+to reach the data (vouchers to add, a use to record, a fix); a SQL file built from them sets it.
+
 ## Later
 
 - Scan import: the extraction JSON goes in through an upload on the page (client data stays out of

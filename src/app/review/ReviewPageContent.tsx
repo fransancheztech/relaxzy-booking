@@ -17,22 +17,32 @@ import {
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import { useLayout } from "@/app/context/LayoutContext";
 import { formatBusinessDateTime } from "@/utils/businessTime";
 import {
+  IMPORT_FILES,
   REVIEW_KINDS,
   type ClientSnapshot,
+  type OnlineOrderDecision,
+  type OnlineOrderDetails,
   type NameProposal,
   type ReviewAction,
   type ReviewError,
   type ReviewItem,
   type ReviewKind,
   type ReviewListResponse,
+  type VoucherCardDecision,
+  type VoucherCardDetails,
+  type VoucherCardProposal,
 } from "@/lib/review/types";
 import ReviewItemCard, { clientFullName, phoneRank, type DecidePayload } from "./ReviewItemCard";
+import VoucherCardReview from "./VoucherCardReview";
+import OnlineOrderReview from "./OnlineOrderReview";
+import { ymd } from "./VoucherParts";
 
 type View = "open" | "deferred";
 
@@ -50,7 +60,20 @@ function sortItems(kind: ReviewKind, items: ReviewItem[]): ReviewItem[] {
       || byName(a, b));
   }
   if (kind === "client_surname_in_name") return [...items].sort(byName);
-  return items; // client_inactive: oldest client first, as the API sends them
+  return items; // client_inactive and vouchers: by date, as the API sends them
+}
+
+/** A short name for an item in toasts and in the list of decisions. */
+function itemLabel(item: ReviewItem): string {
+  if (item.kind === "voucher_card") {
+    const c = item.details as VoucherCardDetails;
+    return `${ymd(c.fecha)} ${c.de || "—"} → ${c.para || "—"}`;
+  }
+  if (item.kind === "voucher_online_order") {
+    const o = item.details as OnlineOrderDetails;
+    return `#${o.invoice} ${o.buyer}`;
+  }
+  return clientFullName(item.details as ClientSnapshot);
 }
 
 const ReviewPageContent = () => {
@@ -86,6 +109,8 @@ const ReviewPageContent = () => {
       CLIENT_HAS_HISTORY: t("errorClientHasHistory"),
       CHANGED_SINCE: t("errorChangedSince"),
       CONTACT_TAKEN: t("errorContactTaken"),
+      VOUCHER_NOT_FOUND: t("errorVoucherNotFound"),
+      NOTE_REQUIRED: t("errorNoteRequired"),
     };
     return messages[code as ReviewError] ?? t("errorFailed");
   }, [t]);
@@ -125,7 +150,36 @@ const ReviewPageContent = () => {
     }
   }, [refresh, t]);
 
-  // Opening a tab loads it; a check that has never found anything runs once by itself.
+  // Upload of an imported tab's file (tarjetas.json, pedidos_online.json): read in the browser, sent as JSON.
+  const fileInput = useRef<HTMLInputElement>(null);
+  const importFile = async (file: File) => {
+    let items: unknown;
+    try {
+      items = JSON.parse(await file.text());
+    } catch {
+      toast.error(t("importInvalid"));
+      return;
+    }
+    setSearching(true);
+    try {
+      const res = await fetch("/api/review/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind, items }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.ok) toast.success(t("importDone", { imported: body.imported ?? 0, added: body.added ?? 0, auto: body.autoDecided ?? 0 }));
+      else toast.error(body.error === "INVALID_FILE" ? t("importInvalid") : t("importFailed"));
+    } catch {
+      toast.error(t("importFailed"));
+    } finally {
+      await refresh(kind);
+      setSearching(false);
+    }
+  };
+
+  // Opening a tab loads it; a check that has never found anything runs once by itself. Imported
+  // tabs have nothing to search until their file is uploaded.
   useEffect(() => {
     let cancelled = false;
     currentKind.current = kind;
@@ -135,7 +189,7 @@ const ReviewPageContent = () => {
       const body = await refresh(kind);
       if (cancelled) return;
       const c = body?.counts[kind];
-      if (c && c.open + c.deferred + c.decided === 0 && !autoSearched.current.has(kind)) {
+      if (c && c.open + c.deferred + c.decided === 0 && !IMPORT_FILES[kind] && !autoSearched.current.has(kind)) {
         autoSearched.current.add(kind);
         await search(kind, false);
       }
@@ -185,15 +239,17 @@ const ReviewPageContent = () => {
       return;
     }
 
-    const name = action === "apply" && item.kind !== "client_inactive"
+    const isNameCheck = item.kind === "client_missing_accent" || item.kind === "client_surname_in_name";
+    const name = action === "apply" && isNameCheck
       ? clientFullName({ client_name: payload.client_name, client_surname: payload.client_surname })
-      : clientFullName(item.details as ClientSnapshot);
+      : itemLabel(item);
     if (action === "later") {
       toast.info(t("deferredToast", { name }));
     } else {
       const message = item.kind === "client_inactive"
         ? (action === "apply" ? t("retiredToast", { name }) : t("keptClientToast", { name }))
-        : (action === "apply" ? t("appliedToast", { name }) : t("keptToast", { name }));
+        : !isNameCheck ? t("recordedToast", { name })
+          : (action === "apply" ? t("appliedToast", { name }) : t("keptToast", { name }));
       const id = toast.success(
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <span>{message}</span>
@@ -211,6 +267,19 @@ const ReviewPageContent = () => {
   const shown = counts?.[kind] ?? { open: 0, deferred: 0, decided: 0 };
 
   const recentLine = (item: ReviewItem) => {
+    if (item.kind === "voucher_card") {
+      const d = item.decision as unknown as VoucherCardDecision;
+      const p = item.proposal as VoucherCardProposal | null;
+      const codes = d.voucher_ids.map((id) => p?.candidates.find((c) => c.id === id)?.code ?? "?").join(", ");
+      const what = d.link === "system" ? t("outcomeLinked", { codes })
+        : d.link === "online_order" ? t("outcomeOnline", { invoice: d.invoice ?? 0 })
+          : t("outcomeMissing");
+      return { text: itemLabel(item), outcome: d.used === "unrecorded" ? `${what} · ${t("usage.unrecorded")}` : what };
+    }
+    if (item.kind === "voucher_online_order") {
+      const d = item.decision as unknown as OnlineOrderDecision;
+      return { text: itemLabel(item), outcome: t(`orderOutcome.${d.outcome}`) };
+    }
     const before = clientFullName(item.details as ClientSnapshot);
     const applied = item.decision?.action === "apply";
     if (item.kind === "client_inactive") {
@@ -245,6 +314,27 @@ const ReviewPageContent = () => {
       </Tabs>
 
       <Typography variant="body2" color="text.secondary">{t(`kindIntro.${kind}`)}</Typography>
+
+      {IMPORT_FILES[kind] && (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".json,application/json"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file) importFile(file);
+            }}
+          />
+          <Button size="small" variant="outlined" startIcon={<UploadFileIcon fontSize="small" />} disabled={searching || busy}
+            onClick={() => fileInput.current?.click()}>
+            {t("importButton", { file: IMPORT_FILES[kind] ?? "" })}
+          </Button>
+          <Typography variant="caption" color="text.secondary">{t("importHint", { file: IMPORT_FILES[kind] ?? "" })}</Typography>
+        </Box>
+      )}
 
       {loadFailed && <Alert severity="error">{t("loadFailed")}</Alert>}
 
@@ -292,15 +382,24 @@ const ReviewPageContent = () => {
               <ChevronRightIcon fontSize="small" />
             </IconButton>
           </Box>
-          <ReviewItemCard
-            key={`${current.id}:${current.updated_at}`}
-            item={current}
-            busy={busy || searching}
-            onDecide={(action, payload) => decide(current, action, payload)}
-          />
+          {(() => {
+            const key = `${current.id}:${current.updated_at}`;
+            const props = {
+              item: current,
+              busy: busy || searching,
+              onDecide: (action: ReviewAction, payload: DecidePayload) => decide(current, action, payload),
+            };
+            if (current.kind === "voucher_card") return <VoucherCardReview key={key} {...props} />;
+            if (current.kind === "voucher_online_order") return <OnlineOrderReview key={key} {...props} />;
+            return <ReviewItemCard key={key} {...props} />;
+          })()}
         </Box>
       ) : (
-        !loadFailed && <Alert severity="success">{view === "open" ? t("allDone") : t("noneDeferred")}</Alert>
+        !loadFailed && (
+          IMPORT_FILES[kind] && shown.open + shown.deferred + shown.decided === 0
+            ? <Alert severity="info">{t("importFirst", { file: IMPORT_FILES[kind] ?? "" })}</Alert>
+            : <Alert severity="success">{view === "open" ? t("allDone") : t("noneDeferred")}</Alert>
+        )
       )}
 
       <Box sx={{ mt: 1 }}>
@@ -324,6 +423,7 @@ const ReviewPageContent = () => {
                   </Typography>
                   <Typography variant="body2" sx={{ flex: 1, minWidth: 180 }}>{line.text}</Typography>
                   <Chip size="small" label={line.outcome} variant="outlined" />
+                  {!item.decided_by && <Chip size="small" label={t("autoChip")} />}
                   <Button size="small" disabled={busy} onClick={() => reopen(item)}>{t("undo")}</Button>
                 </Box>
               );

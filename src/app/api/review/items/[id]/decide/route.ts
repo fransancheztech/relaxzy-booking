@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserRole } from "@/lib/auth/getCurrentUserRole";
 import { getCurrentUserId } from "@/lib/auth/getCurrentUserId";
@@ -52,6 +53,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         const applied = await check.apply(tx, item, {
           client_name: body.client_name,
           client_surname: body.client_surname,
+          values: body.values,
           note,
         });
         if ("error" in applied) return applied;
@@ -59,6 +61,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       }
 
       const now = new Date();
+      // A recorded decision that still has to reach the data (a voucher to add) stays unapplied.
+      const pending = action === "apply" && check.needsFollowUp?.(decision as Prisma.InputJsonObject) === true;
       const claimed = await tx.review_items.updateMany({
         where: { id, status: { not: "decided" } },
         data: {
@@ -67,7 +71,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
           note,
           decided_by: actor,
           decided_at: now,
-          applied_at: now,
+          applied_at: pending ? null : now,
           updated_at: now,
         },
       });
