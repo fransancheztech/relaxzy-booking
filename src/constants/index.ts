@@ -14,6 +14,8 @@ export const menuPages: menuPageModel[] = [
   { text: 'Stats', href: '/stats' },
   { text: 'Agenda', href: '/agenda' },
   { text: 'Guidelines', href: '/guidelines' },
+  // Temporary, admin-only: the old-data cleanup (plans/2026-11-17-old-data-review-page.md).
+  { text: 'Review', href: '/review' },
 ];
 
 export const drawerWidth: number = 240;

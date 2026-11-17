@@ -511,6 +511,36 @@ model agenda_notes_log {
   @@index([note_id, changed_at(sort: Desc)], map: "agenda_notes_log_note_idx")
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model review_items {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  kind          String
+  item_key      String
+  source        String
+  business_date DateTime? @db.Date
+  client_id     String?   @db.Uuid
+  booking_id    String?   @db.Uuid
+  voucher_id    String?   @db.Uuid
+  details       Json      @default("{}")
+  proposal      Json?
+  status        String    @default("open")
+  decision      Json?
+  note          String?
+  decided_by    String?   @db.Uuid
+  decided_at    DateTime? @db.Timestamptz(6)
+  applied_at    DateTime? @db.Timestamptz(6)
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@unique([kind, item_key], map: "review_items_kind_key_unique")
+  @@index([booking_id], map: "review_items_booking_idx", where: raw("(booking_id IS NOT NULL)"))
+  @@index([business_date], where: raw("(business_date IS NOT NULL)"))
+  @@index([client_id], map: "review_items_client_idx", where: raw("(client_id IS NOT NULL)"))
+  @@index([kind, status])
+  @@index([voucher_id], map: "review_items_voucher_idx", where: raw("(voucher_id IS NOT NULL)"))
+}
+
 view bookings_with_details {
   booking_id                  String?          @db.Uuid
   booking_start_time          DateTime?        @db.Timestamptz(6)

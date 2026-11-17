@@ -38,6 +38,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import SavingsIcon from "@mui/icons-material/Savings";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import FactCheckIcon from "@mui/icons-material/FactCheck";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -68,6 +69,7 @@ const PAGE_ICONS: Record<string, React.ReactNode> = {
   "/tips":       <SavingsIcon sx={{ fontSize: 18 }} />,
   "/hours":      <AccessTimeIcon sx={{ fontSize: 18 }} />,
   "/guidelines": <MenuBookIcon sx={{ fontSize: 18 }} />,
+  "/review":     <FactCheckIcon sx={{ fontSize: 18 }} />,
 };
 
 function HeaderButton() {
@@ -128,7 +130,7 @@ export default function LayoutContent({
   // Stats holds admin-only figures; Payments is the raw ledger of every payment (refunds there
   // have no booking or client context — receptionists refund from the booking or voucher).
   // Hours is for admins and therapists, so it is the one page a receptionist must not see.
-  const adminOnlyPaths = new Set(["/stats", "/payments"]);
+  const adminOnlyPaths = new Set(["/stats", "/payments", "/review"]);
   const therapistOnlyPaths = new Set(["/agenda", "/calendar", "/guidelines", "/hours", "/tips"]);
   const receptionistHiddenPaths = new Set(["/hours"]);
   const isReceptionist = !isAdmin && !isTherapist;
