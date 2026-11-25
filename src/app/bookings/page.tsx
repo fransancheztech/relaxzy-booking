@@ -12,6 +12,7 @@ import { GridFilterItem, GridFilterModel } from "@mui/x-data-grid";
 import { activeFilterItems } from "@/utils/gridFilterItems";
 import { useLiveUpdates } from "@/hooks/useLiveUpdates";
 import { useLoadSequence } from "@/hooks/useLoadSequence";
+import { defaultStartFromBookingsPage } from "@/lib/bookings/defaultStart";
 
 export default function BookingsPage() {
   const { setButtonLabel, setOnButtonClick } = useLayout();
@@ -26,6 +27,8 @@ export default function BookingsPage() {
 
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [isOpenNewBookingDialog, setIsOpenNewBookingDialog] = useState(false);
+  // Worked out when the button is pressed: 11:00 today before 11:00, otherwise now.
+  const [newBookingStart, setNewBookingStart] = useState<Date | undefined>(undefined);
   const [isOpenEditBookingDialog, setIsOpenEditBookingDialog] = useState(false);
   const [sortModel, setSortModel] = useState<{ field: string; sort: "asc" | "desc" }>({
     field: "start_time",
@@ -136,7 +139,10 @@ export default function BookingsPage() {
   // -------------------------------
   useEffect(() => {
     setButtonLabel(t("newBooking"));
-    setOnButtonClick(() => () => setIsOpenNewBookingDialog((prev) => !prev));
+    setOnButtonClick(() => () => {
+      setNewBookingStart(defaultStartFromBookingsPage());
+      setIsOpenNewBookingDialog((prev) => !prev);
+    });
     return () => {
       setButtonLabel("");
       setOnButtonClick(null);
@@ -164,6 +170,7 @@ export default function BookingsPage() {
       <NewBookingDialogForm
         open={isOpenNewBookingDialog}
         onClose={closeNewDialog}
+        defaultStart={newBookingStart}
       />
       <UpdateBookingDialogForm
         open={isOpenEditBookingDialog}

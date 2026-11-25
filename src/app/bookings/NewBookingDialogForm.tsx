@@ -31,9 +31,13 @@ import { findVoucherUseWarnings, type VoucherUseWarning } from "@/lib/vouchers/u
 type Props = {
   open: boolean;
   onClose: () => void;
+  /** Start time to open with (see src/lib/bookings/defaultStart.ts); now rounded to 5 minutes if absent. */
+  defaultStart?: Date;
+  /** Therapist to preselect, e.g. the column of the calendar slot that was clicked. */
+  defaultTherapistId?: string;
 };
 
-const NewBookingDialogForm = ({ open, onClose }: Props) => {
+const NewBookingDialogForm = ({ open, onClose, defaultStart, defaultTherapistId }: Props) => {
   const t = useTranslations("BookingForm");
   const tCommon = useTranslations("Common");
   const tPayErr = useTranslations("BookingPayment.errors");
@@ -51,10 +55,10 @@ const NewBookingDialogForm = ({ open, onClose }: Props) => {
     client_surname: "",
     client_phone: "",
     client_email: "",
-    start_time: roundToNearestMinutes(new Date(), { nearestTo: 5 }),
+    start_time: defaultStart ?? roundToNearestMinutes(new Date(), { nearestTo: 5 }),
     duration: undefined,
     service_name: "",
-    therapist_id: "",
+    therapist_id: defaultTherapistId ?? "",
     therapist_requested: false,
     notes: "",
     price: undefined,

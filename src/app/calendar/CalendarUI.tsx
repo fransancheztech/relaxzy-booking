@@ -7,7 +7,7 @@ import esLocale from "@fullcalendar/core/locales/es";
 import thLocale from "@fullcalendar/core/locales/th";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin from "@fullcalendar/interaction";
+import interactionPlugin, { type DateClickArg } from "@fullcalendar/interaction";
 import resourceTimeGridPlugin from "@fullcalendar/resource-timegrid";
 import luxon3Plugin from "@fullcalendar/luxon3";
 import { DatesSetArg, EventClickArg, EventContentArg } from "@fullcalendar/core";
@@ -34,6 +34,10 @@ import { METHOD_COLORS, type MethodKind } from "@/components/payments/MethodAmou
 
 interface CalendarUIProps {
   setIsOpenBookingDialog: React.Dispatch<React.SetStateAction<boolean>>;
+  /** The range on screen, so the page can pick the New Booking default date. */
+  onRangeChange?: (range: { start: Date; end: Date }) => void;
+  /** An empty time slot was clicked: open New Booking at that time (and therapist column). */
+  onSlotClick?: (start: Date, therapistId?: string) => void;
 }
 
 // 5-minute resolution so odd-timed bookings (e.g. 13:05) are colored at the right minute
@@ -79,7 +83,7 @@ function getOccupancyColor(count: number): string {
   return OCCUPANCY_COLORS[Math.min(count, 5)] ?? OCCUPANCY_COLORS[5];
 }
 
-function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
+function CalendarUI({ setIsOpenBookingDialog, onRangeChange, onSlotClick }: CalendarUIProps) {
   const { setSelectedBookingId } = useLayout();
   const { isTherapist } = useRole();
   const { therapists, loaded: therapistsLoaded } = useTherapistsWithLoaded();
@@ -461,9 +465,22 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
     // With a named `timeZone`, FullCalendar's `start`/`end` are timezone-naive marker
     // dates. `startStr`/`endStr` are offset-correct ISO strings, so parse those to get the
     // true UTC instants for the Madrid day bounds (used for fetching + the API calls).
-    setRange({ start: new Date(info.startStr), end: new Date(info.endStr) });
+    const next = { start: new Date(info.startStr), end: new Date(info.endStr) };
+    setRange(next);
+    onRangeChange?.(next);
     setCurrentView(info.view.type);
-  }, []);
+  }, [onRangeChange]);
+
+  // Clicking an empty slot in a time grid opens New Booking at that time. In the "By therapist"
+  // view the column's therapist is preselected (only an active one: the form lists no others).
+  // Month cells are left alone: there a click means "look at this day", not "book now".
+  const handleDateClick = useCallback((info: DateClickArg) => {
+    if (!onSlotClick || isTherapist || info.allDay) return;
+    const resourceId = info.resource?.id;
+    const therapistId = resourceId && therapists.some((th) => th.id === resourceId) ? resourceId : undefined;
+    // dateStr carries the Madrid offset; `date` is a timezone-naive marker under a named timeZone.
+    onSlotClick(new Date(info.dateStr), therapistId);
+  }, [onSlotClick, isTherapist, therapists]);
 
   // Clicking a day header/number in week or month view jumps to that day's "By therapist" view
   const handleNavLinkDayClick = useCallback((date: Date) => {
@@ -577,6 +594,7 @@ function CalendarUI({ setIsOpenBookingDialog }: CalendarUIProps) {
               : undefined
           }
           eventClick={handleEventClick}
+          dateClick={handleDateClick}
           datesSet={handleDatesSet}
           navLinks
           navLinkDayClick={handleNavLinkDayClick}
