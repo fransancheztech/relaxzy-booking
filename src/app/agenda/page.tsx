@@ -6,8 +6,8 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import esLocale from "@fullcalendar/core/locales/es";
 import thLocale from "@fullcalendar/core/locales/th";
-import type { DateSelectArg, DatesSetArg, EventClickArg } from "@fullcalendar/core";
-import { Box, Paper } from "@mui/material";
+import type { DateSelectArg, DatesSetArg, EventClickArg, EventContentArg } from "@fullcalendar/core";
+import { Box, Paper, Tooltip } from "@mui/material";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "react-toastify";
 import { useLayout } from "../context/LayoutContext";
@@ -78,6 +78,24 @@ const AgendaPage = () => {
 
   const dayNotes = selectedDate ? notes.filter((n) => n.note_date === selectedDate) : [];
 
+  // A month cell shows one ellipsised line, so the full note is in a hover tooltip, with the same
+  // timing and width as the calendar cards: 1s delay so it only shows when someone rests on a note.
+  const renderNote = (arg: EventContentArg) => (
+    <Tooltip
+      title={<div style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{arg.event.title}</div>}
+      arrow
+      placement="top"
+      enterDelay={1000}
+      enterNextDelay={1000}
+      disableInteractive
+      slotProps={{ tooltip: { sx: { maxWidth: 280, px: 1.25, py: 1 } } }}
+    >
+      <div style={{ padding: "0 2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {arg.event.title}
+      </div>
+    </Tooltip>
+  );
+
   return (
     <main className="p-4">
       <Paper sx={{ p: 2 }}>
@@ -104,6 +122,7 @@ const AgendaPage = () => {
               const d = info.event.startStr.slice(0, 10);
               if (d) openDay(d);
             }}
+            eventContent={renderNote}
             selectable={false}
             select={(_info: DateSelectArg) => undefined}
             events={notes.map((n) => ({
